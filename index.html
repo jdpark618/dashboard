@@ -124,11 +124,11 @@ select option { background-color: #0f172a; color: #f1f5f9; }
     </div>
     <p class="text-xs muted mt-1">Google Play 시장 모니터링</p>
   </div>
-  <div class="flex items-center gap-2">
-    <span id="todayLabel" class="text-xs muted"></span>
+  <div class="flex items-center gap-2.5">
+    <span id="todayLabel" class="text-xs muted font-medium"></span>
     <span id="syncStatus" class="text-xs px-3 py-1.5 rounded-full bg-slate-800 text-slate-400">초기화 중</span>
-    <button id="refreshBtn" onclick="fetchAllData()" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-sm font-semibold transition-colors">
-      <i class="fa-solid fa-rotate mr-1"></i> 새로고침
+    <button id="refreshBtn" onclick="fetchAllData()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white text-xs font-medium transition-colors">
+      <i class="fa-solid fa-rotate mr-1 text-slate-400"></i> 새로고침
     </button>
   </div>
 </header>
@@ -162,13 +162,17 @@ select option { background-color: #0f172a; color: #f1f5f9; }
 
 <main>
 <!-- DASHBOARD VIEW -->
-<div id="view-dashboard" class="space-y-5">
-  <section class="mb-5">
-    <div class="flex items-end justify-between mb-3">
-      <div>
-        <h2 class="text-base font-semibold">Today Market Summary</h2>
+<div id="view-dashboard" class="space-y-6">
+  <!-- 섹션 1: 마켓 서머리 -->
+  <section>
+    <div class="flex items-center justify-between mb-3 px-0.5">
+      <h2 class="text-base font-bold text-slate-200 flex items-center gap-2">
+        <i class="fa-solid fa-chart-simple text-indigo-400"></i>Today Market Summary
+      </h2>
+      <div class="flex items-center gap-2">
+        <span class="text-[11px] muted">기준일:</span>
+        <span id="snapshotDate" class="text-xs px-2.5 py-0.5 rounded-md bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 font-semibold">-</span>
       </div>
-      <span id="snapshotDate" class="text-xs muted">-</span>
     </div>
 
     <div id="freezeWarning" class="hidden mb-4 flex items-center gap-2 px-4 py-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-400 text-sm font-medium">
@@ -180,126 +184,190 @@ select option { background-color: #0f172a; color: #f1f5f9; }
     </div>
 
     <div class="grid grid-cols-2 lg:grid-cols-5 gap-3">
-      <div id="cardPopular1" class="card rounded-xl p-4 relative overflow-hidden summary-card-hover">
-        <i class="fa-solid fa-fire text-emerald-400/10 text-4xl absolute -bottom-2 -right-2"></i>
-        <div class="text-[11px] muted flex justify-between items-center">
-          <span>인기 1위</span>
-          <span id="todayPopChange"></span>
-        </div>
-        <div class="flex items-center gap-2 mt-2 relative z-10">
-          <img id="todayPopularIcon" src="" class="w-7 h-7 rounded-lg object-cover bg-slate-800 hidden shrink-0" alt="">
-          <div id="todayPopularTop" class="text-[15px] font-bold truncate">-</div>
-        </div>
-        <div class="flex items-center justify-between text-[11px] text-emerald-300 mt-1.5 relative z-10">
-          <span id="todayPopularMeta" class="truncate">-</span>
-          <span id="todayPopularScore" class="text-amber-400 font-semibold shrink-0 ml-1"></span>
-        </div>
-      </div>
-
-      <div id="cardSales1" class="card rounded-xl p-4 relative overflow-hidden summary-card-hover">
-        <i class="fa-solid fa-coins text-indigo-400/10 text-4xl absolute -bottom-2 -right-2"></i>
-        <div class="text-[11px] muted flex justify-between items-center">
-          <span>매출 1위</span>
-          <span id="todaySalesChange"></span>
-        </div>
-        <div class="flex items-center gap-2 mt-2 relative z-10">
-          <img id="todaySalesIcon" src="" class="w-7 h-7 rounded-lg object-cover bg-slate-800 hidden shrink-0" alt="">
-          <div id="todaySalesTop" class="text-[15px] font-bold truncate">-</div>
-        </div>
-        <div class="flex items-center justify-between text-[11px] text-indigo-300 mt-1.5 relative z-10">
-          <span id="todaySalesMeta" class="truncate">-</span>
-          <span id="todaySalesScore" class="text-amber-400 font-semibold shrink-0 ml-1"></span>
-        </div>
-      </div>
-
-      <div id="cardNew1" class="card rounded-xl p-4 relative overflow-hidden summary-card-hover">
-        <i class="fa-solid fa-seedling text-sky-400/10 text-4xl absolute -bottom-2 -right-2"></i>
-        <div class="text-[11px] muted flex justify-between items-center">
-          <span>인기순위 신규 진입</span>
-          <span id="todayNewChange"></span>
-        </div>
-        <div class="flex items-center gap-2 mt-2 relative z-10">
-          <img id="todayNewIcon" src="" class="w-7 h-7 rounded-lg object-cover bg-slate-800 hidden shrink-0" alt="">
-          <div id="todayNewTop" class="text-[15px] font-bold truncate">-</div>
-        </div>
-        <div class="flex items-center justify-between text-[11px] text-sky-300 mt-1.5 relative z-10">
-          <span id="todayNewMeta" class="truncate">-</span>
-          <span id="todayNewScore" class="text-amber-400 font-semibold shrink-0 ml-1"></span>
-        </div>
-      </div>
-
-      <div id="cardRising1" class="card rounded-xl p-4 relative overflow-hidden summary-card-hover">
-        <i class="fa-solid fa-rocket text-rose-400/10 text-4xl absolute -bottom-2 -right-2"></i>
-        <div class="text-[11px] muted flex justify-between items-center">
-          <span>매출 최고 상승</span>
-          <span id="todayRisingChange"></span>
-        </div>
-        <div class="flex items-center gap-2 mt-2 relative z-10">
-          <img id="todayRisingIcon" src="" class="w-7 h-7 rounded-lg object-cover bg-slate-800 hidden shrink-0" alt="">
-          <div id="todayRisingTop" class="text-[15px] font-bold truncate">-</div>
-        </div>
-        <div class="flex items-center justify-between text-[11px] rank-up mt-1.5 relative z-10">
-          <span id="todayRisingMeta" class="truncate">-</span>
-          <span id="todayRisingScore" class="text-amber-400 font-semibold shrink-0 ml-1"></span>
-        </div>
-      </div>
-
-      <div class="card rounded-xl p-4 relative overflow-hidden flex flex-col justify-between">
-        <i class="fa-solid fa-crown text-amber-400/10 text-4xl absolute -bottom-2 -right-2 z-0"></i>
-        <div class="text-[11px] muted mb-2 relative z-10">장르 점유 (매출순)</div>
-        <div class="flex items-center gap-2 h-full relative z-10">
-          <div class="w-11 h-11 shrink-0 relative">
-            <canvas id="todayGenreDonut"></canvas>
+      <!-- 인기 1위 -->
+      <div id="cardPopular1" class="card rounded-xl p-4 relative overflow-hidden summary-card-hover flex flex-col justify-between">
+        <div>
+          <i class="fa-solid fa-fire text-emerald-400/10 text-4xl absolute -bottom-2 -right-2 pointer-events-none"></i>
+          <div class="text-[11px] muted flex justify-between items-center">
+            <span class="font-semibold text-emerald-400">인기 1위</span>
+            <span id="todayPopChange"></span>
           </div>
-          <div id="todayGenreLegend" class="flex flex-col justify-center text-[10px] gap-0.5 flex-1 w-0 font-medium"></div>
+          <div class="flex items-center gap-2.5 mt-2.5 relative z-10">
+            <img id="todayPopularIcon" src="" class="w-8 h-8 rounded-lg object-cover bg-slate-800 hidden shrink-0" alt="">
+            <div id="todayPopularTop" class="text-[14px] font-bold truncate text-slate-100">-</div>
+          </div>
+        </div>
+        <div class="flex items-center justify-between text-[11px] mt-3 pt-2 border-t border-slate-800/80 relative z-10">
+          <span id="todayPopularMeta" class="truncate muted">-</span>
+          <span id="todayPopularScore" class="shrink-0 ml-1"></span>
+        </div>
+      </div>
+
+      <!-- 매출 1위 -->
+      <div id="cardSales1" class="card rounded-xl p-4 relative overflow-hidden summary-card-hover flex flex-col justify-between">
+        <div>
+          <i class="fa-solid fa-coins text-indigo-400/10 text-4xl absolute -bottom-2 -right-2 pointer-events-none"></i>
+          <div class="text-[11px] muted flex justify-between items-center">
+            <span class="font-semibold text-indigo-400">매출 1위</span>
+            <span id="todaySalesChange"></span>
+          </div>
+          <div class="flex items-center gap-2.5 mt-2.5 relative z-10">
+            <img id="todaySalesIcon" src="" class="w-8 h-8 rounded-lg object-cover bg-slate-800 hidden shrink-0" alt="">
+            <div id="todaySalesTop" class="text-[14px] font-bold truncate text-slate-100">-</div>
+          </div>
+        </div>
+        <div class="flex items-center justify-between text-[11px] mt-3 pt-2 border-t border-slate-800/80 relative z-10">
+          <span id="todaySalesMeta" class="truncate muted">-</span>
+          <span id="todaySalesScore" class="shrink-0 ml-1"></span>
+        </div>
+      </div>
+
+      <!-- 인기순위 신규 진입 -->
+      <div id="cardNew1" class="card rounded-xl p-4 relative overflow-hidden summary-card-hover flex flex-col justify-between">
+        <div>
+          <i class="fa-solid fa-seedling text-sky-400/10 text-4xl absolute -bottom-2 -right-2 pointer-events-none"></i>
+          <div class="text-[11px] muted flex justify-between items-center">
+            <span class="font-semibold text-sky-400">인기 신규 진입</span>
+            <span id="todayNewChange"></span>
+          </div>
+          <div class="flex items-center gap-2.5 mt-2.5 relative z-10">
+            <img id="todayNewIcon" src="" class="w-8 h-8 rounded-lg object-cover bg-slate-800 hidden shrink-0" alt="">
+            <div id="todayNewTop" class="text-[14px] font-bold truncate text-slate-100">-</div>
+          </div>
+        </div>
+        <div class="flex items-center justify-between text-[11px] mt-3 pt-2 border-t border-slate-800/80 relative z-10">
+          <span id="todayNewMeta" class="truncate muted">-</span>
+          <span id="todayNewScore" class="shrink-0 ml-1"></span>
+        </div>
+      </div>
+
+      <!-- 매출 최고 상승 -->
+      <div id="cardRising1" class="card rounded-xl p-4 relative overflow-hidden summary-card-hover flex flex-col justify-between">
+        <div>
+          <i class="fa-solid fa-rocket text-rose-400/10 text-4xl absolute -bottom-2 -right-2 pointer-events-none"></i>
+          <div class="text-[11px] muted flex justify-between items-center">
+            <span class="font-semibold text-rose-400">매출 최고 상승</span>
+            <span id="todayRisingChange"></span>
+          </div>
+          <div class="flex items-center gap-2.5 mt-2.5 relative z-10">
+            <img id="todayRisingIcon" src="" class="w-8 h-8 rounded-lg object-cover bg-slate-800 hidden shrink-0" alt="">
+            <div id="todayRisingTop" class="text-[14px] font-bold truncate text-slate-100">-</div>
+          </div>
+        </div>
+        <div class="flex items-center justify-between text-[11px] mt-3 pt-2 border-t border-slate-800/80 relative z-10">
+          <span id="todayRisingMeta" class="truncate muted">-</span>
+          <span id="todayRisingScore" class="shrink-0 ml-1"></span>
+        </div>
+      </div>
+
+      <!-- 매출 점유 1위 장르 KPI 요약 -->
+      <div class="card rounded-xl p-4 relative overflow-hidden flex flex-col justify-between">
+        <i class="fa-solid fa-crown text-amber-400/10 text-4xl absolute -bottom-2 -right-2 pointer-events-none"></i>
+        <div class="text-[11px] muted flex justify-between items-center relative z-10">
+          <span class="font-semibold text-amber-400">매출 1위 장르 점유</span>
+          <span id="todayGenreTopBadge" class="text-[10px] px-1.5 py-0.5 rounded bg-amber-400/10 text-amber-300 font-semibold border border-amber-400/20">TOP 1</span>
+        </div>
+        <div class="mt-2.5 relative z-10">
+          <div class="flex items-baseline gap-2">
+            <span id="todayGenreTopName" class="text-lg font-bold text-slate-100 truncate">-</span>
+            <span id="todayGenreTopPct" class="text-2xl font-black text-amber-300">-</span>
+          </div>
+        </div>
+        <div class="text-[11px] muted mt-3 pt-2 border-t border-slate-800/80 relative z-10 truncate" id="todayGenreTopDesc">
+          매출 TOP100 기준
         </div>
       </div>
     </div>
   </section>
 
-  <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-    <div class="card rounded-xl p-5">
-      <h3 class="font-semibold text-sm mb-3"><i class="fa-solid fa-fire mr-1.5 text-emerald-400"></i>일간 인기순위 TOP 10</h3>
-      <ol id="popularTop10List" class="divide-y divide-slate-900/70"></ol>
+  <!-- 섹션 2: 일간 TOP 10 -->
+  <section>
+    <div class="flex items-center justify-between mb-3 px-0.5">
+      <h2 class="text-base font-bold text-slate-200 flex items-center gap-2">
+        <i class="fa-solid fa-ranking-star text-indigo-400"></i>일간 순위 TOP 10
+      </h2>
     </div>
-    <div class="card rounded-xl p-5">
-      <h3 class="font-semibold text-sm mb-3"><i class="fa-solid fa-coins mr-1.5 text-indigo-400"></i>일간 매출순위 TOP 10</h3>
-      <ol id="salesTop10List" class="divide-y divide-slate-900/70"></ol>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div class="card rounded-xl p-5">
+        <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-800/80">
+          <h3 class="font-semibold text-sm flex items-center gap-1.5 text-emerald-400">
+            <i class="fa-solid fa-fire"></i> 인기순위 TOP 10
+          </h3>
+          <span class="text-[10px] muted">Google Play 인기</span>
+        </div>
+        <ol id="popularTop10List" class="divide-y divide-slate-900/70"></ol>
+      </div>
+      <div class="card rounded-xl p-5">
+        <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-800/80">
+          <h3 class="font-semibold text-sm flex items-center gap-1.5 text-indigo-400">
+            <i class="fa-solid fa-coins"></i> 매출순위 TOP 10
+          </h3>
+          <span class="text-[10px] muted">Google Play 매출</span>
+        </div>
+        <ol id="salesTop10List" class="divide-y divide-slate-900/70"></ol>
+      </div>
     </div>
   </section>
 
+  <!-- 섹션 3: 오늘의 순위 변동 -->
   <section class="space-y-3">
-    <h2 class="font-semibold text-base px-1">오늘의 순위 변동</h2>
+    <div class="flex items-center justify-between mb-1 px-0.5">
+      <h2 class="text-base font-bold text-slate-200 flex items-center gap-2">
+        <i class="fa-solid fa-arrow-trend-up text-indigo-400"></i>오늘의 순위 변동
+      </h2>
+    </div>
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
       <div class="card rounded-xl p-5">
-        <div class="text-xs font-semibold mb-3 flex items-center gap-1.5 text-sky-400 pb-2 border-b border-slate-800">
-          <span class="w-2 h-2 rounded-full bg-sky-400"></span>인기순위 신규 진입
+        <div class="text-xs font-semibold mb-3 flex items-center justify-between text-sky-400 pb-2 border-b border-slate-800">
+          <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-sky-400"></span>인기순위 신규 진입</span>
+          <span class="text-[10px] muted font-normal">인기 순위 기준</span>
         </div>
         <ul id="newEntriesList" class="divide-y divide-slate-900/70"></ul>
       </div>
       <div class="card rounded-xl p-5">
-        <div class="text-xs font-semibold mb-3 flex items-center gap-1.5 text-emerald-400 pb-2 border-b border-slate-800">
-          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>매출 급상승
+        <div class="text-xs font-semibold mb-3 flex items-center justify-between text-emerald-400 pb-2 border-b border-slate-800">
+          <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400"></span>매출 급상승</span>
+          <span class="text-[10px] muted font-normal">전일 대비 매출</span>
         </div>
         <ul id="salesRisingList" class="divide-y divide-slate-900/70"></ul>
       </div>
       <div class="card rounded-xl p-5">
-        <div class="text-xs font-semibold mb-3 flex items-center gap-1.5 text-rose-400 pb-2 border-b border-slate-800">
-          <span class="w-2 h-2 rounded-full bg-rose-400"></span>매출 급하락
+        <div class="text-xs font-semibold mb-3 flex items-center justify-between text-rose-400 pb-2 border-b border-slate-800">
+          <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-rose-400"></span>매출 급하락</span>
+          <span class="text-[10px] muted font-normal">전일 대비 매출</span>
         </div>
         <ul id="salesFallingList" class="divide-y divide-slate-900/70"></ul>
       </div>
     </div>
   </section>
 
-  <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-    <div class="card rounded-xl p-5">
-      <h3 class="font-semibold text-sm mb-3">TOP100 장르 비중 (인기순)</h3>
-      <div id="popularGenreBars"></div>
+  <!-- 섹션 4: TOP100 장르 점유율 -->
+  <section>
+    <div class="flex items-center justify-between mb-3 px-0.5">
+      <h2 class="text-base font-bold text-slate-200 flex items-center gap-2">
+        <i class="fa-solid fa-chart-pie text-indigo-400"></i>TOP 100 장르 점유율
+      </h2>
+      <span class="text-[11px] muted">전체 100% 기준 비례 막대 (동일 장르 고정 색상)</span>
     </div>
-    <div class="card rounded-xl p-5">
-      <h3 class="font-semibold text-sm mb-3">TOP100 장르 비중 (매출순)</h3>
-      <div id="salesGenreBars"></div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div class="card rounded-xl p-5 flex flex-col justify-between min-h-[420px]">
+        <div>
+          <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-800/80">
+            <h3 class="font-semibold text-sm text-slate-200">인기순위 TOP 100 장르 비중</h3>
+            <span class="text-[10px] text-emerald-400 font-semibold">인기 기준</span>
+          </div>
+          <div id="popularGenreBars"></div>
+        </div>
+      </div>
+      <div class="card rounded-xl p-5 flex flex-col justify-between min-h-[420px]">
+        <div>
+          <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-800/80">
+            <h3 class="font-semibold text-sm text-slate-200">매출순위 TOP 100 장르 비중</h3>
+            <span class="text-[10px] text-indigo-400 font-semibold">매출 기준</span>
+          </div>
+          <div id="salesGenreBars"></div>
+        </div>
+      </div>
     </div>
   </section>
 </div>
@@ -506,7 +574,7 @@ select option { background-color: #0f172a; color: #f1f5f9; }
   </div>
 </div>
 
-<!-- SEARCH VIEW (수정됨: 조회 기준일 제거, 기간 옵션 확장) -->
+<!-- SEARCH VIEW -->
 <div id="view-search" class="hidden space-y-5">
   <section class="card rounded-xl p-5">
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
@@ -672,7 +740,7 @@ const SPREADSHEET_ID = '1CW7Xr3eWBUKBPC0DXRDsqqrx2itUlzZfXPVF2hUoMAw';
 const SHEETS = { sales:'DB_매출순위', popular:'DB_인기순위', newReleases:'월간신작DB' };
 const rawStore = {sales:null,popular:null,newReleases:null};
 let currentView='dashboard';
-let todayGenreDonutInst = null;
+
 let bizSalesGenreTrendInst = null;
 let bizPopularGenreTrendInst = null;
 let bizEntryPatternInst = null;
@@ -694,6 +762,17 @@ const availableDatesCache = { sales: null, popular: null, newReleases: null };
 const monthFetchInFlight = {};
 
 let searchDebounceTimer = null;
+
+/* 공통 장르 고정 색상 팔레트 */
+const BIZ_GENRE_COLORS={'롤플레잉':'#f87171','RPG':'#f87171','전략':'#818cf8','퍼즐':'#34d399','어드벤처':'#38bdf8','카지노':'#fbbf24','스포츠':'#a78bfa','카드':'#fb7185','액션':'#22d3ee','시뮬레이션':'#facc15','보드':'#4ade80','기타':'#64748b','미분류':'#475569'};
+const BIZ_GENRE_FALLBACK_PALETTE=['#818cf8','#34d399','#38bdf8','#fbbf24','#a78bfa','#fb7185','#22d3ee','#facc15','#4ade80','#f472b6'];
+function bizIsMiscGenre(g){ return g==='기타'||g==='미분류'||g.includes('기타'); }
+function bizGenreColor(g){
+  if(BIZ_GENRE_COLORS[g]) return BIZ_GENRE_COLORS[g];
+  if(bizIsMiscGenre(g)) return '#64748b';
+  let hash=0; for(let i=0;i<g.length;i++){hash=(hash*31+g.charCodeAt(i))>>>0;}
+  return BIZ_GENRE_FALLBACK_PALETTE[hash%BIZ_GENRE_FALLBACK_PALETTE.length];
+}
 
 function pad2(n){ return String(n).padStart(2,'0'); }
 function ymKey(y,m){ return `${y}-${pad2(m)}`; }
@@ -942,6 +1021,7 @@ function rankOf(row) {
   return Number.isFinite(n) && n > 0 ? n : null;
 }
 
+/* 평점 정규화: 항상 소수점 1자리(예: 4.0)로 일관되게 출력 */
 function scoreOf(row) {
   if(!row) return '-';
   const rDate = rowDate(row);
@@ -949,9 +1029,9 @@ function scoreOf(row) {
   let val = row[8], str = String(val ?? '').trim(), num = parseFloat(str);
   if (!isNaN(num) && (num > 5 || num < 0)) {
     let fallbackVal = row[7], fallbackNum = parseFloat(String(fallbackVal ?? '').trim());
-    return (!isNaN(fallbackNum) && fallbackNum >= 0 && fallbackNum <= 5) ? String(fallbackVal).trim() : '-';
+    return (!isNaN(fallbackNum) && fallbackNum >= 0 && fallbackNum <= 5) ? fallbackNum.toFixed(1) : '-';
   }
-  return (str && str !== '-' && str !== '0') ? str : '-';
+  return (!isNaN(num) && num >= 0 && num <= 5) ? num.toFixed(1) : ((str && str !== '-' && str !== '0') ? str : '-');
 }
 
 function setText(id,v){const el=document.getElementById(id); if(el)el.textContent=v;}
@@ -1038,7 +1118,7 @@ function buildSnapshotFallback(salesData, popData) {
     asOfDate: latest,
     popularTop10: popularTop30.slice(0, 10), salesTop10: salesTop30.slice(0, 10),
     popularTop30, salesTop30,
-    newEntries: popList.filter(x => prev && !prevPopMap.has(getGameKey(x.name))).slice(0, 10).map(x => ({...x, change: 'NEW'})),
+    newEntries: popList.filter(x => prev && !prevPopMap.has(getGameKey(x.name))).map(x => ({...x, change: 'NEW'})),
     salesRising: salesChanges.filter(x => x.diff > 0).sort((a,b) => b.diff - a.diff).slice(0, 10),
     salesFalling: salesChanges.filter(x => x.diff < 0).sort((a,b) => a.val - b.val ? a.diff - b.diff : 0).sort((a,b) => a.diff - b.diff).slice(0, 10),
     popularGenre: popularGenreProcessed, salesGenre: salesGenreProcessed
@@ -1070,13 +1150,22 @@ function getLatestScore(gameTitle) {
   return (sc && sc !== '-' && sc !== '0') ? sc : null;
 }
 
-function renderRankList(elId, items, {showMeta=true}={}) {
+/* 통일된 평점 뱃지 헬퍼 */
+function renderScoreBadgeHtml(scoreVal) {
+  if (!scoreVal || scoreVal === '-') return '';
+  return `<span class="text-amber-400 font-semibold text-[11px] flex items-center shrink-0 bg-amber-400/10 px-1.5 py-0.5 rounded border border-amber-400/20"><i class="fa-solid fa-star text-[9px] mr-1"></i>${escapeHtml(scoreVal)}</span>`;
+}
+
+/* 리스트 렌더링: 순위 강조, 라벨링(인기/매출 N위), 쉐브론 클릭 힌트, 메타정보 통일 */
+function renderRankList(elId, items, {showMeta=true, listType='normal'}={}) {
   const el = document.getElementById(elId);
-  if (!items || !items.length) { el.innerHTML = '<li class="text-xs muted py-2">데이터 없음</li>'; return; }
-  el.innerHTML = items.map(it => {
-    const scoreVal = it.score || getLatestScore(it.name);
-    const scoreBadge = (scoreVal && scoreVal !== '-')
-      ? `<span class="text-amber-400 font-semibold text-[11px] flex items-center shrink-0 bg-amber-400/10 px-1.5 py-0.5 rounded border border-amber-400/20"><i class="fa-solid fa-star text-[9px] mr-1"></i>${escapeHtml(scoreVal)}</span>` : '';
+  if (!items || !items.length) { el.innerHTML = '<li class="text-xs muted py-4 text-center">데이터 없음</li>'; return; }
+  
+  el.innerHTML = items.map((it, idx) => {
+    const rawScore = it.score || getLatestScore(it.name);
+    const scoreVal = (rawScore && !isNaN(parseFloat(rawScore))) ? parseFloat(rawScore).toFixed(1) : rawScore;
+    const scoreBadge = renderScoreBadgeHtml(scoreVal);
+    
     let displayChange = it.change;
     if (elId === 'newEntriesList' && (!displayChange || displayChange === '-' || displayChange === '0')) displayChange = 'NEW';
 
@@ -1085,35 +1174,76 @@ function renderRankList(elId, items, {showMeta=true}={}) {
       ? `<img src="${iconUrl}" class="w-6 h-6 rounded-md object-cover bg-slate-800 shrink-0" alt="" onerror="this.style.display='none'">`
       : '';
 
+    /* 순위 시각적 위계 및 라벨링 */
+    let rankBadgeHtml = '';
+    if (listType === 'top10') {
+      const rankNum = idx + 1;
+      let rankColor = 'text-slate-400';
+      if (rankNum === 1) rankColor = 'text-amber-400 font-black text-sm';
+      else if (rankNum === 2) rankColor = 'text-slate-300 font-bold text-sm';
+      else if (rankNum === 3) rankColor = 'text-amber-600 font-bold text-sm';
+      else rankColor = 'text-slate-400 font-semibold text-xs';
+      rankBadgeHtml = `<span class="${rankColor} w-5 text-right shrink-0">${rankNum}</span>`;
+    } else if (listType === 'newPop') {
+      rankBadgeHtml = `<span class="text-[10px] font-semibold text-sky-400 bg-sky-500/10 px-1.5 py-0.5 rounded border border-sky-500/20 whitespace-nowrap shrink-0">인기 ${it.rank}위</span>`;
+    } else if (listType === 'risingSales') {
+      rankBadgeHtml = `<span class="text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 whitespace-nowrap shrink-0">매출 ${it.rank}위</span>`;
+    } else if (listType === 'fallingSales') {
+      rankBadgeHtml = `<span class="text-[10px] font-semibold text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20 whitespace-nowrap shrink-0">매출 ${it.rank}위</span>`;
+    } else {
+      rankBadgeHtml = `<span class="text-[11px] muted w-5 text-right shrink-0">${escapeHtml(it.rank)}</span>`;
+    }
+
     return `
-      <li class="flex items-center justify-between gap-2 py-2 border-b border-slate-900/70 last:border-0 hover:bg-slate-800/30 cursor-pointer rounded px-1.5 transition-colors" onclick="openGameDetail('${escapeAttr(it.name).replace(/&#039;/g,"\\'")}')">
+      <li class="group flex items-center justify-between gap-2 py-2 border-b border-slate-900/70 last:border-0 hover:bg-slate-800/40 cursor-pointer rounded-lg px-2 transition-colors" onclick="openGameDetail('${escapeAttr(it.name).replace(/&#039;/g,"\\'")}')">
         <div class="flex items-center gap-2.5 min-w-0 flex-1">
-          <span class="text-[11px] muted w-5 text-right shrink-0">${escapeHtml(it.rank)}</span>
+          ${rankBadgeHtml}
           ${iconHtml}
           <div class="min-w-0 flex-1">
-            <div class="text-xs font-medium truncate">${escapeHtml(it.name)}</div>
-            ${showMeta && (it.genre || it.publisher) ? `<div class="text-[10px] muted truncate">${escapeHtml(it.genre || '')}${it.genre && it.publisher ? ' · ' : ''}${escapeHtml(it.publisher || '')}</div>` : ''}
+            <div class="text-xs font-medium truncate text-slate-200 group-hover:text-indigo-300 transition-colors">${escapeHtml(it.name)}</div>
+            ${showMeta ? `<div class="text-[10px] muted truncate mt-0.5">${escapeHtml(it.genre || '-')}${it.genre && it.publisher ? ' · ' : ''}${escapeHtml(it.publisher || '-')}</div>` : ''}
           </div>
         </div>
         <div class="flex items-center gap-2 shrink-0">
           ${scoreBadge}
-          <div class="w-12 text-right flex justify-end">${rankChangeBadge(displayChange)}</div>
+          <div class="w-14 text-right flex justify-end">${rankChangeBadge(displayChange)}</div>
+          <i class="fa-solid fa-chevron-right text-[9px] text-slate-600 group-hover:text-slate-300 transition-colors ml-0.5"></i>
         </div>
       </li>`;
   }).join('');
 }
 
+/* 정직한 비례 막대 그래프: 전체 100% 기준 % 길이 및 고정 장르 색상 적용 */
 function renderGenreBars(elId, arr) {
   const el = document.getElementById(elId);
-  if (!arr || !arr.length) { el.innerHTML = '<div class="text-xs muted py-2">데이터 없음</div>'; return; }
-  const max = Math.max(...arr.map(a => a.count), 1);
+  if (!arr || !arr.length) { el.innerHTML = '<div class="text-xs muted py-4 text-center">데이터 없음</div>'; return; }
+  
   const totalCount = arr.reduce((sum, a) => sum + a.count, 0) || 1;
+  const TOP_COUNT = 9;
+  const topList = arr.slice(0, TOP_COUNT);
+  const remainingList = arr.slice(TOP_COUNT);
 
-  const topColors = ['#34d399', '#818cf8', '#38bdf8'];
+  const displayList = topList.map(a => ({
+    genre: a.genre,
+    count: a.count,
+    trendDiff: a.trendDiff,
+    percent: ((a.count / totalCount) * 100).toFixed(1)
+  }));
 
-  el.innerHTML = arr.map((a, idx) => {
-    const percent = ((a.count / totalCount) * 100).toFixed(1);
-    const barColor = idx < 3 ? topColors[idx] : '#475569';
+  if (remainingList.length > 0) {
+    const remCount = remainingList.reduce((s, x) => s + x.count, 0);
+    const remTrend = remainingList.reduce((s, x) => s + (x.trendDiff || 0), 0);
+    displayList.push({
+      genre: `기타 (${remainingList.length}개 장르)`,
+      count: remCount,
+      trendDiff: remTrend,
+      percent: ((remCount / totalCount) * 100).toFixed(1),
+      isMisc: true
+    });
+  }
+
+  el.innerHTML = displayList.map(a => {
+    const barColor = a.isMisc ? '#64748b' : bizGenreColor(a.genre);
 
     let trendBadge = '';
     if (a.trendDiff > 0) {
@@ -1124,12 +1254,15 @@ function renderGenreBars(elId, arr) {
 
     return `
       <div class="flex items-center gap-2 py-1.5">
-        <span class="text-[11px] w-20 shrink-0 truncate text-slate-200 font-medium">${escapeHtml(a.genre)}</span>
-        <div class="flex-1 h-2.5 bg-slate-800/80 rounded-full overflow-hidden p-0.5">
-          <div class="h-full rounded-full transition-all duration-500" style="width:${(a.count / max * 100).toFixed(0)}%; background:${barColor};"></div>
+        <span class="text-[11px] w-28 shrink-0 truncate text-slate-200 font-medium flex items-center gap-1.5">
+          <span class="inline-block w-2 h-2 rounded-full shrink-0" style="background:${barColor}"></span>
+          <span class="truncate">${escapeHtml(a.genre)}</span>
+        </span>
+        <div class="flex-1 h-2 bg-slate-800/90 rounded-full overflow-hidden p-0.5">
+          <div class="h-full rounded-full transition-all duration-500" style="width:${a.percent}%; background:${barColor};"></div>
         </div>
-        <div class="flex items-center justify-end w-20 shrink-0 text-[11px]">
-          <span class="font-bold text-slate-100 mr-1.5">${a.count}<span class="text-[9px] muted font-normal ml-0.5">(${percent}%)</span></span>
+        <div class="flex items-center justify-end w-24 shrink-0 text-[11px]">
+          <span class="font-bold text-slate-100 mr-1">${a.count}개<span class="text-[9.5px] muted font-normal ml-1">(${a.percent}%)</span></span>
           ${trendBadge}
         </div>
       </div>`;
@@ -1141,7 +1274,7 @@ function renderToday(){
   if(!p) return;
   const displayDate = p.asOfDate || latestDate(rawStore.sales) || new Date().toISOString().slice(0, 10);
   setText('todayLabel', `Today · ${displayDate}`);
-  setText('snapshotDate', `기준일: ${displayDate}`);
+  setText('snapshotDate', displayDate);
 
   const freezeWarningEl = document.getElementById('freezeWarning'), freezeWarningText = document.getElementById('freezeWarningText');
   if (freezeWarningEl && freezeWarningText) {
@@ -1158,7 +1291,8 @@ function renderToday(){
     }
   }
 
-  const bindTopCard = (item, prefix) => {
+  /* KPI 카드 바인딩 (보조정보·평점배지 일관성) */
+  const bindTopCard = (item, prefix, customBadge=null) => {
     const topEl = document.getElementById(`today${prefix}Top`);
     const metaEl = document.getElementById(`today${prefix}Meta`);
     const iconEl = document.getElementById(`today${prefix}Icon`);
@@ -1170,15 +1304,18 @@ function renderToday(){
       if(topEl) topEl.textContent = '-';
       if(metaEl) metaEl.textContent = '-';
       if(iconEl) iconEl.classList.add('hidden');
+      if(changeEl) changeEl.textContent = '-';
+      if(scoreEl) scoreEl.innerHTML = '';
       return;
     }
 
     if(topEl) topEl.textContent = item.name;
     if(metaEl) metaEl.textContent = `${item.genre || '-'} · ${item.publisher || '-'}`;
-    if(changeEl) changeEl.innerHTML = rankChangeBadge(item.change);
+    if(changeEl) changeEl.innerHTML = customBadge || rankChangeBadge(item.change);
 
-    const scoreVal = getLatestScore(item.name);
-    if(scoreEl) scoreEl.innerHTML = scoreVal ? `<i class="fa-solid fa-star text-[10px] mr-0.5"></i>${scoreVal}` : '';
+    const rawSc = item.score || getLatestScore(item.name);
+    const formattedScore = (rawSc && !isNaN(parseFloat(rawSc))) ? parseFloat(rawSc).toFixed(1) : rawSc;
+    if(scoreEl) scoreEl.innerHTML = renderScoreBadgeHtml(formattedScore);
 
     const iconUrl = item.iconUrl || getIconUrlForGame(item.name);
     if (iconEl) {
@@ -1195,31 +1332,39 @@ function renderToday(){
 
   bindTopCard(p.popularTop10[0], 'Popular');
   bindTopCard(p.salesTop10[0], 'Sales');
-  bindTopCard(p.newEntries[0], 'New');
-  if (p.newEntries[0]) document.getElementById('todayNewMeta').textContent = `현재 ${p.newEntries[0].rank}위 (최고 진입)`;
 
-  bindTopCard(p.salesRising[0], 'Rising');
-  if (p.salesRising[0]) document.getElementById('todayRisingMeta').textContent = `현재 ${p.salesRising[0].rank}위`;
+  /* 신규 진입 게임 중복 방지 (인기 1위와 같을 경우 2순위 후보 폴백) */
+  const pop1Name = p.popularTop10[0]?.name;
+  let newCandidate = p.newEntries.find(x => x.name !== pop1Name) || p.newEntries[0];
+  const newRankBadge = newCandidate ? `<span class="text-[10px] px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-300 font-semibold border border-sky-500/20 whitespace-nowrap">인기 ${newCandidate.rank}위</span>` : null;
+  bindTopCard(newCandidate, 'New', newRankBadge);
 
-  if(todayGenreDonutInst) todayGenreDonutInst.destroy();
-  const top3Genres = p.salesGenre.slice(0, 3), totalCount = p.salesGenre.reduce((sum, g) => sum + g.count, 0), donutColors = ['#fbbf24', '#34d399', '#818cf8'];
-  if(top3Genres.length > 0) {
-    todayGenreDonutInst = new Chart(document.getElementById('todayGenreDonut').getContext('2d'), {
-      type: 'doughnut', data: { labels: top3Genres.map(g => g.genre), datasets: [{ data: top3Genres.map(g => g.count), backgroundColor: donutColors, borderWidth: 0, hoverOffset: 2 }] },
-      options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { display: false }, tooltip: { enabled: false } }, layout: { padding: 0 } }
-    });
-    document.getElementById('todayGenreLegend').innerHTML = top3Genres.map((g, i) => `<div class="truncate flex items-center text-slate-300"><span class="w-1.5 h-1.5 inline-block rounded-full mr-1.5 shrink-0" style="background:${donutColors[i]}"></span><span class="truncate">${g.genre} ${(totalCount > 0 ? ((g.count / totalCount) * 100).toFixed(0) : 0)}%</span></div>`).join('');
-  } else {
-    document.getElementById('todayGenreLegend').innerHTML = '<div class="muted">데이터 없음</div>';
+  /* 최고 상승 카드: 구체적 랭크 표기 */
+  const risingItem = p.salesRising[0];
+  const risingBadge = risingItem ? `<span class="text-[10px] px-1.5 py-0.5 rounded bg-rose-500/10 text-rose-300 font-semibold border border-rose-500/20 whitespace-nowrap">▲${risingItem.diff} (${risingItem.rank}위)</span>` : null;
+  bindTopCard(risingItem, 'Rising', risingBadge);
+
+  /* 장르 점유 1위 KPI 요약 바인딩 */
+  const topGenre = p.salesGenre[0];
+  const totalSalesCount = p.salesGenre.reduce((s, g) => s + g.count, 0) || 100;
+  if (topGenre) {
+    const topGenrePct = ((topGenre.count / totalSalesCount) * 100).toFixed(1);
+    setText('todayGenreTopName', topGenre.genre);
+    setText('todayGenreTopPct', `${topGenrePct}%`);
+    setText('todayGenreTopDesc', `매출 TOP100 중 ${topGenre.count}개 타이틀`);
+    const nameEl = document.getElementById('todayGenreTopName');
+    if (nameEl) nameEl.style.color = bizGenreColor(topGenre.genre);
   }
 
-  renderRankList('popularTop10List',p.popularTop10,{showMeta:true});
-  renderRankList('salesTop10List',p.salesTop10,{showMeta:true});
-  renderRankList('newEntriesList',p.newEntries,{showMeta:true});
-  renderRankList('salesRisingList',p.salesRising,{showMeta:false});
-  renderRankList('salesFallingList',p.salesFalling,{showMeta:false});
-  renderGenreBars('popularGenreBars',p.popularGenre);
-  renderGenreBars('salesGenreBars',p.salesGenre);
+  /* 리스트 렌더링: 정보량(showMeta: true) 통일 & 오독 방지 라벨링 적용 */
+  renderRankList('popularTop10List', p.popularTop10, {showMeta:true, listType:'top10'});
+  renderRankList('salesTop10List', p.salesTop10, {showMeta:true, listType:'top10'});
+  renderRankList('newEntriesList', p.newEntries.slice(0, 10), {showMeta:true, listType:'newPop'});
+  renderRankList('salesRisingList', p.salesRising, {showMeta:true, listType:'risingSales'});
+  renderRankList('salesFallingList', p.salesFalling, {showMeta:true, listType:'fallingSales'});
+
+  renderGenreBars('popularGenreBars', p.popularGenre);
+  renderGenreBars('salesGenreBars', p.salesGenre);
 }
 
 function switchView(view){
@@ -1459,7 +1604,6 @@ function getTopTitlesSafe(data, n=3) {
 
 let searchPopularChartInst=null, searchSalesChartInst=null, detailChartInst=null, detailScoreChartInst=null;
 
-// [성능 최적화] O(1) Map 기반 탐색으로 차트 데이터 생성 속도 대폭 개선
 function drawChartShared(canvasId, prevInst, data, titles, colors, baseDate, duration, padding=15) {
   if(!data || !data.rows) return prevInst;
   const canvasEl = document.getElementById(canvasId);
@@ -1475,7 +1619,6 @@ function drawChartShared(canvasId, prevInst, data, titles, colors, baseDate, dur
   const rankMapByGame = new Map();
   targetKeySet.forEach(k => rankMapByGame.set(k, new Map()));
 
-  // 단 1회 순회로 조회 맵 생성 (기존 Array.find 반복 완전 제거)
   for (let i = 0; i < data.rows.length; i++) {
     const r = data.rows[i];
     const k = getGameKey(r);
@@ -1517,7 +1660,6 @@ function drawChartShared(canvasId, prevInst, data, titles, colors, baseDate, dur
   });
 }
 
-// [성능 최적화] 디바운싱: 타이핑 멈추고 300ms 후에만 차트 렌더링 1회 실행
 function debouncedRenderSearchCharts(){
   if(searchDebounceTimer) clearTimeout(searchDebounceTimer);
   searchDebounceTimer = setTimeout(() => {
@@ -1536,7 +1678,6 @@ function renderSearchCharts(){
   document.getElementById('searchSalesWrap').classList.toggle('hidden',!showSales);
   const colors=['#818cf8', '#fbbf24', '#34d399', '#f87171', '#60a5fa', '#a78bfa', '#f472b6', '#2dd4bf', '#fb923c', '#94a3b8'];
 
-  // [기본 동작 유지] 검색어가 비어있을 때는 오늘자 기준 TOP 3를 기본 표시
   const popTitles = titles.length > 0 ? titles : getTopTitlesSafe(rawStore.popular, 3);
   const salesTitles = titles.length > 0 ? titles : getTopTitlesSafe(rawStore.sales, 3);
 
@@ -1544,7 +1685,6 @@ function renderSearchCharts(){
   if(showSales) searchSalesChartInst=drawChartShared('searchSalesChart',searchSalesChartInst,rawStore.sales,salesTitles,colors, baseDate, duration);
 }
 
-// [온디맨드 로딩] 최신일 기준으로 선택된 기간(N일)만큼의 월 데이터 목록 계산
 function computeSearchNeededMonths(){
   const duration = parseInt(document.getElementById('searchDuration')?.value || '15', 10);
   const latest = latestDate(rawStore.sales) || latestDate(rawStore.popular) || new Date().toISOString().slice(0, 10);
@@ -1559,7 +1699,6 @@ function computeSearchNeededMonths(){
   return [...months].map(k => { const [yy, mm] = k.split('-'); return { y: Number(yy), m: Number(mm) }; });
 }
 
-// 60일/90일 선택 시 필요한 과거 월 데이터를 병렬로 로드한 뒤 렌더링
 async function ensureSearchRangeLoaded(){
   const months = computeSearchNeededMonths();
   if(months.length){
@@ -1937,15 +2076,6 @@ function bizSetTag(id, tagInfo){
   el.className=`text-[10px] font-semibold ${tagInfo[1]}`;
 }
 
-const BIZ_GENRE_COLORS={'롤플레잉':'#f87171','RPG':'#f87171','전략':'#818cf8','퍼즐':'#34d399','어드벤처':'#38bdf8','카지노':'#fbbf24','스포츠':'#a78bfa','카드':'#fb7185','액션':'#22d3ee','시뮬레이션':'#facc15','보드':'#4ade80','기타':'#64748b','미분류':'#475569'};
-const BIZ_GENRE_FALLBACK_PALETTE=['#818cf8','#34d399','#38bdf8','#fbbf24','#a78bfa','#fb7185','#22d3ee','#facc15','#4ade80','#f472b6'];
-function bizIsMiscGenre(g){return g==='기타'||g==='미분류';}
-function bizGenreColor(g){
-  if(BIZ_GENRE_COLORS[g]) return BIZ_GENRE_COLORS[g];
-  if(bizIsMiscGenre(g)) return '#64748b';
-  let hash=0; for(let i=0;i<g.length;i++){hash=(hash*31+g.charCodeAt(i))>>>0;}
-  return BIZ_GENRE_FALLBACK_PALETTE[hash%BIZ_GENRE_FALLBACK_PALETTE.length];
-}
 function bizRenderGenreChart(data, canvasId, instName){
   const dates=bizDateWindow(15), series=new Map();
   dates.forEach(d=>{
