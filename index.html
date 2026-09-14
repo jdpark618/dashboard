@@ -418,7 +418,6 @@ select option { background-color: #0f172a; color: #f1f5f9; }
     </div>
   </section>
 
-  <!-- 변경된 영역: 생명력/잔존 (좌 3) + 퍼블리셔 도넛차트 (우 2) -->
   <section class="grid grid-cols-1 lg:grid-cols-5 gap-4">
     <div class="card rounded-xl p-5 lg:col-span-3 flex flex-col">
       <div class="flex items-center justify-between mb-3">
@@ -447,7 +446,6 @@ select option { background-color: #0f172a; color: #f1f5f9; }
 
 <!-- CALENDAR VIEW -->
 <div id="view-calendar" class="hidden space-y-3">
-  <!-- 1행: 월 네비 + 지표 + 필터 토글 -->
   <div class="flex flex-col xl:flex-row gap-3 items-start xl:items-center justify-between">
     <div class="flex items-center gap-3">
       <button onclick="changeCalMonth(-1)" class="cal-navbtn" aria-label="이전 달"><i class="fa-solid fa-chevron-left"></i></button>
@@ -471,7 +469,6 @@ select option { background-color: #0f172a; color: #f1f5f9; }
     </div>
   </div>
 
-  <!-- 2행: 범례 + 칸당 표시 개수 -->
   <div class="card rounded-xl px-4 py-2.5 flex flex-wrap items-center justify-between gap-x-5 gap-y-2">
     <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
       <span class="cal-lg"><i style="background:#22c55e"></i>OPEN</span>
@@ -493,7 +490,6 @@ select option { background-color: #0f172a; color: #f1f5f9; }
     </div>
   </div>
 
-  <!-- 3행: 물량 레일 + 달력 -->
   <div class="cal-wrap">
     <aside class="cal-rail">
       <div class="card rounded-xl p-3.5">
@@ -510,7 +506,7 @@ select option { background-color: #0f172a; color: #f1f5f9; }
   </div>
 </div>
 
-<!-- SEARCH VIEW -->
+<!-- SEARCH VIEW (수정됨: 조회 기준일 제거, 기간 옵션 확장) -->
 <div id="view-search" class="hidden space-y-5">
   <section class="card rounded-xl p-5">
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
@@ -519,16 +515,14 @@ select option { background-color: #0f172a; color: #f1f5f9; }
         <p class="text-xs muted mt-1">게임명을 검색해 인기·매출 순위 추이를 확인하고 비교할 수 있습니다.</p>
       </div>
       <div class="flex flex-wrap items-center gap-3">
-        <div class="flex items-center gap-1.5 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs">
-          <span class="text-slate-400 font-medium mr-1"><i class="fa-regular fa-calendar mr-1"></i>조회 기준일</span>
-          <select id="searchYear" onchange="onSearchYearChange()" class="bg-transparent text-slate-200 outline-none cursor-pointer"></select>
-          <select id="searchMonth" onchange="onSearchMonthChange()" class="bg-transparent text-slate-200 outline-none cursor-pointer"></select>
-          <select id="searchDay" onchange="ensureSearchRangeLoaded()" class="bg-transparent text-slate-200 outline-none cursor-pointer"></select>
-          <span class="text-slate-400 font-medium ml-3 border-l border-slate-700 pl-3">기간</span>
+        <div class="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs">
+          <span class="text-slate-400 font-medium"><i class="fa-regular fa-calendar mr-1.5"></i>조회 기간</span>
           <select id="searchDuration" onchange="ensureSearchRangeLoaded()" class="bg-transparent text-slate-200 outline-none cursor-pointer">
-            <option value="7">7일</option>
-            <option value="15" selected>15일</option>
-            <option value="30">30일</option>
+            <option value="7">최근 7일</option>
+            <option value="15" selected>최근 15일</option>
+            <option value="30">최근 30일</option>
+            <option value="60">최근 60일</option>
+            <option value="90">최근 90일</option>
           </select>
         </div>
         <label class="flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 cursor-pointer">
@@ -541,9 +535,9 @@ select option { background-color: #0f172a; color: #f1f5f9; }
     </div>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-5">
       <input id="searchTitle1" list="gameNameOptions" placeholder="게임 1 검색"
-        class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-indigo-500" oninput="renderSearchCharts()">
+        class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-indigo-500" oninput="debouncedRenderSearchCharts()">
       <input id="searchTitle2" list="gameNameOptions" placeholder="게임 2 검색 (비교, 선택)"
-        class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-indigo-500" oninput="renderSearchCharts()">
+        class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-indigo-500" oninput="debouncedRenderSearchCharts()">
       <datalist id="gameNameOptions"></datalist>
     </div>
     <div id="searchPopularWrap" class="mb-6">
@@ -689,26 +683,17 @@ let bizLastEntries = [];
 let currentCalYear = new Date().getFullYear();
 let currentCalMonth = new Date().getMonth() + 1;
 
-// [성능 최적화] 게임별 아이콘/평점 조회용 인덱스.
-// 기존에는 아이콘/평점을 조회할 때마다 매출·인기 DB 전체 행을 복사&정렬/스캔했는데,
-// 이 DB는 매일 행이 누적되는 구조라 데이터가 쌓일수록 화면 렌더링 시 이 작업이 반복 호출되며 점점 느려졌음.
-// fetch 직후 딱 1회만 Map을 만들어두고, 화면에서는 O(1) 조회만 하도록 변경.
 let iconIndexPopular = new Map();
 let iconIndexSales = new Map();
 let salesLatestMap = new Map();
 let popularLatestMap = new Map();
 
-// [온디맨드 로딩] 기본 화면은 "오늘 기준" 최소 범위만 불러오고,
-// 사용자가 DB탭 필터/순위검색/신작달력에서 다른 월을 조회할 때만 해당 월 데이터를 추가로 불러와 병합한다.
-// - 매출/인기 DB: 이번 달(캘린더 월) 전체 + 상세정보 패널의 "최근 15일" 차트가 항상 끊기지 않도록,
-//   오늘 기준 최근 15일 중 이번 달 1일보다 이른 날짜까지 시작점을 당겨서 함께 받아온다.
-//   (매달 15일 이후에는 이번 달치만으로 15일이 다 채워지므로 추가로 받는 게 없고, 1~14일 사이에만
-//   전월 며칠 치가 더 포함되는 정도 — 고정된 소량이라 데이터가 계속 쌓여서 느려지던 문제와는 무관함)
-// - 신작 DB: 이번 달 + 다음 달(캘린더 월 기준)
 const DETAIL_LOOKBACK_DAYS = 15;
 const loadedMonths = { sales: new Set(), popular: new Set(), newReleases: new Set() };
-const availableDatesCache = { sales: null, popular: null, newReleases: null }; // Set('YYYY-MM-DD') - 필터 드롭다운 구성용 (컬럼 A만 조회하는 가벼운 요청)
-const monthFetchInFlight = {}; // 동시에 같은 월을 중복 요청하지 않도록 하는 캐시: `${store}:${ym}` -> Promise
+const availableDatesCache = { sales: null, popular: null, newReleases: null };
+const monthFetchInFlight = {};
+
+let searchDebounceTimer = null;
 
 function pad2(n){ return String(n).padStart(2,'0'); }
 function ymKey(y,m){ return `${y}-${pad2(m)}`; }
@@ -746,8 +731,6 @@ function parseGviz(text){
   if(start<0||end<start)throw new Error('Google Sheets 응답을 읽을 수 없습니다.');
   const json=JSON.parse(text.slice(start,end+1));
   if(json.status === 'error'){
-    // WHERE 조건 쿼리가 컬럼 타입과 안 맞는 등의 이유로 거부된 경우. 여기서 명시적으로 던져야
-    // fetchSheetData의 '조건 없는 전체 재조회' 폴백이 정상적으로 발동한다(그냥 빈 결과로 조용히 넘어가지 않도록).
     const msg = (json.errors && json.errors[0] && (json.errors[0].detailed_message || json.errors[0].message)) || 'Google Sheets 쿼리 오류';
     throw new Error(msg);
   }
@@ -777,7 +760,6 @@ async function fetchSheetData(sheetName, headers=1, whereClause=''){
     return parseGviz(text);
   }catch(e){
     if(whereClause){
-      // 날짜 조건 쿼리 파싱이 실패하면(시트 컬럼 타입 이슈 등) 조건 없이 전체 조회로 한 번 더 시도해서 화면이 완전히 깨지는 것은 막는다
       console.warn(`${sheetName}: 조건부 조회 파싱 실패, 전체 조회로 재시도`, e);
       const res2=await fetch(buildUrl(''),{cache:'no-store'});
       if(!res2.ok)throw new Error(`${sheetName}: HTTP ${res2.status}`);
@@ -787,7 +769,6 @@ async function fetchSheetData(sheetName, headers=1, whereClause=''){
   }
 }
 
-// [온디맨드 로딩] 날짜 컬럼(A)만 가볍게 조회해서 필터 드롭다운(년/월) 구성에 필요한 '존재하는 날짜 목록'만 파악한다.
 function parseGvizDatesOnly(text){
   const start=text.indexOf('{'), end=text.lastIndexOf('}');
   if(start<0||end<start) throw new Error('날짜 목록 응답을 읽을 수 없습니다.');
@@ -826,7 +807,6 @@ async function getAvailableDates(storeKey){
   return availableDatesCache[storeKey];
 }
 
-// [온디맨드 로딩] 특정 게임/날짜 행의 '동일 건 식별' 키 (같은 날짜에 이미 로드된 행과 새로 받아온 행을 구분/중복제거하기 위함)
 function rowIdentityKey(storeKey, row){
   const d = rowDate(row);
   if(storeKey === 'newReleases'){
@@ -840,13 +820,12 @@ function mergeRowsIntoStore(storeKey, newRows){
   if(!store){ rawStore[storeKey] = { cols: [], rows: newRows }; return; }
   const map = new Map();
   store.rows.forEach(r => map.set(rowIdentityKey(storeKey, r), r));
-  newRows.forEach(r => map.set(rowIdentityKey(storeKey, r), r)); // 새로 받아온 데이터로 덮어씀(최신값 우선)
+  newRows.forEach(r => map.set(rowIdentityKey(storeKey, r), r));
   store.rows = Array.from(map.values());
 }
 
-// [온디맨드 로딩] 특정 (년,월)의 데이터가 아직 없으면 그 달치만 서버에 요청해서 rawStore에 병합한다.
 async function ensureMonthLoaded(storeKey, y, m){
-  if(storeKey === 'newReleases') return; // 신작DB는 초기 로딩 시 전체를 이미 불러와 두었으므로 추가 로드가 필요 없음
+  if(storeKey === 'newReleases') return;
   const key = ymKey(y,m);
   if(loadedMonths[storeKey].has(key)) return;
   const inFlightKey = `${storeKey}:${key}`;
@@ -892,7 +871,6 @@ function getDates(data){
 function latestDate(data){const ds=getDates(data);return ds[ds.length-1]||'';}
 
 function gameName(row) { return row ? String(row[3] || '').trim() || '-' : '-'; }
-function gameAppId(row) { return row ? String(row[4] || '').trim() : ''; }
 
 function getGameKey(rowOrName) {
   const name = typeof rowOrName === 'string' ? rowOrName : String(rowOrName?.[3] || '').trim();
@@ -908,7 +886,6 @@ function getIconUrlFromRow(row) {
   return '';
 }
 
-// [성능 최적화] 아이콘 인덱스 빌더: 데이터 전체를 1회 순회하며 게임별로 "아이콘이 있는 가장 최근 행"만 기록
 function buildIconIndex(data) {
   const map = new Map();
   if (!data || !data.rows) return map;
@@ -926,7 +903,6 @@ function buildIconIndex(data) {
   return map;
 }
 
-// [성능 최적화] 최신일자 스냅샷 인덱스 빌더 (평점 조회용)
 function buildLatestRowMap(data) {
   const map = new Map();
   if (!data || !data.rows) return map;
@@ -941,7 +917,6 @@ function buildLatestRowMap(data) {
   return map;
 }
 
-// [성능 최적화] fetch 후 딱 1번만 호출해서 위 인덱스들을 새로 생성
 function rebuildLookupIndices() {
   iconIndexPopular = buildIconIndex(rawStore.popular);
   iconIndexSales = buildIconIndex(rawStore.sales);
@@ -1261,7 +1236,6 @@ function switchView(view){
 }
 
 async function openSearchView(){
-  await setupSearchDateSelect();
   await ensureSearchRangeLoaded();
 }
 
@@ -1485,24 +1459,51 @@ function getTopTitlesSafe(data, n=3) {
 
 let searchPopularChartInst=null, searchSalesChartInst=null, detailChartInst=null, detailScoreChartInst=null;
 
+// [성능 최적화] O(1) Map 기반 탐색으로 차트 데이터 생성 속도 대폭 개선
 function drawChartShared(canvasId, prevInst, data, titles, colors, baseDate, duration, padding=15) {
   if(!data || !data.rows) return prevInst;
-  const ctx=document.getElementById(canvasId).getContext('2d');
+  const canvasEl = document.getElementById(canvasId);
+  if(!canvasEl) return prevInst;
+  const ctx = canvasEl.getContext('2d');
+  
   let allDates = getDates(data);
   if(baseDate) allDates = allDates.filter(d => d <= baseDate);
   const dates = allDates.slice(-duration);
 
-  const datasets=titles.filter(Boolean).map((t,i)=>({
-    label:t, clip:false,
-    data:dates.map(d=>{
-      const targetKey = getGameKey(t);
-      const row=data.rows.find(r=>rowDate(r)===d && getGameKey(r) === targetKey);
-      return row?rankOf(row):null;
-    }),
-    borderColor:colors[i%colors.length], backgroundColor:'transparent', borderWidth:2, pointRadius:2, tension:.25, spanGaps:true
-  }));
+  const validTitles = titles.filter(Boolean);
+  const targetKeySet = new Set(validTitles.map(t => getGameKey(t)));
+  const rankMapByGame = new Map();
+  targetKeySet.forEach(k => rankMapByGame.set(k, new Map()));
 
-  if(prevInst)prevInst.destroy();
+  // 단 1회 순회로 조회 맵 생성 (기존 Array.find 반복 완전 제거)
+  for (let i = 0; i < data.rows.length; i++) {
+    const r = data.rows[i];
+    const k = getGameKey(r);
+    if (targetKeySet.has(k)) {
+      const d = rowDate(r);
+      const rank = rankOf(r);
+      if (d && rank) {
+        rankMapByGame.get(k).set(d, rank);
+      }
+    }
+  }
+
+  const datasets = validTitles.map((t, i) => {
+    const k = getGameKey(t);
+    const dateRankMap = rankMapByGame.get(k);
+    return {
+      label: t, clip: false,
+      data: dates.map(d => dateRankMap ? (dateRankMap.get(d) ?? null) : null),
+      borderColor: colors[i % colors.length],
+      backgroundColor: 'transparent',
+      borderWidth: 2,
+      pointRadius: 2,
+      tension: .25,
+      spanGaps: true
+    };
+  });
+
+  if(prevInst) prevInst.destroy();
   return new Chart(ctx,{
     type:'line', data:{labels:dates,datasets},
     options:{
@@ -1516,82 +1517,49 @@ function drawChartShared(canvasId, prevInst, data, titles, colors, baseDate, dur
   });
 }
 
+// [성능 최적화] 디바운싱: 타이핑 멈추고 300ms 후에만 차트 렌더링 1회 실행
+function debouncedRenderSearchCharts(){
+  if(searchDebounceTimer) clearTimeout(searchDebounceTimer);
+  searchDebounceTimer = setTimeout(() => {
+    renderSearchCharts();
+  }, 300);
+}
+
 function renderSearchCharts(){
   if(!rawStore.sales&&!rawStore.popular)return;
   const t1=document.getElementById('searchTitle1').value.trim(), t2=document.getElementById('searchTitle2').value.trim(), titles=[t1,t2].filter(Boolean);
   const showPop=document.getElementById('toggleSearchPopular').checked, showSales=document.getElementById('toggleSearchSales').checked;
-  const y = document.getElementById('searchYear')?.value, m = document.getElementById('searchMonth')?.value, d = document.getElementById('searchDay')?.value;
-  const baseDate = (y && m && d) ? `${y}-${m}-${d.padStart(2,'0')}` : null, duration = parseInt(document.getElementById('searchDuration')?.value || '15', 10);
+  const duration = parseInt(document.getElementById('searchDuration')?.value || '15', 10);
+  const baseDate = latestDate(rawStore.sales) || latestDate(rawStore.popular) || null;
 
   document.getElementById('searchPopularWrap').classList.toggle('hidden',!showPop);
   document.getElementById('searchSalesWrap').classList.toggle('hidden',!showSales);
   const colors=['#818cf8', '#fbbf24', '#34d399', '#f87171', '#60a5fa', '#a78bfa', '#f472b6', '#2dd4bf', '#fb923c', '#94a3b8'];
 
-  if(showPop) searchPopularChartInst=drawChartShared('searchPopularChart',searchPopularChartInst,rawStore.popular,titles.length > 0 ? titles : getTopTitlesSafe(rawStore.popular, 3),colors, baseDate, duration);
-  if(showSales) searchSalesChartInst=drawChartShared('searchSalesChart',searchSalesChartInst,rawStore.sales,titles.length > 0 ? titles : getTopTitlesSafe(rawStore.sales, 3),colors, baseDate, duration);
+  // [기본 동작 유지] 검색어가 비어있을 때는 오늘자 기준 TOP 3를 기본 표시
+  const popTitles = titles.length > 0 ? titles : getTopTitlesSafe(rawStore.popular, 3);
+  const salesTitles = titles.length > 0 ? titles : getTopTitlesSafe(rawStore.sales, 3);
+
+  if(showPop) searchPopularChartInst=drawChartShared('searchPopularChart',searchPopularChartInst,rawStore.popular,popTitles,colors, baseDate, duration);
+  if(showSales) searchSalesChartInst=drawChartShared('searchSalesChart',searchSalesChartInst,rawStore.sales,salesTitles,colors, baseDate, duration);
 }
 
-async function setupSearchDateSelect() {
-  const salesDates = await getAvailableDates('sales');
-  const popularDates = await getAvailableDates('popular');
-  const allDates = new Set([...salesDates, ...popularDates]);
-  const yearsSet = new Set();
-  allDates.forEach(d => yearsSet.add(d.slice(0, 4)));
-  let years = [...yearsSet].sort().reverse();
-  const ySel = document.getElementById('searchYear');
-  if(!ySel) return;
-  const data = rawStore.sales || rawStore.popular;
-  const latest = latestDate(data) || new Date().toISOString().slice(0, 10);
-  const targetY = latest.slice(0, 4), targetM = latest.slice(5, 7), targetD = latest;
-  if(years.length===0) years=[targetY];
-  ySel.innerHTML = years.map(y => `<option value="${y}">${y}년</option>`).join('');
-  ySel.value = years.includes(targetY) ? targetY : years[0];
-  await updateSearchMonthSelect(ySel.value, targetM, targetD);
-}
-
-async function updateSearchMonthSelect(year, selectedM='', selectedD='') {
-  const salesDates = await getAvailableDates('sales');
-  const popularDates = await getAvailableDates('popular');
-  const allDates = new Set([...salesDates, ...popularDates]);
-  const monthsSet = new Set();
-  allDates.forEach(d => { if(d.startsWith(year)) monthsSet.add(d.slice(5, 7)); });
-  let months = [...monthsSet].sort().reverse();
-  const mSel = document.getElementById('searchMonth');
-  if(!mSel) return;
-  if(months.length===0) months=[pad2(new Date().getMonth()+1)];
-  mSel.innerHTML = months.map(m => `<option value="${m}">${Number(m)}월</option>`).join('');
-  const targetM = (selectedM && months.includes(selectedM)) ? selectedM : months[0];
-  mSel.value = targetM;
-  await updateSearchDaySelect(year, targetM, selectedD);
-}
-
-async function updateSearchDaySelect(year, month, selectedD='') {
-  const salesDates = await getAvailableDates('sales');
-  const popularDates = await getAvailableDates('popular');
-  const allDates = [...new Set([...salesDates, ...popularDates])].sort().reverse();
-  const filteredDays = allDates.filter(d => d.startsWith(`${year}-${month}`));
-  const dSel = document.getElementById('searchDay');
-  if(!dSel) return;
-  dSel.innerHTML = filteredDays.map(d => `<option value="${d.slice(8, 10)}">${Number(d.slice(8, 10))}일</option>`).join('');
-  const dOnly = selectedD ? selectedD.slice(8, 10) : '', targetD = (dOnly && filteredDays.some(d => d.endsWith(dOnly))) ? dOnly : (filteredDays[0] ? filteredDays[0].slice(8, 10) : '');
-  dSel.value = targetD;
-}
-
+// [온디맨드 로딩] 최신일 기준으로 선택된 기간(N일)만큼의 월 데이터 목록 계산
 function computeSearchNeededMonths(){
-  const y = document.getElementById('searchYear')?.value;
-  const m = document.getElementById('searchMonth')?.value;
-  const d = document.getElementById('searchDay')?.value;
   const duration = parseInt(document.getElementById('searchDuration')?.value || '15', 10);
-  if(!y || !m || !d) return [];
-  const baseDate = new Date(Number(y), Number(m)-1, Number(d));
+  const latest = latestDate(rawStore.sales) || latestDate(rawStore.popular) || new Date().toISOString().slice(0, 10);
+  const [y, m, d] = latest.split('-').map(Number);
+  const baseDate = new Date(y, m - 1, d);
   const months = new Set();
-  for(let i=0;i<duration;i++){
-    const dt = new Date(baseDate); dt.setDate(dt.getDate()-i);
-    months.add(ymKey(dt.getFullYear(), dt.getMonth()+1));
+  for(let i = 0; i < duration; i++){
+    const dt = new Date(baseDate);
+    dt.setDate(dt.getDate() - i);
+    months.add(ymKey(dt.getFullYear(), dt.getMonth() + 1));
   }
-  return [...months].map(k=>{ const [yy,mm]=k.split('-'); return {y:Number(yy), m:Number(mm)}; });
+  return [...months].map(k => { const [yy, mm] = k.split('-'); return { y: Number(yy), m: Number(mm) }; });
 }
 
+// 60일/90일 선택 시 필요한 과거 월 데이터를 병렬로 로드한 뒤 렌더링
 async function ensureSearchRangeLoaded(){
   const months = computeSearchNeededMonths();
   if(months.length){
@@ -1599,9 +1567,6 @@ async function ensureSearchRangeLoaded(){
   }
   renderSearchCharts();
 }
-
-async function onSearchYearChange() { await updateSearchMonthSelect(document.getElementById('searchYear').value); await ensureSearchRangeLoaded(); }
-async function onSearchMonthChange() { await updateSearchDaySelect(document.getElementById('searchYear').value, document.getElementById('searchMonth').value); await ensureSearchRangeLoaded(); }
 
 function setDefaultDateFilters(store){
   const data = rawStore[store];
@@ -1766,7 +1731,7 @@ function filterCurrentTable(){
   }
 
   if (currentView === 'sales' || currentView === 'popular') {
-    const headers = ['날짜', '순위', '증감', '앱이름', '패키지명', '장르', '개발사(퍼블리셔)'];
+    const headers = ['날짜', '순위', '증감', '평점', '앱이름', '장르', '개발사(퍼블리셔)'];
     document.getElementById('tableHead').innerHTML = '<tr>' + headers.map(h => `<th class="px-4 py-3 whitespace-nowrap text-slate-300 font-semibold border-b border-slate-800">${h}</th>`).join('') + '</tr>';
     document.getElementById('tableBody').innerHTML = rows.length ? rows.map(r => {
       const gName = gameName(r), rDate = rowDate(r), rRank = rankOf(r) || '-', rChange = String(r[2] || '-'), rScore = scoreOf(r);
@@ -1813,21 +1778,18 @@ function renderDatabase(view){
     if(view === 'newReleases') {
       mobileWrap.classList.remove('hidden'); mobileWrap.classList.add('flex'); fDay.classList.add('hidden');
       fYear.onchange = onNewReleasesYearChange; fMonth.onchange = onNewReleasesMonthChange;
-      setDefaultNewReleasesFilters(); // 네트워크 요청 없이 오늘 기준으로 즉시 세팅
+      setDefaultNewReleasesFilters();
     } else {
       mobileWrap.classList.add('hidden'); mobileWrap.classList.remove('flex'); fDay.classList.remove('hidden');
       fYear.onchange = onYearChange; fMonth.onchange = onMonthChange;
       if(document.getElementById('mobileFilter')) document.getElementById('mobileFilter').checked = false;
-      setDefaultDateFilters(view); // 네트워크 요청 없이 이미 로드된 최신(오늘) 날짜로 즉시 세팅
+      setDefaultDateFilters(view);
     }
   }
   document.getElementById('tableSearch').value = '';
 
-  // 탭 전환 시 이미 로드되어 있는 데이터로 즉시 렌더링한다 — 이전 탭 데이터가 잠시 남아있는 것처럼 보이지 않도록,
-  // 추가 네트워크 요청(연/월 전체 옵션 조회) 없이 이 시점에 바로 테이블을 채운다.
   filterCurrentTable();
 
-  // 과거 연/월을 선택할 수 있도록 드롭다운의 "전체 옵션 목록"만 백그라운드에서 뒤이어 채운다(테이블 표시는 막지 않음).
   if(view === 'newReleases') populateNewReleasesYearOptions();
   else populateYearOptions(view);
 }
@@ -1865,8 +1827,6 @@ function getMetricsForGame(data, gameNameTarget, recentDays=15){
 }
 
 function openGameDetail(targetName) {
-  // 기본 로딩 시점에 이미 "최근 15일"이 항상 커버되도록 받아오므로(fetchAllData 참고),
-  // 여기서 별도로 추가 데이터를 불러올 필요 없이 즉시 렌더링한다.
   setText('detailTitle', targetName);
   const salesMetrics = getMetricsForGame(rawStore.sales, targetName, 15), popMetrics = getMetricsForGame(rawStore.popular, targetName, 15);
   setText('detailGenrePub', `${salesMetrics.genre || popMetrics.genre || '-'} · ${salesMetrics.pub || popMetrics.pub || '-'}`);
@@ -1976,8 +1936,7 @@ function bizSetTag(id, tagInfo){
   el.textContent=tagInfo[0];
   el.className=`text-[10px] font-semibold ${tagInfo[1]}`;
 }
-// 장르명 -> 고정 색상 매핑: 매출/인기 등 여러 차트에 동시에 등장해도 같은 장르는 항상 같은 색으로 표시되도록 고정한다.
-// '기타'/'미분류'는 실제 세부 장르를 알 수 없는 버킷이라 항상 회색으로 낮춰 표시한다.
+
 const BIZ_GENRE_COLORS={'롤플레잉':'#f87171','RPG':'#f87171','전략':'#818cf8','퍼즐':'#34d399','어드벤처':'#38bdf8','카지노':'#fbbf24','스포츠':'#a78bfa','카드':'#fb7185','액션':'#22d3ee','시뮬레이션':'#facc15','보드':'#4ade80','기타':'#64748b','미분류':'#475569'};
 const BIZ_GENRE_FALLBACK_PALETTE=['#818cf8','#34d399','#38bdf8','#fbbf24','#a78bfa','#fb7185','#22d3ee','#facc15','#4ade80','#f472b6'];
 function bizIsMiscGenre(g){return g==='기타'||g==='미분류';}
@@ -2003,8 +1962,6 @@ function bizRenderGenreMomentum(){
   if(!latest||!prev)return [];
   const calc=d=>{const m=new Map();bizRowsOnDate(rawStore.sales,d,100).forEach(r=>{const g=String(r[5]||r[4]||'미분류').trim()||'미분류';m.set(g,(m.get(g)||0)+1);});return m;};
   const a=calc(latest),b=calc(prev);
-  // 정렬 기준은 '변화량'이 아니라 '현재 비중'이다. 변화량 기준으로만 자르면 롤플레잉처럼 비중은 높지만
-  // 7일 전과 변화가 없는(diff=0) 주력 장르가 상위 노출에서 밀려나 사라지는 문제가 있었다.
   const arr=[...new Set([...a.keys(),...b.keys()])].map(g=>({g,diff:(a.get(g)||0)-(b.get(g)||0),now:a.get(g)||0})).sort((x,y)=>y.now-x.now||y.diff-x.diff).slice(0,10);
   const hasMisc=arr.some(x=>bizIsMiscGenre(x.g));
   document.getElementById('bizGenreMomentum').innerHTML=arr.map(x=>{
@@ -2070,9 +2027,6 @@ function bizRenderEntries(entries){
     </tr>`).join('')||'<tr><td colspan="6" class="py-8 text-center muted">최근 30일 신규 진입 게임을 찾지 못했습니다.</td></tr>';
 }
 function bizRenderEntryPattern(entries){
-  // 도넛과 하단 요약 카드가 서로 다른 라벨/다른 값을 쓰던 문제를 없애기 위해 겹치지 않는 3분할로 재구성한다.
-  // strongEver: 현재 상태와 무관하게 한 번이라도 TOP30을 경험한 게임 수(인사이트 카드 문구용, 도넛에는 미사용)
-  // strongRetained: TOP30 경험 + 현재도 TOP100 잔존 (dropped와 절대 겹치지 않도록 last<=100 조건 포함)
   const observed=entries.filter(x=>x.last).length;
   const dropped=entries.filter(x=>x.last&&x.last>100).length;
   const retained=observed-dropped;
@@ -2090,7 +2044,6 @@ function bizRenderGap(){
   p.map.forEach((pv,key)=>{const sv=s.map.get(key);if(!sv)return;const gap=pv.rank-sv.rank;if(Math.abs(gap)>=5)arr.push({name:sv.name||pv.name,p:pv.rank,s:sv.rank,gap,pub:sv.publisher});});
   arr.sort((a,b)=>Math.abs(b.gap)-Math.abs(a.gap));
   document.getElementById('bizGapTable').innerHTML=arr.slice(0,15).map(x=>{
-    // gap = 인기 순위 - 매출 순위. gap>0이면 매출 순위가 더 좋다는 뜻이므로 앱 전역 컨벤션(매출=indigo, 인기=emerald)에 맞춰 색을 매칭한다.
     const fullText=x.gap>0?'인기 대비 매출 상위':'매출 대비 인기 상위', badge=x.gap>0?'매출 우위':'인기 우위';
     const cls=x.gap>0?'text-indigo-300':'text-emerald-300';
     return `
@@ -2213,11 +2166,6 @@ async function fetchAllData(){
   status.innerHTML='<i class="fa-solid fa-spinner fa-spin mr-1"></i> 동기화 중';
   btn.disabled=true;
   try{
-    // [기본 화면 = 오늘 기준] 매출/인기DB는 이번 달 전체 + "최근 15일" 상세차트가 항상 끊기지 않을 만큼만 우선 로드한다.
-    // 신작DB는 매출/인기DB와 달리 크롤링으로 적재되는 시트라 날짜 컬럼이 실제 Date 타입이 아닐 수 있어
-    // (구글시트 WHERE 날짜조건이 시트마다 다르게 먹음) 조건부 조회 대신 항상 전체를 불러온다.
-    // 데이터량 자체가 매출/인기DB(일별 순위 누적)보다 훨씬 적어 전체 조회의 성능 영향은 미미하다.
-    // 그 외 기간(매출/인기DB의 과거 월)은 사용자가 필터/검색을 조작할 때 ensureMonthLoaded()가 온디맨드로 불러온다.
     const today = new Date();
     const ty=today.getFullYear(), tm=today.getMonth()+1;
     const monthStartStr = ymdStr(ty, tm, 1);
@@ -2233,7 +2181,6 @@ async function fetchAllData(){
 
     loadedMonths.sales = new Set([ymKey(ty,tm)]);
     loadedMonths.popular = new Set([ymKey(ty,tm)]);
-    // newReleases는 위에서 전체를 이미 불러왔으므로 별도 월별 로드 추적이 필요 없음 (ensureMonthLoaded가 no-op 처리)
 
     rebuildLookupIndices();
     currentCalYear = ty; currentCalMonth = tm;
