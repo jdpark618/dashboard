@@ -1875,44 +1875,67 @@ function bizGameHistory(data){
   (data?.rows||[]).forEach(r=>{
     const key=getGameKey(r), d=rowDate(r), rank=rankOf(r);
     if(!key||key==='-'||!d||!rank) return;
+    const isNew = d >= '2026-09-08';
     if(!map.has(key)) map.set(key,[]);
-    map.get(key).push({date:d,rank,name:gameName(r),genre:String(r[5]||r[4]||'').trim()||'미분류',publisher:String(r[6]||r[5]||'').trim()||'미상'});
+    map.get(key).push({
+      date:d, rank, name:gameName(r),
+      genre:String(isNew?(r[5]||''):(r[4]||'')).trim()||'미분류',
+      publisher:String(isNew?(r[6]||''):(r[5]||'')).trim()||'미상'
+    });
   });
   map.forEach(v=>v.sort((a,b)=>dateValue(a.date)-dateValue(b.date)));
   return map;
 }
-function bizCombinedHistory(){
-  const sales=bizGameHistory(rawStore.sales), popular=bizGameHistory(rawStore.popular);
-  const keys=new Set([...sales.keys(),...popular.keys()]);
-  const map=new Map();
-  keys.forEach(k=>map.set(k,{sales:sales.get(k)||[],popular:popular.get(k)||[]}));
-  return map;
-}
+
 function bizLatestGameRanks(data){
   const latest=latestDate(data), map=new Map();
   if(!latest) return {date:null,map};
-  bizRowsOnDate(data,latest,100).forEach(r=>map.set(getGameKey(r),{name:gameName(r),rank:rankOf(r),genre:String(r[5]||r[4]||'').trim()||'미분류',publisher:String(r[6]||r[5]||'').trim()||'미상'}));
+  const isNew = latest >= '2026-09-08';
+  bizRowsOnDate(data,latest,100).forEach(r=>map.set(getGameKey(r),{
+    name:gameName(r), rank:rankOf(r),
+    genre:String(isNew?(r[5]||''):(r[4]||'')).trim()||'미분류',
+    publisher:String(isNew?(r[6]||''):(r[5]||'')).trim()||'미상'
+  }));
   return {date:latest,map};
 }
-function bizPct(n,d){return d?`${Math.round(n/d*100)}%`:'-';}
-function bizRank(v){return v?`${v}위`:'-';}
+
 function bizRenderGenreChart(data, canvasId, instName, titleColor){
   const dates=bizDateWindow(15), series=new Map();
   dates.forEach(d=>{
     const rows=bizRowsOnDate(data,d,100), counts={};
-    rows.forEach(r=>{const g=String(r[5]||r[4]||'미분류').trim()||'미분류';counts[g]=(counts[g]||0)+1;});
+    const isNew = d >= '2026-09-08';
+    rows.forEach(r=>{
+      const g=String(isNew?(r[5]||''):(r[4]||'')).trim()||'미분류';
+      if(g !== '기타' && g !== '미분류' && g !== '-') counts[g]=(counts[g]||0)+1;
+    });
     Object.entries(counts).forEach(([g,c])=>{if(!series.has(g))series.set(g,[]);series.get(g).push({d,v:c/(rows.length||1)*100});});
   });
   const top=[...series.entries()].sort((a,b)=>(b[1].at(-1)?.v||0)-(a[1].at(-1)?.v||0)).slice(0,5);
   if(window[instName]) window[instName].destroy();
   window[instName]=new Chart(document.getElementById(canvasId).getContext('2d'),{type:'line',data:{labels:dates,datasets:top.map(([g,vals],i)=>({label:g,data:dates.map(d=>vals.find(x=>x.d===d)?.v??null),borderColor:`hsl(${230+i*35} 70% 65%)`,backgroundColor:'transparent',borderWidth:2,pointRadius:1.5,tension:.25,spanGaps:true}))},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',font:{size:10},boxWidth:12}}},scales:{x:{grid:{display:false},ticks:{color:'#64748b',maxTicksLimit:7,callback:function(v){const l=this.getLabelForValue(v);return l?l.substring(5).replace('-','/'):''}}},y:{min:0,max:100,grid:{color:'rgba(51,65,85,.25)'},ticks:{color:'#94a3b8',callback:v=>v+'%'}}}}});
 }
+
 function bizRenderGenreMomentum(){
   const dates=bizDateWindow(15), latest=dates.at(-1), prev=dates.length>7?dates[dates.length-8]:dates[0];
   if(!latest||!prev)return [];
-  const calc=d=>{const m=new Map();bizRowsOnDate(rawStore.sales,d,100).forEach(r=>{const g=String(r[5]||r[4]||'미분류').trim()||'미분류';m.set(g,(m.get(g)||0)+1);});return m;};
+  const calc=d=>{
+    const m=new Map();
+    const isNew = d >= '2026-09-08';
+    bizRowsOnDate(rawStore.sales,d,100).forEach(r=>{
+      const g=String(isNew?(r[5]||''):(r[4]||'')).trim()||'미분류';
+      m.set(g,(m.get(g)||0)+1);
+    });
+    return m;
+  };
   const a=calc(latest),b=calc(prev);
-  const arr=[...new Set([...a.keys(),...b.keys()])].map(g=>({g,diff:(a.get(g)||0)-(b.get(g)||0),now:a.get(g)||0})).sort((x,y)=>y.diff-x.diff).slice(0,8);
+  const arr=[...new Set([...a.keys(),...b.keys()])]
+    .filter(g => g !== '기타' && g !== '미분류' && g !== '-')
+    .map(g=>({g,diff:(a.get(g)||0)-(b.get(g)||0),now:a.get(g)||0}))
+    .sort((x,y) => {
+      if (y.diff !== x.diff) return y.diff - x.diff; 
+      return y.now - x.now; 
+    })
+    .slice(0,8);
   document.getElementById('bizGenreMomentum').innerHTML=arr.map(x=>`
     <div class="flex items-center justify-between py-2 px-2 -mx-2 hover:bg-slate-800/40 rounded-lg transition-colors">
       <span class="text-xs truncate mr-2 font-medium">${escapeHtml(x.g)}</span>
@@ -1920,67 +1943,16 @@ function bizRenderGenreMomentum(){
     </div>`).join('')||'<div class="muted text-xs py-3">데이터 없음</div>';
   return arr;
 }
-function bizBuildNewEntrants(){
-  const latest=latestDate(rawStore.sales); if(!latest)return [];
-  const cutoff=dateValue(latest)-29*86400000, history=bizGameHistory(rawStore.sales), latestVal=dateValue(latest);
-  const arr=[];
-  history.forEach((rows,key)=>{
-    const first=rows.find(x=>dateValue(x.date)>=cutoff);
-    if(!first) return;
-    const window=rows.filter(x=>dateValue(x.date)>=cutoff&&dateValue(x.date)<=latestVal);
-    const first100=window.find(x=>x.rank<=100);
-    if(!first100) return;
-    const best=Math.min(...window.map(x=>x.rank)), last=window.at(-1)?.rank??null, top100Days=new Set(window.filter(x=>x.rank<=100).map(x=>x.date)).size;
-    arr.push({key,name:first100.name||first.name,firstDate:first100.date,firstRank:first100.rank,best,last,top100Days,genre:first100.genre,publisher:first100.publisher,rows:window});
-  });
-  return arr.sort((a,b)=>dateValue(b.firstDate)-dateValue(a.firstDate));
-}
-function bizRenderEntries(entries){
-  document.getElementById('bizEntryTable').innerHTML=entries.slice(0,18).map(x=>`
-    <tr class="border-b border-slate-900 hover:bg-slate-800/60 cursor-pointer transition-colors" onclick="openGameDetail('${escapeAttr(x.name).replace(/&#039;/g,"\\'")}')">
-      <td class="py-2 pr-2 pl-2">
-        <div class="font-medium text-slate-200 truncate max-w-[150px] md:max-w-[200px] lg:max-w-[300px]">${escapeHtml(x.name)}</div>
-        <div class="text-[9px] muted truncate max-w-[150px] md:max-w-[200px] lg:max-w-[300px]">${escapeHtml(x.publisher)}</div>
-      </td>
-      <td class="py-2 px-2 text-[10px] muted text-center whitespace-nowrap">${x.firstDate.substring(5).replace('-','/')}</td>
-      <td class="py-2 px-2 text-right whitespace-nowrap">${bizRank(x.firstRank)}</td>
-      <td class="py-2 px-2 text-right text-indigo-300 font-semibold whitespace-nowrap">${bizRank(x.best)}</td>
-      <td class="py-2 px-2 text-right whitespace-nowrap">${bizRank(x.last)}</td>
-      <td class="py-2 pl-2 pr-2 text-right whitespace-nowrap">${x.top100Days}일</td>
-    </tr>`).join('')||'<tr><td colspan="6" class="py-8 text-center muted">최근 30일 신규 진입 게임을 찾지 못했습니다.</td></tr>';
-}
-function bizRenderEntryPattern(entries){
-  const strong=entries.filter(x=>x.best<=30).length, retained=entries.filter(x=>x.best<=100&&x.last&&x.last<=100).length, dropped=entries.filter(x=>x.last&&x.last>100).length, observed=entries.filter(x=>x.last).length;
-  if(bizEntryPatternInst)bizEntryPatternInst.destroy();
-  bizEntryPatternInst=new Chart(document.getElementById('bizEntryPatternChart').getContext('2d'),{type:'doughnut',data:{labels:['TOP30 경험','TOP100 잔존','현재 TOP100 이탈'],datasets:[{data:[strong,Math.max(retained-strong,0),dropped],backgroundColor:['#34d399','#818cf8','#475569'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',font:{size:10},boxWidth:12}}}}});
-  document.getElementById('bizEntryPatternSummary').innerHTML=[['TOP30 경험',strong,'text-emerald-300'],['TOP100 잔존',retained,'text-indigo-300'],['현재 이탈',dropped,'text-slate-400']].map(x=>`<div class="rounded-lg bg-slate-900/70 p-2 flex flex-col justify-center items-center"><div class="text-[10px] muted">${x[0]}</div><div class="text-base font-bold mt-0.5 ${x[2]}">${x[1]}개</div></div>`).join('');
-  return {strong,retained,dropped,observed};
-}
-function bizRenderGap(){
-  const s=bizLatestGameRanks(rawStore.sales), p=bizLatestGameRanks(rawStore.popular), arr=[];
-  p.map.forEach((pv,key)=>{const sv=s.map.get(key);if(!sv)return;const gap=pv.rank-sv.rank;if(Math.abs(gap)>=5)arr.push({name:sv.name||pv.name,p:pv.rank,s:sv.rank,gap,pub:sv.publisher});});
-  arr.sort((a,b)=>Math.abs(b.gap)-Math.abs(a.gap));
-  document.getElementById('bizGapTable').innerHTML=arr.slice(0,15).map(x=>{
-    const text=x.gap>0?'인기 대비 매출 상위':'매출 대비 인기 상위';
-    const cls=x.gap>0?'text-emerald-300':'text-sky-300';
-    return `
-      <tr class="border-b border-slate-900 hover:bg-slate-800/60 cursor-pointer transition-colors" onclick="openGameDetail('${escapeAttr(x.name).replace(/&#039;/g,"\\'")}')">
-        <td class="py-2 pr-2 pl-2 text-left">
-          <div class="font-medium text-slate-200 truncate max-w-[150px] md:max-w-[200px] lg:max-w-[250px]">${escapeHtml(x.name)}</div>
-          <div class="text-[9px] muted truncate max-w-[150px] md:max-w-[200px] lg:max-w-[250px]">${escapeHtml(x.pub)}</div>
-        </td>
-        <td class="py-2 px-2 text-right whitespace-nowrap">${bizRank(x.p)}</td>
-        <td class="py-2 px-2 text-right whitespace-nowrap">${bizRank(x.s)}</td>
-        <td class="py-2 px-2 text-right font-bold ${cls} whitespace-nowrap">${x.gap>0?'+':''}${x.gap}</td>
-        <td class="py-2 pl-2 pr-2 text-[10px] ${cls} whitespace-nowrap text-right">${text}</td>
-      </tr>`;
-  }).join('')||'<tr><td colspan="5" class="py-8 text-center muted">두 DB에서 동시에 TOP100인 게임이 부족합니다.</td></tr>';
-  return arr;
-}
+
 function bizRenderPublishers(){
   const latest=latestDate(rawStore.sales); if(!latest)return [];
+  const isNew = latest >= '2026-09-08';
   const rows=bizRowsOnDate(rawStore.sales,latest,100), map=new Map();
-  rows.forEach(r=>{const p=String(r[6]||r[5]||'미상').trim()||'미상';if(!map.has(p))map.set(p,[]);map.get(p).push(rankOf(r));});
+  rows.forEach(r=>{
+    const p=String(isNew?(r[6]||''):(r[5]||'')).trim()||'미상';
+    if(!map.has(p))map.set(p,[]);
+    map.get(p).push(rankOf(r));
+  });
   const arr=[...map.entries()].map(([p,ranks])=>({p,count:ranks.length,pct:ranks.length,avg:Math.round(ranks.reduce((a,b)=>a+b,0)/ranks.length)})).sort((a,b)=>b.count-a.count||a.avg-b.avg);
 
   const top5=arr.slice(0,5), others=arr.slice(5), otherCount=others.reduce((s,x)=>s+x.count,0);
@@ -1993,6 +1965,18 @@ function bizRenderPublishers(){
     data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:0}]},
     options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.label}: ${c.raw}개`}}}}
   });
+
+  const legendItems = top5.slice();
+  if(otherCount > 0) legendItems.push({p:'기타', count:otherCount});
+
+  document.getElementById('bizPublisherLegend').innerHTML = legendItems.map((x,i)=>`
+    <div class="rounded-lg bg-slate-900/70 p-2 text-center flex flex-col justify-center">
+      <div class="text-[10px] muted truncate px-1">${escapeHtml(x.p)}</div>
+      <div class="text-base font-bold mt-0.5" style="color:${colors[i]}">${x.count}개</div>
+    </div>`).join('');
+
+  return arr;
+}
 
   const legendItems = top5.slice();
   if(otherCount > 0) legendItems.push({p:'기타', count:otherCount});
