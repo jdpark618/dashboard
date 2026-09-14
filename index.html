@@ -254,22 +254,22 @@ select option { background-color: #0f172a; color: #f1f5f9; }
   </section>
 
   <section class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-    <div class="card rounded-xl p-4">
+    <div class="card rounded-xl p-4 summary-card-hover">
       <div class="text-[11px] muted">최근 30일 신규 진입 게임</div>
       <div id="bizKpiNewEntrants" class="text-2xl font-bold mt-2">-</div>
       <div class="text-[10px] muted mt-1">매출·인기 DB에서 처음 관측된 게임</div>
     </div>
-    <div class="card rounded-xl p-4">
+    <div class="card rounded-xl p-4 summary-card-hover">
       <div class="text-[11px] muted">TOP100 잔존율</div>
       <div id="bizKpiRetention" class="text-2xl font-bold mt-2 text-emerald-300">-</div>
       <div class="text-[10px] muted mt-1">30일 전 TOP100의 현재 잔존 비율</div>
     </div>
-    <div class="card rounded-xl p-4">
+    <div class="card rounded-xl p-4 summary-card-hover">
       <div class="text-[11px] muted">최근 7일 시장 변동</div>
       <div id="bizKpiVolatility" class="text-2xl font-bold mt-2 text-indigo-300">-</div>
       <div class="text-[10px] muted mt-1">TOP100 게임의 평균 순위 변화</div>
     </div>
-    <div class="card rounded-xl p-4">
+    <div class="card rounded-xl p-4 summary-card-hover">
       <div class="text-[11px] muted">현재 TOP100 최다 퍼블리셔</div>
       <div id="bizKpiPublisher" class="text-lg font-bold mt-2 truncate">-</div>
       <div id="bizKpiPublisherMeta" class="text-[10px] muted mt-1">-</div>
@@ -307,11 +307,11 @@ select option { background-color: #0f172a; color: #f1f5f9; }
       <div class="overflow-auto max-h-[300px] scrollbar pr-2">
         <table class="w-full text-left text-xs">
           <thead class="sticky top-0 bg-slate-900 z-10"><tr class="border-b border-slate-800 text-[10px] muted">
-            <th class="py-2 pr-2 w-full">게임</th>
+            <th class="py-2 pr-2 pl-2 text-left">게임</th>
             <th class="py-2 px-2 text-right whitespace-nowrap">인기</th>
             <th class="py-2 px-2 text-right whitespace-nowrap">매출</th>
             <th class="py-2 px-2 text-right whitespace-nowrap">Gap</th>
-            <th class="py-2 pl-2 whitespace-nowrap">해석</th>
+            <th class="py-2 pl-2 pr-2 text-right whitespace-nowrap">해석</th>
           </tr></thead>
           <tbody id="bizGapTable"></tbody>
         </table>
@@ -328,12 +328,12 @@ select option { background-color: #0f172a; color: #f1f5f9; }
       <div class="overflow-auto max-h-[360px] scrollbar pr-2">
         <table class="w-full text-left text-xs">
           <thead class="sticky top-0 bg-slate-900 z-10"><tr class="border-b border-slate-800 text-[10px] muted">
-            <th class="py-2 pr-2 w-full">게임</th>
+            <th class="py-2 pr-2 pl-2 text-left">게임</th>
             <th class="py-2 px-2 text-center whitespace-nowrap">최초 관측</th>
             <th class="py-2 px-2 text-right whitespace-nowrap">첫 순위</th>
             <th class="py-2 px-2 text-right whitespace-nowrap">최고</th>
             <th class="py-2 px-2 text-right whitespace-nowrap">현재</th>
-            <th class="py-2 pl-2 text-right whitespace-nowrap">TOP100 일수</th>
+            <th class="py-2 pl-2 pr-2 text-right whitespace-nowrap">TOP100 일수</th>
           </tr></thead>
           <tbody id="bizEntryTable"></tbody>
         </table>
@@ -357,10 +357,10 @@ select option { background-color: #0f172a; color: #f1f5f9; }
       <div class="overflow-auto max-h-[330px] scrollbar pr-2">
         <table class="w-full text-left text-xs">
           <thead class="sticky top-0 bg-slate-900 z-10"><tr class="border-b border-slate-800 text-[10px] muted">
-            <th class="py-2 w-full">퍼블리셔</th>
-            <th class="py-2 text-center whitespace-nowrap">게임 수</th>
-            <th class="py-2 text-center whitespace-nowrap">비중</th>
-            <th class="py-2 text-right whitespace-nowrap">평균 순위</th>
+            <th class="py-2 pl-2 text-left">퍼블리셔</th>
+            <th class="py-2 px-2 text-center whitespace-nowrap">게임 수</th>
+            <th class="py-2 px-2 text-center whitespace-nowrap">비중</th>
+            <th class="py-2 pr-2 text-right whitespace-nowrap">평균 순위</th>
         </tr></thead><tbody id="bizPublisherTable"></tbody></table>
       </div>
     </div>
@@ -718,8 +718,6 @@ async function fetchSheetData(sheetName, headers=1, whereClause=''){
 }
 
 // [온디맨드 로딩] 날짜 컬럼(A)만 가볍게 조회해서 필터 드롭다운(년/월) 구성에 필요한 '존재하는 날짜 목록'만 파악한다.
-// 기존 parseGviz의 '컬럼 라벨이 전부 A,B,C... 형태면 첫 데이터행을 헤더로 간주해 버리는' 로직은
-// 단일 컬럼 조회에서는 오동작할 수 있어 별도의 단순 파서를 사용한다.
 function parseGvizDatesOnly(text){
   const start=text.indexOf('{'), end=text.lastIndexOf('}');
   if(start<0||end<start) throw new Error('날짜 목록 응답을 읽을 수 없습니다.');
@@ -777,7 +775,6 @@ function mergeRowsIntoStore(storeKey, newRows){
 }
 
 // [온디맨드 로딩] 특정 (년,월)의 데이터가 아직 없으면 그 달치만 서버에 요청해서 rawStore에 병합한다.
-// 이미 로드된 달이면 즉시 반환(추가 네트워크 요청 없음), 동시에 같은 달을 여러 번 요청해도 fetch는 1번만 나간다.
 async function ensureMonthLoaded(storeKey, y, m){
   if(storeKey === 'newReleases') return; // 신작DB는 초기 로딩 시 전체를 이미 불러와 두었으므로 추가 로드가 필요 없음
   const key = ymKey(y,m);
@@ -968,7 +965,6 @@ function buildSnapshotFallback(salesData, popData) {
     return { ...x, diff: pRank !== null ? pRank - x.rank : 0, change: getChange(key, x.rank, prevSalesMap) };
   });
 
-  // [이전일 대비 장르 증감 계산 함수 추가]
   const countGenresWithTrend = (currentList, prevMapData, prevDate) => {
     const currentCounts = {};
     currentList.slice(0, 100).forEach(x => currentCounts[x.genre || '기타'] = (currentCounts[x.genre || '기타'] || 0) + 1);
@@ -1045,7 +1041,7 @@ function renderRankList(elId, items, {showMeta=true}={}) {
       : '';
 
     return `
-      <li class="flex items-center justify-between gap-2 py-2 border-b border-slate-900/70 last:border-0 hover:bg-slate-800/30 cursor-pointer rounded px-1.5 transition-colors" onclick="openGameDetail('${escapeAttr(it.name)}')">
+      <li class="flex items-center justify-between gap-2 py-2 border-b border-slate-900/70 last:border-0 hover:bg-slate-800/30 cursor-pointer rounded px-1.5 transition-colors" onclick="openGameDetail('${escapeAttr(it.name).replace(/&#039;/g,"\\'")}')">
         <div class="flex items-center gap-2.5 min-w-0 flex-1">
           <span class="text-[11px] muted w-5 text-right shrink-0">${escapeHtml(it.rank)}</span>
           ${iconHtml}
@@ -1062,14 +1058,12 @@ function renderRankList(elId, items, {showMeta=true}={}) {
   }).join('');
 }
 
-// [장르 비중 바 차트 업그레이드] 퍼센티지, TOP 3 포인트 컬러, 전일 대비 증감 뱃지 적용
 function renderGenreBars(elId, arr) {
   const el = document.getElementById(elId);
   if (!arr || !arr.length) { el.innerHTML = '<div class="text-xs muted py-2">데이터 없음</div>'; return; }
   const max = Math.max(...arr.map(a => a.count), 1);
   const totalCount = arr.reduce((sum, a) => sum + a.count, 0) || 1;
 
-  // 상위 TOP 3 컬러 포인트 지정 (1위: 에메랄드, 2위: 인디고, 3위: 스카이, 나머지: 슬레이트 그라데이션)
   const topColors = ['#34d399', '#818cf8', '#38bdf8'];
 
   el.innerHTML = arr.map((a, idx) => {
@@ -1196,7 +1190,6 @@ function switchView(view){
   if(view==='calendar')ensureCalendarMonthLoaded();
 }
 
-// [온디맨드 로딩] 순위검색 탭을 처음 열 때: 필터 드롭다운 구성 + 현재 선택된 기준일/기간에 필요한 월 데이터 로드
 async function openSearchView(){
   await setupSearchDateSelect();
   await ensureSearchRangeLoaded();
@@ -1215,7 +1208,6 @@ async function resetCalMonth() {
   await ensureCalendarMonthLoaded();
 }
 
-// [온디맨드 로딩] 달력에서 보고 있는 (년,월)의 신작 데이터가 없으면 그 달치만 불러온 뒤 렌더링
 async function ensureCalendarMonthLoaded(){
   const gridBody = document.getElementById('calGridBody');
   if(gridBody) gridBody.innerHTML = '<div class="col-span-7 p-10 text-center muted"><i class="fa-solid fa-spinner fa-spin mr-1"></i> 데이터 불러오는 중...</div>';
@@ -1223,25 +1215,10 @@ async function ensureCalendarMonthLoaded(){
   renderCalendar();
 }
 
-/* ══ 신작 달력 v2 (가시성 개선) ═══════════════════════════════════
-   변경 요지
-   1) 제목 2줄 래핑 + 사이드바 폭 회수(24% → 184px 레일) → 제목 잘림 제거
-   2) 칸당 노출 개수 상한 + "+N 더보기" 접기 → 행 높이 균일, 한 달이 한 화면에
-   3) 퍼블리셔 기준 주목작 강조(3단 위계)
-   4) 출시유형 OPEN/TEST/EARLY 3종 모두 표기 (기존엔 OPEN에 뱃지가 없어 TEST만 보였음)
-   5) 인디고는 '오늘' 전용, 더보기는 무채색으로 분리
-   ※ 데이터 스키마(월간신작DB: 출시일/게임명/플랫폼/퍼블리셔/출시유형)는 그대로 사용 */
-
-// 칸당 표시 개수 (3 / 4 / 5 / 99=전체). 상단 "칸당 표시" 버튼으로 변경.
 let calMaxPerCell = 4;
-// "+N 더보기"로 펼쳐 둔 날짜들
 const calExpandedDays = new Set();
-// 현재 그려진 월 (월이 바뀌면 펼침 상태 초기화)
 let calRenderedYM = '';
 
-// [v2] 주요 퍼블리셔 목록 — 퍼블리셔 문자열에 아래 키워드가 포함되면 달력에서 '주목작'으로 강조.
-// 월간신작DB에는 장르/규모 컬럼이 없어, 가지고 있는 컬럼(퍼블리셔)으로 위계를 만든 것.
-// 자유롭게 추가/삭제하면 되고, 배열을 비우면 강조 없이 전부 균일하게 표시된다.
 const CAL_MAJOR_PUBLISHERS = [
   '넥슨','nexon','넷마블','netmarble','엔씨','ncsoft','카카오','kakao','크래프톤','krafton',
   '컴투스','com2us','위메이드','wemade','네오위즈','neowiz','스마일게이트','smilegate',
@@ -1254,13 +1231,11 @@ const CAL_MAJOR_PUBLISHERS = [
   '디즈니','disney','로블록스','roblox','가레나','garena','미호요'
 ];
 
-// 출시유형 문자열 → 'OPEN' | 'TEST' | 'EARLY'
-// 시트 표기가 '얼리억세스'/'얼리액세스'처럼 흔들려도 잡히도록 넉넉하게 매칭한다.
 function resolveCalType(typeStr){
   const t = String(typeStr || '').replace(/\s+/g, '').toLowerCase();
   if (t.includes('테스트') || t.includes('test') || t.includes('cbt') || t.includes('obt') || t.includes('베타') || t.includes('beta')) return 'TEST';
   if (t.includes('얼리') || t.includes('early') || t.includes('앞서') ) return 'EARLY';
-  return 'OPEN'; // 정식출시 및 미기재
+  return 'OPEN';
 }
 const CAL_TYPE_COLOR = { OPEN:'#22c55e', TEST:'#f59e0b', EARLY:'#38bdf8' };
 
@@ -1270,7 +1245,6 @@ function isCalMajorPublisher(pub){
   return CAL_MAJOR_PUBLISHERS.some(k => p.includes(k));
 }
 
-// 상단 "칸당 표시" 버튼
 function setCalCap(n){
   calMaxPerCell = n;
   calExpandedDays.clear();
@@ -1278,7 +1252,6 @@ function setCalCap(n){
   renderCalendar();
 }
 
-// 셀의 "+N 더보기 / 접기"
 function toggleCalDay(d){
   if(calExpandedDays.has(d)) calExpandedDays.delete(d); else calExpandedDays.add(d);
   renderCalendar();
@@ -1297,7 +1270,6 @@ function renderCalendar() {
   const isOfficialOnly = document.getElementById('calOfficialOnly').checked;
   const targetYM = `${currentCalYear}-${String(currentCalMonth).padStart(2, '0')}`;
 
-  // 월이 바뀌면 이전 달에서 펼쳐둔 셀 상태는 버린다
   if(calRenderedYM !== targetYM){ calExpandedDays.clear(); calRenderedYM = targetYM; }
 
   const monthGames = [];
@@ -1331,19 +1303,16 @@ function renderCalendar() {
   setText('calStatTotal', monthGames.length);
   setText('calStatMobile', countMobile);
   setText('calStatPC', monthGames.length - countMobile);
-  // 모바일 필터가 켜져 있으면 PC·콘솔 0은 "실제 0"이 아니라 "필터로 제외됨" — 흐리게 눌러서 구분
   const pcWrap = document.getElementById('calStatPCWrap');
   if(pcWrap) pcWrap.classList.toggle('dim', isMobileOnly);
   setText('calStatPCLabel', isMobileOnly ? 'PC·콘솔 (필터 제외)' : 'PC·콘솔');
 
-  // 날짜별로 묶고, 칸이 잘릴 때 주목작이 먼저 살아남도록 주요 퍼블리셔를 앞으로
   const byDay = {};
   monthGames.forEach(g => { (byDay[g.day] = byDay[g.day] || []).push(g); });
   Object.keys(byDay).forEach(k => byDay[k].sort((a,b) => (b.isMajor?1:0) - (a.isMajor?1:0)));
 
   const firstDay = new Date(currentCalYear, currentCalMonth - 1, 1).getDay();
   const daysInMonth = new Date(currentCalYear, currentCalMonth, 0).getDate();
-  // toISOString()은 UTC 기준이라 KST 오전 9시 이전에 '오늘'이 하루 밀린다 — 로컬 기준으로 계산
   const nowD = new Date();
   const todayVal = `${nowD.getFullYear()}-${pad2(nowD.getMonth()+1)}-${pad2(nowD.getDate())}`;
 
@@ -1356,7 +1325,6 @@ function renderCalendar() {
          + `<span class="cal-name">${escapeHtml(g.name)}</span></div>`;
   };
 
-  // 모든 행 높이를 같게 만들기 위한 1차 추정치 (렌더 후 실측으로 한 번 더 보정한다)
   let maxShown = 1;
   Object.keys(byDay).forEach(k => {
     const n = calExpandedDays.has(Number(k)) ? byDay[k].length : Math.min(byDay[k].length, calMaxPerCell);
@@ -1393,8 +1361,6 @@ function renderCalendar() {
   for(let i=0; i<remainingCells; i++) gridHtml += `<div class="cal-cell cal-empty"></div>`;
   gridBody.innerHTML = gridHtml;
 
-  // 행 높이 정밀 보정: 실제로 가장 높은 칸(더보기 버튼·오늘 뱃지·2줄 제목 포함)에 전체를 맞춘다.
-  // 탭이 숨겨진 상태(높이 0)에서 호출됐을 땐 위의 추정치를 그대로 둔다.
   let tallest = 0;
   gridBody.querySelectorAll('.cal-cell').forEach(c => {
     const h = c.getBoundingClientRect().height;
@@ -1402,7 +1368,6 @@ function renderCalendar() {
   });
   if(tallest > 0) gridBody.style.setProperty('--cal-cell-h', Math.ceil(tallest) + 'px');
 
-  // ── 좌측 레일: 주차별 물량 (모바일/PC 2색 스택 바)
   const weekCount = Math.ceil((firstDay + daysInMonth) / 7);
   const weekRows = [];
   for(let w=0; w<weekCount; w++) {
@@ -1542,7 +1507,6 @@ async function updateSearchDaySelect(year, month, selectedD='') {
   dSel.value = targetD;
 }
 
-// [온디맨드 로딩] 순위검색 탭에서 선택된 기준일 ~ (기준일-기간) 사이에 걸치는 모든 (년,월)을 계산
 function computeSearchNeededMonths(){
   const y = document.getElementById('searchYear')?.value;
   const m = document.getElementById('searchMonth')?.value;
@@ -1569,7 +1533,6 @@ async function ensureSearchRangeLoaded(){
 async function onSearchYearChange() { await updateSearchMonthSelect(document.getElementById('searchYear').value); await ensureSearchRangeLoaded(); }
 async function onSearchMonthChange() { await updateSearchDaySelect(document.getElementById('searchYear').value, document.getElementById('searchMonth').value); await ensureSearchRangeLoaded(); }
 
-// 탭을 열 때는 네트워크 요청 없이 "이미 로드되어 있는" 오늘/이번달 기준값으로 드롭다운을 채우고 바로 테이블을 보여준다.
 function setDefaultDateFilters(store){
   const data = rawStore[store];
   const loadedLatest = latestDate(data);
@@ -1586,8 +1549,6 @@ function setDefaultDateFilters(store){
   }
 }
 
-// 과거 연/월을 선택할 수 있도록 드롭다운 "전체 옵션 목록"은 백그라운드에서 채운다 - 테이블은 이미 표시된 뒤라 지연이 있어도 화면엔 영향 없음.
-// 이 조회가 끝나기 전에 사용자가 다른 탭으로 이동했으면(currentView가 바뀌었으면) 그 결과는 반영하지 않는다(다른 탭 드롭다운을 덮어쓰는 경쟁 상태 방지).
 async function populateYearOptions(store){
   const availableDates = await getAvailableDates(store);
   if(currentView !== store) return;
@@ -1649,7 +1610,6 @@ async function updateDaySelect(year, month, selectedD=''){
 async function onYearChange(){ await updateMonthSelect(document.getElementById('filterYear').value); }
 async function onMonthChange(){ await updateDaySelect(document.getElementById('filterYear').value, document.getElementById('filterMonth').value); }
 
-// 신작DB는 이미 전체를 불러와 두었으므로(fetchAllData 참고) 네트워크 요청 없이 바로 오늘 기준 년/월로 드롭다운을 채운다.
 function setDefaultNewReleasesFilters(){
   const today = new Date();
   const y = String(today.getFullYear()), m = pad2(today.getMonth()+1);
@@ -1658,7 +1618,6 @@ function setDefaultNewReleasesFilters(){
   if(mSel){ mSel.innerHTML = `<option value="${m}">${Number(m)}월</option>`; mSel.value = m; }
 }
 
-// 과거 연/월 선택용 드롭다운 전체 옵션은 백그라운드에서 채운다 (신작DB는 어차피 전체가 로드돼 있어 테이블 자체는 영향 없음).
 async function populateNewReleasesYearOptions(){
   const availableDates = await getAvailableDates('newReleases');
   if(currentView !== 'newReleases') return;
@@ -1742,7 +1701,7 @@ function filterCurrentTable(){
     document.getElementById('tableBody').innerHTML = rows.length ? rows.map(r => {
       const gName = gameName(r), rDate = rowDate(r), rRank = rankOf(r) || '-', rChange = String(r[2] || '-'), rScore = scoreOf(r);
       const isNew = rDate >= '2026-09-08';
-      return `<tr class="border-b border-slate-900 hover:bg-slate-800/60 cursor-pointer transition-colors" onclick="openGameDetail('${escapeAttr(gName)}')">
+      return `<tr class="border-b border-slate-900 hover:bg-slate-800/60 cursor-pointer transition-colors" onclick="openGameDetail('${escapeAttr(gName).replace(/&#039;/g,"\\'")}')">
         <td class="px-4 py-2.5 whitespace-nowrap">${escapeHtml(rDate)}</td>
         <td class="px-4 py-2.5 whitespace-nowrap">${escapeHtml(rRank)}</td>
         <td class="px-4 py-2.5 whitespace-nowrap">${escapeHtml(rChange)}</td>
@@ -1757,7 +1716,7 @@ function filterCurrentTable(){
     document.getElementById('tableHead').innerHTML = '<tr>' + headers.map(h => `<th class="px-4 py-3 whitespace-nowrap text-slate-300 font-semibold border-b border-slate-800">${h}</th>`).join('') + '</tr>';
     document.getElementById('tableBody').innerHTML = rows.length ? rows.map(r => {
       const gName = String(r[1]||'').trim() || '-';
-      return `<tr class="border-b border-slate-900 hover:bg-slate-800/60 cursor-pointer transition-colors" onclick="openGameDetail('${escapeAttr(gName)}')">
+      return `<tr class="border-b border-slate-900 hover:bg-slate-800/60 cursor-pointer transition-colors" onclick="openGameDetail('${escapeAttr(gName).replace(/&#039;/g,"\\'")}')">
         <td class="px-4 py-2.5 whitespace-nowrap">${escapeHtml(String(r[0]||'').trim() || '-')}</td>
         <td class="px-4 py-2.5 whitespace-nowrap">${escapeHtml(gName)}</td>
         <td class="px-4 py-2.5 whitespace-nowrap">${escapeHtml(String(r[2]||'').trim() || '-')}</td>
@@ -1959,7 +1918,11 @@ function bizRenderGenreMomentum(){
   const calc=d=>{const m=new Map();bizRowsOnDate(rawStore.sales,d,100).forEach(r=>{const g=String(r[5]||r[4]||'미분류').trim()||'미분류';m.set(g,(m.get(g)||0)+1);});return m;};
   const a=calc(latest),b=calc(prev);
   const arr=[...new Set([...a.keys(),...b.keys()])].map(g=>({g,diff:(a.get(g)||0)-(b.get(g)||0),now:a.get(g)||0})).sort((x,y)=>y.diff-x.diff).slice(0,8);
-  document.getElementById('bizGenreMomentum').innerHTML=arr.map(x=>`<div class="flex items-center justify-between py-1.5"><span class="text-xs truncate mr-2">${escapeHtml(x.g)}</span><span class="text-xs font-bold ${x.diff>0?'rank-up':x.diff<0?'rank-down':'text-slate-400'}">${x.diff>0?'▲ +':x.diff<0?'▼ ':'→ '}${Math.abs(x.diff)}개 <span class="muted font-normal">(${x.now}개)</span></span></div>`).join('')||'<div class="muted text-xs py-3">데이터 없음</div>';
+  document.getElementById('bizGenreMomentum').innerHTML=arr.map(x=>`
+    <div class="flex items-center justify-between py-2 px-2 -mx-2 hover:bg-slate-800/40 rounded-lg transition-colors">
+      <span class="text-xs truncate mr-2 font-medium">${escapeHtml(x.g)}</span>
+      <span class="text-xs font-bold ${x.diff>0?'rank-up':x.diff<0?'rank-down':'text-slate-400'}">${x.diff>0?'▲ +':x.diff<0?'▼ ':'→ '}${Math.abs(x.diff)}개 <span class="muted font-normal ml-1">(${x.now}개)</span></span>
+    </div>`).join('')||'<div class="muted text-xs py-3">데이터 없음</div>';
   return arr;
 }
 function bizBuildNewEntrants(){
@@ -1978,7 +1941,18 @@ function bizBuildNewEntrants(){
   return arr.sort((a,b)=>dateValue(b.firstDate)-dateValue(a.firstDate));
 }
 function bizRenderEntries(entries){
-  document.getElementById('bizEntryTable').innerHTML=entries.slice(0,18).map(x=>`<tr class="border-b border-slate-900 hover:bg-slate-800/30"><td class="py-1.5 pr-2 w-full"><button onclick="openGameDetail('${String(x.name).replace(/'/g,"\'")}')" class="font-medium text-slate-200 hover:text-indigo-300 truncate max-w-[190px] block text-left">${escapeHtml(x.name)}</button><div class="text-[9px] muted truncate max-w-[190px]">${escapeHtml(x.publisher)}</div></td><td class="py-1.5 px-2 text-[10px] muted text-center whitespace-nowrap">${x.firstDate.substring(5).replace('-','/')}</td><td class="py-1.5 px-2 text-right whitespace-nowrap">${bizRank(x.firstRank)}</td><td class="py-1.5 px-2 text-right text-indigo-300 font-semibold whitespace-nowrap">${bizRank(x.best)}</td><td class="py-1.5 px-2 text-right whitespace-nowrap">${bizRank(x.last)}</td><td class="py-1.5 pl-2 text-right whitespace-nowrap">${x.top100Days}일</td></tr>`).join('')||'<tr><td colspan="6" class="py-8 text-center muted">최근 30일 신규 진입 게임을 찾지 못했습니다.</td></tr>';
+  document.getElementById('bizEntryTable').innerHTML=entries.slice(0,18).map(x=>`
+    <tr class="border-b border-slate-900 hover:bg-slate-800/60 cursor-pointer transition-colors" onclick="openGameDetail('${escapeAttr(x.name).replace(/&#039;/g,"\\'")}')">
+      <td class="py-2 pr-2 pl-2">
+        <div class="font-medium text-slate-200 truncate max-w-[150px] md:max-w-[200px] lg:max-w-[300px]">${escapeHtml(x.name)}</div>
+        <div class="text-[9px] muted truncate max-w-[150px] md:max-w-[200px] lg:max-w-[300px]">${escapeHtml(x.publisher)}</div>
+      </td>
+      <td class="py-2 px-2 text-[10px] muted text-center whitespace-nowrap">${x.firstDate.substring(5).replace('-','/')}</td>
+      <td class="py-2 px-2 text-right whitespace-nowrap">${bizRank(x.firstRank)}</td>
+      <td class="py-2 px-2 text-right text-indigo-300 font-semibold whitespace-nowrap">${bizRank(x.best)}</td>
+      <td class="py-2 px-2 text-right whitespace-nowrap">${bizRank(x.last)}</td>
+      <td class="py-2 pr-2 pl-2 text-right whitespace-nowrap">${x.top100Days}일</td>
+    </tr>`).join('')||'<tr><td colspan="6" class="py-8 text-center muted">최근 30일 신규 진입 게임을 찾지 못했습니다.</td></tr>';
 }
 function bizRenderEntryPattern(entries){
   const strong=entries.filter(x=>x.best<=30).length, retained=entries.filter(x=>x.best<=100&&x.last&&x.last<=100).length, dropped=entries.filter(x=>x.last&&x.last>100).length, observed=entries.filter(x=>x.last).length;
@@ -1991,7 +1965,21 @@ function bizRenderGap(){
   const s=bizLatestGameRanks(rawStore.sales), p=bizLatestGameRanks(rawStore.popular), arr=[];
   p.map.forEach((pv,key)=>{const sv=s.map.get(key);if(!sv)return;const gap=pv.rank-sv.rank;if(Math.abs(gap)>=5)arr.push({name:sv.name||pv.name,p:pv.rank,s:sv.rank,gap,pub:sv.publisher});});
   arr.sort((a,b)=>Math.abs(b.gap)-Math.abs(a.gap));
-  document.getElementById('bizGapTable').innerHTML=arr.slice(0,15).map(x=>{const text=x.gap>0?'인기 대비 매출 상위':'매출 대비 인기 상위';const cls=x.gap>0?'text-emerald-300':'text-sky-300';return `<tr class="border-b border-slate-900"><td class="py-1.5 pr-2 w-full"><button onclick="openGameDetail('${String(x.name).replace(/'/g,"\'")}')" class="font-medium hover:text-indigo-300 truncate max-w-[190px] block text-left">${escapeHtml(x.name)}</button><div class="text-[9px] muted truncate max-w-[190px]">${escapeHtml(x.pub)}</div></td><td class="py-1.5 px-2 text-right whitespace-nowrap">${bizRank(x.p)}</td><td class="py-1.5 px-2 text-right whitespace-nowrap">${bizRank(x.s)}</td><td class="py-1.5 px-2 text-right font-bold ${cls} whitespace-nowrap">${x.gap>0?'+':''}${x.gap}</td><td class="py-1.5 pl-2 text-[10px] ${cls} whitespace-nowrap">${text}</td></tr>`}).join('')||'<tr><td colspan="5" class="py-8 text-center muted">두 DB에서 동시에 TOP100인 게임이 부족합니다.</td></tr>';
+  document.getElementById('bizGapTable').innerHTML=arr.slice(0,15).map(x=>{
+    const text=x.gap>0?'인기 대비 매출 상위':'매출 대비 인기 상위';
+    const cls=x.gap>0?'text-emerald-300':'text-sky-300';
+    return `
+      <tr class="border-b border-slate-900 hover:bg-slate-800/60 cursor-pointer transition-colors" onclick="openGameDetail('${escapeAttr(x.name).replace(/&#039;/g,"\\'")}')">
+        <td class="py-2 pr-2 pl-2">
+          <div class="font-medium text-slate-200 truncate max-w-[150px] md:max-w-[200px] lg:max-w-[250px]">${escapeHtml(x.name)}</div>
+          <div class="text-[9px] muted truncate max-w-[150px] md:max-w-[200px] lg:max-w-[250px]">${escapeHtml(x.pub)}</div>
+        </td>
+        <td class="py-2 px-2 text-right whitespace-nowrap">${bizRank(x.p)}</td>
+        <td class="py-2 px-2 text-right whitespace-nowrap">${bizRank(x.s)}</td>
+        <td class="py-2 px-2 text-right font-bold ${cls} whitespace-nowrap">${x.gap>0?'+':''}${x.gap}</td>
+        <td class="py-2 pr-2 pl-2 text-[10px] ${cls} whitespace-nowrap text-right">${text}</td>
+      </tr>`;
+  }).join('')||'<tr><td colspan="5" class="py-8 text-center muted">두 DB에서 동시에 TOP100인 게임이 부족합니다.</td></tr>';
   return arr;
 }
 function bizRenderPublishers(){
@@ -1999,7 +1987,13 @@ function bizRenderPublishers(){
   const rows=bizRowsOnDate(rawStore.sales,latest,100), map=new Map();
   rows.forEach(r=>{const p=String(r[6]||r[5]||'미상').trim()||'미상';if(!map.has(p))map.set(p,[]);map.get(p).push(rankOf(r));});
   const arr=[...map.entries()].map(([p,ranks])=>({p,count:ranks.length,pct:ranks.length,avg:Math.round(ranks.reduce((a,b)=>a+b,0)/ranks.length)})).sort((a,b)=>b.count-a.count||a.avg-b.avg).slice(0,10);
-  document.getElementById('bizPublisherTable').innerHTML=arr.map(a=>`<tr class="border-b border-slate-900"><td class="py-1.5 font-medium truncate w-full">${escapeHtml(a.p)}</td><td class="py-1.5 text-center whitespace-nowrap">${a.count}</td><td class="py-1.5 text-center whitespace-nowrap">${a.count}%</td><td class="py-1.5 text-right text-indigo-300 whitespace-nowrap">${bizRank(a.avg)}</td></tr>`).join('')||'<tr><td colspan="4" class="py-8 text-center muted">데이터 없음</td></tr>';
+  document.getElementById('bizPublisherTable').innerHTML=arr.map(a=>`
+    <tr class="border-b border-slate-900 hover:bg-slate-800/40 transition-colors">
+      <td class="py-2 pl-2 pr-2 font-medium text-slate-200 truncate max-w-[150px] md:max-w-[200px]">${escapeHtml(a.p)}</td>
+      <td class="py-2 px-2 text-center whitespace-nowrap">${a.count}</td>
+      <td class="py-2 px-2 text-center whitespace-nowrap">${a.count}%</td>
+      <td class="py-2 pr-2 pl-2 text-right text-indigo-300 whitespace-nowrap">${bizRank(a.avg)}</td>
+    </tr>`).join('')||'<tr><td colspan="4" class="py-8 text-center muted">데이터 없음</td></tr>';
   return arr;
 }
 function bizRenderLifecycle(){
@@ -2007,7 +2001,24 @@ function bizRenderLifecycle(){
   if(cutoff===null)return [];
   history.forEach((rows,key)=>{const w=rows.filter(x=>dateValue(x.date)>=cutoff&&x.rank<=100);if(w.length<7)return;const best=Math.min(...w.map(x=>x.rank)), last=rows.at(-1)?.rank, days=new Set(w.map(x=>x.date)).size;if(days>=10)arr.push({key,name:w[0].name,best,last,days,publisher:w[0].publisher});});
   arr.sort((a,b)=>b.days-a.days||a.best-b.best);
-  document.getElementById('bizLifecycleList').innerHTML=arr.slice(0,8).map(x=>{const label=x.last<=30?'TOP30 유지':x.last<=100?'TOP100 유지':'TOP100 이탈';const cls=x.last<=30?'text-emerald-300':x.last<=100?'text-indigo-300':'text-rose-300';return `<div class="rounded-xl bg-slate-900/60 border border-slate-800 p-2.5"><div class="flex items-center justify-between gap-2"><button onclick="openGameDetail('${String(x.name).replace(/'/g,"\'")}')" class="text-xs font-semibold truncate hover:text-indigo-300">${escapeHtml(x.name)}</button><span class="text-[10px] whitespace-nowrap ${cls}">${label}</span></div><div class="flex items-center justify-start gap-4 mt-1.5 text-[10px] muted"><span>최고 ${bizRank(x.best)}</span><span>현재 ${bizRank(x.last)}</span><span>TOP100 ${x.days}일</span></div></div>`}).join('')||'<div class="muted text-xs py-3">지속 관측 게임이 없습니다.</div>';
+  document.getElementById('bizLifecycleList').innerHTML=arr.slice(0,8).map(x=>{
+    const label=x.last<=30?'TOP30 유지':x.last<=100?'TOP100 유지':'TOP100 이탈';
+    const cls=x.last<=30?'text-emerald-300':x.last<=100?'text-indigo-300':'text-rose-300';
+    return `
+      <div class="rounded-xl bg-slate-900/60 border border-slate-800 p-3 hover:bg-slate-800/80 cursor-pointer transition-colors" onclick="openGameDetail('${escapeAttr(x.name).replace(/&#039;/g,"\\'")}')">
+        <div class="flex items-center justify-between gap-2">
+          <div class="text-xs font-semibold truncate text-slate-200">${escapeHtml(x.name)}</div>
+          <span class="text-[10px] whitespace-nowrap ${cls} bg-slate-950/50 px-1.5 py-0.5 rounded border border-slate-800">${label}</span>
+        </div>
+        <div class="flex items-center justify-between mt-2.5 text-[10px] muted">
+          <div class="flex items-center gap-3">
+            <span>최고 <b class="text-slate-300 font-semibold">${bizRank(x.best)}</b></span>
+            <span>현재 <b class="text-slate-300 font-semibold">${bizRank(x.last)}</b></span>
+          </div>
+          <span class="font-medium text-indigo-300/80">TOP100 ${x.days}일</span>
+        </div>
+      </div>`;
+  }).join('')||'<div class="muted text-xs py-3">지속 관측 게임이 없습니다.</div>';
   return arr;
 }
 function bizRenderInsights(momentum,entries,patterns,gaps,pubs){
@@ -2017,7 +2028,11 @@ function bizRenderInsights(momentum,entries,patterns,gaps,pubs){
     {icon:'fa-rocket',title:'신규 진입',text:entries.length?`최근 30일 매출 DB에서 ${entries.length}개 게임이 신규 진입했고, ${patterns.strong}개가 TOP30을 경험했습니다.`:'최근 30일 신규 진입 게임이 없습니다.'},
     {icon:'fa-scale-balanced',title:'순위 Gap',text:topGap?`${topGap.name}은 인기 ${topGap.p}위 / 매출 ${topGap.s}위로 두 순위의 차이가 ${Math.abs(topGap.gap)}위입니다.`:'현재 두 DB의 공통 TOP100 데이터가 부족합니다.'}
   ];
-  document.getElementById('bizInsightCards').innerHTML=cards.map(c=>`<div class="rounded-xl bg-slate-900/70 border border-slate-800 p-4"><div class="flex items-center gap-2 text-xs font-semibold"><i class="fa-solid ${c.icon} text-indigo-400"></i>${c.title}</div><p class="text-[11px] leading-relaxed text-slate-300 mt-2">${escapeHtml(c.text)}</p></div>`).join('');
+  document.getElementById('bizInsightCards').innerHTML=cards.map(c=>`
+    <div class="rounded-xl bg-slate-900/70 border border-slate-800 p-4 summary-card-hover">
+      <div class="flex items-center gap-2 text-xs font-semibold"><i class="fa-solid ${c.icon} text-indigo-400"></i>${c.title}</div>
+      <p class="text-[11px] leading-relaxed text-slate-300 mt-2">${escapeHtml(c.text)}</p>
+    </div>`).join('');
 }
 async function openBusinessAnalysis(){
   const loading=document.getElementById('bizLoading');if(loading)loading.classList.remove('hidden');
