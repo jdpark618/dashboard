@@ -254,22 +254,22 @@ select option { background-color: #0f172a; color: #f1f5f9; }
   </section>
 
   <section class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-    <div class="card rounded-xl p-4 summary-card-hover">
+    <div class="card rounded-xl p-4 summary-card-hover" onclick="bizScrollTo('bizCardEntryTable')">
       <div class="text-[11px] muted">최근 30일 신규 진입 게임</div>
-      <div id="bizKpiNewEntrants" class="text-2xl font-bold mt-2">-</div>
+      <div class="flex items-baseline gap-2 mt-2"><div id="bizKpiNewEntrants" class="text-2xl font-bold">-</div><span id="bizKpiNewEntrantsTag" class="text-[10px] font-semibold"></span></div>
       <div class="text-[10px] muted mt-1">매출·인기 DB에서 처음 관측된 게임</div>
     </div>
-    <div class="card rounded-xl p-4 summary-card-hover">
+    <div class="card rounded-xl p-4 summary-card-hover" onclick="bizScrollTo('bizCardEntryPattern')">
       <div class="text-[11px] muted">TOP100 잔존율</div>
-      <div id="bizKpiRetention" class="text-2xl font-bold mt-2 text-emerald-300">-</div>
+      <div class="flex items-baseline gap-2 mt-2"><div id="bizKpiRetention" class="text-2xl font-bold">-</div><span id="bizKpiRetentionTag" class="text-[10px] font-semibold"></span></div>
       <div class="text-[10px] muted mt-1">30일 전 TOP100의 현재 잔존 비율</div>
     </div>
-    <div class="card rounded-xl p-4 summary-card-hover">
+    <div class="card rounded-xl p-4 summary-card-hover" onclick="bizScrollTo('bizCardMomentum')">
       <div class="text-[11px] muted">최근 7일 시장 변동</div>
-      <div id="bizKpiVolatility" class="text-2xl font-bold mt-2 text-indigo-300">-</div>
+      <div class="flex items-baseline gap-2 mt-2"><div id="bizKpiVolatility" class="text-2xl font-bold">-</div><span id="bizKpiVolatilityTag" class="text-[10px] font-semibold"></span></div>
       <div class="text-[10px] muted mt-1">TOP100 게임의 평균 순위 변화</div>
     </div>
-    <div class="card rounded-xl p-4 summary-card-hover">
+    <div class="card rounded-xl p-4 summary-card-hover" onclick="bizScrollTo('bizCardPublisher')">
       <div class="text-[11px] muted">현재 TOP100 최다 퍼블리셔</div>
       <div id="bizKpiPublisher" class="text-lg font-bold mt-2 truncate">-</div>
       <div id="bizKpiPublisherMeta" class="text-[10px] muted mt-1">-</div>
@@ -294,11 +294,12 @@ select option { background-color: #0f172a; color: #f1f5f9; }
   </section>
 
   <section class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-    <div class="card rounded-xl p-5">
+    <div id="bizCardMomentum" class="card rounded-xl p-5">
       <div class="flex items-center justify-between mb-3">
-        <div><h3 class="font-semibold text-sm">장르 Momentum</h3><p class="text-[10px] muted mt-1">7일 전 대비 TOP100 구성 변화</p></div>
+        <div><h3 class="font-semibold text-sm">장르 Momentum</h3><p class="text-[10px] muted mt-1">현재 TOP100 비중 상위 장르 · 7일 전 대비 변화</p></div>
       </div>
-      <div id="bizGenreMomentum" class="divide-y divide-slate-800"></div>
+      <div id="bizGenreMomentum" class="divide-y divide-slate-800 max-h-[300px] overflow-y-auto scrollbar pr-1"></div>
+      <p id="bizGenreMomentumNote" class="hidden text-[9px] muted mt-2 leading-relaxed">※ '기타'는 세부 장르가 불명확하거나 퍼블리셔가 의도적으로 미분류 처리한 게임을 포함할 수 있어, 실제 장르 구성과 다를 수 있습니다.</p>
     </div>
     <div class="card rounded-xl p-5 lg:col-span-2">
       <div class="flex items-center justify-between mb-3">
@@ -320,10 +321,15 @@ select option { background-color: #0f172a; color: #f1f5f9; }
   </section>
 
   <section class="grid grid-cols-1 lg:grid-cols-5 gap-4">
-    <div class="card rounded-xl p-5 lg:col-span-3">
+    <div id="bizCardEntryTable" class="card rounded-xl p-5 lg:col-span-3">
       <div class="flex items-center justify-between mb-3">
         <div><h3 class="font-semibold text-sm">신규 진입 게임 성과</h3><p class="text-[10px] muted mt-1">출시일이 아닌 <b>DB 최초 관측일</b>을 기준으로 추적</p></div>
         <span class="text-[10px] text-sky-300">Observed Entry</span>
+      </div>
+      <div id="bizEntrySortGroup" class="flex items-center gap-1 mb-3">
+        <button type="button" data-sort="latest" onclick="bizSetEntrySort('latest')" class="px-2 py-1 rounded-md text-[10px] font-medium transition-colors bg-indigo-500/20 text-indigo-300">최신순</button>
+        <button type="button" data-sort="best" onclick="bizSetEntrySort('best')" class="px-2 py-1 rounded-md text-[10px] font-medium transition-colors text-slate-400 hover:text-slate-200">최고순위순</button>
+        <button type="button" data-sort="days" onclick="bizSetEntrySort('days')" class="px-2 py-1 rounded-md text-[10px] font-medium transition-colors text-slate-400 hover:text-slate-200">잔존일수순</button>
       </div>
       <div class="overflow-auto max-h-[360px] scrollbar pr-2">
         <table class="w-full text-left text-xs">
@@ -339,7 +345,7 @@ select option { background-color: #0f172a; color: #f1f5f9; }
         </table>
       </div>
     </div>
-    <div class="card rounded-xl p-5 lg:col-span-2">
+    <div id="bizCardEntryPattern" class="card rounded-xl p-5 lg:col-span-2">
       <div class="flex items-center justify-between mb-3">
         <div><h3 class="font-semibold text-sm">신규 진입 패턴</h3><p class="text-[10px] muted mt-1">최근 30일 최초 관측 게임의 현재 상태</p></div>
       </div>
@@ -350,25 +356,28 @@ select option { background-color: #0f172a; color: #f1f5f9; }
 
   <!-- 변경된 영역: 생명력/잔존 (좌 3) + 퍼블리셔 도넛차트 (우 2) -->
   <section class="grid grid-cols-1 lg:grid-cols-5 gap-4">
-    <div class="card rounded-xl p-5 lg:col-span-3">
+    <div class="card rounded-xl p-5 lg:col-span-3 flex flex-col">
       <div class="flex items-center justify-between mb-3">
         <div><h3 class="font-semibold text-sm">게임 생명력 / 잔존</h3><p class="text-[10px] muted mt-1">최근 30일 관측 데이터에서 지속적으로 상위권을 유지하는 게임</p></div>
       </div>
-      <div id="bizLifecycleList" class="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto max-h-[330px] scrollbar pr-2"></div>
+      <div id="bizLifecycleList" class="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto flex-1 min-h-[240px] max-h-[330px] scrollbar pr-2"></div>
     </div>
-    <div class="card rounded-xl p-5 lg:col-span-2">
+    <div id="bizCardPublisher" class="card rounded-xl p-5 lg:col-span-2 flex flex-col">
       <div class="flex items-center justify-between mb-3">
         <div><h3 class="font-semibold text-sm">퍼블리셔 시장 점유</h3><p class="text-[10px] muted mt-1">현재 매출 TOP100 내 퍼블리셔 비중</p></div>
         <span class="text-[10px] text-indigo-300">Current Sales TOP100</span>
       </div>
-      <div class="h-[170px]"><canvas id="bizPublisherChart"></canvas></div>
-      <div id="bizPublisherLegend" class="grid grid-cols-3 gap-2 mt-4"></div>
+      <div class="h-[170px] shrink-0"><canvas id="bizPublisherChart"></canvas></div>
+      <div class="flex-1 flex flex-col justify-center min-h-0">
+        <div id="bizPublisherLegend" class="grid grid-cols-2 gap-2 mt-4"></div>
+        <p id="bizPublisherSummary" class="text-[10px] muted mt-3 pt-3 border-t border-slate-800"></p>
+      </div>
     </div>
   </section>
 
   <section class="card rounded-xl p-5 border-indigo-500/20">
     <div class="flex items-center gap-2 mb-3"><i class="fa-solid fa-lightbulb text-amber-400"></i><h3 class="font-semibold text-sm">사업 관점 요약</h3><span class="text-[10px] muted">※ 매출·인기 DB에서 관측되는 현상만 요약</span></div>
-    <div id="bizInsightCards" class="grid grid-cols-1 md:grid-cols-3 gap-3"></div>
+    <div id="bizInsightCards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3"></div>
   </section>
 </div>
 
@@ -610,6 +619,8 @@ let bizSalesGenreTrendInst = null;
 let bizPopularGenreTrendInst = null;
 let bizEntryPatternInst = null;
 let bizPublisherChartInst = null;
+let bizEntrySortMode = 'latest';
+let bizLastEntries = [];
 
 let currentCalYear = new Date().getFullYear();
 let currentCalMonth = new Date().getMonth() + 1;
@@ -1875,85 +1886,168 @@ function bizGameHistory(data){
   (data?.rows||[]).forEach(r=>{
     const key=getGameKey(r), d=rowDate(r), rank=rankOf(r);
     if(!key||key==='-'||!d||!rank) return;
-    const isNew = d >= '2026-09-08';
     if(!map.has(key)) map.set(key,[]);
-    map.get(key).push({
-      date:d, rank, name:gameName(r),
-      genre:String(isNew?(r[5]||''):(r[4]||'')).trim()||'미분류',
-      publisher:String(isNew?(r[6]||''):(r[5]||'')).trim()||'미상'
-    });
+    map.get(key).push({date:d,rank,name:gameName(r),genre:String(r[5]||r[4]||'').trim()||'미분류',publisher:String(r[6]||r[5]||'').trim()||'미상'});
   });
   map.forEach(v=>v.sort((a,b)=>dateValue(a.date)-dateValue(b.date)));
   return map;
 }
-
 function bizLatestGameRanks(data){
   const latest=latestDate(data), map=new Map();
   if(!latest) return {date:null,map};
-  const isNew = latest >= '2026-09-08';
-  bizRowsOnDate(data,latest,100).forEach(r=>map.set(getGameKey(r),{
-    name:gameName(r), rank:rankOf(r),
-    genre:String(isNew?(r[5]||''):(r[4]||'')).trim()||'미분류',
-    publisher:String(isNew?(r[6]||''):(r[5]||'')).trim()||'미상'
-  }));
+  bizRowsOnDate(data,latest,100).forEach(r=>map.set(getGameKey(r),{name:gameName(r),rank:rankOf(r),genre:String(r[5]||r[4]||'').trim()||'미분류',publisher:String(r[6]||r[5]||'').trim()||'미상'}));
   return {date:latest,map};
 }
-
-function bizRenderGenreChart(data, canvasId, instName, titleColor){
+function bizPct(n,d){return d?`${Math.round(n/d*100)}%`:'-';}
+function bizRank(v){return v?`${v}위`:'-';}
+function bizScrollTo(id){
+  const el=document.getElementById(id); if(!el) return;
+  el.scrollIntoView({behavior:'smooth',block:'center'});
+  el.classList.add('ring-2','ring-indigo-400/60');
+  setTimeout(()=>el.classList.remove('ring-2','ring-indigo-400/60'),900);
+}
+function bizSetTag(id, tagInfo){
+  const el=document.getElementById(id); if(!el) return;
+  if(!tagInfo){ el.textContent=''; el.className='text-[10px] font-semibold'; return; }
+  el.textContent=tagInfo[0];
+  el.className=`text-[10px] font-semibold ${tagInfo[1]}`;
+}
+// 장르명 -> 고정 색상 매핑: 매출/인기 등 여러 차트에 동시에 등장해도 같은 장르는 항상 같은 색으로 표시되도록 고정한다.
+// '기타'/'미분류'는 실제 세부 장르를 알 수 없는 버킷이라 항상 회색으로 낮춰 표시한다.
+const BIZ_GENRE_COLORS={'롤플레잉':'#f87171','RPG':'#f87171','전략':'#818cf8','퍼즐':'#34d399','어드벤처':'#38bdf8','카지노':'#fbbf24','스포츠':'#a78bfa','카드':'#fb7185','액션':'#22d3ee','시뮬레이션':'#facc15','보드':'#4ade80','기타':'#64748b','미분류':'#475569'};
+const BIZ_GENRE_FALLBACK_PALETTE=['#818cf8','#34d399','#38bdf8','#fbbf24','#a78bfa','#fb7185','#22d3ee','#facc15','#4ade80','#f472b6'];
+function bizIsMiscGenre(g){return g==='기타'||g==='미분류';}
+function bizGenreColor(g){
+  if(BIZ_GENRE_COLORS[g]) return BIZ_GENRE_COLORS[g];
+  if(bizIsMiscGenre(g)) return '#64748b';
+  let hash=0; for(let i=0;i<g.length;i++){hash=(hash*31+g.charCodeAt(i))>>>0;}
+  return BIZ_GENRE_FALLBACK_PALETTE[hash%BIZ_GENRE_FALLBACK_PALETTE.length];
+}
+function bizRenderGenreChart(data, canvasId, instName){
   const dates=bizDateWindow(15), series=new Map();
   dates.forEach(d=>{
     const rows=bizRowsOnDate(data,d,100), counts={};
-    const isNew = d >= '2026-09-08';
-    rows.forEach(r=>{
-      const g=String(isNew?(r[5]||''):(r[4]||'')).trim()||'미분류';
-      if(g !== '기타' && g !== '미분류' && g !== '-') counts[g]=(counts[g]||0)+1;
-    });
+    rows.forEach(r=>{const g=String(r[5]||r[4]||'미분류').trim()||'미분류';counts[g]=(counts[g]||0)+1;});
     Object.entries(counts).forEach(([g,c])=>{if(!series.has(g))series.set(g,[]);series.get(g).push({d,v:c/(rows.length||1)*100});});
   });
   const top=[...series.entries()].sort((a,b)=>(b[1].at(-1)?.v||0)-(a[1].at(-1)?.v||0)).slice(0,5);
   if(window[instName]) window[instName].destroy();
-  window[instName]=new Chart(document.getElementById(canvasId).getContext('2d'),{type:'line',data:{labels:dates,datasets:top.map(([g,vals],i)=>({label:g,data:dates.map(d=>vals.find(x=>x.d===d)?.v??null),borderColor:`hsl(${230+i*35} 70% 65%)`,backgroundColor:'transparent',borderWidth:2,pointRadius:1.5,tension:.25,spanGaps:true}))},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',font:{size:10},boxWidth:12}}},scales:{x:{grid:{display:false},ticks:{color:'#64748b',maxTicksLimit:7,callback:function(v){const l=this.getLabelForValue(v);return l?l.substring(5).replace('-','/'):''}}},y:{min:0,max:100,grid:{color:'rgba(51,65,85,.25)'},ticks:{color:'#94a3b8',callback:v=>v+'%'}}}}});
+  window[instName]=new Chart(document.getElementById(canvasId).getContext('2d'),{type:'line',data:{labels:dates,datasets:top.map(([g,vals])=>{const c=bizGenreColor(g);return {label:g,data:dates.map(d=>vals.find(x=>x.d===d)?.v??null),borderColor:c,backgroundColor:'transparent',borderWidth:2,borderDash:bizIsMiscGenre(g)?[4,3]:undefined,pointRadius:1.5,tension:.25,spanGaps:true};})},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',font:{size:10},boxWidth:12}}},scales:{x:{grid:{display:false},ticks:{color:'#64748b',maxTicksLimit:7,callback:function(v){const l=this.getLabelForValue(v);return l?l.substring(5).replace('-','/'):''}}},y:{min:0,max:100,grid:{color:'rgba(51,65,85,.25)'},ticks:{color:'#94a3b8',callback:v=>v+'%'}}}}});
 }
-
 function bizRenderGenreMomentum(){
   const dates=bizDateWindow(15), latest=dates.at(-1), prev=dates.length>7?dates[dates.length-8]:dates[0];
   if(!latest||!prev)return [];
-  const calc=d=>{
-    const m=new Map();
-    const isNew = d >= '2026-09-08';
-    bizRowsOnDate(rawStore.sales,d,100).forEach(r=>{
-      const g=String(isNew?(r[5]||''):(r[4]||'')).trim()||'미분류';
-      m.set(g,(m.get(g)||0)+1);
-    });
-    return m;
-  };
+  const calc=d=>{const m=new Map();bizRowsOnDate(rawStore.sales,d,100).forEach(r=>{const g=String(r[5]||r[4]||'미분류').trim()||'미분류';m.set(g,(m.get(g)||0)+1);});return m;};
   const a=calc(latest),b=calc(prev);
-  const arr=[...new Set([...a.keys(),...b.keys()])]
-    .filter(g => g !== '기타' && g !== '미분류' && g !== '-')
-    .map(g=>({g,diff:(a.get(g)||0)-(b.get(g)||0),now:a.get(g)||0}))
-    .sort((x,y) => {
-      if (y.diff !== x.diff) return y.diff - x.diff; 
-      return y.now - x.now; 
-    })
-    .slice(0,8);
-  document.getElementById('bizGenreMomentum').innerHTML=arr.map(x=>`
-    <div class="flex items-center justify-between py-2 px-2 -mx-2 hover:bg-slate-800/40 rounded-lg transition-colors">
-      <span class="text-xs truncate mr-2 font-medium">${escapeHtml(x.g)}</span>
+  // 정렬 기준은 '변화량'이 아니라 '현재 비중'이다. 변화량 기준으로만 자르면 롤플레잉처럼 비중은 높지만
+  // 7일 전과 변화가 없는(diff=0) 주력 장르가 상위 노출에서 밀려나 사라지는 문제가 있었다.
+  const arr=[...new Set([...a.keys(),...b.keys()])].map(g=>({g,diff:(a.get(g)||0)-(b.get(g)||0),now:a.get(g)||0})).sort((x,y)=>y.now-x.now||y.diff-x.diff).slice(0,10);
+  const hasMisc=arr.some(x=>bizIsMiscGenre(x.g));
+  document.getElementById('bizGenreMomentum').innerHTML=arr.map(x=>{
+    const misc=bizIsMiscGenre(x.g);
+    return `
+    <div class="flex items-center justify-between py-2 px-2 -mx-2 hover:bg-slate-800/40 rounded-lg transition-colors ${misc?'opacity-70':''}">
+      <span class="text-xs truncate mr-2 font-medium flex items-center gap-1.5">
+        <span class="inline-block w-2 h-2 rounded-full shrink-0" style="background:${bizGenreColor(x.g)}"></span>
+        ${escapeHtml(x.g)}${misc?' <i class=\"fa-solid fa-circle-question text-[9px] muted\"></i>':''}
+      </span>
       <span class="text-xs font-bold ${x.diff>0?'rank-up':x.diff<0?'rank-down':'text-slate-400'}">${x.diff>0?'▲ +':x.diff<0?'▼ ':'→ '}${Math.abs(x.diff)}개 <span class="muted font-normal ml-1">(${x.now}개)</span></span>
-    </div>`).join('')||'<div class="muted text-xs py-3">데이터 없음</div>';
+    </div>`;
+  }).join('')||'<div class="muted text-xs py-3">데이터 없음</div>';
+  const note=document.getElementById('bizGenreMomentumNote'); if(note) note.classList.toggle('hidden',!hasMisc);
   return arr;
 }
-
+function bizBuildNewEntrants(){
+  const latest=latestDate(rawStore.sales); if(!latest)return [];
+  const cutoff=dateValue(latest)-29*86400000, history=bizGameHistory(rawStore.sales), latestVal=dateValue(latest);
+  const arr=[];
+  history.forEach((rows,key)=>{
+    const first=rows.find(x=>dateValue(x.date)>=cutoff);
+    if(!first) return;
+    const window=rows.filter(x=>dateValue(x.date)>=cutoff&&dateValue(x.date)<=latestVal);
+    const first100=window.find(x=>x.rank<=100);
+    if(!first100) return;
+    const best=Math.min(...window.map(x=>x.rank)), last=window.at(-1)?.rank??null, top100Days=new Set(window.filter(x=>x.rank<=100).map(x=>x.date)).size;
+    arr.push({key,name:first100.name||first.name,firstDate:first100.date,firstRank:first100.rank,best,last,top100Days,genre:first100.genre,publisher:first100.publisher,rows:window});
+  });
+  return arr.sort((a,b)=>dateValue(b.firstDate)-dateValue(a.firstDate));
+}
+function bizSortEntries(entries, mode){
+  const arr=entries.slice();
+  if(mode==='best') arr.sort((a,b)=>(a.best||999)-(b.best||999));
+  else if(mode==='days') arr.sort((a,b)=>b.top100Days-a.top100Days);
+  else arr.sort((a,b)=>dateValue(b.firstDate)-dateValue(a.firstDate));
+  return arr;
+}
+function bizSetEntrySort(mode){
+  bizEntrySortMode=mode;
+  document.querySelectorAll('#bizEntrySortGroup button').forEach(b=>{
+    const active=b.dataset.sort===mode;
+    b.classList.toggle('bg-indigo-500/20',active);
+    b.classList.toggle('text-indigo-300',active);
+    b.classList.toggle('text-slate-400',!active);
+  });
+  bizRenderEntries(bizLastEntries);
+}
+function bizRenderEntries(entries){
+  bizLastEntries=entries;
+  const sorted=bizSortEntries(entries, bizEntrySortMode);
+  document.getElementById('bizEntryTable').innerHTML=sorted.slice(0,18).map(x=>`
+    <tr class="border-b border-slate-900 hover:bg-slate-800/60 cursor-pointer transition-colors" onclick="openGameDetail('${escapeAttr(x.name).replace(/&#039;/g,"\\'")}')">
+      <td class="py-2 pr-2 pl-2">
+        <div class="font-medium text-slate-200 truncate max-w-[150px] md:max-w-[200px] lg:max-w-[300px]">${escapeHtml(x.name)}</div>
+        <div class="text-[9px] muted truncate max-w-[150px] md:max-w-[200px] lg:max-w-[300px]">${escapeHtml(x.publisher)}</div>
+      </td>
+      <td class="py-2 px-2 text-[10px] muted text-center whitespace-nowrap">${x.firstDate.substring(5).replace('-','/')}</td>
+      <td class="py-2 px-2 text-right whitespace-nowrap">${bizRank(x.firstRank)}</td>
+      <td class="py-2 px-2 text-right text-indigo-300 font-semibold whitespace-nowrap">${bizRank(x.best)}</td>
+      <td class="py-2 px-2 text-right whitespace-nowrap">${bizRank(x.last)}</td>
+      <td class="py-2 pl-2 pr-2 text-right whitespace-nowrap">${x.top100Days}일</td>
+    </tr>`).join('')||'<tr><td colspan="6" class="py-8 text-center muted">최근 30일 신규 진입 게임을 찾지 못했습니다.</td></tr>';
+}
+function bizRenderEntryPattern(entries){
+  // 도넛과 하단 요약 카드가 서로 다른 라벨/다른 값을 쓰던 문제를 없애기 위해 겹치지 않는 3분할로 재구성한다.
+  // strongEver: 현재 상태와 무관하게 한 번이라도 TOP30을 경험한 게임 수(인사이트 카드 문구용, 도넛에는 미사용)
+  // strongRetained: TOP30 경험 + 현재도 TOP100 잔존 (dropped와 절대 겹치지 않도록 last<=100 조건 포함)
+  const observed=entries.filter(x=>x.last).length;
+  const dropped=entries.filter(x=>x.last&&x.last>100).length;
+  const retained=observed-dropped;
+  const strongEver=entries.filter(x=>x.best<=30).length;
+  const strongRetained=entries.filter(x=>x.best<=30&&x.last&&x.last<=100).length;
+  const steady=Math.max(retained-strongRetained,0);
+  const LABELS=['TOP30 경험 잔존','TOP100 잔존','TOP100 이탈'];
+  if(bizEntryPatternInst)bizEntryPatternInst.destroy();
+  bizEntryPatternInst=new Chart(document.getElementById('bizEntryPatternChart').getContext('2d'),{type:'doughnut',data:{labels:LABELS,datasets:[{data:[strongRetained,steady,dropped],backgroundColor:['#34d399','#818cf8','#475569'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',font:{size:10},boxWidth:12}}}}});
+  document.getElementById('bizEntryPatternSummary').innerHTML=[[LABELS[0],strongRetained,'text-emerald-300'],[LABELS[1],steady,'text-indigo-300'],[LABELS[2],dropped,'text-slate-400']].map(x=>`<div class="rounded-lg bg-slate-900/70 p-2 flex flex-col justify-center items-center"><div class="text-[9px] muted leading-tight text-center">${x[0]}</div><div class="text-base font-bold mt-0.5 ${x[2]}">${x[1]}개</div></div>`).join('');
+  return {strong:strongEver,retained,dropped,observed};
+}
+function bizRenderGap(){
+  const s=bizLatestGameRanks(rawStore.sales), p=bizLatestGameRanks(rawStore.popular), arr=[];
+  p.map.forEach((pv,key)=>{const sv=s.map.get(key);if(!sv)return;const gap=pv.rank-sv.rank;if(Math.abs(gap)>=5)arr.push({name:sv.name||pv.name,p:pv.rank,s:sv.rank,gap,pub:sv.publisher});});
+  arr.sort((a,b)=>Math.abs(b.gap)-Math.abs(a.gap));
+  document.getElementById('bizGapTable').innerHTML=arr.slice(0,15).map(x=>{
+    // gap = 인기 순위 - 매출 순위. gap>0이면 매출 순위가 더 좋다는 뜻이므로 앱 전역 컨벤션(매출=indigo, 인기=emerald)에 맞춰 색을 매칭한다.
+    const fullText=x.gap>0?'인기 대비 매출 상위':'매출 대비 인기 상위', badge=x.gap>0?'매출 우위':'인기 우위';
+    const cls=x.gap>0?'text-indigo-300':'text-emerald-300';
+    return `
+      <tr class="border-b border-slate-900 hover:bg-slate-800/60 cursor-pointer transition-colors" onclick="openGameDetail('${escapeAttr(x.name).replace(/&#039;/g,"\\'")}')">
+        <td class="py-2 pr-2 pl-2 text-left">
+          <div class="font-medium text-slate-200 truncate max-w-[150px] md:max-w-[200px] lg:max-w-[250px]">${escapeHtml(x.name)}</div>
+          <div class="text-[9px] muted truncate max-w-[150px] md:max-w-[200px] lg:max-w-[250px]">${escapeHtml(x.pub)}</div>
+        </td>
+        <td class="py-2 px-2 text-right whitespace-nowrap">${bizRank(x.p)}</td>
+        <td class="py-2 px-2 text-right whitespace-nowrap">${bizRank(x.s)}</td>
+        <td class="py-2 px-2 text-right font-bold ${cls} whitespace-nowrap">${x.gap>0?'+':''}${x.gap}</td>
+        <td class="py-2 pl-2 pr-2 text-[10px] ${cls} whitespace-nowrap text-right"><span class="px-1.5 py-0.5 rounded bg-slate-900/70 border border-slate-800" title="${fullText}">${badge}</span></td>
+      </tr>`;
+  }).join('')||'<tr><td colspan="5" class="py-8 text-center muted">두 DB에서 동시에 TOP100인 게임이 부족합니다.</td></tr>';
+  return arr;
+}
 function bizRenderPublishers(){
   const latest=latestDate(rawStore.sales); if(!latest)return [];
-  const isNew = latest >= '2026-09-08';
-  const rows=bizRowsOnDate(rawStore.sales,latest,100), map=new Map();
-  rows.forEach(r=>{
-    const p=String(isNew?(r[6]||''):(r[5]||'')).trim()||'미상';
-    if(!map.has(p))map.set(p,[]);
-    map.get(p).push(rankOf(r));
-  });
-  const arr=[...map.entries()].map(([p,ranks])=>({p,count:ranks.length,pct:ranks.length,avg:Math.round(ranks.reduce((a,b)=>a+b,0)/ranks.length)})).sort((a,b)=>b.count-a.count||a.avg-b.avg);
+  const rows=bizRowsOnDate(rawStore.sales,latest,100), total=rows.length||1, map=new Map();
+  rows.forEach(r=>{const p=String(r[6]||r[5]||'미상').trim()||'미상';if(!map.has(p))map.set(p,[]);map.get(p).push(rankOf(r));});
+  const arr=[...map.entries()].map(([p,ranks])=>({p,count:ranks.length,pct:Math.round(ranks.length/total*100),avg:Math.round(ranks.reduce((a,b)=>a+b,0)/ranks.length)})).sort((a,b)=>b.count-a.count||a.avg-b.avg);
 
   const top5=arr.slice(0,5), others=arr.slice(5), otherCount=others.reduce((s,x)=>s+x.count,0);
   const labels=top5.map(x=>x.p), data=top5.map(x=>x.count), colors=['#818cf8','#34d399','#fbbf24','#f87171','#a78bfa','#475569'];
@@ -1967,25 +2061,17 @@ function bizRenderPublishers(){
   });
 
   const legendItems = top5.slice();
-  if(otherCount > 0) legendItems.push({p:'기타', count:otherCount});
+  if(otherCount > 0) legendItems.push({p:'기타', count:otherCount, pct:Math.round(otherCount/total*100)});
 
   document.getElementById('bizPublisherLegend').innerHTML = legendItems.map((x,i)=>`
     <div class="rounded-lg bg-slate-900/70 p-2 text-center flex flex-col justify-center">
       <div class="text-[10px] muted truncate px-1">${escapeHtml(x.p)}</div>
       <div class="text-base font-bold mt-0.5" style="color:${colors[i]}">${x.count}개</div>
+      <div class="text-[9px] muted">${x.pct!=null?x.pct+'%':bizPct(x.count,total)}</div>
     </div>`).join('');
 
-  return arr;
-}
-
-  const legendItems = top5.slice();
-  if(otherCount > 0) legendItems.push({p:'기타', count:otherCount});
-
-  document.getElementById('bizPublisherLegend').innerHTML = legendItems.map((x,i)=>`
-    <div class="rounded-lg bg-slate-900/70 p-2 text-center flex flex-col justify-center">
-      <div class="text-[10px] muted truncate px-1">${escapeHtml(x.p)}</div>
-      <div class="text-base font-bold mt-0.5" style="color:${colors[i]}">${x.count}개</div>
-    </div>`).join('');
+  const top5Share=Math.round(top5.reduce((s,x)=>s+x.count,0)/total*100);
+  setText('bizPublisherSummary', `상위 5개 퍼블리셔가 현재 매출 TOP100의 ${top5Share}%를 차지합니다 (총 ${arr.length}개 퍼블리셔 관측).`);
 
   return arr;
 }
@@ -2016,14 +2102,18 @@ function bizRenderLifecycle(){
 }
 function bizRenderInsights(momentum,entries,patterns,gaps,pubs){
   const rising=momentum.find(x=>x.diff>0), falling=momentum.slice().reverse().find(x=>x.diff<0), topGap=gaps[0], topPub=pubs[0];
+  const riskParts=[];
+  if(falling) riskParts.push(`${falling.g}가 최근 7일간 TOP100에서 ${Math.abs(falling.diff)}개 감소했습니다.`);
+  if(patterns.dropped>0) riskParts.push(`신규 진입 게임 중 ${patterns.dropped}개가 이미 TOP100에서 이탈했습니다.`);
   const cards=[
-    {icon:'fa-arrow-trend-up',title:'시장 트렌드',text:rising?`${rising.g}가 최근 7일간 매출 TOP100에서 ${rising.diff}개 증가했습니다.`:'최근 7일 장르 구성 변화가 크지 않습니다.'},
-    {icon:'fa-rocket',title:'신규 진입',text:entries.length?`최근 30일 매출 DB에서 ${entries.length}개 게임이 신규 진입했고, ${patterns.strong}개가 TOP30을 경험했습니다.`:'최근 30일 신규 진입 게임이 없습니다.'},
-    {icon:'fa-scale-balanced',title:'순위 Gap',text:topGap?`${topGap.name}은 인기 ${topGap.p}위 / 매출 ${topGap.s}위로 두 순위의 차이가 ${Math.abs(topGap.gap)}위입니다.`:'현재 두 DB의 공통 TOP100 데이터가 부족합니다.'}
+    {icon:'fa-arrow-trend-up',color:'text-indigo-400',title:'시장 트렌드',text:rising?`${rising.g}가 최근 7일간 매출 TOP100에서 ${rising.diff}개 증가했습니다.`:'최근 7일 장르 구성 변화가 크지 않습니다.'},
+    {icon:'fa-rocket',color:'text-indigo-400',title:'신규 진입',text:entries.length?`최근 30일 매출 DB에서 ${entries.length}개 게임이 신규 진입했고, ${patterns.strong}개가 TOP30을 경험했습니다.`:'최근 30일 신규 진입 게임이 없습니다.'},
+    {icon:'fa-scale-balanced',color:'text-indigo-400',title:'순위 Gap',text:topGap?`${topGap.name}은 인기 ${topGap.p}위 / 매출 ${topGap.s}위로 두 순위의 차이가 ${Math.abs(topGap.gap)}위입니다.`:'현재 두 DB의 공통 TOP100 데이터가 부족합니다.'},
+    {icon:'fa-triangle-exclamation',color:'text-amber-400',title:'위험 신호',text:riskParts.length?riskParts.join(' '):'뚜렷한 하락 신호가 관측되지 않았습니다.'}
   ];
   document.getElementById('bizInsightCards').innerHTML=cards.map(c=>`
     <div class="rounded-xl bg-slate-900/70 border border-slate-800 p-4 summary-card-hover">
-      <div class="flex items-center gap-2 text-xs font-semibold"><i class="fa-solid ${c.icon} text-indigo-400"></i>${c.title}</div>
+      <div class="flex items-center gap-2 text-xs font-semibold"><i class="fa-solid ${c.icon} ${c.color}"></i>${c.title}</div>
       <p class="text-[11px] leading-relaxed text-slate-300 mt-2">${escapeHtml(c.text)}</p>
     </div>`).join('');
 }
@@ -2035,12 +2125,18 @@ async function openBusinessAnalysis(){
     rebuildLookupIndices();
     const latest2=latestDate(rawStore.sales);setText('bizAsOf',latest2?`기준일 · ${latest2} · 매출·인기 DB 최근 30일`:'데이터 없음');
     const entries=bizBuildNewEntrants();setText('bizKpiNewEntrants',String(entries.length));
-    const pattern=bizRenderEntryPattern(entries);setText('bizKpiRetention',pattern.observed?bizPct(pattern.retained,pattern.observed):'-');
+    bizSetTag('bizKpiNewEntrantsTag', entries.length>=8?['활발','rank-up']:entries.length>=1?['보통','text-slate-400']:['없음','rank-down']);
+    const pattern=bizRenderEntryPattern(entries);
+    const retentionPct=pattern.observed?Math.round(pattern.retained/pattern.observed*100):null;
+    setText('bizKpiRetention',retentionPct!=null?`${retentionPct}%`:'-');
+    bizSetTag('bizKpiRetentionTag', retentionPct==null?null:retentionPct>=70?['안정적','rank-up']:retentionPct>=40?['보통','text-amber-300']:['주의','rank-down']);
     const sLatest=bizLatestGameRanks(rawStore.sales), sPrevDate=bizDateWindow(8)[0];let totalDelta=0,deltaN=0;
     if(sLatest.date&&sPrevDate){const prevMap=new Map();bizRowsOnDate(rawStore.sales,sPrevDate,100).forEach(r=>prevMap.set(getGameKey(r),rankOf(r)));sLatest.map.forEach((v,k)=>{const p=prevMap.get(k);if(p){totalDelta+=Math.abs(p-v.rank);deltaN++;}});}
-    setText('bizKpiVolatility',deltaN?`${(totalDelta/deltaN).toFixed(1)}위`:'-');
-    bizRenderGenreChart(rawStore.sales,'bizSalesGenreTrendChart','bizSalesGenreTrendInst','#818cf8');
-    bizRenderGenreChart(rawStore.popular,'bizPopularGenreTrendChart','bizPopularGenreTrendInst','#38bdf8');
+    const avgDelta=deltaN?totalDelta/deltaN:null;
+    setText('bizKpiVolatility',avgDelta!=null?`${avgDelta.toFixed(1)}위`:'-');
+    bizSetTag('bizKpiVolatilityTag', avgDelta==null?null:avgDelta<=3?['안정적','rank-up']:avgDelta<=8?['보통','text-amber-300']:['변동 큼','rank-down']);
+    bizRenderGenreChart(rawStore.sales,'bizSalesGenreTrendChart','bizSalesGenreTrendInst');
+    bizRenderGenreChart(rawStore.popular,'bizPopularGenreTrendChart','bizPopularGenreTrendInst');
     const momentum=bizRenderGenreMomentum();const gaps=bizRenderGap();bizRenderEntries(entries);const pubs=bizRenderPublishers();bizRenderLifecycle();bizRenderInsights(momentum,entries,pattern,gaps,pubs);
     if(pubs[0]){setText('bizKpiPublisher',pubs[0].p);setText('bizKpiPublisherMeta',`현재 매출 TOP100 ${pubs[0].count}개 · ${pubs[0].pct}%`);}else{setText('bizKpiPublisher','-');setText('bizKpiPublisherMeta','-');}
   }catch(e){console.error(e);setText('bizAsOf','분석 데이터 로드 실패');}
@@ -2096,3 +2192,5 @@ window.addEventListener('DOMContentLoaded',fetchAllData);
 </script>
 </body>
 </html>
+
+사업 분석의 세부 페이지를 보고 UI/UX 부분을 수정하고 싶은데 니가 한번 확인한다음 개선할 부분을 검토해줬으면 좋겠어. 코드 수정은 내가 최종 승인해야 진행.
