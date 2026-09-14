@@ -24,18 +24,101 @@ body { background:#080d18; }
 .summary-card-hover:hover { background:rgba(30,41,59,.9); transform: translateY(-2px); border-color: rgba(99, 102, 241, 0.4); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
 select option { background-color: #0f172a; color: #f1f5f9; }
 
-/* 캘린더 전용 스타일 */
-.cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 1px; background-color: rgba(71,85,105,.3); border: 1px solid rgba(71,85,105,.3); border-radius: 0.5rem; overflow: hidden; }
-.cal-header { background: rgba(30,41,59,.9); text-align: center; padding: 10px 0; font-size: 11px; font-weight: 600; color: #94a3b8; }
-.cal-cell { background: #0f172a; min-height: 120px; padding: 6px; display: flex; flex-direction: column; gap: 4px; transition: background 0.2s; }
-.cal-cell:hover { background: #1e293b; }
-.cal-cell.today { background: rgba(99, 102, 241, 0.1); box-shadow: inset 0 0 0 1px #6366f1; }
-.cal-date { font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 4px; }
-.cal-cell.today .cal-date { color: #818cf8; }
-.cal-item { font-size: 11px; font-weight: 500; letter-spacing: -0.3px; padding: 4px 7px; border-radius: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: default; border: 1px solid transparent; }
-.cal-item.mobile { background: rgba(16, 185, 129, 0.2); color: #a7f3d0; border-color: rgba(16, 185, 129, 0.4); }
-.cal-item.pc { background: rgba(148, 163, 184, 0.25); color: #f1f5f9; border-color: rgba(148, 163, 184, 0.4); }
-.cal-empty { background: rgba(15,23,42,0.5); }
+/* ══ 캘린더 전용 스타일 (v2 · 가시성 개선) ══════════════════════
+   출시유형 컬러: OPEN #22c55e / TEST #f59e0b / EARLY #38bdf8
+   인디고(#6366f1)는 "오늘" 전용으로만 사용 (더보기 등에 재사용 금지) */
+.cal-typecolors { --t-open:#22c55e; --t-test:#f59e0b; --t-early:#38bdf8; }
+
+/* 레이아웃: 좌측 물량 레일(184px) + 우측 달력 */
+.cal-wrap { display: flex; flex-direction: column; gap: 14px; align-items: stretch; }
+@media (min-width: 1024px) { .cal-wrap { flex-direction: row; align-items: flex-start; } }
+.cal-rail { width: 100%; flex: 0 0 auto; }
+@media (min-width: 1024px) { .cal-rail { width: 184px; } }
+.cal-main { flex: 1 1 auto; min-width: 0; }
+
+/* 요일 헤더 */
+.cal-hdr { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); margin-bottom: 7px; }
+.cal-hdr > div { text-align: center; padding: 6px 0; font-size: 12px; font-weight: 700; color: #94a3b8; }
+.cal-hdr > div.sun { color: #f9a8a8; }
+.cal-hdr > div.sat { color: #9cc4f5; }
+
+/* 그리드: 경계 대비를 한 단계 올려 열 정렬이 잡히도록 */
+.cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 1px; background-color: rgba(71,85,105,.45); border: 1px solid rgba(100,116,139,.55); border-radius: 0.6rem; overflow: hidden; }
+.cal-cell { background: #0f172a; min-height: var(--cal-cell-h, 214px); padding: 9px 9px 10px; display: flex; flex-direction: column; gap: 7px; transition: background 0.2s; }
+.cal-cell:hover { background: #16202f; }
+.cal-cell.sun { background: #0e1119; }
+.cal-cell.sat { background: #0c1119; }
+.cal-cell.sun:hover, .cal-cell.sat:hover { background: #16202f; }
+/* 지난달/다음달 칸은 한 단계 어둡게 눌러 이달의 시작·끝이 읽히게 */
+.cal-empty, .cal-cell.cal-empty:hover { background: #070b12; }
+.cal-cell.today { background: #131029; box-shadow: inset 0 0 0 2px #6366f1; }
+
+/* 날짜 숫자: 15px로 키우고 주말은 색으로 구분, 오늘은 채운 원형 뱃지 */
+.cal-date { font-size: 15px; font-weight: 700; color: #ccd8e8; line-height: 1; font-variant-numeric: tabular-nums; margin: 0; }
+.cal-cell.sun .cal-date { color: #f9a8a8; }
+.cal-cell.sat .cal-date { color: #9cc4f5; }
+.cal-cell.today .cal-date { background: #6366f1; color: #fff; width: 25px; height: 25px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; margin: -3px 0 -2px -3px; }
+
+/* 카드: 좌측 3px 바 = 출시유형 / 배경 = 플랫폼 / 굵기·밝기 = 주요 퍼블리셔 */
+.cal-items { display: flex; flex-direction: column; gap: 4px; }
+.cal-item { border-left: 3px solid var(--tc, #22c55e); border-radius: 5px; padding: 5px 8px 6px; display: flex; flex-direction: column; gap: 3px; cursor: default; }
+.cal-item.mobile { background: rgba(16, 185, 129, 0.16); }
+.cal-item.pc { background: rgba(148, 163, 184, 0.18); }
+.cal-item.mobile.major { background: rgba(16, 185, 129, 0.34); }
+.cal-item.pc.major { background: rgba(148, 163, 184, 0.34); }
+.cal-badge { font-size: 8.5px; font-weight: 700; letter-spacing: .09em; line-height: 1; color: var(--tc, #22c55e); }
+/* 제목 2줄 래핑 — 잘림 제거의 핵심 */
+.cal-name { font-size: 12.5px; line-height: 1.32; letter-spacing: -0.2px; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: keep-all; }
+.cal-item.mobile .cal-name { color: #9fe8d0; font-weight: 500; }
+.cal-item.pc .cal-name { color: #d8e2ef; font-weight: 500; }
+.cal-item.major .cal-name { font-weight: 700; }
+.cal-item.mobile.major .cal-name { color: #d3fbec; }
+.cal-item.pc.major .cal-name { color: #ffffff; }
+
+/* 더보기/접기: 인디고 대신 무채색 (오늘 색과 충돌 방지) */
+.cal-more { margin-top: auto; width: 100%; border: 1px solid #2f3f57; border-radius: 5px; background: transparent; color: #94a3b8; font-size: 11px; padding: 4px 6px; cursor: pointer; transition: background .15s, color .15s; font-variant-numeric: tabular-nums; }
+.cal-more:hover { background: #1c2740; color: #e2e8f0; }
+
+/* 상단 지표 / 토글 / 범례 / 칸당 표시 */
+.cal-navbtn { width: 32px; height: 32px; border-radius: 8px; background: #1e293b; color: #cbd5e1; display: flex; align-items: center; justify-content: center; transition: background .15s; }
+.cal-navbtn:hover { background: #334155; }
+.cal-kpi { border: 1px solid rgba(71,85,105,.7); border-radius: 8px; background: rgba(15,23,42,.8); padding: 4px 13px; display: flex; align-items: baseline; gap: 7px; transition: opacity .15s; }
+.cal-kpi > b { font-size: 18px; font-weight: 700; line-height: 1.2; color: #818cf8; font-variant-numeric: tabular-nums; }
+.cal-kpi.m > b { color: #34d399; }
+.cal-kpi.p > b { color: #cbd5e1; }
+.cal-kpi > span { font-size: 11px; color: #94a3b8; }
+.cal-kpi.dim { opacity: .4; }
+.cal-toggle { display: inline-flex; align-items: center; gap: 7px; border: 1px solid rgba(71,85,105,.7); border-radius: 999px; background: rgba(15,23,42,.8); color: #64748b; font-size: 12px; padding: 6px 14px; cursor: pointer; transition: background .15s, color .15s, border-color .15s; }
+.cal-toggle input { position: absolute; opacity: 0; width: 0; height: 0; }
+.cal-toggle .knob { width: 22px; height: 12px; border-radius: 999px; background: #243349; position: relative; flex-shrink: 0; }
+.cal-toggle .knob::after { content: ""; position: absolute; top: 2px; left: 2px; width: 8px; height: 8px; border-radius: 50%; background: #5a6a80; transition: transform .16s, background .16s; }
+.cal-toggle:has(input:checked) { background: #0f3830; border-color: #1d6455; color: #8ce8cd; }
+.cal-toggle:has(input:checked) .knob { background: #1d6455; }
+.cal-toggle:has(input:checked) .knob::after { background: #7ce8c8; transform: translateX(10px); }
+.cal-toggle:focus-within { outline: 2px solid #6366f1; outline-offset: 2px; }
+.cal-lg { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 700; letter-spacing: .08em; color: #94a3b8; }
+.cal-lg > i { width: 9px; height: 9px; border-radius: 2px; display: block; }
+.cal-sw { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
+.cal-sw.m { background: rgba(16,185,129,.16); border: 1px solid rgba(16,185,129,.45); }
+.cal-sw.p { background: rgba(148,163,184,.18); border: 1px solid rgba(148,163,184,.45); }
+.cal-sw.major { background: rgba(16,185,129,.34); border: 1px solid rgba(16,185,129,.6); }
+.cal-capsel { display: flex; gap: 2px; padding: 2px; background: rgba(15,23,42,.9); border: 1px solid rgba(71,85,105,.7); border-radius: 7px; }
+.cal-capsel button { border: 0; background: transparent; color: #94a3b8; font-size: 11.5px; padding: 3px 11px; border-radius: 5px; cursor: pointer; font-variant-numeric: tabular-nums; }
+.cal-capsel button:hover { color: #e2e8f0; }
+.cal-capsel button.on { background: #1c2942; color: #eaf1fb; }
+.cal-capsel button:focus-visible { outline: 2px solid #6366f1; outline-offset: 1px; }
+
+/* 좌측 주차별 물량 레일 */
+.cal-wk { padding: 8px 10px; border-radius: 8px; border: 1px solid transparent; display: flex; flex-direction: column; gap: 6px; }
+.cal-wk.peak { background: rgba(30,41,59,.55); border-color: rgba(71,85,105,.55); }
+.cal-wk-h { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.cal-wk-n { font-size: 12.5px; font-weight: 600; color: #cbd5e1; }
+.cal-wk-n em { font-style: normal; font-size: 10.5px; color: #64748b; margin-left: 5px; }
+.cal-wk-c { font-size: 13px; font-weight: 700; color: #7ce8c8; font-variant-numeric: tabular-nums; }
+.cal-wk-bar { height: 5px; border-radius: 3px; background: #16202f; overflow: hidden; display: flex; }
+.cal-wk-bar > i { display: block; height: 100%; }
+.cal-wk-bar > i.m { background: #34d399; }
+.cal-wk-bar > i.p { background: #64748b; }
 
 /* A안 커스텀 툴팁 스타일 */
 .custom-tooltip-wrap { position: relative; display: inline-block; }
@@ -238,56 +321,66 @@ select option { background-color: #0f172a; color: #f1f5f9; }
 </div>
 
 <!-- CALENDAR VIEW -->
-<div id="view-calendar" class="hidden space-y-4">
-  <div class="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+<div id="view-calendar" class="hidden space-y-3">
+  <!-- 1행: 월 네비 + 지표 + 필터 토글 -->
+  <div class="flex flex-col xl:flex-row gap-3 items-start xl:items-center justify-between">
     <div class="flex items-center gap-3">
-      <button onclick="changeCalMonth(-1)" class="w-8 h-8 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition-colors"><i class="fa-solid fa-chevron-left"></i></button>
+      <button onclick="changeCalMonth(-1)" class="cal-navbtn" aria-label="이전 달"><i class="fa-solid fa-chevron-left"></i></button>
       <h2 id="calMonthTitle" class="text-xl font-bold w-36 whitespace-nowrap text-center">-</h2>
-      <button onclick="changeCalMonth(1)" class="w-8 h-8 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition-colors"><i class="fa-solid fa-chevron-right"></i></button>
-      <button onclick="resetCalMonth()" class="text-xs ml-2 px-3 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 transition-colors shrink-0">이번 달</button>
+      <button onclick="changeCalMonth(1)" class="cal-navbtn" aria-label="다음 달"><i class="fa-solid fa-chevron-right"></i></button>
+      <button onclick="resetCalMonth()" class="text-xs ml-1 px-3 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 transition-colors shrink-0">이번 달</button>
     </div>
 
-    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-      <div id="calStatsBadge" class="text-xs px-4 py-2 rounded-lg bg-slate-800/80 border border-slate-700 font-medium flex gap-3">
-        <span>총 신작: <strong id="calStatTotal" class="text-indigo-400">0</strong></span>
-        <span class="w-px h-4 bg-slate-600"></span>
-        <span>모바일: <strong id="calStatMobile" class="text-emerald-400">0</strong></span>
-        <span class="w-px h-4 bg-slate-600"></span>
-        <span>PC/콘솔: <strong id="calStatPC" class="text-slate-300">0</strong></span>
+    <div class="flex flex-wrap items-center gap-2">
+      <div class="flex gap-2">
+        <div class="cal-kpi"><b id="calStatTotal">0</b><span>총 신작</span></div>
+        <div class="cal-kpi m"><b id="calStatMobile">0</b><span>모바일</span></div>
+        <div class="cal-kpi p" id="calStatPCWrap"><b id="calStatPC">0</b><span id="calStatPCLabel">PC·콘솔</span></div>
       </div>
-      <div class="flex items-center gap-2">
-        <label class="flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 cursor-pointer hover:bg-slate-800 transition-colors">
-          <input type="checkbox" id="calMobileOnly" checked onchange="renderCalendar()" class="accent-indigo-500"> 모바일(멀티 플랫폼)만 보기
-        </label>
-        <label class="flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 cursor-pointer hover:bg-slate-800 transition-colors">
-          <input type="checkbox" id="calOfficialOnly" onchange="renderCalendar()" class="accent-indigo-500"> 정식출시만 보기
-        </label>
+      <label class="cal-toggle">
+        <input type="checkbox" id="calMobileOnly" checked onchange="renderCalendar()"><span class="knob"></span>모바일(멀티)만
+      </label>
+      <label class="cal-toggle">
+        <input type="checkbox" id="calOfficialOnly" onchange="renderCalendar()"><span class="knob"></span>정식출시만
+      </label>
+    </div>
+  </div>
+
+  <!-- 2행: 범례 + 칸당 표시 개수 -->
+  <div class="card rounded-xl px-4 py-2.5 flex flex-wrap items-center justify-between gap-x-5 gap-y-2">
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+      <span class="cal-lg"><i style="background:#22c55e"></i>OPEN</span>
+      <span class="cal-lg"><i style="background:#f59e0b"></i>TEST</span>
+      <span class="cal-lg"><i style="background:#38bdf8"></i>EARLY</span>
+      <span class="w-px h-3.5 bg-slate-700 hidden sm:block"></span>
+      <span class="flex items-center gap-1.5 text-[10px] muted"><span class="cal-sw m"></span>모바일 포함</span>
+      <span class="flex items-center gap-1.5 text-[10px] muted"><span class="cal-sw p"></span>PC·콘솔 단독</span>
+      <span class="flex items-center gap-1.5 text-[10px] muted"><span class="cal-sw major"></span>주요 퍼블리셔</span>
+    </div>
+    <div class="flex items-center gap-2 text-[11px] text-slate-500">
+      <span>칸당 표시</span>
+      <div class="cal-capsel" id="calCapSel">
+        <button type="button" data-c="3" onclick="setCalCap(3)">3</button>
+        <button type="button" data-c="4" onclick="setCalCap(4)" class="on">4</button>
+        <button type="button" data-c="5" onclick="setCalCap(5)">5</button>
+        <button type="button" data-c="99" onclick="setCalCap(99)">전체</button>
       </div>
     </div>
   </div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 items-start">
-    <div class="col-span-1 space-y-3">
-      <div class="card rounded-xl p-4">
-        <h3 class="text-sm font-semibold mb-3 flex items-center gap-2"><i class="fa-solid fa-list-check text-indigo-400"></i>주차별 주요 출시작</h3>
-        <div id="calWeeklySummary" class="space-y-4 pr-1"></div>
+  <!-- 3행: 물량 레일 + 달력 -->
+  <div class="cal-wrap">
+    <aside class="cal-rail">
+      <div class="card rounded-xl p-3.5">
+        <h3 class="text-[10px] font-bold tracking-[0.14em] text-slate-500 mb-2.5">주차별 물량</h3>
+        <div id="calWeeklySummary" class="space-y-0.5"></div>
       </div>
-    </div>
-    <div class="col-span-1 lg:col-span-3 card rounded-xl p-4">
-      <div class="cal-grid mb-1">
-        <div class="cal-header text-rose-400">SUN</div>
-        <div class="cal-header">MON</div>
-        <div class="cal-header">TUE</div>
-        <div class="cal-header">WED</div>
-        <div class="cal-header">THU</div>
-        <div class="cal-header">FRI</div>
-        <div class="cal-header text-sky-400">SAT</div>
+    </aside>
+    <div class="cal-main card rounded-xl p-3.5">
+      <div class="cal-hdr">
+        <div class="sun">일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div class="sat">토</div>
       </div>
       <div id="calGridBody" class="cal-grid"></div>
-      <div class="flex items-center justify-end gap-3 mt-3 text-[10px] muted">
-        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-emerald-500/20 border border-emerald-500/30 inline-block"></span>모바일 포함</span>
-        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-slate-700/50 border border-slate-600/50 inline-block"></span>PC/콘솔 단독</span>
-      </div>
     </div>
   </div>
 </div>
@@ -1068,6 +1161,67 @@ async function ensureCalendarMonthLoaded(){
   renderCalendar();
 }
 
+/* ══ 신작 달력 v2 (가시성 개선) ═══════════════════════════════════
+   변경 요지
+   1) 제목 2줄 래핑 + 사이드바 폭 회수(24% → 184px 레일) → 제목 잘림 제거
+   2) 칸당 노출 개수 상한 + "+N 더보기" 접기 → 행 높이 균일, 한 달이 한 화면에
+   3) 퍼블리셔 기준 주목작 강조(3단 위계)
+   4) 출시유형 OPEN/TEST/EARLY 3종 모두 표기 (기존엔 OPEN에 뱃지가 없어 TEST만 보였음)
+   5) 인디고는 '오늘' 전용, 더보기는 무채색으로 분리
+   ※ 데이터 스키마(월간신작DB: 출시일/게임명/플랫폼/퍼블리셔/출시유형)는 그대로 사용 */
+
+// 칸당 표시 개수 (3 / 4 / 5 / 99=전체). 상단 "칸당 표시" 버튼으로 변경.
+let calMaxPerCell = 4;
+// "+N 더보기"로 펼쳐 둔 날짜들
+const calExpandedDays = new Set();
+// 현재 그려진 월 (월이 바뀌면 펼침 상태 초기화)
+let calRenderedYM = '';
+
+// [v2] 주요 퍼블리셔 목록 — 퍼블리셔 문자열에 아래 키워드가 포함되면 달력에서 '주목작'으로 강조.
+// 월간신작DB에는 장르/규모 컬럼이 없어, 가지고 있는 컬럼(퍼블리셔)으로 위계를 만든 것.
+// 자유롭게 추가/삭제하면 되고, 배열을 비우면 강조 없이 전부 균일하게 표시된다.
+const CAL_MAJOR_PUBLISHERS = [
+  '넥슨','nexon','넷마블','netmarble','엔씨','ncsoft','카카오','kakao','크래프톤','krafton',
+  '컴투스','com2us','위메이드','wemade','네오위즈','neowiz','스마일게이트','smilegate',
+  '그라비티','gravity','펄어비스','pearlabyss','데브시스터즈','devsisters','시프트업','shiftup',
+  '라인게임즈','linegames','웹젠','webzen','조이시티','joycity','하이브im','hiveim',
+  '텐센트','tencent','levelinfinite','넷이즈','netease','호요버스','hoyoverse','mihoyo',
+  'supercell','슈퍼셀','playrix','scopely','habby','centurygames','funplus','lilith','릴리스',
+  'yostar','요스타','반다이','bandai','스퀘어에닉스','squareenix','세가','sega',
+  '코나미','konami','캡콤','capcom','닌텐도','nintendo','ubisoft','유비소프트',
+  '디즈니','disney','로블록스','roblox','가레나','garena','미호요'
+];
+
+// 출시유형 문자열 → 'OPEN' | 'TEST' | 'EARLY'
+// 시트 표기가 '얼리억세스'/'얼리액세스'처럼 흔들려도 잡히도록 넉넉하게 매칭한다.
+function resolveCalType(typeStr){
+  const t = String(typeStr || '').replace(/\s+/g, '').toLowerCase();
+  if (t.includes('테스트') || t.includes('test') || t.includes('cbt') || t.includes('obt') || t.includes('베타') || t.includes('beta')) return 'TEST';
+  if (t.includes('얼리') || t.includes('early') || t.includes('앞서') ) return 'EARLY';
+  return 'OPEN'; // 정식출시 및 미기재
+}
+const CAL_TYPE_COLOR = { OPEN:'#22c55e', TEST:'#f59e0b', EARLY:'#38bdf8' };
+
+function isCalMajorPublisher(pub){
+  const p = String(pub || '').replace(/\s+/g, '').toLowerCase();
+  if(!p || p === '-') return false;
+  return CAL_MAJOR_PUBLISHERS.some(k => p.includes(k));
+}
+
+// 상단 "칸당 표시" 버튼
+function setCalCap(n){
+  calMaxPerCell = n;
+  calExpandedDays.clear();
+  document.querySelectorAll('#calCapSel button').forEach(b => b.classList.toggle('on', Number(b.dataset.c) === n));
+  renderCalendar();
+}
+
+// 셀의 "+N 더보기 / 접기"
+function toggleCalDay(d){
+  if(calExpandedDays.has(d)) calExpandedDays.delete(d); else calExpandedDays.add(d);
+  renderCalendar();
+}
+
 function renderCalendar() {
   const data = rawStore.newReleases, gridBody = document.getElementById('calGridBody'), weeklySummary = document.getElementById('calWeeklySummary');
   setText('calMonthTitle', `${currentCalYear}년 ${currentCalMonth}월`);
@@ -1081,104 +1235,135 @@ function renderCalendar() {
   const isOfficialOnly = document.getElementById('calOfficialOnly').checked;
   const targetYM = `${currentCalYear}-${String(currentCalMonth).padStart(2, '0')}`;
 
-  let monthGames = [];
+  // 월이 바뀌면 이전 달에서 펼쳐둔 셀 상태는 버린다
+  if(calRenderedYM !== targetYM){ calExpandedDays.clear(); calRenderedYM = targetYM; }
+
+  const monthGames = [];
   data.rows.forEach(r => {
     const rDate = String(r[0]||'').trim();
-    if(rDate.startsWith(targetYM)) {
-      const platformStr = String(r[2] || '').trim();
-      const typeStr = String(r[4] || '').trim();
-      const isMobile = platformStr.replace(/\s+/g, '').includes('모바일');
-      const typeClean = typeStr.replace(/\s+/g, '').toLowerCase();
-      const isOfficial = typeClean.includes('정식출시');
-      const isTest = typeClean.includes('테스트');
-      const isEarly = typeClean.includes('얼리억세스');
+    if(!rDate.startsWith(targetYM)) return;
 
-      if(isMobileOnly && !isMobile) return;
-      if(isOfficialOnly && !isOfficial) return;
+    const platformStr = String(r[2] || '').trim();
+    const typeStr = String(r[4] || '').trim();
+    const publisher = String(r[3] || '-').trim();
+    const isMobile = platformStr.replace(/\s+/g, '').includes('모바일');
+    const type = resolveCalType(typeStr);
 
-      monthGames.push({
-        date: rDate,
-        day: parseInt(rDate.split('-')[2], 10),
-        name: String(r[1]||'-').trim(),
-        platform: platformStr,
-        publisher: String(r[3]||'-').trim(),
-        type: typeStr,
-        isMobile: isMobile,
-        isOfficial: isOfficial,
-        isTest: isTest,
-        isEarly: isEarly
-      });
-    }
+    if(isMobileOnly && !isMobile) return;
+    if(isOfficialOnly && type !== 'OPEN') return;
+
+    monthGames.push({
+      date: rDate,
+      day: parseInt(rDate.split('-')[2], 10),
+      name: String(r[1]||'-').trim(),
+      platform: platformStr,
+      publisher: publisher,
+      typeRaw: typeStr,
+      type: type,
+      isMobile: isMobile,
+      isMajor: isCalMajorPublisher(publisher)
+    });
   });
 
   const countMobile = monthGames.filter(g => g.isMobile).length;
-  setText('calStatTotal', monthGames.length); setText('calStatMobile', countMobile); setText('calStatPC', monthGames.length - countMobile);
+  setText('calStatTotal', monthGames.length);
+  setText('calStatMobile', countMobile);
+  setText('calStatPC', monthGames.length - countMobile);
+  // 모바일 필터가 켜져 있으면 PC·콘솔 0은 "실제 0"이 아니라 "필터로 제외됨" — 흐리게 눌러서 구분
+  const pcWrap = document.getElementById('calStatPCWrap');
+  if(pcWrap) pcWrap.classList.toggle('dim', isMobileOnly);
+  setText('calStatPCLabel', isMobileOnly ? 'PC·콘솔 (필터 제외)' : 'PC·콘솔');
+
+  // 날짜별로 묶고, 칸이 잘릴 때 주목작이 먼저 살아남도록 주요 퍼블리셔를 앞으로
+  const byDay = {};
+  monthGames.forEach(g => { (byDay[g.day] = byDay[g.day] || []).push(g); });
+  Object.keys(byDay).forEach(k => byDay[k].sort((a,b) => (b.isMajor?1:0) - (a.isMajor?1:0)));
 
   const firstDay = new Date(currentCalYear, currentCalMonth - 1, 1).getDay();
   const daysInMonth = new Date(currentCalYear, currentCalMonth, 0).getDate();
-  const todayVal = new Date().toISOString().slice(0, 10);
+  // toISOString()은 UTC 기준이라 KST 오전 9시 이전에 '오늘'이 하루 밀린다 — 로컬 기준으로 계산
+  const nowD = new Date();
+  const todayVal = `${nowD.getFullYear()}-${pad2(nowD.getMonth()+1)}-${pad2(nowD.getDate())}`;
+
+  const itemHtml = (g) => {
+    const cls = ['cal-item', g.isMobile ? 'mobile' : 'pc'];
+    if(g.isMajor) cls.push('major');
+    const tip = `${g.name}\n플랫폼: ${g.platform || '-'}\n출시유형: ${g.typeRaw || '-'}\n퍼블리셔: ${g.publisher || '-'}`;
+    return `<div class="${cls.join(' ')}" style="--tc:${CAL_TYPE_COLOR[g.type]}" title="${escapeAttr(tip)}">`
+         + `<span class="cal-badge">${g.type}</span>`
+         + `<span class="cal-name">${escapeHtml(g.name)}</span></div>`;
+  };
+
+  // 모든 행 높이를 같게 만들기 위한 1차 추정치 (렌더 후 실측으로 한 번 더 보정한다)
+  let maxShown = 1;
+  Object.keys(byDay).forEach(k => {
+    const n = calExpandedDays.has(Number(k)) ? byDay[k].length : Math.min(byDay[k].length, calMaxPerCell);
+    if(n > maxShown) maxShown = n;
+  });
+  gridBody.style.setProperty('--cal-cell-h', (34 + maxShown * 45) + 'px');
 
   let gridHtml = '';
   for(let i=0; i<firstDay; i++) gridHtml += `<div class="cal-cell cal-empty"></div>`;
 
   for(let d=1; d<=daysInMonth; d++) {
-    const isToday = `${targetYM}-${String(d).padStart(2, '0')}` === todayVal;
-    let itemsHtml = monthGames.filter(g => g.day === d).map(g => {
-      let badge = '';
-      if (g.isTest) badge = `<span class="px-1 py-0.5 rounded text-[9px] bg-purple-500/20 text-purple-300 mr-1 font-bold">TEST</span>`;
-      else if (g.isEarly) badge = `<span class="px-1 py-0.5 rounded text-[9px] bg-amber-500/20 text-amber-300 mr-1 font-bold">EARLY</span>`;
-      return `<div class="cal-item ${g.isMobile ? 'mobile' : 'pc'}" title="${escapeAttr(`플랫폼: ${g.platform}\n유형: ${g.type}\n퍼블리셔: ${g.publisher}`)}">${badge}${escapeHtml(g.name)}</div>`;
-    }).join('');
-    gridHtml += `<div class="cal-cell ${isToday ? 'today' : ''}"><div class="cal-date">${d}</div>${itemsHtml}</div>`;
+    const dow = (firstDay + d - 1) % 7;
+    const list = byDay[d] || [];
+    const expanded = calExpandedDays.has(d);
+    const shown = expanded ? list : list.slice(0, calMaxPerCell);
+    const hidden = list.length - shown.length;
+
+    const cellCls = ['cal-cell'];
+    if(dow === 0) cellCls.push('sun'); else if(dow === 6) cellCls.push('sat');
+    if(`${targetYM}-${pad2(d)}` === todayVal) cellCls.push('today');
+
+    let moreHtml = '';
+    if(hidden > 0) moreHtml = `<button type="button" class="cal-more" onclick="toggleCalDay(${d})">+${hidden}개 더보기</button>`;
+    else if(expanded && list.length > calMaxPerCell) moreHtml = `<button type="button" class="cal-more" onclick="toggleCalDay(${d})">접기</button>`;
+
+    gridHtml += `<div class="${cellCls.join(' ')}">`
+              + `<div class="cal-date">${d}</div>`
+              + `<div class="cal-items">${shown.map(itemHtml).join('')}</div>`
+              + moreHtml
+              + `</div>`;
   }
 
   const remainingCells = (firstDay + daysInMonth) % 7 === 0 ? 0 : 7 - ((firstDay + daysInMonth) % 7);
   for(let i=0; i<remainingCells; i++) gridHtml += `<div class="cal-cell cal-empty"></div>`;
   gridBody.innerHTML = gridHtml;
 
-  let weeklyHtml = '';
-  for(let w=0; w<Math.ceil((firstDay + daysInMonth) / 7); w++) {
+  // 행 높이 정밀 보정: 실제로 가장 높은 칸(더보기 버튼·오늘 뱃지·2줄 제목 포함)에 전체를 맞춘다.
+  // 탭이 숨겨진 상태(높이 0)에서 호출됐을 땐 위의 추정치를 그대로 둔다.
+  let tallest = 0;
+  gridBody.querySelectorAll('.cal-cell').forEach(c => {
+    const h = c.getBoundingClientRect().height;
+    if(h > tallest) tallest = h;
+  });
+  if(tallest > 0) gridBody.style.setProperty('--cal-cell-h', Math.ceil(tallest) + 'px');
+
+  // ── 좌측 레일: 주차별 물량 (모바일/PC 2색 스택 바)
+  const weekCount = Math.ceil((firstDay + daysInMonth) / 7);
+  const weekRows = [];
+  for(let w=0; w<weekCount; w++) {
     const startDay = (w * 7) - firstDay + 1, endDay = startDay + 6;
     const actualStart = Math.max(1, startDay), actualEnd = Math.min(daysInMonth, endDay);
-
-    if (actualStart <= daysInMonth && actualEnd >= 1) {
-      const weekGames = monthGames.filter(g => g.day >= actualStart && g.day <= actualEnd);
-      if (weekGames.length > 0) {
-        let chipsHtml = weekGames.slice(0, 3).map(g => {
-          let badge = '';
-          if (g.isTest) badge = `<span class="px-1 py-0.5 rounded text-[8px] bg-purple-500/20 text-purple-300 mr-1 font-bold">TEST</span>`;
-          else if (g.isEarly) badge = `<span class="px-1 py-0.5 rounded text-[8px] bg-amber-500/20 text-amber-300 mr-1 font-bold">EARLY</span>`;
-          const colorClass = g.isMobile ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-slate-700/50 text-slate-300 border-slate-600/50';
-          return `<span class="inline-block px-2 py-0.5 rounded border ${colorClass} text-[10px] mr-1 mb-1 truncate max-w-[150px]" title="${escapeAttr(g.name)}">${badge}${escapeHtml(g.name)}</span>`;
-        }).join('');
-
-        let moreHtml = '';
-        if (weekGames.length > 3) {
-          const remainingList = weekGames.slice(3).map(g => {
-            let b = '';
-            if (g.isTest) b = '[TEST] ';
-            else if (g.isEarly) b = '[EARLY] ';
-            return `${b}${g.name} (${g.platform})`;
-          }).join('<br>');
-          moreHtml = `
-            <div class="custom-tooltip-wrap inline-block">
-              <span class="inline-block px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[10px] cursor-help mb-1">+${weekGames.length-3}종 더보기</span>
-              <div class="custom-tooltip-content">${remainingList}</div>
-            </div>`;
-        }
-
-        weeklyHtml += `
-          <div class="border-b border-slate-800 pb-3 last:border-0">
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-xs font-bold text-indigo-300">${w+1}주차 <span class="muted font-normal ml-1">(${currentCalMonth}/${actualStart} ~ ${currentCalMonth}/${actualEnd})</span></span>
-              <span class="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-300 border border-slate-700 shrink-0">총 ${weekGames.length}종 <span class="text-emerald-400 opacity-80 ml-1">M ${weekGames.filter(g => g.isMobile).length}</span></span>
-            </div>
-            <div class="flex flex-wrap gap-y-0.5 items-center">${chipsHtml}${moreHtml}</div>
-          </div>`;
-      }
-    }
+    if(actualStart > daysInMonth || actualEnd < 1) continue;
+    const wg = monthGames.filter(g => g.day >= actualStart && g.day <= actualEnd);
+    weekRows.push({ w, actualStart, actualEnd, total: wg.length, mobile: wg.filter(g => g.isMobile).length });
   }
-  weeklySummary.innerHTML = weeklyHtml || '<div class="muted text-xs py-4 text-center">해당 월에 필터링된 신작 일정이 없습니다.</div>';
+
+  const maxWeek = Math.max(1, ...weekRows.map(x => x.total));
+  weeklySummary.innerHTML = weekRows.length ? weekRows.map(x => {
+    const pc = x.total - x.mobile;
+    const mPct = (x.mobile / maxWeek * 100).toFixed(1);
+    const pPct = (pc / maxWeek * 100).toFixed(1);
+    return `<div class="cal-wk${x.total === maxWeek && x.total > 0 ? ' peak' : ''}">
+        <div class="cal-wk-h">
+          <span class="cal-wk-n">${x.w+1}주차<em>${currentCalMonth}/${x.actualStart}–${currentCalMonth}/${x.actualEnd}</em></span>
+          <span class="cal-wk-c">${x.total}</span>
+        </div>
+        <div class="cal-wk-bar" title="모바일 ${x.mobile}종 · PC/콘솔 ${pc}종"><i class="m" style="width:${mPct}%"></i><i class="p" style="width:${pPct}%"></i></div>
+      </div>`;
+  }).join('') : '<div class="muted text-xs py-4 text-center">해당 월에 필터링된 신작 일정이 없습니다.</div>';
 }
 
 function populateGameNameOptions(){
