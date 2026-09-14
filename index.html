@@ -1615,7 +1615,7 @@ function openGameDetail(targetName) {
   const linkEl = document.getElementById('detailPlayStoreLink');
   if (finalAppId && finalAppId !== '-' && finalAppId.includes('.')) {
       linkEl.href = `https://play.google.com/store/apps/details?id=${encodeURIComponent(finalAppId)}`;
-      linkEl.innerHTML = `<i class="fa-brands fa-google-play text-emerald-400 text-lg"></i> Google Play 이동`;
+      linkEl.innerHTML = `<i class="fa-brands fa-google-play text-emerald-400 text-lg"></i> Google Play`;
   } else {
       linkEl.href = `https://play.google.com/store/search?q=${encodeURIComponent(targetName)}&c=apps`;
       linkEl.innerHTML = `<i class="fa-brands fa-google-play text-emerald-400 text-lg"></i> Google Play 검색`;
