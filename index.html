@@ -362,8 +362,8 @@ select option { background-color: #0f172a; color: #f1f5f9; }
       <div class="flex items-center justify-between mb-3">
         <div><h3 class="font-semibold text-sm">장르 Momentum</h3><p class="text-[10px] muted mt-1">현재 TOP100 비중 상위 장르 · 7일 전 대비 변화</p></div>
       </div>
-      <div id="bizGenreMomentum" class="divide-y divide-slate-800 max-h-[300px] overflow-y-auto scrollbar pr-1"></div>
-      <p id="bizGenreMomentumNote" class="hidden text-[9px] muted mt-2 leading-relaxed">※ '기타'는 세부 장르가 불명확하거나 퍼블리셔가 의도적으로 미분류 처리한 게임을 포함할 수 있어, 실제 장르 구성과 다를 수 있습니다.</p>
+      <div id="bizGenreMomentum" class="divide-y divide-slate-800 max-h-[300px] overflow-y-auto overflow-x-hidden scrollbar pr-1"></div>
+      <p id="bizGenreMomentumNote" class="hidden text-[11px] muted mt-2 leading-relaxed">※ '기타'는 세부 장르가 불명확하거나 퍼블리셔가 의도적으로 미분류 처리한 게임을 포함할 수 있어, 실제 장르 구성과 다를 수 있습니다.</p>
     </div>
     <div class="card rounded-xl p-5 lg:col-span-2">
       <div class="flex items-center justify-between mb-3">
@@ -2256,5 +2256,3 @@ window.addEventListener('DOMContentLoaded',fetchAllData);
 </script>
 </body>
 </html>
-
-사업 분석의 세부 페이지를 보고 UI/UX 부분을 수정하고 싶은데 니가 한번 확인한다음 개선할 부분을 검토해줬으면 좋겠어. 코드 수정은 내가 최종 승인해야 진행.
