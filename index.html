@@ -583,7 +583,9 @@ select option { background-color: #0f172a; color: #f1f5f9; }
   <section class="card rounded-xl p-5">
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
       <div>
-        <h2 class="font-semibold">타이틀 순위 검색</h2>
+        <h2 class="font-semibold flex items-center gap-2">타이틀 순위 검색
+          <span id="searchLoadingIndicator" class="hidden text-[10px] font-normal text-indigo-300"><i class="fa-solid fa-spinner fa-spin mr-1"></i>지난 기간 데이터 불러오는 중...</span>
+        </h2>
         <p class="text-xs muted mt-1">게임명을 검색해 인기·매출 순위 추이를 확인하고 비교할 수 있습니다.</p>
       </div>
       <div class="flex flex-wrap items-center gap-3">
@@ -1714,11 +1716,23 @@ function computeSearchNeededMonths(){
 }
 
 async function ensureSearchRangeLoaded(){
-  const months = computeSearchNeededMonths();
-  if(months.length){
-    await Promise.all(months.flatMap(({y,m}) => [ensureMonthLoaded('sales',y,m), ensureMonthLoaded('popular',y,m)]));
-  }
+  /* 이전 달 데이터를 추가로 불러와야 하는 조회 기간(15일 이상 등)을 처음 선택하면 네트워크 요청이 끝날 때까지
+     차트 영역이 비어 있어 "멈춘 것처럼" 보였다. 우선 지금 가진 데이터로 즉시 한 번 그리고, 로딩 표시를 띄운 뒤,
+     추가 데이터가 오면 다시 그린다. 그 중 한 달 요청이 실패해도(네트워크 순간 오류 등) 나머지 데이터로는
+     반드시 다시 그리도록 catch로 감싼다 — 실패 시 영영 안 그려지는 일이 없게.*/
   renderSearchCharts();
+  const months = computeSearchNeededMonths();
+  if(!months.length) return;
+  const indicator = document.getElementById('searchLoadingIndicator');
+  if(indicator) indicator.classList.remove('hidden');
+  try{
+    await Promise.all(months.flatMap(({y,m}) => [ensureMonthLoaded('sales',y,m), ensureMonthLoaded('popular',y,m)]));
+  }catch(e){
+    console.error('순위 검색 기간 데이터 로드 중 일부 실패', e);
+  }finally{
+    if(indicator) indicator.classList.add('hidden');
+    renderSearchCharts();
+  }
 }
 
 function setDefaultDateFilters(store){
