@@ -741,6 +741,44 @@ select option { background-color: #0f172a; color: #f1f5f9; }
   </div>
 </div>
 
+<!-- NEW RELEASE (WAME) DETAIL PANEL -->
+<div id="releaseDetailOverlay" class="fixed inset-0 bg-black/70 z-40 hidden opacity-0 transition-opacity duration-300" onclick="closeReleaseDetail()"></div>
+<div id="releaseDetailPanel" class="fixed top-0 right-0 w-full max-w-[450px] h-full bg-slate-900 shadow-2xl z-50 transform translate-x-full transition-transform duration-300 overflow-y-auto border-l border-slate-700 flex flex-col">
+  <div class="p-5 border-b border-slate-800 flex justify-between items-center sticky top-0 bg-slate-900/95 backdrop-blur z-20">
+    <div class="flex items-center gap-3 pr-2 min-w-0">
+      <img id="releaseDetailIcon" src="" class="w-11 h-11 rounded-xl object-cover bg-slate-800 hidden shrink-0 shadow" alt="">
+      <div class="min-w-0">
+        <div class="text-[11px] text-indigo-400 font-semibold mb-0.5 truncate" id="releaseDetailPub">-</div>
+        <h2 class="text-lg font-bold leading-tight truncate" id="releaseDetailTitle">-</h2>
+      </div>
+    </div>
+    <button onclick="closeReleaseDetail()" class="text-slate-400 hover:text-white shrink-0 ml-2"><i class="fa-solid fa-xmark text-xl"></i></button>
+  </div>
+
+  <div class="p-5 space-y-5 flex-1">
+    <div class="flex flex-wrap items-center gap-2" id="releaseDetailBadges"></div>
+
+    <div class="card p-4 rounded-xl border-slate-700/50 bg-slate-800/30">
+      <div class="text-[11px] muted mb-1"><i class="fa-regular fa-calendar mr-1.5"></i>출시(예정)일</div>
+      <div class="text-base font-bold mt-1" id="releaseDetailDate">-</div>
+    </div>
+
+    <div id="releaseDetailSummaryWrap" class="hidden">
+      <h4 class="text-sm font-semibold mb-2">게임 소개</h4>
+      <p class="text-xs leading-relaxed text-slate-300" id="releaseDetailSummary">-</p>
+    </div>
+
+    <div id="releaseDetailShotsWrap" class="hidden">
+      <h4 class="text-sm font-semibold mb-2">스크린샷</h4>
+      <div id="releaseDetailShots" class="flex gap-2 overflow-x-auto scrollbar pb-1"></div>
+    </div>
+
+    <a id="releaseDetailWameLink" href="#" target="_blank" class="hidden items-center justify-center gap-2 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sm font-semibold transition-colors">
+      <i class="fa-solid fa-arrow-up-right-from-square text-indigo-400"></i> WAME에서 자세히 보기
+    </a>
+  </div>
+</div>
+
 <script>
 const SPREADSHEET_ID = '1CW7Xr3eWBUKBPC0DXRDsqqrx2itUlzZfXPVF2hUoMAw';
 const SHEETS = { sales:'DB_매출순위', popular:'DB_인기순위', newReleases:'월간신작DB' };
@@ -1500,7 +1538,8 @@ function renderCalendar() {
       typeRaw: typeStr,
       type: type,
       isMobile: isMobile,
-      isMajor: isCalMajorPublisher(publisher)
+      isMajor: isCalMajorPublisher(publisher),
+      gameId: String(r[5] || '').trim()
     });
   });
 
@@ -1525,7 +1564,8 @@ function renderCalendar() {
     const cls = ['cal-item', g.isMobile ? 'mobile' : 'pc'];
     if(g.isMajor) cls.push('major');
     const tip = `${g.name}\n플랫폼: ${g.platform || '-'}\n출시유형: ${g.typeRaw || '-'}\n퍼블리셔: ${g.publisher || '-'}`;
-    return `<div class="${cls.join(' ')}" style="--tc:${CAL_TYPE_COLOR[g.type]}" title="${escapeAttr(tip)}">`
+    const key = g.gameId ? `id:${g.gameId}` : `nm:${g.name}|${g.platform}`;
+    return `<div class="${cls.join(' ')}" style="--tc:${CAL_TYPE_COLOR[g.type]}" title="${escapeAttr(tip)}" onclick="openReleaseDetail('${escapeAttr(key).replace(/&#039;/g,"\\'")}')">`
          + `<span class="cal-badge">${g.type}</span>`
          + `<span class="cal-name">${escapeHtml(g.name)}</span></div>`;
   };
@@ -1918,10 +1958,13 @@ function filterCurrentTable(){
     document.getElementById('tableHead').innerHTML = '<tr>' + headers.map(h => `<th class="px-4 py-3 whitespace-nowrap text-slate-300 font-semibold border-b border-slate-800">${h}</th>`).join('') + '</tr>';
     document.getElementById('tableBody').innerHTML = rows.length ? rows.map(r => {
       const gName = String(r[1]||'').trim() || '-';
-      return `<tr class="border-b border-slate-900 hover:bg-slate-800/60 cursor-pointer transition-colors" onclick="openGameDetail('${escapeAttr(gName).replace(/&#039;/g,"\\'")}')">
+      const gPlatform = String(r[2]||'').trim() || '-';
+      const gId = String(r[5]||'').trim();
+      const key = gId ? `id:${gId}` : `nm:${gName}|${gPlatform}`;
+      return `<tr class="border-b border-slate-900 hover:bg-slate-800/60 cursor-pointer transition-colors" onclick="openReleaseDetail('${escapeAttr(key).replace(/&#039;/g,"\\'")}')">
         <td class="px-4 py-2.5 whitespace-nowrap">${escapeHtml(String(r[0]||'').trim() || '-')}</td>
         <td class="px-4 py-2.5 whitespace-nowrap">${escapeHtml(gName)}</td>
-        <td class="px-4 py-2.5 whitespace-nowrap">${escapeHtml(String(r[2]||'').trim() || '-')}</td>
+        <td class="px-4 py-2.5 whitespace-nowrap">${escapeHtml(gPlatform)}</td>
         <td class="px-4 py-2.5 whitespace-nowrap">${escapeHtml(String(r[3]||'').trim() || '-')}</td>
         <td class="px-4 py-2.5 whitespace-nowrap">${escapeHtml(String(r[4]||'').trim() || '-')}</td>
       </tr>`;
@@ -2063,6 +2106,82 @@ function closeGameDetail() {
   document.getElementById('detailPanel').classList.add('translate-x-full');
   document.getElementById('detailOverlay').classList.add('opacity-0');
   setTimeout(() => document.getElementById('detailOverlay').classList.add('hidden'), 300);
+}
+
+function badgePill(text, color){
+  return `<span class="text-[11px] font-semibold px-2.5 py-1 rounded-full" style="color:${color};background:${color}22;border:1px solid ${color}55">${escapeHtml(text)}</span>`;
+}
+
+function findNewReleaseRow(key){
+  const data = rawStore.newReleases;
+  if(!data || !data.rows) return null;
+  if(key.startsWith('id:')){
+    const id = key.slice(3);
+    return data.rows.find(r => String(r[5]||'').trim() === id) || null;
+  }
+  if(key.startsWith('nm:')){
+    const [name, platform] = key.slice(3).split('|');
+    return data.rows.find(r => String(r[1]||'').trim() === name && String(r[2]||'').trim() === platform) || null;
+  }
+  return null;
+}
+
+function openReleaseDetail(key){
+  const row = findNewReleaseRow(key);
+  if(!row) return;
+
+  const date = String(row[0]||'').trim() || '-';
+  const name = String(row[1]||'').trim() || '-';
+  const platform = String(row[2]||'').trim() || '-';
+  const publisher = String(row[3]||'').trim() || '-';
+  const releaseType = String(row[4]||'').trim() || '-';
+  const gameId = String(row[5]||'').trim();
+  const icon = String(row[6]||'').trim();
+  const summary = String(row[7]||'').trim();
+  const shots = String(row[8]||'').trim();
+
+  setText('releaseDetailTitle', name);
+  setText('releaseDetailPub', publisher);
+  setText('releaseDetailDate', date);
+
+  const iconEl = document.getElementById('releaseDetailIcon');
+  if(icon && icon.startsWith('http')){ iconEl.src = icon; iconEl.classList.remove('hidden'); }
+  else { iconEl.classList.add('hidden'); }
+
+  const type = resolveCalType(releaseType);
+  const badgesEl = document.getElementById('releaseDetailBadges');
+  const platformBadges = platform.split('/').map(p=>p.trim()).filter(Boolean).map(p=>badgePill(p, '#94a3b8'));
+  badgesEl.innerHTML = [badgePill(releaseType, CAL_TYPE_COLOR[type])].concat(platformBadges).join('');
+
+  const summaryWrap = document.getElementById('releaseDetailSummaryWrap');
+  if(summary){ setText('releaseDetailSummary', summary); summaryWrap.classList.remove('hidden'); }
+  else summaryWrap.classList.add('hidden');
+
+  const shotsWrap = document.getElementById('releaseDetailShotsWrap');
+  const shotsEl = document.getElementById('releaseDetailShots');
+  const shotList = shots ? shots.split('|').map(s=>s.trim()).filter(Boolean) : [];
+  if(shotList.length){
+    shotsEl.innerHTML = shotList.map(u=>`<img src="${escapeAttr(u)}" class="h-32 rounded-lg object-cover shrink-0" alt="" onerror="this.style.display='none'">`).join('');
+    shotsWrap.classList.remove('hidden');
+  } else shotsWrap.classList.add('hidden');
+
+  const linkEl = document.getElementById('releaseDetailWameLink');
+  if(gameId){
+    linkEl.href = `https://www.wame.is/ko/game/${encodeURIComponent(gameId)}`;
+    linkEl.classList.remove('hidden'); linkEl.classList.add('flex');
+  } else { linkEl.classList.add('hidden'); linkEl.classList.remove('flex'); }
+
+  document.getElementById('releaseDetailOverlay').classList.remove('hidden');
+  setTimeout(() => {
+    document.getElementById('releaseDetailOverlay').classList.remove('opacity-0');
+    document.getElementById('releaseDetailPanel').classList.remove('translate-x-full');
+  }, 10);
+}
+
+function closeReleaseDetail() {
+  document.getElementById('releaseDetailPanel').classList.add('translate-x-full');
+  document.getElementById('releaseDetailOverlay').classList.add('opacity-0');
+  setTimeout(() => document.getElementById('releaseDetailOverlay').classList.add('hidden'), 300);
 }
 
 function bizDateWindow(days=30){
