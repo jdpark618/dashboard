@@ -775,9 +775,11 @@ select option { background-color: #0f172a; color: #f1f5f9; }
       <div id="releaseDetailShots" class="flex gap-2 overflow-x-auto scrollbar pb-1"></div>
     </div>
 
+    <!--
     <a id="releaseDetailWameLink" href="#" target="_blank" class="hidden items-center justify-center gap-2 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sm font-semibold transition-colors">
       <i class="fa-solid fa-arrow-up-right-from-square text-indigo-400"></i> WAME에서 자세히 보기
     </a>
+    -->
   </div>
 </div>
 
@@ -2189,11 +2191,13 @@ function openReleaseDetail(key){
     shotsWrap.classList.remove('hidden');
   } else shotsWrap.classList.add('hidden');
 
+  /*
   const linkEl = document.getElementById('releaseDetailWameLink');
   if(gameId){
     linkEl.href = `https://www.wame.is/ko/game/${encodeURIComponent(gameId)}`;
     linkEl.classList.remove('hidden'); linkEl.classList.add('flex');
   } else { linkEl.classList.add('hidden'); linkEl.classList.remove('flex'); }
+  */
 
   document.getElementById('releaseDetailOverlay').classList.remove('hidden');
   setTimeout(() => {
