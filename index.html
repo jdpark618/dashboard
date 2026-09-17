@@ -125,6 +125,21 @@ select option { background-color: #0f172a; color: #f1f5f9; }
 .gs-bd.p { background:rgba(16,185,129,.18); color:#a7f3d0; }
 .gs-bd.old { background:rgba(51,65,85,.5); color:#94a3b8; font-weight:500; }
 .gs-empty { font-size:12px; color:#64748b; padding:10px 12px; }
+.gs-tabs { display:flex; gap:4px; padding:6px 8px; border-bottom:1px solid rgba(71,85,105,.45); position:sticky; top:-4px; background:#0f172a; z-index:1; }
+.gs-tab { font-size:11px; font-weight:600; padding:4px 10px; border-radius:6px; color:#64748b; cursor:pointer; }
+.gs-tab:hover { color:#cbd5e1; }
+.gs-tab.on { background:rgba(99,102,241,.2); color:#e0e7ff; }
+.gs-ck { width:15px; height:15px; flex:0 0 15px; border-radius:4px; border:1px solid #475569; display:flex; align-items:center; justify-content:center; font-size:9px; color:#0f172a; }
+.gs-rk { width:16px; flex:0 0 16px; text-align:right; font-size:10px; font-weight:600; color:#64748b; }
+.gs-foot { font-size:10px; color:#64748b; padding:7px 12px 5px; border-top:1px solid rgba(71,85,105,.45); margin-top:4px; }
+.gs-foot.warn { color:#fbbf24; }
+.gs-chips { display:flex; flex-wrap:wrap; align-items:center; gap:6px; min-height:26px; }
+.gs-chip { display:inline-flex; align-items:center; gap:6px; padding:3px 4px 3px 9px; border-radius:999px; background:rgba(30,41,59,.9); border:1px solid rgba(71,85,105,.7); font-size:11px; color:#e2e8f0; max-width:260px; }
+.gs-chip .nm { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.gs-chip .dot { width:8px; height:8px; flex:0 0 8px; border-radius:50%; }
+.gs-chip button { color:#64748b; padding:0 4px; font-size:11px; line-height:1; }
+.gs-chip button:hover { color:#e2e8f0; }
+.gs-chipnote { font-size:11px; color:#64748b; }
 .gs-clear { position:absolute; right:8px; top:50%; transform:translateY(-50%); color:#64748b; font-size:12px; cursor:pointer; padding:2px 4px; }
 .gs-clear:hover { color:#cbd5e1; }
 </style>
@@ -621,17 +636,13 @@ select option { background-color: #0f172a; color: #f1f5f9; }
         </label>
       </div>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-5">
+    <div class="mb-5 space-y-2.5">
       <div class="gs-wrap">
-        <input id="searchTitle1" placeholder="게임 1 검색 (클릭 시 현재 TOP 10)" autocomplete="off"
+        <input id="searchQuery" placeholder="게임 검색 또는 클릭해서 현재 TOP 10에서 선택 (최대 5개)" autocomplete="off"
           class="w-full bg-slate-900 border border-slate-700 rounded-lg pl-3 pr-8 py-2 text-xs focus:outline-none focus:border-indigo-500">
-        <span class="gs-clear hidden" data-for="searchTitle1" title="지우기"><i class="fa-solid fa-xmark"></i></span>
+        <span class="gs-clear hidden" data-for="searchQuery" title="검색어 지우기"><i class="fa-solid fa-xmark"></i></span>
       </div>
-      <div class="gs-wrap">
-        <input id="searchTitle2" placeholder="게임 2 검색 (비교, 선택)" autocomplete="off"
-          class="w-full bg-slate-900 border border-slate-700 rounded-lg pl-3 pr-8 py-2 text-xs focus:outline-none focus:border-indigo-500">
-        <span class="gs-clear hidden" data-for="searchTitle2" title="지우기"><i class="fa-solid fa-xmark"></i></span>
-      </div>
+      <div id="searchChips" class="gs-chips"></div>
     </div>
     <div id="searchAnchorNote" class="hidden -mt-2 mb-4 text-[11px] text-amber-300/90"></div>
     <div id="searchPopularWrap" class="mb-6">
@@ -1473,6 +1484,7 @@ function switchView(view){
 
 async function openSearchView(){
   loadGameIndex(); /* 전체 기간 게임명 인덱스는 백그라운드로 준비 (차트 렌더를 막지 않음) */
+  gsApplyDefaultSelection();
   await ensureSearchRangeLoaded();
 }
 
@@ -1754,7 +1766,7 @@ function loadGameIndex(){
       gameIndex = buildIndexFromLoadedRows(); gameIndexFull = false;
       gameIndexPromise = null; /* 다음 진입 때 재시도 */
     }
-    gsActive && gsRender(gsActive); /* 열려 있는 드롭다운이 있으면 갱신 */
+    if(gsOpen) gsRender(); /* 열려 있는 드롭다운이 있으면 갱신 */
   })();
   return gameIndexPromise;
 }
@@ -1793,8 +1805,64 @@ function gsHighlight(name, raw){
   return escapeHtml(name.slice(0, i)) + '<mark>' + escapeHtml(name.slice(i, i + raw.length)) + '</mark>' + escapeHtml(name.slice(i + raw.length));
 }
 
-function gsItemHtml(name, raw, idx){
+/* ---------- 게임 칩 선택 ---------- */
+const SEARCH_MAX_GAMES = 5;
+const SEARCH_CHIP_PALETTE = ['#818cf8', '#fbbf24', '#34d399', '#f87171', '#60a5fa'];
+let searchSelected = [];          /* 선택한 게임명 (칩 순서 = 차트 순서) */
+const searchColorOf = {};         /* gameKey -> 고정 색상 */
+let searchDefaultApplied = false; /* 최초 진입 시 매출 TOP3 기본 선택은 한 번만 */
+let gsTab = 'sales';              /* 드롭다운 기본 탭: 매출 TOP 10 */
+let gsOpen = false;
+let gsItems = [];
+let gsIdx = -1;
+
+function gsIsSelected(name){ const k = getGameKey(name); return searchSelected.some(n => getGameKey(n) === k); }
+
+function gsToggle(name){
+  const k = getGameKey(name);
+  if(k === '-') return;
+  if(gsIsSelected(name)){
+    searchSelected = searchSelected.filter(n => getGameKey(n) !== k);
+    delete searchColorOf[k];
+  }else{
+    if(searchSelected.length >= SEARCH_MAX_GAMES){ gsOpen && gsRender(true); return; }
+    const used = new Set(Object.values(searchColorOf));
+    searchColorOf[k] = SEARCH_CHIP_PALETTE.find(c => !used.has(c)) || SEARCH_CHIP_PALETTE[0];
+    searchSelected.push(name);
+  }
+  gsRenderChips();
+  if(gsOpen) gsRender();
+  ensureSearchRangeLoaded(); /* 칩이 바뀔 때만 차트 갱신 (필요하면 과거 월 로드) */
+}
+
+function gsApplyDefaultSelection(){
+  if(searchDefaultApplied || searchSelected.length) return;
+  const top = gsTopList('sales', 3);
+  if(!top.length) return; /* 데이터 도착 전이면 다음 진입 때 적용 */
+  searchDefaultApplied = true;
+  top.forEach(n => {
+    const used = new Set(Object.values(searchColorOf));
+    searchColorOf[getGameKey(n)] = SEARCH_CHIP_PALETTE.find(c => !used.has(c));
+    searchSelected.push(n);
+  });
+  gsRenderChips();
+}
+
+function gsRenderChips(){
+  const el = document.getElementById('searchChips'); if(!el) return;
+  if(!searchSelected.length){
+    el.innerHTML = `<span class="gs-chipnote"><i class="fa-regular fa-circle-question mr-1"></i>선택한 게임이 없어 각 차트의 TOP3를 표시 중입니다</span>`;
+    return;
+  }
+  el.innerHTML = searchSelected.map((n, i) =>
+    `<span class="gs-chip" title="${escapeAttr(n)}"><span class="dot" style="background:${searchColorOf[getGameKey(n)]}"></span><span class="nm">${escapeHtml(n)}</span><button type="button" data-i="${i}" aria-label="${escapeAttr(n)} 제거"><i class="fa-solid fa-xmark"></i></button></span>`
+  ).join('') + `<span class="gs-chipnote">${searchSelected.length}/${SEARCH_MAX_GAMES}</span>`;
+}
+
+function gsItemHtml(name, raw, idx, rank){
   const s = gsCurrentRank(name, 'sales'), p = gsCurrentRank(name, 'popular');
+  const on = gsIsSelected(name);
+  const color = on ? searchColorOf[getGameKey(name)] : '';
   const icon = getIconUrlForGame(name);
   const iconHtml = icon
     ? `<img class="gs-ic" src="${escapeAttr(icon)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`
@@ -1806,101 +1874,98 @@ function gsItemHtml(name, raw, idx){
     const g = gameIndex?.get(getGameKey(name));
     badges = g?.lastSeen ? `<span class="gs-bd old">최근 100위권 ${g.lastSeen.slice(2).replace(/-/g,'.')}</span>` : '';
   }
-  return `<div class="gs-it" data-idx="${idx}">${iconHtml}<span class="gs-nm">${gsHighlight(name, raw)}</span>${badges}</div>`;
+  return `<div class="gs-it" data-idx="${idx}">`
+    + `<span class="gs-ck" style="${on ? `background:${color};border-color:${color}` : ''}">${on ? '<i class="fa-solid fa-check"></i>' : ''}</span>`
+    + (rank ? `<span class="gs-rk">${rank}</span>` : '')
+    + `${iconHtml}<span class="gs-nm">${gsHighlight(name, raw)}</span>${badges}</div>`;
 }
 
-let gsActive = null;   /* 현재 드롭다운이 열린 input */
-const gsState = new WeakMap(); /* input -> {dd, items, idx, committed} */
-
-function gsRender(input){
-  const st = gsState.get(input); if(!st) return;
+function gsRender(limitHit = false){
+  const input = document.getElementById('searchQuery');
+  const dd = document.getElementById('searchDropdown');
+  if(!input || !dd) return;
   const raw = input.value.trim();
+  const prevScroll = dd.scrollTop;
   let html = '';
-  st.items = [];
-  const push = (name) => { html += gsItemHtml(name, raw, st.items.length); st.items.push(name); };
+  gsItems = [];
 
   if(!raw){
-    const pop = gsTopList('popular'), sales = gsTopList('sales');
-    html += `<div class="gs-sec"><i class="fa-solid fa-fire text-emerald-400"></i>현재 인기 TOP 10</div>`; pop.forEach(push);
-    html += `<div class="gs-sec"><i class="fa-solid fa-coins text-indigo-400"></i>현재 매출 TOP 10</div>`; sales.forEach(push);
-    html += `<div class="gs-empty">다른 게임은 이름을 입력해 검색하세요 (과거 100위권 기록 포함)</div>`;
+    const list = gsTopList(gsTab === 'sales' ? 'sales' : 'popular', 10);
+    html += `<div class="gs-tabs">`
+      + `<span class="gs-tab${gsTab === 'sales' ? ' on' : ''}" data-tab="sales"><i class="fa-solid fa-coins mr-1"></i>매출 TOP 10</span>`
+      + `<span class="gs-tab${gsTab === 'popular' ? ' on' : ''}" data-tab="popular"><i class="fa-solid fa-fire mr-1"></i>인기 TOP 10</span></div>`;
+    list.forEach((n, i) => { html += gsItemHtml(n, '', gsItems.length, i + 1); gsItems.push(n); });
+    if(!list.length) html += `<div class="gs-empty">순위 데이터를 불러오는 중입니다</div>`;
   }else{
     const found = gsSearch(raw);
     const note = gameIndexFull ? '전체 기간' : '<i class="fa-solid fa-spinner fa-spin"></i> 전체 기간 불러오는 중 · 현재 로드분';
     html += `<div class="gs-sec">검색 결과 ${found.length}${found.length >= GS_MAX_RESULTS ? '+' : ''}개 · ${note}</div>`;
-    found.forEach(push);
+    found.forEach(n => { html += gsItemHtml(n, raw, gsItems.length); gsItems.push(n); });
     if(!found.length) html += `<div class="gs-empty">"${escapeHtml(raw)}"와(과) 일치하는 100위권 게임이 없습니다</div>`;
   }
-  st.idx = raw && st.items.length ? 0 : -1;
-  st.dd.innerHTML = html;
-  st.dd.classList.remove('hidden');
-  gsMark(input);
+  const full = searchSelected.length >= SEARCH_MAX_GAMES;
+  html += `<div class="gs-foot${full && limitHit ? ' warn' : ''}">${full
+    ? `최대 ${SEARCH_MAX_GAMES}개까지 선택됨 · 칩을 빼고 추가하세요`
+    : (raw ? '여러 개 체크 가능 · Esc로 닫기' : '여러 개 체크 가능 · 다른 게임은 이름을 입력해 검색 (과거 100위권 포함)')}</div>`;
+
+  if(gsIdx >= gsItems.length) gsIdx = gsItems.length - 1;
+  dd.innerHTML = html;
+  dd.classList.remove('hidden');
+  dd.scrollTop = prevScroll;
+  gsOpen = true;
+  gsMark(false);
 }
 
-function gsMark(input){
-  const st = gsState.get(input);
-  st.dd.querySelectorAll('.gs-it').forEach(el => el.classList.toggle('on', Number(el.dataset.idx) === st.idx));
-  st.dd.querySelector('.gs-it.on')?.scrollIntoView({ block: 'nearest' });
+function gsMark(scroll = true){
+  const dd = document.getElementById('searchDropdown');
+  dd.querySelectorAll('.gs-it').forEach(el => el.classList.toggle('on', Number(el.dataset.idx) === gsIdx));
+  if(scroll) dd.querySelector('.gs-it.on')?.scrollIntoView({ block: 'nearest' });
 }
 
-function gsClose(input){
-  const st = gsState.get(input); if(!st) return;
-  st.dd.classList.add('hidden');
-  if(gsActive === input) gsActive = null;
-}
-
-function gsCommit(input){
-  const st = gsState.get(input);
-  const v = input.value.trim();
-  input.parentElement.querySelector('.gs-clear')?.classList.toggle('hidden', !v);
-  if(v === st.committed) return;
-  st.committed = v;
-  ensureSearchRangeLoaded(); /* 선택/지우기 시점에만 차트 갱신 (필요하면 과거 월 로드) */
-}
-
-function gsPick(input, idx){
-  const st = gsState.get(input);
-  const name = st.items[idx]; if(!name) return;
-  input.value = name;
-  gsClose(input);
-  gsCommit(input);
+function gsClose(){
+  document.getElementById('searchDropdown')?.classList.add('hidden');
+  gsOpen = false; gsIdx = -1;
 }
 
 function initSearchAutocomplete(){
-  ['searchTitle1', 'searchTitle2'].forEach(id => {
-    const input = document.getElementById(id); if(!input) return;
-    const dd = document.createElement('div');
-    dd.className = 'gs-dd hidden';
-    input.parentElement.appendChild(dd);
-    gsState.set(input, { dd, items: [], idx: -1, committed: '' });
+  const input = document.getElementById('searchQuery'); if(!input) return;
+  const dd = document.createElement('div');
+  dd.id = 'searchDropdown';
+  dd.className = 'gs-dd hidden';
+  input.parentElement.appendChild(dd);
+  const clearBtn = input.parentElement.querySelector('.gs-clear');
+  const syncClear = () => clearBtn?.classList.toggle('hidden', !input.value);
 
-    input.addEventListener('focus', () => { gsActive = input; loadGameIndex(); gsRender(input); });
-    input.addEventListener('input', () => {
-      gsActive = input; gsRender(input);
-      if(!input.value.trim()) gsCommit(input); /* 전부 지우면 기본 TOP3 차트로 복귀 */
-    });
-    input.addEventListener('blur', () => setTimeout(() => { gsClose(input); gsCommit(input); }, 120));
-    input.addEventListener('keydown', e => {
-      const st = gsState.get(input);
-      if(st.dd.classList.contains('hidden')){ if(e.key === 'ArrowDown'){ gsRender(input); e.preventDefault(); } return; }
-      if(e.key === 'ArrowDown'){ e.preventDefault(); st.idx = Math.min(st.idx + 1, st.items.length - 1); gsMark(input); }
-      else if(e.key === 'ArrowUp'){ e.preventDefault(); st.idx = Math.max(st.idx - 1, 0); gsMark(input); }
-      else if(e.key === 'Enter'){ e.preventDefault(); if(st.idx >= 0) gsPick(input, st.idx); else { gsClose(input); gsCommit(input); } }
-      else if(e.key === 'Escape'){ gsClose(input); }
-    });
-    dd.addEventListener('mousedown', e => {
-      const it = e.target.closest('.gs-it'); if(!it) return;
-      e.preventDefault(); gsPick(input, Number(it.dataset.idx));
-    });
-    dd.addEventListener('mousemove', e => {
-      const it = e.target.closest('.gs-it'); if(!it) return;
-      const st = gsState.get(input), i = Number(it.dataset.idx);
-      if(st.idx !== i){ st.idx = i; gsMark(input); }
-    });
-    input.parentElement.querySelector('.gs-clear')?.addEventListener('mousedown', e => {
-      e.preventDefault(); input.value = ''; gsCommit(input); input.focus();
-    });
+  input.addEventListener('focus', () => { loadGameIndex(); gsIdx = -1; gsRender(); });
+  input.addEventListener('input', () => { gsIdx = input.value.trim() ? 0 : -1; dd.scrollTop = 0; gsRender(); syncClear(); });
+  input.addEventListener('blur', () => setTimeout(() => { if(document.activeElement !== input) gsClose(); }, 120));
+  input.addEventListener('keydown', e => {
+    if(!gsOpen){ if(e.key === 'ArrowDown'){ e.preventDefault(); gsRender(); } return; }
+    if(e.key === 'ArrowDown'){ e.preventDefault(); gsIdx = Math.min(gsIdx + 1, gsItems.length - 1); gsMark(); }
+    else if(e.key === 'ArrowUp'){ e.preventDefault(); gsIdx = Math.max(gsIdx - 1, 0); gsMark(); }
+    else if(e.key === 'Enter'){ e.preventDefault(); if(gsIdx >= 0 && gsItems[gsIdx]) gsToggle(gsItems[gsIdx]); }
+    else if(e.key === 'Escape'){ gsClose(); input.blur(); }
+    else if(e.key === 'Backspace' && !input.value && searchSelected.length){ gsToggle(searchSelected[searchSelected.length - 1]); }
   });
+  dd.addEventListener('mousedown', e => {
+    e.preventDefault(); /* 드롭다운 클릭 시 입력창 포커스 유지 → 여러 개 연속 선택 */
+    const tab = e.target.closest('.gs-tab');
+    if(tab){ gsTab = tab.dataset.tab; gsIdx = -1; dd.scrollTop = 0; gsRender(); return; }
+    const it = e.target.closest('.gs-it');
+    if(it){ gsIdx = Number(it.dataset.idx); gsToggle(gsItems[gsIdx]); }
+  });
+  dd.addEventListener('mousemove', e => {
+    const it = e.target.closest('.gs-it'); if(!it) return;
+    const i = Number(it.dataset.idx);
+    if(gsIdx !== i){ gsIdx = i; gsMark(false); }
+  });
+  clearBtn?.addEventListener('mousedown', e => { e.preventDefault(); input.value = ''; syncClear(); gsIdx = -1; gsRender(); input.focus(); });
+  document.getElementById('searchChips')?.addEventListener('click', e => {
+    const btn = e.target.closest('button[data-i]'); if(!btn) return;
+    const name = searchSelected[Number(btn.dataset.i)];
+    if(name) gsToggle(name);
+  });
+  gsRenderChips();
 }
 
 /* 선택한 게임이 모두 현재 조회 기간 이전에만 기록이 있으면, 마지막 100위권 기록일을 기준으로 기간을 잡는다. */
@@ -1992,7 +2057,7 @@ function debouncedRenderSearchCharts(){
 
 function renderSearchCharts(){
   if(!rawStore.sales&&!rawStore.popular)return;
-  const t1=document.getElementById('searchTitle1').value.trim(), t2=document.getElementById('searchTitle2').value.trim(), titles=[t1,t2].filter(Boolean);
+  const titles=[...searchSelected];
   const showPop=document.getElementById('toggleSearchPopular').checked, showSales=document.getElementById('toggleSearchSales').checked;
   const duration = parseInt(document.getElementById('searchDuration')?.value || '15', 10);
   const baseDate = getSearchBaseDate(titles, duration);
@@ -2002,17 +2067,18 @@ function renderSearchCharts(){
   document.getElementById('searchSalesWrap').classList.toggle('hidden',!showSales);
   const colors=['#818cf8', '#fbbf24', '#34d399', '#f87171', '#60a5fa', '#a78bfa', '#f472b6', '#2dd4bf', '#fb923c', '#94a3b8'];
 
+  /* 선택한 게임이 있으면 두 차트 모두 같은 게임·같은 색(칩 색)으로, 없으면 차트별 TOP3 */
   const popTitles = titles.length > 0 ? titles : getTopTitlesSafe(rawStore.popular, 3);
   const salesTitles = titles.length > 0 ? titles : getTopTitlesSafe(rawStore.sales, 3);
+  const chipColors = titles.length > 0 ? titles.map(t => searchColorOf[getGameKey(t)] || colors[0]) : colors;
 
-  if(showPop) searchPopularChartInst=drawChartShared('searchPopularChart',searchPopularChartInst,rawStore.popular,popTitles,colors, baseDate, duration);
-  if(showSales) searchSalesChartInst=drawChartShared('searchSalesChart',searchSalesChartInst,rawStore.sales,salesTitles,colors, baseDate, duration);
+  if(showPop) searchPopularChartInst=drawChartShared('searchPopularChart',searchPopularChartInst,rawStore.popular,popTitles,chipColors, baseDate, duration);
+  if(showSales) searchSalesChartInst=drawChartShared('searchSalesChart',searchSalesChartInst,rawStore.sales,salesTitles,chipColors, baseDate, duration);
 }
 
 function computeSearchNeededMonths(){
   const duration = parseInt(document.getElementById('searchDuration')?.value || '15', 10);
-  const titles = ['searchTitle1','searchTitle2'].map(id => document.getElementById(id)?.value.trim()).filter(Boolean);
-  const latest = getSearchBaseDate(titles, duration);
+  const latest = getSearchBaseDate([...searchSelected], duration);
   const [y, m, d] = latest.split('-').map(Number);
   const baseDate = new Date(y, m - 1, d);
   const months = new Set();
