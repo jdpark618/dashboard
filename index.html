@@ -2187,6 +2187,25 @@ async function onNewReleasesMonthChange(){
   filterCurrentTable();
 }
 
+/* DB 표 정렬 상태 (탭별로 유지) */
+const dbSortState = { sales: { key: 'date', dir: 'desc' }, popular: { key: 'date', dir: 'desc' }, newReleases: { key: 'date', dir: 'desc' } };
+function getDbSort(view){ return dbSortState[view] || { key: 'date', dir: 'desc' }; }
+function setDbSort(key){
+  const st = dbSortState[currentView]; if(!st) return;
+  if(st.key === key) st.dir = st.dir === 'desc' ? 'asc' : 'desc';
+  else { st.key = key; st.dir = key === 'name' ? 'asc' : 'desc'; } /* 게임명은 가나다순, 날짜는 최신순부터 */
+  filterCurrentTable();
+}
+function dbHeaderCell(label, key, sort){
+  const base = 'px-4 py-3 whitespace-nowrap font-semibold border-b border-slate-800';
+  if(!key) return `<th class="${base} text-slate-300">${label}</th>`;
+  const active = sort.key === key;
+  const icon = active ? (sort.dir === 'desc' ? 'fa-sort-down' : 'fa-sort-up') : 'fa-sort';
+  const hint = key === 'name' ? (active && sort.dir === 'asc' ? '가나다 역순으로 정렬' : '가나다순으로 정렬') : (active && sort.dir === 'desc' ? '오래된 순으로 정렬' : '최신순으로 정렬');
+  return `<th class="${base} select-none cursor-pointer transition-colors ${active ? 'text-indigo-300' : 'text-slate-300 hover:text-white'}" onclick="setDbSort('${key}')" title="${hint}" aria-sort="${active ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none'}">
+    <span class="inline-flex items-center gap-1.5">${label}<i class="fa-solid ${icon} text-[10px] ${active ? '' : 'opacity-40'}"></i></span></th>`;
+}
+
 function filterCurrentTable(){
   const data = rawStore[currentView];
   if(!data || !data.rows) return;
@@ -2205,15 +2224,23 @@ function filterCurrentTable(){
 
   if(q) rows = rows.filter(r => r.some(c => String(c??'').toLowerCase().includes(q)));
 
+  /* 정렬: 매출/인기 = 날짜(보조: 순위 오름차순), 신작 = 출시일 또는 게임명 */
+  const sort = getDbSort(currentView), dir = sort.dir === 'asc' ? 1 : -1;
+  const byRank = (a,b) => (rankOf(a)||999999) - (rankOf(b)||999999);
   if (currentView === 'newReleases') {
-    rows = rows.slice().sort((a,b) => dateValue(b[0]) - dateValue(a[0]));
+    const nameOf = r => String(r[1]||'').trim();
+    const byName = (a,b) => nameOf(a).localeCompare(nameOf(b), 'ko', { numeric: true, sensitivity: 'base' });
+    const byDate = (a,b) => dateValue(a[0]) - dateValue(b[0]);
+    rows = rows.slice().sort(sort.key === 'name'
+      ? (a,b) => dir * byName(a,b) || -byDate(a,b)
+      : (a,b) => dir * byDate(a,b) || byName(a,b));
   } else {
-    rows = rows.slice().sort((a,b) => (rankOf(a)||999999) - (rankOf(b)||999999));
+    rows = rows.slice().sort((a,b) => dir * rowDate(a).localeCompare(rowDate(b)) || byRank(a,b));
   }
 
   if (currentView === 'sales' || currentView === 'popular') {
-    const headers = ['날짜', '순위', '증감', '평점', '앱이름', '장르', '개발사(퍼블리셔)'];
-    document.getElementById('tableHead').innerHTML = '<tr>' + headers.map(h => `<th class="px-4 py-3 whitespace-nowrap text-slate-300 font-semibold border-b border-slate-800">${h}</th>`).join('') + '</tr>';
+    const headers = [['날짜','date'], ['순위'], ['증감'], ['평점'], ['앱이름'], ['장르'], ['개발사(퍼블리셔)']];
+    document.getElementById('tableHead').innerHTML = '<tr>' + headers.map(([h, key]) => dbHeaderCell(h, key, sort)).join('') + '</tr>';
     document.getElementById('tableBody').innerHTML = rows.length ? rows.map(r => {
       const gName = gameName(r), rDate = rowDate(r), rRank = rankOf(r) || '-', rChange = String(r[2] || '-'), rScore = scoreOf(r);
       const isNew = rDate >= '2026-09-08';
@@ -2228,8 +2255,8 @@ function filterCurrentTable(){
       </tr>`;
     }).join('') : '<tr><td colspan="100" class="text-center py-10 muted">데이터가 없습니다.</td></tr>';
   } else {
-    const headers = ['출시일', '게임명', '플랫폼', '퍼블리셔', '출시유형'];
-    document.getElementById('tableHead').innerHTML = '<tr>' + headers.map(h => `<th class="px-4 py-3 whitespace-nowrap text-slate-300 font-semibold border-b border-slate-800">${h}</th>`).join('') + '</tr>';
+    const headers = [['출시일','date'], ['게임명','name'], ['플랫폼'], ['퍼블리셔'], ['출시유형']];
+    document.getElementById('tableHead').innerHTML = '<tr>' + headers.map(([h, key]) => dbHeaderCell(h, key, sort)).join('') + '</tr>';
     document.getElementById('tableBody').innerHTML = rows.length ? rows.map(r => {
       const gName = String(r[1]||'').trim() || '-';
       const gPlatform = String(r[2]||'').trim() || '-';
