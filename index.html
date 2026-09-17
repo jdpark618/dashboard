@@ -433,6 +433,11 @@ select option { background-color: #0f172a; color: #f1f5f9; }
   <div id="mkDaily" class="space-y-4">
     <section id="mkDailyKpis" class="grid grid-cols-2 lg:grid-cols-4 gap-3"></section>
 
+    <section class="card rounded-xl p-5">
+      <div class="mk-card-head"><div><h3 class="font-semibold text-sm">시장 포지션 맵</h3><p class="text-[10px] muted mt-1">기준일 인기·매출 순위로 본 게임 성격 · 50위 기준 · 100위 밖은 100+</p></div></div>
+      <div id="mkDPosition"></div>
+    </section>
+
     <section class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
       <div class="card rounded-xl p-5">
         <div class="mk-card-head"><div><h3 class="font-semibold text-sm">급상승 / 급하락 TOP5</h3><p class="text-[10px] muted mt-1">전일 대비 순위 변화 · 양일 모두 TOP100인 게임</p></div><div class="mk-tabs" data-tab="dMovers"></div></div>
@@ -444,16 +449,15 @@ select option { background-color: #0f172a; color: #f1f5f9; }
         <div class="mk-fill"><div id="mkDEntries" class="mk-fill-inner scrollbar pr-1"></div></div>
       </div>
     </section>
-
-    <section class="card rounded-xl p-5">
-      <div class="mk-card-head"><div><h3 class="font-semibold text-sm">시장 포지션 맵</h3><p class="text-[10px] muted mt-1">기준일 인기·매출 순위로 본 게임 성격 · 50위 기준 · 100위 밖은 100+</p></div></div>
-      <div id="mkDPosition"></div>
-    </section>
   </div>
 
   <!-- 주간 분석 -->
   <div id="mkWeekly" class="hidden space-y-4">
     <section id="mkWeeklyKpis" class="grid grid-cols-2 lg:grid-cols-4 gap-3"></section>
+    <section class="card rounded-xl p-5">
+      <div class="mk-card-head"><div><h3 class="font-semibold text-sm">시장 포지션 맵</h3><p class="text-[10px] muted mt-1">지난주 주 평균 인기·매출 순위로 본 게임 성격 · 50위 기준 · 미관측일은 100+로 계산</p></div></div>
+      <div id="mkWPosition"></div>
+    </section>
     <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <div class="card rounded-xl p-5">
         <div class="mk-card-head"><div><h3 class="font-semibold text-sm">장르 비중 추이</h3><p class="text-[10px] muted mt-1">최근 8주 · 주간 TOP100 구성 비중</p></div><div class="mk-tabs" data-tab="wGenre"></div></div>
@@ -2513,7 +2517,7 @@ function lightboxKeyHandler(e){
 const MK_SCHEMA_CHANGE_DATE = '2026-09-08';
 const MK_STORE_LABEL = { sales: '매출', popular: '인기' };
 let mkMode = 'daily';
-const mkPosExpand = { sales: false, popular: false, both: false };
+const mkPosExpand = {};
 const mkTabs = { dMovers: 'sales', dEntries: 'sales', dEntryType: 'in', wEntryType: 'list', wGenre: 'sales', wPub: 'sales', wMovers: 'sales', wEntries: 'sales', wCohort: 'sales' };
 const mkIndexCache = { sales: null, popular: null };
 let mkMonthsReady = false;
@@ -2807,40 +2811,43 @@ function mkRenderDaily(){
     }
   }
 
-  /* 시장 포지션 맵 (Gap 통합): 50위 기준, 100위 밖 = 101 */
-  {
-    const keys = new Set([...S.baseMap.keys(), ...P.baseMap.keys()]), cut = 50;
-    const Q = { sales: [], popular: [], both: [] };
-    keys.forEach(k => {
-      const s = S.baseMap.get(k), p = P.baseMap.get(k), sr = s?.rank ?? 101, pr = p?.rank ?? 101;
-      const x = { name: (s || p).name, sr, pr, gap: pr - sr };
-      if(sr <= cut && pr <= cut) Q.both.push(x);
-      else if(sr <= cut && pr > cut) Q.sales.push(x);
-      else if(pr <= cut && sr > cut) Q.popular.push(x);
-    });
-    Q.sales.sort((a, b) => b.gap - a.gap || a.sr - b.sr);
-    Q.popular.sort((a, b) => a.gap - b.gap || a.pr - b.pr);
-    Q.both.sort((a, b) => (a.sr + a.pr) - (b.sr + b.pr));
-    const rk = v => v > 100 ? '100+' : v;
-    const col = (key, title, desc, cls, dotCls) => {
-      const list = Q[key], expanded = mkPosExpand[key], shown = expanded ? list : list.slice(0, 5);
-      return `<div class="rounded-xl border border-slate-800 bg-slate-900/50 p-3 flex flex-col min-w-0">
-        <div class="flex items-start justify-between gap-2 mb-2"><div class="min-w-0"><div class="text-xs font-semibold ${cls} flex items-center gap-1.5"><span class="w-2 h-2 rounded-full ${dotCls}"></span>${title}</div><div class="text-[10px] muted mt-0.5">${desc}</div></div><span class="text-[11px] font-bold text-slate-300 shrink-0">${list.length}개</span></div>
-        <div class="${expanded ? 'max-h-[260px] overflow-y-auto scrollbar pr-1' : ''}">${shown.length ? shown.map(x => `
-          <div class="flex items-center gap-2 py-1.5 px-1.5 -mx-1.5 rounded-lg hover:bg-slate-800/60 cursor-pointer" data-game="${escapeAttr(x.name)}">
-            <div class="flex-1 min-w-0 text-xs">${mkGameCell(x.name)}</div>
-            <span class="text-[10px] whitespace-nowrap"><span class="text-indigo-300">매출 ${rk(x.sr)}</span> <span class="muted">·</span> <span class="text-emerald-300">인기 ${rk(x.pr)}</span></span>
-          </div>`).join('') : '<div class="muted text-[11px] py-3 text-center">해당 게임 없음</div>'}</div>
-        ${list.length > 5 ? `<button type="button" data-posexpand="${key}" class="mt-1 text-[10px] text-slate-400 hover:text-slate-200 text-left">${expanded ? '접기' : `외 ${list.length - 5}개 더 보기`}</button>` : ''}
-      </div>`;
-    };
-    document.getElementById('mkDPosition').innerHTML = `<div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-      ${col('sales', '매출형', '매출 50위 이내 · 인기 50위 밖', 'text-indigo-300', 'bg-indigo-400')}
-      ${col('popular', '인기형', '인기 50위 이내 · 매출 50위 밖', 'text-emerald-300', 'bg-emerald-400')}
-      ${col('both', '양쪽 상위', '매출·인기 모두 50위 이내', 'text-sky-300', 'bg-sky-400')}
-    </div>
-    <p class="text-[10px] muted mt-3">매출형은 소수 유저 과금 비중이 큰 구조, 인기형은 유입 대비 수익화가 약한 구조일 가능성이 높습니다. 정렬은 두 순위 차이가 큰 순입니다.</p>`;
-  }
+  /* 시장 포지션 맵 */
+  mkRenderPositionMap('mkDPosition', S.baseMap, P.baseMap, { unit: '' });
+}
+
+/* 시장 포지션 맵 (일간·주간 공용): sMap/pMap = Map<key, {name, rank}>, rank 101 이상 = 100위 밖 */
+function mkRenderPositionMap(elId, sMap, pMap, opt){
+  const cut = 50, keys = new Set([...sMap.keys(), ...pMap.keys()]);
+  const Q = { sales: [], popular: [], both: [] };
+  keys.forEach(k => {
+    const s = sMap.get(k), p = pMap.get(k), sr = s?.rank ?? 101, pr = p?.rank ?? 101;
+    const x = { name: (s || p).name, sr, pr, gap: pr - sr };
+    if(sr <= cut && pr <= cut) Q.both.push(x);
+    else if(sr <= cut) Q.sales.push(x);
+    else if(pr <= cut) Q.popular.push(x);
+  });
+  Q.sales.sort((a, b) => b.gap - a.gap || a.sr - b.sr);
+  Q.popular.sort((a, b) => a.gap - b.gap || a.pr - b.pr);
+  Q.both.sort((a, b) => (a.sr + a.pr) - (b.sr + b.pr));
+  const rk = v => v > 100 ? '100+' : String(Math.round(v));
+  const col = (key, title, desc, cls, dotCls) => {
+    const list = Q[key], stateKey = `${elId}:${key}`, expanded = !!mkPosExpand[stateKey], shown = expanded ? list : list.slice(0, 5);
+    return `<div class="rounded-xl border border-slate-800 bg-slate-900/50 p-3 flex flex-col min-w-0">
+      <div class="flex items-start justify-between gap-2 mb-2"><div class="min-w-0"><div class="text-xs font-semibold ${cls} flex items-center gap-1.5"><span class="w-2 h-2 rounded-full ${dotCls}"></span>${title}</div><div class="text-[10px] muted mt-0.5">${desc}</div></div><span class="text-[11px] font-bold text-slate-300 shrink-0">${list.length}개</span></div>
+      <div class="${expanded ? 'max-h-[260px] overflow-y-auto scrollbar pr-1' : ''}">${shown.length ? shown.map(x => `
+        <div class="flex items-center gap-2 py-1.5 px-1.5 -mx-1.5 rounded-lg hover:bg-slate-800/60 cursor-pointer" data-game="${escapeAttr(x.name)}">
+          <div class="flex-1 min-w-0 text-xs">${mkGameCell(x.name)}</div>
+          <span class="text-[10px] whitespace-nowrap"><span class="text-indigo-300">매출 ${rk(x.sr)}</span> <span class="muted">·</span> <span class="text-emerald-300">인기 ${rk(x.pr)}</span></span>
+        </div>`).join('') : '<div class="muted text-[11px] py-3 text-center">해당 게임 없음</div>'}</div>
+      ${list.length > 5 ? `<button type="button" data-posexpand="${stateKey}" class="mt-1 text-[10px] text-slate-400 hover:text-slate-200 text-left">${expanded ? '접기' : `외 ${list.length - 5}개 더 보기`}</button>` : ''}
+    </div>`;
+  };
+  document.getElementById(elId).innerHTML = `<div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+    ${col('sales', '매출형', `매출 ${opt.unit}50위 이내 · 인기 50위 밖`, 'text-indigo-300', 'bg-indigo-400')}
+    ${col('popular', '인기형', `인기 ${opt.unit}50위 이내 · 매출 50위 밖`, 'text-emerald-300', 'bg-emerald-400')}
+    ${col('both', '양쪽 상위', `매출·인기 모두 ${opt.unit}50위 이내`, 'text-sky-300', 'bg-sky-400')}
+  </div>
+  <p class="text-[10px] muted mt-3">매출형은 소수 유저 과금 비중이 큰 구조, 인기형은 유입 대비 수익화가 약한 구조일 가능성이 높습니다. 정렬은 두 순위 차이가 큰 순입니다.${opt.note ? ' ' + opt.note : ''}</p>`;
 }
 
 /* ---------- 주간 ---------- */
@@ -2907,6 +2914,19 @@ function mkRenderWeekly(){
     mkKpiCard('4주 잔존율', `매출 ${rS != null ? rS + '%' : '-'}`, `인기 ${rP != null ? rP + '%' : '-'} · 4주 전 TOP100 중 잔존`) +
     mkKpiCard('주간 평균 순위 변동', `매출 ${vS != null ? vS.toFixed(1) + '위' : '-'}`, `인기 ${vP != null ? vP.toFixed(1) + '위' : '-'} · 전주 대비 절대값 평균`) +
     mkKpiCard('가중 1위 퍼블리셔', topPub ? escapeHtml(topPub.publisher) : '-', topPub ? `매출 점유 ${Math.round(topPub.score / pubS.total * 100)}% · ${topPub.games.size}개 보유` : '-');
+
+  /* 시장 포지션 맵 (주간): 주 평균 순위, 관측되지 않은 날은 101로 계산 */
+  {
+    const weekRankMap = s => {
+      const w = mkWeekAgg(I[s], mon), n = w.dates.length, m = new Map();
+      if(!n) return m;
+      w.games.forEach((g, k) => m.set(k, { name: g.name, rank: (g.sum + (n - g.days) * 101) / n }));
+      return m;
+    };
+    const wS = weekRankMap('sales'), wP = weekRankMap('popular');
+    if(wS.size || wP.size) mkRenderPositionMap('mkWPosition', wS, wP, { unit: '주 평균 ', note: '주중 일부만 순위권이었던 게임은 빠진 날을 100+로 반영해 평균이 낮아집니다.' });
+    else document.getElementById('mkWPosition').innerHTML = mkEmpty('지난주 데이터가 없습니다.');
+  }
 
   /* 장르 비중 8주 */
   const gIdx = I[mkTabs.wGenre];
