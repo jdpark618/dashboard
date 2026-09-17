@@ -1667,7 +1667,10 @@ function populateGameNameOptions(){
 
 function getTopTitlesSafe(data, n=3) {
   if (!data || !data.rows) return ['데이터 없음'];
-  const filtered = data.rows.filter(r => rowDate(r) === latestDate(data)).sort((a, b) => (rankOf(a) || 9999) - (rankOf(b) || 9999));
+  /* [성능] latestDate()는 전체 행 순회+정렬을 하므로 filter 안에서 행마다 호출하면 O(N²)이 된다.
+     루프 밖에서 1회만 계산한다. (순위 검색 최초 진입 시 멈춤 현상의 원인) */
+  const latest = latestDate(data);
+  const filtered = data.rows.filter(r => rowDate(r) === latest).sort((a, b) => (rankOf(a) || 9999) - (rankOf(b) || 9999));
   const names = [];
   for (let r of filtered) {
     const gn = gameName(r);
@@ -1775,17 +1778,25 @@ function computeSearchNeededMonths(){
 }
 
 async function ensureSearchRangeLoaded(){
-  /* 이전 달 데이터를 추가로 불러와야 하는 조회 기간(15일 이상 등)을 처음 선택하면 네트워크 요청이 끝날 때까지
-     차트 영역이 비어 있어 "멈춘 것처럼" 보였다. 우선 지금 가진 데이터로 즉시 한 번 그리고, 로딩 표시를 띄운 뒤,
-     추가 데이터가 오면 다시 그린다. 그 중 한 달 요청이 실패해도(네트워크 순간 오류 등) 나머지 데이터로는
-     반드시 다시 그리도록 catch로 감싼다 — 실패 시 영영 안 그려지는 일이 없게.*/
+  /* [체감 개선] 탭 클릭 핸들러 안에서 바로 차트를 그리면 계산이 끝날 때까지 화면 전환이 지연된다.
+     rAF → setTimeout으로 한 프레임 양보해 탭 화면이 먼저 페인트된 뒤 차트를 그린다. */
+  await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 0)));
+
+  /* 지금 가진 데이터로 즉시 한 번 그린다. */
   renderSearchCharts();
-  const months = computeSearchNeededMonths();
+
+  /* 아직 로드되지 않은 월만 추린다. 추가로 받을 데이터가 없으면 로딩 표시·재렌더를 생략한다. */
+  const months = computeSearchNeededMonths().filter(({y, m}) => {
+    const k = ymKey(y, m);
+    return !loadedMonths.sales.has(k) || !loadedMonths.popular.has(k);
+  });
   if(!months.length) return;
+
+  /* 한 달 요청이 실패해도(네트워크 순간 오류 등) 나머지 데이터로는 반드시 다시 그리도록 catch/finally로 감싼다. */
   const indicator = document.getElementById('searchLoadingIndicator');
   if(indicator) indicator.classList.remove('hidden');
   try{
-    await Promise.all(months.flatMap(({y,m}) => [ensureMonthLoaded('sales',y,m), ensureMonthLoaded('popular',y,m)]));
+    await Promise.all(months.flatMap(({y, m}) => [ensureMonthLoaded('sales', y, m), ensureMonthLoaded('popular', y, m)]));
   }catch(e){
     console.error('순위 검색 기간 데이터 로드 중 일부 실패', e);
   }finally{
