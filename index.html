@@ -49,7 +49,6 @@ select option { background-color: #0f172a; color: #f1f5f9; }
 .cal-sw { width:9px; height:9px; border-radius:2px; display:inline-block; }
 .cal-sw.m { background:rgba(16,185,129,.55); }
 .cal-sw.p { background:rgba(148,163,184,.5); }
-.cal-sw.major { background:transparent; box-shadow:inset 0 0 0 1.5px #818cf8; }
 
 .cal-capsel { display:inline-flex; gap:2px; padding:2px; background:rgba(15,23,42,.86); border:1px solid rgba(71,85,105,.5); border-radius:8px; }
 .cal-capsel button { appearance:none; border:0; background:transparent; color:#64748b; font-size:11px; font-weight:600; padding:4px 10px; border-radius:6px; cursor:pointer; transition:all .15s; }
@@ -81,10 +80,8 @@ select option { background-color: #0f172a; color: #f1f5f9; }
 .cal-item:active { transform: translateY(0) scale(.97); }
 .cal-item.mobile { background: rgba(16, 185, 129, 0.14); }
 .cal-item.pc { background: rgba(148, 163, 184, 0.14); }
-.cal-item.major { box-shadow: inset 0 0 0 1px rgba(129,140,248,.55); }
 .cal-badge { font-size:8.5px; font-weight:700; letter-spacing:.03em; color:var(--tc, #94a3b8); }
 .cal-name { color:#e2e8f0; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; line-height:1.25; }
-.cal-item.major .cal-name { font-weight:700; }
 .cal-more { align-self:flex-start; margin-top:auto; font-size:9.5px; font-weight:600; color:#818cf8; background:rgba(99,102,241,.12); border:1px solid rgba(99,102,241,.3); border-radius:5px; padding:2px 6px; cursor:pointer; flex-shrink:0; }
 .cal-more:hover { background:rgba(99,102,241,.22); }
 
@@ -551,7 +548,6 @@ select option { background-color: #0f172a; color: #f1f5f9; }
       <span class="w-px h-3.5 bg-slate-700 hidden sm:block"></span>
       <span class="flex items-center gap-1.5 text-[10px] muted"><span class="cal-sw m"></span>모바일 포함</span>
       <span class="flex items-center gap-1.5 text-[10px] muted"><span class="cal-sw p"></span>PC·콘솔 단독</span>
-      <span class="flex items-center gap-1.5 text-[10px] muted"><span class="cal-sw major"></span>주요 퍼블리셔</span>
     </div>
     <div class="flex items-center gap-2 text-[11px] text-slate-500">
       <span>칸당 표시</span>
@@ -1481,18 +1477,6 @@ let calMaxPerCell = 4;
 const calExpandedDays = new Set();
 let calRenderedYM = '';
 
-const CAL_MAJOR_PUBLISHERS = [
-  '넥슨','nexon','넷마블','netmarble','엔씨','ncsoft','카카오','kakao','크래프톤','krafton',
-  '컴투스','com2us','위메이드','wemade','네오위즈','neowiz','스마일게이트','smilegate',
-  '그라비티','gravity','펄어비스','pearlabyss','데브시스터즈','devsisters','시프트업','shiftup',
-  '라인게임즈','linegames','웹젠','webzen','조이시티','joycity','하이브im','hiveim',
-  '텐센트','tencent','levelinfinite','넷이즈','netease','호요버스','hoyoverse','mihoyo',
-  'supercell','슈퍼셀','playrix','scopely','habby','centurygames','funplus','lilith','릴리스',
-  'yostar','요스타','반다이','bandai','스퀘어에닉스','squareenix','세가','sega',
-  '코나미','konami','캡콤','capcom','닌텐도','nintendo','ubisoft','유비소프트',
-  '디즈니','disney','로블록스','roblox','가레나','garena','미호요'
-];
-
 function resolveCalType(typeStr){
   const t = String(typeStr || '').replace(/\s+/g, '').toLowerCase();
   if (t.includes('테스트') || t.includes('test') || t.includes('cbt') || t.includes('obt') || t.includes('베타') || t.includes('beta')) return 'TEST';
@@ -1500,12 +1484,6 @@ function resolveCalType(typeStr){
   return 'OPEN';
 }
 const CAL_TYPE_COLOR = { OPEN:'#22c55e', TEST:'#f59e0b', EARLY:'#38bdf8' };
-
-function isCalMajorPublisher(pub){
-  const p = String(pub || '').replace(/\s+/g, '').toLowerCase();
-  if(!p || p === '-') return false;
-  return CAL_MAJOR_PUBLISHERS.some(k => p.includes(k));
-}
 
 function setCalCap(n){
   calMaxPerCell = n;
@@ -1557,7 +1535,6 @@ function renderCalendar() {
       typeRaw: typeStr,
       type: type,
       isMobile: isMobile,
-      isMajor: isCalMajorPublisher(publisher),
       gameId: String(r[5] || '').trim()
     });
   });
@@ -1572,7 +1549,6 @@ function renderCalendar() {
 
   const byDay = {};
   monthGames.forEach(g => { (byDay[g.day] = byDay[g.day] || []).push(g); });
-  Object.keys(byDay).forEach(k => byDay[k].sort((a,b) => (b.isMajor?1:0) - (a.isMajor?1:0)));
 
   const firstDay = new Date(currentCalYear, currentCalMonth - 1, 1).getDay();
   const daysInMonth = new Date(currentCalYear, currentCalMonth, 0).getDate();
@@ -1581,7 +1557,6 @@ function renderCalendar() {
 
   const itemHtml = (g) => {
     const cls = ['cal-item', g.isMobile ? 'mobile' : 'pc'];
-    if(g.isMajor) cls.push('major');
     const tip = `${g.name}\n플랫폼: ${g.platform || '-'}\n출시유형: ${g.typeRaw || '-'}\n퍼블리셔: ${g.publisher || '-'}`;
     const key = g.gameId ? `id:${g.gameId}` : `nm:${g.name}|${g.platform}`;
     return `<div class="${cls.join(' ')}" style="--tc:${CAL_TYPE_COLOR[g.type]}" title="${escapeAttr(tip)}" onclick="openReleaseDetail('${escapeAttr(key).replace(/&#039;/g,"\\'")}')">`
