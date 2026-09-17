@@ -127,6 +127,10 @@ select option { background-color: #0f172a; color: #f1f5f9; }
 .gs-empty { font-size:12px; color:#64748b; padding:10px 12px; }
 .mk-card-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:12px; }
 .mk-tabs { display:flex; gap:4px; flex-shrink:0; }
+/* 같은 줄 옆 카드 높이에 맞추고 넘치면 내부 스크롤 (데스크톱). 모바일은 최대 높이 스크롤 */
+.mk-fill { position:relative; min-height:160px; }
+.mk-fill-inner { overflow-y:auto; max-height:340px; }
+@media (min-width:1024px){ .mk-fill { flex:1 1 auto; } .mk-fill-inner { position:absolute; inset:0; max-height:none; } }
 .gs-head { position:sticky; top:-4px; background:#0f172a; z-index:1; border-bottom:1px solid rgba(71,85,105,.45); margin-top:-4px; padding-top:4px; }
 .gs-tabs { display:flex; gap:4px; padding:4px 8px 2px; }
 .gs-tab { font-size:11px; font-weight:600; padding:4px 10px; border-radius:6px; color:#64748b; cursor:pointer; }
@@ -428,16 +432,35 @@ select option { background-color: #0f172a; color: #f1f5f9; }
   <!-- 일간 분석 -->
   <div id="mkDaily" class="space-y-4">
     <section id="mkDailyKpis" class="grid grid-cols-2 lg:grid-cols-4 gap-3"></section>
-    <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+    <section class="card rounded-xl p-5">
+      <div class="mk-card-head"><div><h3 class="font-semibold text-sm">최근 7일 흐름</h3><p class="text-[10px] muted mt-1">일별 TOP100 진입·이탈 수와 TOP10 교체 수 · 오늘 변화가 평소 수준인지 비교</p></div><div class="mk-tabs" data-tab="dFlow"></div></div>
+      <div id="mkDFlow"></div>
+    </section>
+
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
       <div class="card rounded-xl p-5">
         <div class="mk-card-head"><div><h3 class="font-semibold text-sm">급상승 / 급하락 TOP5</h3><p class="text-[10px] muted mt-1">전일 대비 순위 변화 · 양일 모두 TOP100인 게임</p></div><div class="mk-tabs" data-tab="dMovers"></div></div>
         <div id="mkDMovers"></div>
       </div>
-      <div class="card rounded-xl p-5">
-        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">신규 진입</h3><p class="text-[10px] muted mt-1">전일 TOP100에 없다가 기준일에 진입한 게임</p></div><div class="mk-tabs" data-tab="dEntries"></div></div>
-        <div id="mkDEntries" class="max-h-[340px] overflow-y-auto scrollbar pr-1"></div>
+      <div class="card rounded-xl p-5 flex flex-col">
+        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">진입 / 이탈</h3><p id="mkDEntriesDesc" class="text-[10px] muted mt-1">전일 대비 TOP100 진입·이탈 게임</p></div><div class="mk-tabs" data-tab="dEntries"></div></div>
+        <div id="mkDEntryType" class="flex items-center gap-1 mb-2"></div>
+        <div class="mk-fill"><div id="mkDEntries" class="mk-fill-inner scrollbar pr-1"></div></div>
       </div>
     </section>
+
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
+      <div class="card rounded-xl p-5 flex flex-col">
+        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">최근 7일 진입 게임 추적</h3><p class="text-[10px] muted mt-1">최근 7일 동안 TOP100에 진입한 게임의 현재 상태</p></div><div class="mk-tabs" data-tab="dTrack"></div></div>
+        <div class="mk-fill"><div id="mkDTrack" class="mk-fill-inner scrollbar pr-1"></div></div>
+      </div>
+      <div class="card rounded-xl p-5">
+        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">순위 구간별 변동</h3><p class="text-[10px] muted mt-1">전일 대비 구간별 교체 수와 평균 순위 변동폭</p></div><div class="mk-tabs" data-tab="dSeg"></div></div>
+        <div id="mkDSeg"></div>
+      </div>
+    </section>
+
     <section class="card rounded-xl p-5">
       <div class="mk-card-head"><div><h3 class="font-semibold text-sm">인기 ↔ 매출 순위 Gap</h3><p class="text-[10px] muted mt-1">기준일 두 순위 차이가 큰 게임 · 한쪽 100위 밖(100+)도 포함</p></div></div>
       <div id="mkDGap" class="max-h-[340px] overflow-y-auto scrollbar pr-1"></div>
@@ -2509,7 +2532,7 @@ function lightboxKeyHandler(e){
 const MK_SCHEMA_CHANGE_DATE = '2026-09-08';
 const MK_STORE_LABEL = { sales: '매출', popular: '인기' };
 let mkMode = 'daily';
-const mkTabs = { dMovers: 'sales', dEntries: 'sales', wGenre: 'sales', wPub: 'sales', wMovers: 'sales', wEntries: 'sales', wCohort: 'sales' };
+const mkTabs = { dFlow: 'sales', dMovers: 'sales', dEntries: 'sales', dEntryType: 'in', dTrack: 'sales', dSeg: 'sales', wGenre: 'sales', wPub: 'sales', wMovers: 'sales', wEntries: 'sales', wCohort: 'sales' };
 const mkIndexCache = { sales: null, popular: null };
 let mkMonthsReady = false;
 
@@ -2658,49 +2681,170 @@ function mkDailyBase(store){
   const idx = mkGetIndex(store), base = idx.dates.at(-1), prev = idx.dates.at(-2);
   return { idx, base, prev, baseMap: base ? idx.byDate.get(base) : new Map(), prevMap: prev ? idx.byDate.get(prev) : new Map() };
 }
+/* 두 관측일 사이 비교: IN/OUT 키 목록, TOP10 진입 목록 */
+function mkCompareDays(idx, d0, d1){
+  const a = idx.byDate.get(d0) || new Map(), b = idx.byDate.get(d1) || new Map();
+  const ins = [], outs = [], top10In = [];
+  b.forEach((v, k) => {
+    if(!a.has(k)) ins.push(k);
+    if(v.rank <= 10 && !((a.get(k)?.rank || 999) <= 10)) top10In.push(v);
+  });
+  a.forEach((_, k) => { if(!b.has(k)) outs.push(k); });
+  top10In.sort((x, y) => x.rank - y.rank);
+  return { ins, outs, top10In, a, b };
+}
+/* d(포함)까지 연속으로 TOP100에 있던 일수 */
+function mkStreakUntil(idx, key, d){
+  let n = 0;
+  for(let i = idx.dates.indexOf(d); i >= 0; i--){ if(idx.byDate.get(idx.dates[i]).has(key)) n++; else break; }
+  return n;
+}
 function mkRenderDaily(){
   const S = mkDailyBase('sales'), P = mkDailyBase('popular');
   setText('mkAsOf', S.base ? `기준일 ${S.base} · 전일(${S.prev || '-'}) 대비` : '데이터 없음');
+  const B = { sales: S, popular: P };
 
-  const inOut = (D) => {
-    let inn = 0, out = 0;
-    D.baseMap.forEach((_, k) => { if(!D.prevMap.has(k)) inn++; });
-    D.prevMap.forEach((_, k) => { if(!D.baseMap.has(k)) out++; });
-    return { inn, out };
-  };
-  const top10 = (D) => {
-    const ins = [];
-    D.baseMap.forEach((v, k) => { if(v.rank <= 10 && !((D.prevMap.get(k)?.rank || 999) <= 10)) ins.push(v); });
-    ins.sort((a, b) => a.rank - b.rank);
-    return ins;
-  };
-  const sio = inOut(S), pio = inOut(P), st = top10(S), pt = top10(P);
+  /* KPI */
+  const cS = S.prev ? mkCompareDays(S.idx, S.prev, S.base) : { ins: [], outs: [], top10In: [] };
+  const cP = P.prev ? mkCompareDays(P.idx, P.prev, P.base) : { ins: [], outs: [], top10In: [] };
   const t10Sub = (ins) => ins.length ? `IN ${ins[0].name}${ins.length > 1 ? ` 외 ${ins.length - 1}` : ''}` : '변동 없음';
+  const ioVal = c => `<span class="rank-up">+${c.ins.length}</span> <span class="muted font-normal">/</span> <span class="rank-down">−${c.outs.length}</span>`;
   document.getElementById('mkDailyKpis').innerHTML =
-    mkKpiCard('매출 TOP100 IN / OUT', `<span class="rank-up">+${sio.inn}</span> <span class="muted font-normal">/</span> <span class="rank-down">−${sio.out}</span>`, '전일 대비 진입 / 이탈') +
-    mkKpiCard('인기 TOP100 IN / OUT', `<span class="rank-up">+${pio.inn}</span> <span class="muted font-normal">/</span> <span class="rank-down">−${pio.out}</span>`, '전일 대비 진입 / 이탈') +
-    mkKpiCard('매출 TOP10 변동', `${st.length}개 교체`, t10Sub(st), st.length ? 'text-indigo-300' : 'muted') +
-    mkKpiCard('인기 TOP10 변동', `${pt.length}개 교체`, t10Sub(pt), pt.length ? 'text-indigo-300' : 'muted');
+    mkKpiCard('매출 TOP100 IN / OUT', ioVal(cS), '전일 대비 진입 / 이탈') +
+    mkKpiCard('인기 TOP100 IN / OUT', ioVal(cP), '전일 대비 진입 / 이탈') +
+    mkKpiCard('매출 TOP10 변동', `${cS.top10In.length}개 교체`, t10Sub(cS.top10In), cS.top10In.length ? 'text-indigo-300' : 'muted') +
+    mkKpiCard('인기 TOP10 변동', `${cP.top10In.length}개 교체`, t10Sub(cP.top10In), cP.top10In.length ? 'text-indigo-300' : 'muted');
+
+  /* 최근 7일 흐름: 최근 8개 관측일 → 7개 일별 비교 (막대 높이 고정) */
+  {
+    const D = B[mkTabs.dFlow], ds = D.idx.dates.slice(-8), days = [];
+    for(let i = 1; i < ds.length; i++){ const c = mkCompareDays(D.idx, ds[i - 1], ds[i]); days.push({ d: ds[i], inn: c.ins.length, out: c.outs.length, t10: c.top10In.length }); }
+    const el = document.getElementById('mkDFlow');
+    if(!days.length){ el.innerHTML = mkEmpty('비교할 관측일이 부족합니다.'); }
+    else{
+      const max = Math.max(4, ...days.map(x => Math.max(x.inn, x.out)));
+      const past = days.slice(0, -1), avg = k => past.length ? past.reduce((t, x) => t + x[k], 0) / past.length : null;
+      const aIn = avg('inn'), aOut = avg('out'), aT = avg('t10'), today = days.at(-1);
+      const cmp = (v, a) => a == null ? '' : v > a * 1.5 && v - a >= 2 ? '<span class="text-amber-300 ml-1">평소보다 많음</span>' : v < a * 0.5 && a - v >= 2 ? '<span class="text-sky-300 ml-1">평소보다 적음</span>' : '<span class="muted ml-1">평소 수준</span>';
+      el.innerHTML = `
+        <div class="grid grid-cols-7 gap-2 items-end">${days.map((x, i) => {
+          const last = i === days.length - 1;
+          return `<div class="flex flex-col items-center min-w-0">
+            <div class="text-[10px] rank-up font-semibold h-4">${x.inn}</div>
+            <div class="w-full h-[52px] flex items-end justify-center"><div class="w-5 rounded-t ${last ? 'bg-emerald-400' : 'bg-emerald-400/45'}" style="height:${Math.round(x.inn / max * 100)}%"></div></div>
+            <div class="w-full border-t border-slate-600"></div>
+            <div class="w-full h-[52px] flex items-start justify-center"><div class="w-5 rounded-b ${last ? 'bg-rose-400' : 'bg-rose-400/45'}" style="height:${Math.round(x.out / max * 100)}%"></div></div>
+            <div class="text-[10px] rank-down font-semibold h-4">${x.out}</div>
+            <div class="text-[10px] mt-1 ${last ? 'text-indigo-300 font-semibold' : 'muted'}">${mkShort(x.d)}${last ? ' 오늘' : ''}</div>
+            <div class="text-[9px] muted whitespace-nowrap">TOP10 ${x.t10}</div>
+          </div>`;
+        }).join('')}</div>
+        <div class="flex flex-wrap gap-x-5 gap-y-1 mt-3 pt-3 border-t border-slate-800 text-[11px]">
+          <span class="text-slate-300"><span class="inline-block w-2 h-2 rounded-sm bg-emerald-400 mr-1"></span>오늘 진입 <b>${today.inn}</b> <span class="muted">(직전 평균 ${aIn == null ? '-' : aIn.toFixed(1)})</span>${cmp(today.inn, aIn)}</span>
+          <span class="text-slate-300"><span class="inline-block w-2 h-2 rounded-sm bg-rose-400 mr-1"></span>오늘 이탈 <b>${today.out}</b> <span class="muted">(직전 평균 ${aOut == null ? '-' : aOut.toFixed(1)})</span>${cmp(today.out, aOut)}</span>
+          <span class="text-slate-300">TOP10 교체 <b>${today.t10}</b> <span class="muted">(직전 평균 ${aT == null ? '-' : aT.toFixed(1)})</span></span>
+        </div>`;
+    }
+  }
 
   /* 급상승/급하락 */
-  const Dm = mkTabs.dMovers === 'sales' ? S : P;
-  const pairs = [];
+  const Dm = B[mkTabs.dMovers], pairs = [];
   Dm.baseMap.forEach((v, k) => { const p = Dm.prevMap.get(k); if(p) pairs.push({ name: v.name, from: p.rank, to: v.rank, delta: p.rank - v.rank }); });
   document.getElementById('mkDMovers').innerHTML = Dm.prev ? mkMoversHtml(pairs, mkFmtRank) : mkEmpty('전일 데이터가 없습니다.');
 
-  /* 신규 진입 */
-  const De = mkTabs.dEntries === 'sales' ? S : P;
-  const entries = [];
-  if(De.prev) De.baseMap.forEach((v, k) => {
-    if(De.prevMap.has(k)) return;
-    const last = mkLastSeenBefore(De.idx, k, De.prev);
-    entries.push({ ...v, reentry: !!last, lastSeen: last });
-  });
-  entries.sort((a, b) => a.rank - b.rank);
-  document.getElementById('mkDEntries').innerHTML = mkEntryTable(entries, [
-    { label: '진입 순위', w: 'w-[60px]', cls: 'text-indigo-300 font-semibold', val: x => `${x.rank}위` },
-    { label: '이전 기록', w: 'w-[72px]', cls: 'muted text-[10px]', val: x => x.lastSeen ? `${mkShort(x.lastSeen)} 이탈` : '-' }
-  ]);
+  /* 진입 / 이탈 */
+  {
+    const De = B[mkTabs.dEntries], c = De.prev ? mkCompareDays(De.idx, De.prev, De.base) : { ins: [], outs: [] };
+    const typeEl = document.getElementById('mkDEntryType');
+    typeEl.innerHTML = [['in', `진입 ${c.ins.length}`], ['out', `이탈 ${c.outs.length}`]].map(([t, l]) => {
+      const on = mkTabs.dEntryType === t;
+      return `<button type="button" data-tabkey="dEntryType" data-store="${t}" class="px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors ${on ? (t === 'in' ? 'bg-emerald-500/15 text-emerald-300' : 'bg-rose-500/15 text-rose-300') : 'text-slate-400 hover:text-slate-200'}">${l}</button>`;
+    }).join('');
+    const box = document.getElementById('mkDEntries');
+    if(!De.prev){ box.innerHTML = mkEmpty('전일 데이터가 없습니다.'); }
+    else if(mkTabs.dEntryType === 'in'){
+      setText('mkDEntriesDesc', '전일 TOP100에 없다가 기준일에 진입한 게임');
+      const list = c.ins.map(k => { const v = De.baseMap.get(k), last = mkLastSeenBefore(De.idx, k, De.prev); return { ...v, reentry: !!last, lastSeen: last }; }).sort((a, b) => a.rank - b.rank);
+      box.innerHTML = mkEntryTable(list, [
+        { label: '진입 순위', w: 'w-[60px]', cls: 'text-indigo-300 font-semibold', val: x => `${x.rank}위` },
+        { label: '직전 기록', w: 'w-[76px]', cls: 'muted text-[10px]', val: x => x.lastSeen ? `${mkShort(x.lastSeen)}까지` : '-' }
+      ]);
+    }else{
+      setText('mkDEntriesDesc', '전일 TOP100에 있다가 기준일에 빠진 게임');
+      const prevPos = De.idx.dates.indexOf(De.prev);
+      const list = c.outs.map(k => { const v = De.prevMap.get(k), streak = mkStreakUntil(De.idx, k, De.prev); return { ...v, streak, capped: streak === prevPos + 1 }; }).sort((a, b) => a.rank - b.rank);
+      box.innerHTML = list.length ? `<table class="w-full table-fixed text-left text-xs">
+        <thead class="sticky top-0 bg-slate-900 z-10"><tr class="border-b border-slate-800 text-[10px] muted">
+          <th class="py-2 pl-1 pr-2">게임</th><th class="py-2 px-1 text-right w-[60px]">전일 순위</th><th class="py-2 px-1 text-right w-[84px]">연속 유지</th>
+        </tr></thead><tbody>${list.map(x => `<tr class="border-b border-slate-900 hover:bg-slate-800/60 cursor-pointer" data-game="${escapeAttr(x.name)}">
+          <td class="py-2 pl-1 pr-2">${mkGameCell(x.name, x.publisher)}</td>
+          <td class="py-2 px-1 text-right">${x.rank}위</td>
+          <td class="py-2 px-1 text-right ${x.streak >= 14 ? 'text-amber-300 font-semibold' : 'muted'}">${x.streak}일${x.capped ? '+' : ''}</td>
+        </tr>`).join('')}</tbody></table>` : mkEmpty('이탈한 게임이 없습니다.');
+    }
+  }
+
+  /* 최근 7일 진입 게임 추적 */
+  {
+    const D = B[mkTabs.dTrack], ds = D.idx.dates.slice(-8), map = new Map();
+    for(let i = 1; i < ds.length; i++){
+      const c = mkCompareDays(D.idx, ds[i - 1], ds[i]);
+      c.ins.forEach(k => map.set(k, { key: k, entryDate: ds[i], entryRank: c.b.get(k).rank, name: c.b.get(k).name, publisher: c.b.get(k).publisher }));
+    }
+    const list = [...map.values()].map(x => {
+      const now = D.baseMap.get(x.key);
+      return { ...x, name: now?.name || x.name, nowRank: now?.rank ?? null, lastSeen: now ? null : mkLastSeenBefore(D.idx, x.key, D.base) };
+    }).sort((a, b) => (a.nowRank == null) - (b.nowRank == null) || b.entryDate.localeCompare(a.entryDate) || (a.nowRank ?? a.entryRank) - (b.nowRank ?? b.entryRank));
+    const kept = list.filter(x => x.nowRank != null).length;
+    document.getElementById('mkDTrack').innerHTML = list.length ? `
+      <div class="text-[11px] text-slate-300 mb-2">진입 <b>${list.length}</b>개 중 <b class="rank-up">${kept}</b>개 유지 · <b class="rank-down">${list.length - kept}</b>개 이탈</div>
+      <table class="w-full table-fixed text-left text-xs">
+      <thead class="sticky top-0 bg-slate-900 z-10"><tr class="border-b border-slate-800 text-[10px] muted">
+        <th class="py-2 pl-1 pr-2">게임</th><th class="py-2 px-1 text-center w-[48px]">진입일</th><th class="py-2 px-1 text-right w-[48px]">진입</th><th class="py-2 px-1 text-right w-[64px]">현재</th><th class="py-2 px-1 text-right w-[44px]">변화</th>
+      </tr></thead><tbody>${list.map(x => `<tr class="border-b border-slate-900 hover:bg-slate-800/60 cursor-pointer ${x.nowRank == null ? 'opacity-60' : ''}" data-game="${escapeAttr(x.name)}">
+        <td class="py-2 pl-1 pr-2">${mkGameCell(x.name, x.publisher)}</td>
+        <td class="py-2 px-1 text-center text-[10px] muted">${mkShort(x.entryDate)}</td>
+        <td class="py-2 px-1 text-right">${x.entryRank}위</td>
+        <td class="py-2 px-1 text-right">${x.nowRank != null ? `<span class="text-indigo-300 font-semibold">${x.nowRank}위</span>` : `<span class="text-[10px] rank-down">이탈</span><div class="text-[9px] muted">${x.lastSeen ? mkShort(x.lastSeen) + '까지' : ''}</div>`}</td>
+        <td class="py-2 px-1 text-right text-[11px]">${x.nowRank != null ? mkDelta(x.entryRank - x.nowRank) : '<span class="muted">-</span>'}</td>
+      </tr>`).join('')}</tbody></table>` : mkEmpty('최근 7일 진입 게임이 없습니다.');
+  }
+
+  /* 순위 구간별 변동 */
+  {
+    const D = B[mkTabs.dSeg], SEG = [['TOP10', 1, 10], ['11~30위', 11, 30], ['31~100위', 31, 100]];
+    const segStat = (d0, d1) => {
+      const a = D.idx.byDate.get(d0), b = D.idx.byDate.get(d1);
+      return SEG.map(([label, lo, hi]) => {
+        let changed = 0, size = 0, moveSum = 0, moveN = 0;
+        b.forEach((v, k) => {
+          if(v.rank < lo || v.rank > hi) return;
+          size++;
+          const p = a.get(k);
+          if(!p || p.rank < lo || p.rank > hi) changed++;
+          if(p){ moveSum += Math.abs(p.rank - v.rank); moveN++; }
+        });
+        return { label, size: hi - lo + 1, changed, move: moveN ? moveSum / moveN : null };
+      });
+    };
+    const ds = D.idx.dates.slice(-8), el = document.getElementById('mkDSeg');
+    if(ds.length < 2){ el.innerHTML = mkEmpty('전일 데이터가 없습니다.'); }
+    else{
+      const today = segStat(ds.at(-2), ds.at(-1));
+      const hist = []; for(let i = 1; i < ds.length - 1; i++) hist.push(segStat(ds[i - 1], ds[i]));
+      el.innerHTML = `<div class="space-y-3">${today.map((s, j) => {
+        const pastAvg = hist.length ? hist.reduce((t, h) => t + h[j].changed, 0) / hist.length : null;
+        const rate = Math.round(s.changed / s.size * 100);
+        return `<div class="rounded-lg bg-slate-900/60 border border-slate-800 p-3">
+          <div class="flex items-center justify-between text-xs"><span class="font-semibold text-slate-200">${s.label}</span>
+            <span class="text-slate-300">교체 <b class="${s.changed ? 'text-indigo-300' : ''}">${s.changed}</b><span class="muted">/${s.size}</span> · 평균 변동 <b>${s.move == null ? '-' : s.move.toFixed(1) + '위'}</b></span></div>
+          <div class="mt-2 h-1.5 rounded bg-slate-800 overflow-hidden"><div class="h-1.5 rounded bg-indigo-400/80" style="width:${Math.min(rate, 100)}%"></div></div>
+          <div class="text-[10px] muted mt-1.5">교체율 ${rate}% · 직전 6일 평균 교체 ${pastAvg == null ? '-' : pastAvg.toFixed(1)}개</div>
+        </div>`;
+      }).join('')}</div>
+      <p class="text-[10px] muted mt-3">교체 = 전일에는 해당 구간 밖(또는 순위권 밖)이었다가 오늘 구간 안에 들어온 게임 수</p>`;
+    }
+  }
 
   /* Gap (100위 밖 = 101로 계산, 표시는 100+) */
   const keys = new Set([...S.baseMap.keys(), ...P.baseMap.keys()]);
