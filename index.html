@@ -190,7 +190,7 @@ select option { background-color: #0f172a; color: #f1f5f9; }
 .mk-sel { background:#0b1222; border:1px solid var(--line); border-radius:8px; color:#cbd5e1; font-size:12px; padding:6px 10px; outline:none; }
 .mk-sel:focus { border-color:#6366f1; }
 .mk-seg { display:inline-flex; gap:2px; padding:2px; background:#0b1222; border:1px solid var(--line); border-radius:8px; }
-.mk-seg button { font-size:12px; font-weight:600; padding:5px 10px; border-radius:6px; color:#94a3b8; }
+.mk-seg button { font-size:12px; font-weight:600; padding:5px 10px; border-radius:6px; color:#94a3b8; white-space:nowrap; }
 .mk-seg button:hover { color:#e2e8f0; }
 .mk-seg button.on { background:#4338ca; color:#e0e7ff; }
 .pos-chip { display:inline-flex; align-items:center; gap:6px; padding:3px 9px 3px 3px; border-radius:999px; background:rgba(30,41,59,.75); border:1px solid var(--line); font-size:12px; color:#e2e8f0; cursor:pointer; max-width:220px; transition:opacity .15s, border-color .15s; }
@@ -381,7 +381,7 @@ select option { background-color: #0f172a; color: #f1f5f9; }
           <h3 class="font-semibold text-sm flex items-center gap-1.5 t-pop">
             <i class="fa-solid fa-fire"></i> 인기순위 TOP 10
           </h3>
-          <span class="text-[10px] muted">Google Play 인기</span>
+          <button type="button" onclick="openRankPanel('popular')" class="text-[12px] font-semibold text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700 border border-slate-700 rounded-lg px-2.5 py-1 whitespace-nowrap transition-colors">전체순위보기<i class="fa-solid fa-chevron-right ml-1 text-[10px] t-pop"></i></button>
         </div>
         <ol id="popularTop10List" class="divide-y divide-slate-900/70"></ol>
       </div>
@@ -390,7 +390,7 @@ select option { background-color: #0f172a; color: #f1f5f9; }
           <h3 class="font-semibold text-sm flex items-center gap-1.5 t-sales">
             <i class="fa-solid fa-coins"></i> 매출순위 TOP 10
           </h3>
-          <span class="text-[10px] muted">Google Play 매출</span>
+          <button type="button" onclick="openRankPanel('sales')" class="text-[12px] font-semibold text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700 border border-slate-700 rounded-lg px-2.5 py-1 whitespace-nowrap transition-colors">전체순위보기<i class="fa-solid fa-chevron-right ml-1 text-[10px] t-sales"></i></button>
         </div>
         <ol id="salesTop10List" class="divide-y divide-slate-900/70"></ol>
       </div>
@@ -779,6 +779,30 @@ select option { background-color: #0f172a; color: #f1f5f9; }
 <footer class="text-[11px] muted text-center py-5">
   jd
 </footer>
+</div>
+
+<!-- FULL RANKING SIDE PANEL (전체순위보기) -->
+<div id="rankOverlay" class="fixed inset-0 bg-black/60 z-[44] hidden opacity-0 transition-opacity duration-300" onclick="closeRankPanel()"></div>
+<div id="rankPanel" class="fixed top-0 right-0 w-full max-w-[460px] h-full bg-slate-900 shadow-2xl z-[45] transform translate-x-full transition-transform duration-300 border-l border-slate-700 flex flex-col" role="dialog" aria-labelledby="rankPanelTitle">
+  <div class="px-4 pt-4 pb-3 border-b border-slate-800 space-y-2.5 shrink-0">
+    <div class="flex items-start justify-between gap-2">
+      <div class="min-w-0">
+        <h3 id="rankPanelTitle" class="font-bold text-[16px] flex items-center gap-2"><i class="fa-solid fa-list-ol text-indigo-400"></i>전체순위</h3>
+        <div id="rankPanelSub" class="text-[11px] muted mt-0.5">-</div>
+      </div>
+      <button onclick="closeRankPanel()" class="text-slate-400 hover:text-white p-1 -mr-1" aria-label="닫기 (Esc)"><i class="fa-solid fa-xmark text-xl"></i></button>
+    </div>
+    <div class="flex items-center gap-2">
+      <div class="mk-seg shrink-0" id="rankTabs">
+        <button type="button" data-s="popular" onclick="rankSetStore('popular')"><i class="fa-solid fa-fire mr-1"></i>인기</button>
+        <button type="button" data-s="sales" onclick="rankSetStore('sales')"><i class="fa-solid fa-coins mr-1"></i>매출</button>
+      </div>
+      <div class="relative flex-1 min-w-0"><input id="rankSearch" class="mk-sel w-full pr-7" placeholder="이 순위에서 검색" autocomplete="off" oninput="rankState.q = this.value; renderRankPanel()"><button type="button" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-200 text-xs" onclick="document.getElementById('rankSearch').value=''; rankState.q=''; renderRankPanel()" aria-label="검색 지우기"><i class="fa-solid fa-xmark"></i></button></div>
+    </div>
+    <div class="flex flex-wrap items-center gap-1.5" id="rankJumps"></div>
+    <div class="flex flex-wrap items-center gap-1.5" id="rankFilters"></div>
+  </div>
+  <ol id="rankList" class="flex-1 overflow-y-auto scrollbar px-2 py-1"></ol>
 </div>
 
 <!-- GAME DETAIL SIDE PANEL (매출·인기 순위 데이터) -->
@@ -3025,9 +3049,108 @@ async function detailEnsureRange(){
   }
 }
 
+/* ---------- 전체순위 패널 (대시보드 TOP10 → 1~100위) ---------- */
+const RANK_PANEL_W = 460;
+const RANK_JUMPS = [[1, 10], [11, 30], [31, 50], [51, 100]];
+const rankState = { store: 'popular', filter: '', genre: '', q: '' };
+
+function rankPanelOpen(){ return !document.getElementById('rankPanel').classList.contains('translate-x-full'); }
+
+/* 기준일 100개 순위 + 전일 대비 변동 (이미 받아 둔 데이터만 사용) */
+function rankPanelItems(store){
+  const data = rawStore[store], dates = getDates(data), last = dates.at(-1), prev = dates.at(-2);
+  const prevMap = new Map();
+  (data?.rows || []).forEach(r => { if(rowDate(r) === prev){ const rk = rankOf(r); if(rk) prevMap.set(getGameKey(r), rk); } });
+  return { last, prev, items: (data?.rows || []).filter(r => rowDate(r) === last && rankOf(r)).map(r => {
+    const rank = rankOf(r), k = getGameKey(r), before = prevMap.get(k), meta = rankRowMeta(r), sc = scoreOf(r);
+    return { rank, name: gameName(r), genre: meta.genre, publisher: meta.publisher, score: sc, icon: getIconUrlFromRow(r) || getIconUrlForGame(gameName(r)),
+      change: prev ? (before == null ? 'NEW' : before - rank) : null };
+  }).sort((a, b) => a.rank - b.rank) };
+}
+
+function openRankPanel(store){
+  rankState.store = store; rankState.filter = ''; rankState.genre = ''; rankState.q = '';
+  document.getElementById('rankSearch').value = '';
+  renderRankPanel();
+  document.getElementById('rankList').scrollTop = 0;
+  document.getElementById('rankOverlay').classList.remove('hidden');
+  setTimeout(() => { document.getElementById('rankOverlay').classList.remove('opacity-0'); document.getElementById('rankPanel').classList.remove('translate-x-full'); }, 10);
+}
+function closeRankPanel(){
+  document.getElementById('rankPanel').classList.add('translate-x-full');
+  document.getElementById('rankOverlay').classList.add('opacity-0');
+  setTimeout(() => document.getElementById('rankOverlay').classList.add('hidden'), 300);
+  if(document.getElementById('detailPanel').style.right) closeGameDetail();
+  setTimeout(() => { const o = document.getElementById('detailOverlay'); o.style.display = ''; o.style.zIndex = ''; document.getElementById('detailPanel').style.right = ''; }, 320);
+}
+function rankSetStore(s){ rankState.store = s; rankState.filter = ''; rankState.genre = ''; renderRankPanel(); document.getElementById('rankList').scrollTop = 0; }
+function rankSetFilter(f){ rankState.filter = rankState.filter === f ? '' : f; renderRankPanel(); document.getElementById('rankList').scrollTop = 0; }
+function rankJump(from){
+  const el = document.getElementById(`rankRow-${from}`) || [...document.querySelectorAll('#rankList [data-rank]')].find(li => Number(li.dataset.rank) >= from);
+  if(el) el.scrollIntoView({ block: 'start', behavior: 'smooth' });
+}
+
+function renderRankPanel(){
+  const { store, filter, genre } = rankState, label = store === 'sales' ? '매출' : '인기';
+  const { last, prev, items } = rankPanelItems(store);
+  document.querySelectorAll('#rankTabs button').forEach(b => {
+    const on = b.dataset.s === rankState.store;
+    b.classList.toggle('on', on);
+    b.style.background = on ? (b.dataset.s === 'sales' ? '#fbbf24' : '#2dd4bf') : '';
+    b.style.color = on ? '#0b1222' : '';
+  });
+  setText('rankPanelSub', last ? `${label} 순위 · 기준일 ${last}${prev ? ` · 변동은 전일(${mkShort(prev)}) 대비` : ''} · ${items.length}개` : '데이터 없음');
+
+  /* 구간 점프 */
+  document.getElementById('rankJumps').innerHTML = '<span class="text-[11px] muted mr-0.5">구간</span>' + RANK_JUMPS.map(([a, b]) =>
+    `<button type="button" class="cal-chip !py-1 !px-2.5 !text-[11px]" onclick="rankJump(${a})">${a}–${b}</button>`).join('');
+
+  /* 빠른 필터 + 장르 */
+  const count = f => items.filter(x => rankMatchFilter(x, f)).length;
+  const fchip = (f, text, cls) => `<button type="button" class="cal-chip !py-1 !px-2.5 !text-[11px] ${filter === f ? 'on' : ''}" onclick="rankSetFilter('${f}')" aria-pressed="${filter === f}"><span class="${cls}">${text}</span> <b>${count(f)}</b></button>`;
+  const genres = [...items.reduce((m, x) => x.genre ? m.set(x.genre, (m.get(x.genre) || 0) + 1) : m, new Map())].sort((a, b) => b[1] - a[1]);
+  document.getElementById('rankFilters').innerHTML = fchip('new', '신규 진입', 't-new') + fchip('up', '급상승', 'rank-up') + fchip('down', '급하락', 'rank-down')
+    + `<select class="mk-sel !py-1 !text-[11px] ml-auto max-w-[140px]" onchange="rankState.genre = this.value; renderRankPanel()" aria-label="장르 필터"><option value="">전체 장르</option>${genres.map(([g, c]) => `<option value="${escapeAttr(g)}" ${g === genre ? 'selected' : ''}>${escapeHtml(g)} (${c})</option>`).join('')}</select>`;
+
+  /* 목록 */
+  const q = getGameKey(rankState.q.trim());
+  const list = items.filter(x => (!filter || rankMatchFilter(x, filter)) && (!genre || x.genre === genre) && (q === '-' || !q || getGameKey(x.name).includes(q)));
+  const openKey = !document.getElementById('detailPanel').classList.contains('translate-x-full') ? getGameKey(detailCurrentName) : '';
+  document.getElementById('rankList').innerHTML = list.length ? list.map(x => {
+    const meta = [x.genre && x.genre !== '미분류' ? escapeHtml(x.genre) : '', x.publisher && x.publisher !== '-' ? escapeHtml(x.publisher) : '', x.score && x.score !== '-' ? renderScoreBadgeHtml(x.score) : ''].filter(Boolean);
+    const sep = [10, 30, 50].includes(x.rank) && !filter && !genre && !q ? ' border-b-2 border-b-slate-700' : '';
+    return `<li id="rankRow-${x.rank}" data-rank="${x.rank}" data-key="${escapeAttr(getGameKey(x.name))}" class="group flex items-center gap-2.5 py-2 px-2 rounded-lg cursor-pointer hover:bg-slate-800/60 transition-colors scroll-mt-1${sep}${getGameKey(x.name) === openKey ? ' bg-indigo-500/15' : ''}" onclick="openGameDetail('${escapeAttr(x.name).replace(/&#039;/g, "\\'")}')">
+      <span class="w-7 text-right shrink-0 font-bold ${x.rank <= 3 ? 'text-slate-50 text-sm' : 'text-slate-400 text-xs'}">${x.rank}</span>
+      ${x.icon ? `<img src="${escapeAttr(x.icon)}" class="w-8 h-8 rounded-lg object-cover bg-slate-800 shrink-0" alt="" loading="lazy" onerror="this.style.visibility='hidden'">` : '<span class="w-8 h-8 rounded-lg bg-slate-800 shrink-0"></span>'}
+      <div class="min-w-0 flex-1"><div class="text-[13px] font-medium truncate text-slate-100">${escapeHtml(x.name)}</div><div class="text-[11px] muted truncate mt-0.5">${meta.join('<span class="mx-1 text-slate-600">·</span>')}</div></div>
+      <div class="w-12 text-right shrink-0">${x.change === 'NEW' ? '<span class="t-new text-[11px] font-semibold">NEW</span>' : x.change ? `<span class="text-[11px] font-semibold ${x.change > 0 ? 'rank-up' : 'rank-down'}">${x.change > 0 ? '▲' : '▼'}${Math.abs(x.change)}</span>` : '<span class="text-[11px] muted">-</span>'}</div>
+    </li>`;
+  }).join('') : `<li class="text-xs muted text-center py-10">조건에 맞는 게임이 없습니다</li>`;
+}
+/* 급상승·급하락: 전일 대비 5계단 이상 */
+function rankMatchFilter(x, f){
+  if(f === 'new') return x.change === 'NEW';
+  if(f === 'up') return typeof x.change === 'number' && x.change >= 5;
+  if(f === 'down') return typeof x.change === 'number' && x.change <= -5;
+  return true;
+}
+
+/* Esc: 위에 열린 패널부터 하나씩 (게임 상세·신작 상세가 열려 있으면 그쪽이 먼저) */
+window.addEventListener('keydown', e => {
+  if(e.key !== 'Escape' || !rankPanelOpen()) return;
+  if(!document.getElementById('shotLightbox')?.classList.contains('hidden')) return;
+  if(!document.getElementById('detailPanel').classList.contains('translate-x-full') || !document.getElementById('releaseDetailPanel').classList.contains('translate-x-full')) return;
+  closeRankPanel();
+}, true);
+
 function openGameDetail(targetName) {
   detailCurrentName = targetName;
   syncDetailWatchBtn(targetName);
+  const side = rankPanelOpen() && innerWidth >= 1280, overlay = document.getElementById('detailOverlay');
+  document.getElementById('detailPanel').style.right = side ? `${RANK_PANEL_W}px` : '';
+  overlay.style.display = side ? 'none' : '';          /* 나란히 볼 때는 순위 목록을 계속 누를 수 있게 */
+  overlay.style.zIndex = rankPanelOpen() && !side ? '46' : '';  /* 겹칠 때는 바깥을 누르면 상세만 닫힘 */
+  document.querySelectorAll('#rankList li[data-key]').forEach(li => li.classList.toggle('bg-indigo-500/15', li.dataset.key === getGameKey(targetName)));
   renderGameDetail();
   document.getElementById('detailPanel').scrollTop = 0;
   document.getElementById('detailOverlay').classList.remove('hidden');
@@ -3036,6 +3159,7 @@ function openGameDetail(targetName) {
 }
 
 function closeGameDetail() {
+  document.querySelectorAll('#rankList li[data-key]').forEach(li => li.classList.remove('bg-indigo-500/15'));
   document.getElementById('detailPanel').classList.add('translate-x-full');
   document.getElementById('detailOverlay').classList.add('opacity-0');
   setTimeout(() => document.getElementById('detailOverlay').classList.add('hidden'), 300);
