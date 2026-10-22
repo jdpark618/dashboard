@@ -150,6 +150,12 @@ select option { background-color: #0f172a; color: #f1f5f9; }
 .gs-chipnote { font-size:11px; color:#64748b; }
 .gs-clear { position:absolute; right:8px; top:50%; transform:translateY(-50%); color:#64748b; font-size:12px; cursor:pointer; padding:2px 4px; }
 .gs-clear:hover { color:#cbd5e1; }
+/* 스켈레톤 로딩 */
+.sk { display:inline-block; vertical-align:middle; border-radius:6px; background:linear-gradient(90deg, rgba(51,65,85,.45) 25%, rgba(71,85,105,.7) 37%, rgba(51,65,85,.45) 63%); background-size:400% 100%; animation:sk-shimmer 1.4s ease infinite; }
+@keyframes sk-shimmer { 0% { background-position:100% 50%; } 100% { background-position:0 50%; } }
+@media (prefers-reduced-motion: reduce) { .sk { animation:none; } }
+.mk-info { color:#64748b; font-size:10px; margin-left:4px; cursor:help; }
+.mk-info:hover { color:#cbd5e1; }
 </style>
 </head>
 
@@ -464,7 +470,7 @@ select option { background-color: #0f172a; color: #f1f5f9; }
         <div id="mkWGenre"></div>
       </div>
       <div class="card rounded-xl p-5">
-        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">퍼블리셔 점유</h3><p class="text-[10px] muted mt-1">지난주 · 순위 가중 점수 (일별 101 − 순위 합산)</p></div><div class="mk-tabs" data-tab="wPub"></div></div>
+        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">퍼블리셔 영향력 점유<i class="fa-regular fa-circle-question mk-info" title="지난주 매일 순위마다 (101 − 순위) 점수를 주고 퍼블리셔별로 합산한 값의 비중. 1위 게임은 하루 100점, 100위는 1점이라 보유 게임 수보다 상위권 장악력을 반영합니다."></i></h3><p class="text-[10px] muted mt-1">지난주 · 상위 순위일수록 큰 점수로 합산</p></div><div class="mk-tabs" data-tab="wPub"></div></div>
         <div id="mkWPub"></div>
       </div>
     </section>
@@ -1043,6 +1049,15 @@ function rankOf(row) {
   return Number.isFinite(n) && n > 0 ? n : null;
 }
 
+/* 순위 행의 패키지명·장르·퍼블리셔. 시트는 수집 초기(8/31)부터 [날짜,순위,증감,앱이름,패키지명,장르,퍼블리셔] 순서이며
+   9/7까지는 패키지명 칸만 비어 있다. 날짜가 아니라 내용으로 판정: 패키지명 칸에 패키지가 아닌 값이 있고
+   퍼블리셔 칸이 비어 있으면 패키지명 칸 없는 구 레이아웃으로 본다. */
+function rankRowMeta(r){
+  const c4 = String(r?.[4] ?? '').trim(), c5 = String(r?.[5] ?? '').trim(), c6 = String(r?.[6] ?? '').trim();
+  if(c4 && !c4.includes('.') && !c6) return { appId: '', genre: c4, publisher: c5 };
+  return { appId: c4.includes('.') ? c4 : '', genre: c5, publisher: c6 };
+}
+
 /* 평점 정규화: 항상 소수점 1자리(예: 4.0)로 일관되게 출력 */
 function scoreOf(row) {
   if(!row) return '-';
@@ -1057,6 +1072,31 @@ function scoreOf(row) {
 }
 
 function setText(id,v){const el=document.getElementById(id); if(el)el.textContent=v;}
+
+/* ---------- 스켈레톤: 첫 로딩 동안 자리 표시, 렌더 함수가 내용을 덮어쓴다 ---------- */
+function skBar(w, h = 'h-3'){ return `<span class="sk ${h} ${w}"></span>`; }
+function skRows(n){
+  return Array.from({ length: n }, () => `<li class="flex items-center gap-2.5 py-2 px-2">${skBar('w-5', 'h-3')}<span class="sk w-6 h-6 rounded-md"></span><div class="flex-1 min-w-0 space-y-1.5"><div>${skBar('w-2/3')}</div><div>${skBar('w-1/3', 'h-2')}</div></div>${skBar('w-10', 'h-4')}</li>`).join('');
+}
+function skBlocks(n){ return Array.from({ length: n }, () => `<div class="py-1.5">${skBar('w-full', 'h-3')}</div>`).join(''); }
+function skKpis(n){
+  return Array.from({ length: n }, () => `<div class="card rounded-xl p-4 space-y-2.5"><div>${skBar('w-1/2', 'h-2.5')}</div><div>${skBar('w-2/3', 'h-5')}</div><div>${skBar('w-full', 'h-6')}</div></div>`).join('');
+}
+function renderDashboardSkeletons(){
+  const fill = (id, html) => { const el = document.getElementById(id); if(el){ el.innerHTML = html; el.dataset.sk = '1'; } };
+  ['Popular', 'Sales', 'New', 'Rising'].forEach(p => { fill(`today${p}Top`, skBar('w-24', 'h-3.5')); fill(`today${p}Meta`, skBar('w-20', 'h-2.5')); });
+  ['popularTop10List', 'salesTop10List'].forEach(id => fill(id, skRows(10)));
+  ['newEntriesList', 'salesRisingList', 'salesFallingList'].forEach(id => fill(id, skRows(5)));
+  fill('todayGenreLegend', skBlocks(4));
+  ['popularGenreBars', 'salesGenreBars'].forEach(id => fill(id, skBlocks(8)));
+}
+/* 로딩 실패 시 남은 스켈레톤을 안내 문구로 교체 */
+function clearDashboardSkeletons(){
+  document.querySelectorAll('[data-sk]').forEach(el => {
+    if(el.querySelector('.sk')) el.innerHTML = /^(OL|UL)$/.test(el.tagName) ? '<li class="text-xs muted py-4 text-center">데이터를 불러오지 못했습니다</li>' : '-';
+    delete el.dataset.sk;
+  });
+}
 function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
 function escapeAttr(v){return escapeHtml(v);}
 
@@ -1084,14 +1124,14 @@ function buildSnapshotFallback(salesData, popData) {
   const latestSalesMap = parseRankMap(salesData, latest), prevSalesMap = prev ? parseRankMap(salesData, prev) : new Map();
 
   const toList = (map, data) => Array.from(map.values()).map(val => {
-    const r = val.r, isNewSchema = rowDate(r) >= '2026-09-08';
+    const r = val.r, meta = rankRowMeta(r);
     return {
       rank: val.rank, name: String(r[3] || '-').trim(),
-      genre: String(isNewSchema ? r[5] : r[4] || ''),
-      publisher: String(isNewSchema ? r[6] : r[5] || ''),
+      genre: meta.genre,
+      publisher: meta.publisher,
       score: scoreOf(r),
       iconUrl: getIconUrlFromRow(r),
-      appId: isNewSchema ? String(r[4] || '').trim() : ''
+      appId: meta.appId
     };
   }).sort((a,b) => a.rank - b.rank);
 
@@ -1119,8 +1159,7 @@ function buildSnapshotFallback(salesData, popData) {
     const prevCounts = {};
     if (prevDate && prevMapData && prevMapData.rows) {
       prevMapData.rows.filter(r => rowDate(r) === prevDate).forEach(r => {
-        const isNewSchema = rowDate(r) >= '2026-09-08';
-        const g = String(isNewSchema ? r[5] : r[4] || '기타').trim();
+        const g = rankRowMeta(r).genre || '기타';
         prevCounts[g] = (prevCounts[g] || 0) + 1;
       });
     }
@@ -2559,7 +2598,6 @@ function lightboxKeyHandler(e){
    - 신규 진입: 일간 = 전일 TOP100 없음 → 기준일 TOP100 / 주간 = 전주 TOP100 없음 → 해당 주 TOP100 (재진입 포함, 태그로 구분)
    - 이탈: 기준 시점에 기록이 없으면 이탈 (수집 데이터가 100위까지이므로 '순위 > 100' 판정은 사용하지 않음)
    ===================================================================== */
-const MK_SCHEMA_CHANGE_DATE = '2026-09-08';
 const MK_STORE_LABEL = { sales: '매출', popular: '인기' };
 let mkMode = 'daily';
 const mkPosExpand = {};
@@ -2568,12 +2606,8 @@ const mkIndexCache = { sales: null, popular: null };
 let mkMonthsReady = false;
 
 function mkParseRow(r){
-  const isNew = rowDate(r) >= MK_SCHEMA_CHANGE_DATE;
-  return {
-    appId: isNew ? String(r[4] || '').trim() : '',
-    genre: String((isNew ? r[5] : r[4]) || '').trim() || '미분류',
-    publisher: String((isNew ? r[6] : r[5]) || '').trim() || '미상'
-  };
+  const m = rankRowMeta(r);
+  return { appId: m.appId, genre: m.genre || '미분류', publisher: m.publisher || '미상' };
 }
 
 /* 스토어별 인덱스: dates(오름차순), byDate: Map<date, Map<key, {rank,name,genre,publisher}>> */
@@ -2666,8 +2700,14 @@ function mkGameCell(name, sub){
   return `<div class="flex items-center gap-2 min-w-0">${mkIcon(name)}<div class="min-w-0"><div class="font-medium text-slate-200 truncate">${escapeHtml(name)}</div>${sub ? `<div class="text-[9px] muted truncate">${escapeHtml(sub)}</div>` : ''}</div></div>`;
 }
 function mkEmpty(text){ return `<div class="muted text-xs py-6 text-center">${text}</div>`; }
-function mkKpiCard(label, value, sub, subCls = 'muted'){
-  return `<div class="card rounded-xl p-4"><div class="text-[11px] muted">${label}</div><div class="text-xl font-bold mt-2 truncate">${value}</div><div class="text-[10px] mt-1 ${subCls} truncate">${sub}</div></div>`;
+/* 용어 설명 아이콘 (마우스를 올리면 설명) */
+function mkInfo(tip){ return tip ? `<i class="fa-regular fa-circle-question mk-info" title="${escapeAttr(tip)}" aria-label="${escapeAttr(tip)}"></i>` : ''; }
+/* KPI 값: 매출·인기 두 값을 한 줄에 (라벨은 작게, 숫자는 크게) */
+function mkPair(salesVal, popVal){
+  return `<span class="text-[11px] font-semibold text-indigo-300">매출</span> ${salesVal} <span class="muted font-normal">·</span> <span class="text-[11px] font-semibold text-emerald-300">인기</span> ${popVal}`;
+}
+function mkKpiCard(label, value, sub, subCls = 'muted', tip = ''){
+  return `<div class="card rounded-xl p-4"><div class="text-[11px] muted">${label}${mkInfo(tip)}</div><div class="text-xl font-bold mt-2 truncate">${value}</div><div class="text-[10px] mt-1 ${subCls} truncate">${sub}</div></div>`;
 }
 function mkDelta(n, digits = 0){
   if(n == null || isNaN(n)) return '<span class="text-slate-400">-</span>';
@@ -2739,15 +2779,16 @@ function mkDailySeries(idx){
 /* 오늘 값이 직전 평균 대비 어느 수준인지 태그 */
 function mkLevelTag(today, avg){
   if(avg == null) return '';
-  if(today > avg * 1.5 && today - avg >= 2) return '<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300">평소보다 많음</span>';
-  if(today < avg * 0.5 && avg - today >= 2) return '<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300">평소보다 적음</span>';
-  return '<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-slate-700/50 text-slate-400">평소 수준</span>';
+  const tip = `기준일 ${today}개 · 직전 6일 평균 ${avg.toFixed(1)}개 (평균의 1.5배 이상이면 많음, 절반 이하면 적음)`;
+  if(today > avg * 1.5 && today - avg >= 2) return `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 shrink-0" title="${tip}">평소보다 많음</span>`;
+  if(today < avg * 0.5 && avg - today >= 2) return `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 shrink-0" title="${tip}">평소보다 적음</span>`;
+  return `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-slate-700/50 text-slate-400 shrink-0" title="${tip}">평소 수준</span>`;
 }
 function mkAvgPast(arr, fn){ const p = arr.slice(0, -1); return p.length ? p.reduce((t, x) => t + fn(x), 0) / p.length : null; }
 /* 미니 막대: 단일 시리즈 */
-function mkSpark(values, color){
+function mkSpark(values, color, titles = []){
   const max = Math.max(1, ...values);
-  return `<div class="flex items-end gap-[3px] h-7">${values.map((v, i) => `<div class="flex-1 rounded-sm ${color} ${i === values.length - 1 ? '' : 'opacity-40'}" style="height:${Math.max(6, Math.round(v / max * 100))}%" title="${v}"></div>`).join('')}</div>`;
+  return `<div class="flex items-end gap-[3px] h-7">${values.map((v, i) => `<div class="flex-1 rounded-sm ${color} ${i === values.length - 1 ? '' : 'opacity-40'}" style="height:${Math.max(6, Math.round(v / max * 100))}%" title="${escapeAttr(titles[i] || v)}"></div>`).join('')}</div>`;
 }
 /* 미니 막대: 진입(위) / 이탈(아래) 대칭 */
 function mkSparkInOut(days){
@@ -2756,9 +2797,9 @@ function mkSparkInOut(days){
     return `<div class="flex-1 flex flex-col" title="${mkShort(x.d)} 진입 ${x.inn} / 이탈 ${x.out}"><div class="h-4 flex items-end"><div class="w-full rounded-t-sm bg-emerald-400 ${last}" style="height:${Math.round(x.inn / max * 100)}%"></div></div><div class="h-4 flex items-start"><div class="w-full rounded-b-sm bg-rose-400 ${last}" style="height:${Math.round(x.out / max * 100)}%"></div></div></div>`; };
   return `<div class="flex gap-[3px] border-slate-700">${days.map(col).join('')}</div>`;
 }
-function mkKpiSparkCard(label, valueHtml, tagHtml, sparkHtml, sub){
+function mkKpiSparkCard(label, valueHtml, tagHtml, sparkHtml, sub, tip = ''){
   return `<div class="card rounded-xl p-4 flex flex-col">
-    <div class="flex items-center justify-between gap-2"><span class="text-[11px] muted truncate">${label}</span>${tagHtml}</div>
+    <div class="flex items-center justify-between gap-2"><span class="text-[11px] muted truncate">${label}${mkInfo(tip)}</span>${tagHtml}</div>
     <div class="text-xl font-bold mt-1.5 truncate">${valueHtml}</div>
     <div class="mt-auto pt-2">${sparkHtml}</div>
     <div class="text-[10px] muted mt-1.5 truncate">${sub}</div>
@@ -2780,18 +2821,23 @@ function mkRenderDaily(){
   const kpiHtml = [];
   ['sales', 'popular'].forEach(s => {
     const days = mkDailySeries(B[s].idx), t = days.at(-1);
-    if(!t){ kpiHtml.push(mkKpiCard(`${MK_STORE_LABEL[s]} TOP100 IN / OUT`, '-', '전일 데이터 없음')); return; }
+    const label = `${MK_STORE_LABEL[s]} TOP100 변동`;
+    const tip = `전일 ${MK_STORE_LABEL[s]} TOP100에 없다가 기준일에 들어온 게임 수(진입)와, 전일 TOP100에 있다가 기준일에 빠진 게임 수(이탈). 막대는 최근 7일, 위쪽 초록이 진입·아래쪽 빨강이 이탈.`;
+    if(!t){ kpiHtml.push(mkKpiCard(label, '-', '전일 데이터 없음', 'muted', tip)); return; }
     const avg = mkAvgPast(days, x => x.inn + x.out);
-    kpiHtml.push(mkKpiSparkCard(`${MK_STORE_LABEL[s]} TOP100 IN / OUT`,
-      `<span class="rank-up">+${t.inn}</span> <span class="muted font-normal">/</span> <span class="rank-down">−${t.out}</span>`,
-      mkLevelTag(t.inn + t.out, avg), mkSparkInOut(days), `최근 7일 · 하루 평균 진입 ${avg == null ? '-' : (mkAvgPast(days, x => x.inn)).toFixed(1)}개`));
+    kpiHtml.push(mkKpiSparkCard(label,
+      `<span class="rank-up">진입 ${t.inn}</span> <span class="muted font-normal">·</span> <span class="rank-down">이탈 ${t.out}</span>`,
+      mkLevelTag(t.inn + t.out, avg), mkSparkInOut(days), `최근 7일 · 하루 평균 진입 ${avg == null ? '-' : (mkAvgPast(days, x => x.inn)).toFixed(1)}개`, tip));
   });
   ['sales', 'popular'].forEach(s => {
     const D = B[s], days = mkDailySeries(D.idx), t = days.at(-1);
-    if(!t){ kpiHtml.push(mkKpiCard(`${MK_STORE_LABEL[s]} TOP10 교체`, '-', '전일 데이터 없음')); return; }
+    const label = `${MK_STORE_LABEL[s]} TOP10 새 얼굴`;
+    const tip = `전일 ${MK_STORE_LABEL[s]} 10위 밖이었다가 기준일에 10위 안으로 들어온 게임 수. 막대는 최근 7일.`;
+    if(!t){ kpiHtml.push(mkKpiCard(label, '-', '전일 데이터 없음', 'muted', tip)); return; }
     const ins = mkCompareDays(D.idx, D.prev, D.base).top10In;
-    kpiHtml.push(mkKpiSparkCard(`${MK_STORE_LABEL[s]} TOP10 교체`, `${t.t10}개`, mkLevelTag(t.t10, mkAvgPast(days, x => x.t10)),
-      mkSpark(days.map(x => x.t10), 'bg-indigo-400'), ins.length ? `IN ${escapeHtml(ins[0].name)}${ins.length > 1 ? ` 외 ${ins.length - 1}` : ''}` : '오늘 TOP10 신규 진입 없음'));
+    kpiHtml.push(mkKpiSparkCard(label, `${t.t10}개`, mkLevelTag(t.t10, mkAvgPast(days, x => x.t10)),
+      mkSpark(days.map(x => x.t10), 'bg-indigo-400', days.map(x => `${mkShort(x.d)} · ${x.t10}개`)),
+      ins.length ? `${escapeHtml(ins[0].name)} ${ins[0].rank}위${ins.length > 1 ? ` 외 ${ins.length - 1}개` : ''}` : '기준일 TOP10 새 진입 없음', tip));
   });
   document.getElementById('mkDailyKpis').innerHTML = kpiHtml.join('');
 
@@ -2954,11 +3000,17 @@ function mkRenderWeekly(){
       const bars = wk.map((m, i) => ({ m, s: sc[i].prevHasData ? sc[i].list.length : 0, p: pc[i].prevHasData ? pc[i].list.length : 0 }));
       const max = Math.max(1, ...bars.flatMap(x => [x.s, x.p]));
       const spark = `<div class="flex items-end gap-[3px] h-7">${bars.map((x, i) => `<div class="flex-1 flex items-end gap-px h-full ${i === bars.length - 1 ? '' : 'opacity-40'}" title="${mkShort(x.m)} 주 · 매출 ${x.s} / 인기 ${x.p}"><div class="flex-1 rounded-sm bg-indigo-400" style="height:${Math.max(6, Math.round(x.s / max * 100))}%"></div><div class="flex-1 rounded-sm bg-emerald-400" style="height:${Math.max(6, Math.round(x.p / max * 100))}%"></div></div>`).join('')}</div>`;
-      return mkKpiSparkCard('주간 신규 진입', `<span class="text-indigo-300">매출 ${ent.sales.list.length}</span> <span class="muted font-normal">·</span> <span class="text-emerald-300">인기 ${ent.popular.list.length}</span>`, '', spark, `최근 8주 · 전주 대비 ${dTxt(cntDelta('sales'))} · ${dTxt(cntDelta('popular'))}`);
+      return mkKpiSparkCard('주간 신규 진입', mkPair(ent.sales.list.length, ent.popular.list.length), '', spark, `최근 8주 · 전주 대비 매출 ${dTxt(cntDelta('sales'))} · 인기 ${dTxt(cntDelta('popular'))}`,
+        '전주에는 TOP100 기록이 없다가 지난주에 하루라도 TOP100에 든 게임 수. 막대는 최근 8주(파랑 매출·초록 인기).');
     })() +
-    mkKpiCard('4주 잔존율', `매출 ${rS != null ? rS + '%' : '-'}`, `인기 ${rP != null ? rP + '%' : '-'} · 4주 전 TOP100 중 잔존`) +
-    mkKpiCard('주간 평균 순위 변동', `매출 ${vS != null ? vS.toFixed(1) + '위' : '-'}`, `인기 ${vP != null ? vP.toFixed(1) + '위' : '-'} · 전주 대비 절대값 평균`) +
-    mkKpiCard('가중 1위 퍼블리셔', topPub ? escapeHtml(topPub.publisher) : '-', topPub ? `매출 점유 ${Math.round(topPub.score / pubS.total * 100)}% · ${topPub.games.size}개 보유` : '-');
+    mkKpiCard('4주 후 순위권 유지율', mkPair(rS != null ? rS + '%' : '-', rP != null ? rP + '%' : '-'),
+      '4주 전 TOP100 게임 중 지난주에도 남은 비율', 'muted',
+      '4주 전 주의 마지막 날 TOP100에 있던 게임 중, 지난주 마지막 날에도 TOP100에 남아 있는 비율. 높을수록 순위권이 고정된(신작이 뚫기 어려운) 시장.') +
+    mkKpiCard('평균 순위 변동폭', mkPair(vS != null ? vS.toFixed(1) : '-', vP != null ? vP.toFixed(1) : '-'),
+      '전주 대비 게임당 평균 이동 계단 수', 'muted',
+      '두 주 모두 TOP100에 있던 게임의 주 평균 순위가 전주보다 평균 몇 계단 움직였는지(오르내림 구분 없이). 클수록 순위가 많이 요동친 주.') +
+    mkKpiCard('매출 영향력 1위 퍼블리셔', topPub ? escapeHtml(topPub.publisher) : '-', topPub ? `점수 점유 ${Math.round(topPub.score / pubS.total * 100)}% · TOP100 게임 ${topPub.games.size}개` : '-', 'muted',
+      '지난주 매일 매출 순위마다 (101 − 순위) 점수를 주고 퍼블리셔별로 합산. 1위 게임은 하루 100점, 100위는 1점이라 게임 수보다 상위권 장악력을 반영.');
 
   /* 시장 포지션 맵 (주간): 주 평균 순위, 관측되지 않은 날은 101로 계산 */
   {
@@ -2993,7 +3045,7 @@ function mkRenderWeekly(){
   };
   const prevShare = weekShares.at(-2);
   document.getElementById('mkWGenre').innerHTML = lastShare.total ? `
-    <div class="space-y-1.5">${weekShares.map(ws => {
+    <div class="space-y-1.5">${weekShares.slice(Math.max(0, weekShares.findIndex(ws => ws.total > 0))).map(ws => {
       const sg = segs(ws);
       return `<div class="flex items-center gap-2"><span class="w-[74px] shrink-0 text-[10px] ${ws.wm === mon ? 'text-indigo-300 font-semibold' : 'muted'}">${mkShort(ws.wm)} 주${ws.wm === mon ? ' ●' : ''}</span>
         <div class="flex-1 h-4 rounded overflow-hidden flex bg-slate-800/60">${sg.map(x => `<span title="${escapeAttr(x.g)} ${x.pct.toFixed(1)}%" style="width:${x.pct}%;background:${x.color}"></span>`).join('') || '<span class="text-[9px] muted px-2">데이터 없음</span>'}</div></div>`;
@@ -3059,7 +3111,7 @@ function mkRenderWeekly(){
     const pctCell = v => v == null ? '<span class="muted">-</span>' : `<span class="${v >= 60 ? 'text-emerald-300' : v >= 30 ? 'text-amber-300' : 'text-rose-300'} font-semibold">${v}%</span>`;
     document.getElementById('mkWEntries').innerHTML = `<table class="w-full text-left text-xs">
       <thead><tr class="border-b border-slate-800 text-[10px] muted">
-        <th class="py-2 pl-1">진입 주차</th><th class="py-2 px-2 text-right">진입 수</th><th class="py-2 px-2 text-right">1주 후</th><th class="py-2 px-2 text-right">2주 후</th><th class="py-2 pl-2 pr-1 text-right">4주 후</th>
+        <th class="py-2 pl-1">진입 주차${mkInfo('해당 주에 TOP100에 새로 들어온 게임들이 1·2·4주 뒤 마지막 날에도 TOP100에 남아 있는 비율. 60% 이상 초록, 30% 미만 빨강.')}</th><th class="py-2 px-2 text-right">진입 수</th><th class="py-2 px-2 text-right">1주 후</th><th class="py-2 px-2 text-right">2주 후</th><th class="py-2 pl-2 pr-1 text-right">4주 후</th>
       </tr></thead><tbody>
       ${rows.map(r => `<tr class="border-b border-slate-900">
         <td class="py-2 pl-1 ${r.e === mon ? 'text-indigo-300 font-semibold' : 'text-slate-300'}">${mkWeekLabel(r.e)}</td>
@@ -3068,6 +3120,13 @@ function mkRenderWeekly(){
       </tr>`).join('')}</tbody></table>
       <p class="text-[10px] muted mt-2">"-"는 아직 해당 기간이 지나지 않았거나 비교할 데이터가 없는 경우입니다.</p>`;
   }
+}
+
+/* 주간 분석은 이전 월 데이터를 받는 동안 자리만 표시 */
+function mkRenderWeeklySkeleton(){
+  setText('mkAsOf', '지난 기간 데이터를 불러오는 중...');
+  document.getElementById('mkWeeklyKpis').innerHTML = skKpis(4);
+  ['mkWPosition', 'mkWGenre', 'mkWPub', 'mkWMovers', 'mkWEntries'].forEach(id => { document.getElementById(id).innerHTML = skBlocks(6); });
 }
 
 /* ---------- 모드 / 탭 / 진입 ---------- */
@@ -3088,6 +3147,7 @@ function mkRender(){
   try{
     if(mkMode === 'daily') mkRenderDaily();
     else if(mkMonthsReady) mkRenderWeekly();
+    else mkRenderWeeklySkeleton();
   }catch(e){
     console.error('시장 분석 렌더 실패', e);
     setText('mkAsOf', '분석 데이터 처리 중 오류가 발생했습니다.');
@@ -3163,7 +3223,7 @@ async function fetchAllData(){
 
     rebuildLookupIndices();
     currentCalYear = ty; currentCalMonth = tm;
-    renderToday(); resetGameIndex(); mkMonthsReady = false;
+    renderToday(); clearDashboardSkeletons(); resetGameIndex(); mkMonthsReady = false;
     if(currentView==='sales'||currentView==='popular'||currentView==='newReleases')renderDatabase(currentView);
     if(currentView==='search')openSearchView();
     if(currentView==='calendar')ensureCalendarMonthLoaded();
@@ -3187,6 +3247,7 @@ async function fetchAllData(){
     console.error(err);
     status.className='text-xs px-3 py-1.5 rounded-full bg-rose-950 text-rose-300';
     status.innerHTML=`<i class="fa-solid fa-circle-exclamation mr-1"></i> 에러: ${escapeHtml(err.message)}`;
+    clearDashboardSkeletons();
   }finally{btn.disabled=false;}
 }
 
@@ -3194,6 +3255,7 @@ let lastSyncAt = 0;
 const AUTO_REFRESH_MS = 30 * 60 * 1000;
 
 window.addEventListener('DOMContentLoaded', async () => {
+  renderDashboardSkeletons();
   await fetchAllData();
   const initial = viewFromHash();
   if(initial !== 'dashboard') switchView(initial);
