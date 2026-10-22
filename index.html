@@ -200,6 +200,16 @@ select option { background-color: #0f172a; color: #f1f5f9; }
 .pos-chip.dim { opacity:.3; }
 .pos-chip.hl { border-color:#f1f5f9; box-shadow:0 0 0 1px #f1f5f9; }
 .pos-chip.watch { border-color:rgba(251,191,36,.7); }
+/* 패널이 열릴 때 페이지 스크롤을 잠가도 화면이 옆으로 밀리지 않게 스크롤바 자리 고정 */
+html { scrollbar-gutter: stable; }
+html.panel-lock { overflow: hidden; }
+/* 슬라이드 패널 스크롤바: 얇게, 평소엔 은은하게 */
+.thin-scroll { scrollbar-width: thin; scrollbar-color: rgba(100,116,139,.35) transparent; }
+.thin-scroll:hover { scrollbar-color: rgba(148,163,184,.7) transparent; }
+.thin-scroll::-webkit-scrollbar { width: 6px; }
+.thin-scroll::-webkit-scrollbar-thumb { background: rgba(100,116,139,.35); border-radius: 6px; }
+.thin-scroll:hover::-webkit-scrollbar-thumb { background: rgba(148,163,184,.7); }
+.thin-scroll::-webkit-scrollbar-track { background: transparent; }
 .tap-tip { position:fixed; z-index:200; max-width:280px; background:#0f172a; color:#e2e8f0; border:1px solid rgba(99,102,241,.5); border-radius:8px; padding:8px 10px; font-size:12px; line-height:1.55; box-shadow:0 10px 25px -3px rgba(0,0,0,.7); }
 </style>
 </head>
@@ -658,7 +668,7 @@ select option { background-color: #0f172a; color: #f1f5f9; }
 
 <!-- 하루 전체 일정 패널 -->
 <div id="calDayOverlay" class="fixed inset-0 bg-black/60 z-[35] hidden opacity-0 transition-opacity duration-300" onclick="closeCalDay()"></div>
-<div id="calDayPanel" class="fixed top-0 right-0 w-full max-w-[420px] h-full bg-slate-900 shadow-2xl z-[38] transform translate-x-full transition-transform duration-300 overflow-y-auto border-l border-slate-700" role="dialog" aria-labelledby="calDayTitle">
+<div id="calDayPanel" class="fixed top-0 right-0 w-full max-w-[420px] h-full bg-slate-900 shadow-2xl z-[38] transform translate-x-full transition-transform duration-300 overflow-y-auto thin-scroll border-l border-slate-700" role="dialog" aria-labelledby="calDayTitle">
   <div class="px-4 py-3.5 border-b border-slate-800 flex items-center justify-between sticky top-0 bg-slate-900/95 backdrop-blur z-10">
     <h3 id="calDayTitle" class="font-bold text-[15px]">-</h3>
     <button onclick="closeCalDay()" class="text-slate-400 hover:text-white" aria-label="닫기"><i class="fa-solid fa-xmark text-xl"></i></button>
@@ -802,12 +812,13 @@ select option { background-color: #0f172a; color: #f1f5f9; }
     <div class="flex flex-wrap items-center gap-1.5" id="rankJumps"></div>
     <div class="flex flex-wrap items-center gap-1.5" id="rankFilters"></div>
   </div>
-  <ol id="rankList" class="flex-1 overflow-y-auto scrollbar px-2 py-1"></ol>
+  <ol id="rankList" class="flex-1 overflow-y-auto thin-scroll px-2 py-1" onscroll="rankOnScroll()"></ol>
+  <button type="button" id="rankTopBtn" onclick="document.getElementById('rankList').scrollTo({ top: 0, behavior: 'smooth' })" class="hidden absolute right-4 bottom-4 z-10 text-[12px] font-semibold text-slate-100 bg-slate-800/95 hover:bg-slate-700 border border-slate-600 rounded-full px-3 py-1.5 shadow-lg" aria-label="1위로 이동"><i class="fa-solid fa-arrow-up mr-1"></i>1위로</button>
 </div>
 
 <!-- GAME DETAIL SIDE PANEL (매출·인기 순위 데이터) -->
 <div id="detailOverlay" class="fixed inset-0 bg-black/70 z-40 hidden opacity-0 transition-opacity duration-300" onclick="closeGameDetail()"></div>
-<div id="detailPanel" class="fixed top-0 right-0 w-full max-w-[460px] h-full bg-slate-900 shadow-2xl z-50 transform translate-x-full transition-transform duration-300 overflow-y-auto border-l border-slate-700 flex flex-col" role="dialog" aria-labelledby="detailTitle">
+<div id="detailPanel" class="fixed top-0 right-0 w-full max-w-[460px] h-full bg-slate-900 shadow-2xl z-50 transform translate-x-full transition-transform duration-300 overflow-y-auto thin-scroll border-l border-slate-700 flex flex-col" role="dialog" aria-labelledby="detailTitle">
   <div class="px-5 pt-4 pb-3 border-b border-slate-800 sticky top-0 bg-slate-900/95 backdrop-blur z-20">
     <div class="flex items-start gap-3">
       <img id="detailAppIcon" src="" class="w-12 h-12 rounded-xl object-cover bg-slate-800 hidden shrink-0 shadow" alt="">
@@ -863,7 +874,7 @@ select option { background-color: #0f172a; color: #f1f5f9; }
 
 <!-- NEW RELEASE DETAIL PANEL (신작 DB) -->
 <div id="releaseDetailOverlay" class="fixed inset-0 bg-black/70 z-40 hidden opacity-0 transition-opacity duration-300" onclick="closeReleaseDetail()"></div>
-<div id="releaseDetailPanel" class="fixed top-0 right-0 w-full max-w-[460px] h-full bg-slate-900 shadow-2xl z-50 transform translate-x-full transition-transform duration-300 overflow-y-auto border-l border-slate-700 flex flex-col" role="dialog" aria-labelledby="releaseDetailTitle">
+<div id="releaseDetailPanel" class="fixed top-0 right-0 w-full max-w-[460px] h-full bg-slate-900 shadow-2xl z-50 transform translate-x-full transition-transform duration-300 overflow-y-auto thin-scroll border-l border-slate-700 flex flex-col" role="dialog" aria-labelledby="releaseDetailTitle">
   <div class="px-5 pt-4 pb-3 border-b border-slate-800 sticky top-0 bg-slate-900/95 backdrop-blur z-20">
     <div class="flex items-start gap-3">
       <img id="releaseDetailIcon" src="" class="w-12 h-12 rounded-xl object-cover bg-slate-800 hidden shrink-0 shadow" alt="">
@@ -3103,7 +3114,7 @@ function renderRankPanel(){
 
   /* 구간 점프 */
   document.getElementById('rankJumps').innerHTML = '<span class="text-[11px] muted mr-0.5">구간</span>' + RANK_JUMPS.map(([a, b]) =>
-    `<button type="button" class="cal-chip !py-1 !px-2.5 !text-[11px]" onclick="rankJump(${a})">${a}–${b}</button>`).join('');
+    `<button type="button" class="cal-chip !py-1 !px-2.5 !text-[11px]" data-from="${a}" data-to="${b}" onclick="rankJump(${a})">${a}–${b}</button>`).join('');
 
   /* 빠른 필터 + 장르 */
   const count = f => items.filter(x => rankMatchFilter(x, f)).length;
@@ -3126,7 +3137,25 @@ function renderRankPanel(){
       <div class="w-12 text-right shrink-0">${x.change === 'NEW' ? '<span class="t-new text-[11px] font-semibold">NEW</span>' : x.change ? `<span class="text-[11px] font-semibold ${x.change > 0 ? 'rank-up' : 'rank-down'}">${x.change > 0 ? '▲' : '▼'}${Math.abs(x.change)}</span>` : '<span class="text-[11px] muted">-</span>'}</div>
     </li>`;
   }).join('') : `<li class="text-xs muted text-center py-10">조건에 맞는 게임이 없습니다</li>`;
+  rankOnScroll(); /* 목록을 그린 뒤 현재 구간 칩·'1위로' 버튼 갱신 */
 }
+/* 목록 스크롤: 지금 보이는 구간 칩에 불을 켜고, 내려가면 '1위로' 버튼 표시 */
+function rankOnScroll(){
+  const list = document.getElementById('rankList'); if(!list) return;
+  const top = list.getBoundingClientRect().top;
+  const first = [...list.querySelectorAll('li[data-rank]')].find(li => li.getBoundingClientRect().bottom > top + 8);
+  const r = first ? Number(first.dataset.rank) : 0;
+  document.querySelectorAll('#rankJumps [data-from]').forEach(b => b.classList.toggle('on', r >= Number(b.dataset.from) && r <= Number(b.dataset.to)));
+  document.getElementById('rankTopBtn')?.classList.toggle('hidden', list.scrollTop < 400);
+}
+/* 슬라이드 패널이 하나라도 열려 있으면 뒤쪽 페이지 스크롤 잠금 (스크롤바가 겹쳐 보이지 않게) */
+(function panelScrollLock(){
+  const ids = ['rankPanel', 'detailPanel', 'releaseDetailPanel', 'calDayPanel'];
+  const sync = () => document.documentElement.classList.toggle('panel-lock', ids.some(id => { const el = document.getElementById(id); return el && !el.classList.contains('translate-x-full'); }));
+  const mo = new MutationObserver(sync);
+  ids.forEach(id => { const el = document.getElementById(id); if(el) mo.observe(el, { attributes: true, attributeFilter: ['class'] }); });
+})();
+
 /* 급상승·급하락: 전일 대비 5계단 이상 */
 function rankMatchFilter(x, f){
   if(f === 'new') return x.change === 'NEW';
