@@ -156,6 +156,9 @@ select option { background-color: #0f172a; color: #f1f5f9; }
 @media (prefers-reduced-motion: reduce) { .sk { animation:none; } }
 .mk-info { color:#64748b; font-size:10px; margin-left:4px; cursor:help; }
 .mk-info:hover { color:#cbd5e1; }
+.mk-sec { font-size:13px; font-weight:600; color:#64748b; padding:9px 14px; border-bottom:2px solid transparent; margin-bottom:-1px; white-space:nowrap; transition:color .15s; }
+.mk-sec:hover { color:#cbd5e1; }
+.mk-sec.on { color:#e0e7ff; border-color:#6366f1; }
 </style>
 </head>
 
@@ -428,21 +431,30 @@ select option { background-color: #0f172a; color: #f1f5f9; }
       <p class="text-xs muted mt-1">Google Play <b>매출·인기 순위 DB</b>를 기반으로 시장 변화·진입·이탈·구조를 한눈에 확인합니다.</p>
       <div id="mkAsOf" class="text-[11px] text-indigo-300/90 mt-1.5">-</div>
     </div>
-    <div class="flex items-center gap-1 p-1 rounded-lg border border-slate-700 bg-slate-900/70 self-start lg:self-auto">
-      <button type="button" data-mode="daily" onclick="mkSetMode('daily')" class="mk-mode px-3 py-1.5 rounded-md text-xs font-semibold">일간 분석</button>
-      <button type="button" data-mode="weekly" onclick="mkSetMode('weekly')" class="mk-mode px-3 py-1.5 rounded-md text-xs font-semibold">주간 분석</button>
-    </div>
   </section>
+
+  <!-- 질문 단위 탭 -->
+  <nav class="flex gap-1 overflow-x-auto overflow-y-hidden border-b border-slate-800" id="mkSectionTabs">
+    <button type="button" data-section="change" onclick="mkSetSection('change')" class="mk-sec"><i class="fa-solid fa-arrow-trend-up mr-1.5"></i>무엇이 바뀌었나</button>
+    <button type="button" data-section="structure" onclick="mkSetSection('structure')" class="mk-sec"><i class="fa-solid fa-chess-board mr-1.5"></i>시장 구조</button>
+    <button type="button" data-section="debut" onclick="mkSetSection('debut')" class="mk-sec"><i class="fa-solid fa-seedling mr-1.5"></i>데뷔 게임</button>
+    <button type="button" data-section="releases" onclick="mkSetSection('releases')" class="mk-sec"><i class="fa-regular fa-calendar-plus mr-1.5"></i>신작 동향</button>
+  </nav>
   <div id="mkLoading" class="hidden card rounded-xl p-3 text-xs text-indigo-300"><i class="fa-solid fa-spinner fa-spin mr-2"></i><span id="mkLoadingText">지난 기간 순위 데이터를 불러오는 중...</span></div>
+
+  <!-- ① 무엇이 바뀌었나 -->
+  <div id="mkSecChange" class="space-y-4">
+  <div class="flex flex-wrap items-center justify-between gap-2">
+    <p class="text-[11px] muted">순위권에 누가 들어오고 나갔는지, 누가 크게 오르내렸는지</p>
+    <div class="flex items-center gap-1 p-1 rounded-lg border border-slate-700 bg-slate-900/70">
+      <button type="button" data-mode="daily" onclick="mkSetMode('daily')" class="mk-mode px-3 py-1.5 rounded-md text-xs font-semibold">전일 대비</button>
+      <button type="button" data-mode="weekly" onclick="mkSetMode('weekly')" class="mk-mode px-3 py-1.5 rounded-md text-xs font-semibold">전주 대비</button>
+    </div>
+  </div>
 
   <!-- 일간 분석 -->
   <div id="mkDaily" class="space-y-4">
     <section id="mkDailyKpis" class="grid grid-cols-2 lg:grid-cols-4 gap-3"></section>
-
-    <section class="card rounded-xl p-5">
-      <div class="mk-card-head"><div><h3 class="font-semibold text-sm">시장 포지션 맵</h3><p class="text-[10px] muted mt-1">기준일 인기·매출 순위로 본 게임 성격 · 50위 기준 · 100위 밖은 100+</p></div></div>
-      <div id="mkDPosition"></div>
-    </section>
 
     <section class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
       <div class="card rounded-xl p-5">
@@ -460,9 +472,30 @@ select option { background-color: #0f172a; color: #f1f5f9; }
   <!-- 주간 분석 -->
   <div id="mkWeekly" class="hidden space-y-4">
     <section id="mkWeeklyKpis" class="grid grid-cols-2 lg:grid-cols-4 gap-3"></section>
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
+      <div class="card rounded-xl p-5">
+        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">급상승 / 급하락 TOP5</h3><p class="text-[10px] muted mt-1">주 평균 순위 · 전주 대비 · 양주 모두 3일 이상 TOP100</p></div><div class="mk-tabs" data-tab="wMovers"></div></div>
+        <div id="mkWMovers"></div>
+      </div>
+      <div class="card rounded-xl p-5 flex flex-col">
+        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">신규 진입</h3><p id="mkWEntriesDesc" class="text-[10px] muted mt-1">전주 TOP100 기록이 없다가 지난주에 진입한 게임</p></div><div class="mk-tabs" data-tab="wEntries"></div></div>
+        <div id="mkWEntryType" class="flex flex-wrap items-center gap-1 mb-2"></div>
+        <div class="mk-fill"><div id="mkWEntries" class="mk-fill-inner scrollbar pr-1"></div></div>
+      </div>
+    </section>
+  </div>
+  </div>
+
+  <!-- ② 시장 구조 -->
+  <div id="mkSecStructure" class="hidden space-y-4">
+    <p class="text-[11px] muted">어떤 게임이 매출형·인기형인지, 어떤 장르와 퍼블리셔가 순위권을 차지하는지</p>
     <section class="card rounded-xl p-5">
-      <div class="mk-card-head"><div><h3 class="font-semibold text-sm">시장 포지션 맵</h3><p class="text-[10px] muted mt-1">지난주 주 평균 인기·매출 순위로 본 게임 성격 · 50위 기준 · 미관측일은 100+로 계산</p></div></div>
-      <div id="mkWPosition"></div>
+      <div class="mk-card-head">
+        <div><h3 class="font-semibold text-sm">시장 포지션 맵<i class="fa-regular fa-circle-question mk-info" title="가로는 매출 순위, 세로는 인기 순위입니다. 오른쪽 위로 갈수록 두 순위 모두 높습니다. 50위 선으로 네 구역을 나누고, 100위 밖은 가장자리(100+)에 표시합니다. 점을 누르면 게임 상세가 열립니다."></i></h3><p id="mkPosDesc" class="text-[10px] muted mt-1">-</p></div>
+        <div class="mk-tabs" data-tab="posBase"></div>
+      </div>
+      <div class="relative h-[380px] md:h-[440px]"><canvas id="mkPosChart"></canvas></div>
+      <div id="mkPosition" class="mt-4"></div>
     </section>
     <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <div class="card rounded-xl p-5">
@@ -474,15 +507,40 @@ select option { background-color: #0f172a; color: #f1f5f9; }
         <div id="mkWPub"></div>
       </div>
     </section>
-    <section class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
+  </div>
+
+  <!-- ③ 데뷔 게임 -->
+  <div id="mkSecDebut" class="hidden space-y-4">
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <p class="text-[11px] muted">순위 데이터에 처음 등장한 게임이 이후 어떻게 됐는지 (최근 8주)</p>
+      <div class="mk-tabs" data-tab="debut"></div>
+    </div>
+    <section id="mkDebutKpis" class="grid grid-cols-2 lg:grid-cols-4 gap-3"></section>
+    <section class="card rounded-xl p-5">
+      <div class="mk-card-head"><div><h3 class="font-semibold text-sm">데뷔 게임 추적<i class="fa-regular fa-circle-question mk-info" title="패키지명 기준으로 순위 데이터에 처음 나타난 날을 데뷔일로 봅니다. 패키지 수집이 시작된 첫날(그 전부터 순위권에 있던 게임)과, 같은 이름으로 그 전에 순위권에 있던 게임은 제외합니다. 추이 그래프는 데뷔일부터 기준일까지의 순위이며 빈 구간은 TOP100 밖입니다."></i></h3><p id="mkDebutDesc" class="text-[10px] muted mt-1">-</p></div></div>
+      <div id="mkDebutTable" class="overflow-x-auto scrollbar"></div>
+    </section>
+  </div>
+
+  <!-- ④ 신작 동향 -->
+  <div id="mkSecReleases" class="hidden space-y-4">
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <p class="text-[11px] muted">신작 정보 기준 출시 흐름 · 순위 데이터와는 별개 데이터입니다</p>
+      <label class="cal-toggle"><input type="checkbox" id="mkRelMobileOnly" checked onchange="mkRender()"><span class="knob"></span>모바일(멀티 플랫폼)만 보기</label>
+    </div>
+    <section id="mkRelKpis" class="grid grid-cols-2 lg:grid-cols-4 gap-3"></section>
+    <section class="card rounded-xl p-5">
+      <div class="mk-card-head"><div><h3 class="font-semibold text-sm">주차별 출시 수</h3><p class="text-[10px] muted mt-1">출시유형별 · 오늘 이후는 예정</p></div></div>
+      <div class="relative h-[260px]"><canvas id="mkRelWeekChart"></canvas></div>
+    </section>
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <div class="card rounded-xl p-5">
-        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">급상승 / 급하락 TOP5</h3><p class="text-[10px] muted mt-1">주 평균 순위 · 전주 대비 · 양주 모두 3일 이상 TOP100</p></div><div class="mk-tabs" data-tab="wMovers"></div></div>
-        <div id="mkWMovers"></div>
+        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">퍼블리셔별 출시</h3><p class="text-[10px] muted mt-1">이번 달 · 지난달 비교 (예정 포함)</p></div></div>
+        <div id="mkRelPub"></div>
       </div>
-      <div class="card rounded-xl p-5 flex flex-col">
-        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">신규 진입</h3><p id="mkWEntriesDesc" class="text-[10px] muted mt-1">전주 TOP100 기록이 없다가 지난주에 진입한 게임</p></div><div class="mk-tabs" data-tab="wEntries"></div></div>
-        <div id="mkWEntryType" class="flex flex-wrap items-center gap-1 mb-2"></div>
-        <div class="mk-fill"><div id="mkWEntries" class="mk-fill-inner scrollbar pr-1"></div></div>
+      <div class="card rounded-xl p-5">
+        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">출시 요일</h3><p class="text-[10px] muted mt-1">전체 기간 · 어느 요일에 많이 출시되나</p></div></div>
+        <div id="mkRelDow"></div>
       </div>
     </section>
   </div>
@@ -2600,8 +2658,11 @@ function lightboxKeyHandler(e){
    ===================================================================== */
 const MK_STORE_LABEL = { sales: '매출', popular: '인기' };
 let mkMode = 'daily';
+let mkSection = 'change';
 const mkPosExpand = {};
-const mkTabs = { dMovers: 'sales', dEntries: 'sales', dEntryType: 'in', wEntryType: 'list', wGenre: 'sales', wPub: 'sales', wMovers: 'sales', wEntries: 'sales', wCohort: 'sales' };
+const mkTabs = { dMovers: 'sales', dEntries: 'sales', dEntryType: 'in', wEntryType: 'list', wGenre: 'sales', wPub: 'sales', wMovers: 'sales', wEntries: 'sales', wCohort: 'sales', posBase: 'day', debut: 'sales' };
+/* 탭 버튼 선택지: 기본은 매출/인기 */
+const MK_TAB_OPTIONS = { posBase: [['day', '기준일'], ['week', '지난주 평균']] };
 const mkIndexCache = { sales: null, popular: null };
 let mkMonthsReady = false;
 
@@ -2685,9 +2746,10 @@ function mkLastSeenBefore(idx, key, before){
 
 /* ---------- 공통 렌더 조각 ---------- */
 function mkTabsHtml(tabKey){
-  return ['sales', 'popular'].map(s => {
+  const opts = MK_TAB_OPTIONS[tabKey] || [['sales', MK_STORE_LABEL.sales], ['popular', MK_STORE_LABEL.popular]];
+  return opts.map(([s, label]) => {
     const on = mkTabs[tabKey] === s;
-    return `<button type="button" data-tabkey="${tabKey}" data-store="${s}" class="px-2 py-1 rounded-md text-[10px] font-medium transition-colors ${on ? 'bg-indigo-500/20 text-indigo-300' : 'text-slate-400 hover:text-slate-200'}">${MK_STORE_LABEL[s]}</button>`;
+    return `<button type="button" data-tabkey="${tabKey}" data-store="${s}" class="px-2 py-1 rounded-md text-[10px] font-medium transition-colors ${on ? 'bg-indigo-500/20 text-indigo-300' : 'text-slate-400 hover:text-slate-200'}">${label}</button>`;
   }).join('');
 }
 function mkIcon(name){
@@ -2901,9 +2963,6 @@ function mkRenderDaily(){
         </tr>`).join('')}</tbody></table>` : mkEmpty('최근 7일 진입 게임이 없습니다.');
     }
   }
-
-  /* 시장 포지션 맵 */
-  mkRenderPositionMap('mkDPosition', S.baseMap, P.baseMap, { unit: '' });
 }
 
 /* 시장 포지션 맵 (일간·주간 공용): sMap/pMap = Map<key, {name, rank}>, rank 101 이상 = 100위 밖 */
@@ -2980,18 +3039,7 @@ function mkRenderWeekly(){
     a.games.forEach((g, k) => { const p = b.games.get(k); if(p){ sum += Math.abs(p.avg - g.avg); n++; } });
     return n ? sum / n : null;
   };
-  /* KPI 4 / 카드: 퍼블리셔 가중 점수 */
-  const pubScores = s => {
-    const w = mkWeekAgg(I[s], mon), m = new Map();
-    w.dates.forEach(d => I[s].byDate.get(d).forEach((v, k) => {
-      const p = m.get(v.publisher) || { publisher: v.publisher, score: 0, games: new Set() };
-      p.score += 101 - v.rank; p.games.add(k); m.set(v.publisher, p);
-    }));
-    const arr = [...m.values()].filter(x => x.publisher !== '미상').sort((a, b) => b.score - a.score);
-    const total = [...m.values()].reduce((t, x) => t + x.score, 0);
-    return { arr, total };
-  };
-  const rS = retention('sales'), rP = retention('popular'), vS = volatility('sales'), vP = volatility('popular'), pubS = pubScores('sales');
+  const rS = retention('sales'), rP = retention('popular'), vS = volatility('sales'), vP = volatility('popular'), pubS = mkPubScores(I.sales, mon);
   const topPub = pubS.arr[0];
   document.getElementById('mkWeeklyKpis').innerHTML =
     (() => {
@@ -3011,68 +3059,6 @@ function mkRenderWeekly(){
       '두 주 모두 TOP100에 있던 게임의 주 평균 순위가 전주보다 평균 몇 계단 움직였는지(오르내림 구분 없이). 클수록 순위가 많이 요동친 주.') +
     mkKpiCard('매출 영향력 1위 퍼블리셔', topPub ? escapeHtml(topPub.publisher) : '-', topPub ? `점수 점유 ${Math.round(topPub.score / pubS.total * 100)}% · TOP100 게임 ${topPub.games.size}개` : '-', 'muted',
       '지난주 매일 매출 순위마다 (101 − 순위) 점수를 주고 퍼블리셔별로 합산. 1위 게임은 하루 100점, 100위는 1점이라 게임 수보다 상위권 장악력을 반영.');
-
-  /* 시장 포지션 맵 (주간): 주 평균 순위, 관측되지 않은 날은 101로 계산 */
-  {
-    const weekRankMap = s => {
-      const w = mkWeekAgg(I[s], mon), n = w.dates.length, m = new Map();
-      if(!n) return m;
-      w.games.forEach((g, k) => m.set(k, { name: g.name, rank: (g.sum + (n - g.days) * 101) / n }));
-      return m;
-    };
-    const wS = weekRankMap('sales'), wP = weekRankMap('popular');
-    if(wS.size || wP.size) mkRenderPositionMap('mkWPosition', wS, wP, { unit: '주 평균 ', note: '주중 일부만 순위권이었던 게임은 빠진 날을 100+로 반영해 평균이 낮아집니다.' });
-    else document.getElementById('mkWPosition').innerHTML = mkEmpty('지난주 데이터가 없습니다.');
-  }
-
-  /* 장르 비중 8주 */
-  const gIdx = I[mkTabs.wGenre];
-  const weeks = Array.from({ length: 8 }, (_, i) => mkAddDays(mon, -7 * (7 - i)));
-  const weekShares = weeks.map(wm => {
-    const w = mkWeekAgg(gIdx, wm), counts = new Map(); let total = 0;
-    w.dates.forEach(d => gIdx.byDate.get(d).forEach(v => { counts.set(v.genre, (counts.get(v.genre) || 0) + 1); total++; }));
-    const uniq = new Map(); w.games.forEach(g => uniq.set(g.genre, (uniq.get(g.genre) || 0) + 1));
-    return { wm, counts, total, uniq };
-  });
-  const lastShare = weekShares.at(-1);
-  const topGenres = [...lastShare.counts.entries()].filter(([g]) => !bizIsMiscGenre(g)).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([g]) => g);
-  const segs = ws => {
-    if(!ws.total) return [];
-    let rest = ws.total;
-    const out = topGenres.map(g => { const c = ws.counts.get(g) || 0; rest -= c; return { g, pct: c / ws.total * 100, color: bizGenreColor(g) }; });
-    out.push({ g: '기타', pct: rest / ws.total * 100, color: '#475569' });
-    return out;
-  };
-  const prevShare = weekShares.at(-2);
-  document.getElementById('mkWGenre').innerHTML = lastShare.total ? `
-    <div class="space-y-1.5">${weekShares.slice(Math.max(0, weekShares.findIndex(ws => ws.total > 0))).map(ws => {
-      const sg = segs(ws);
-      return `<div class="flex items-center gap-2"><span class="w-[74px] shrink-0 text-[10px] ${ws.wm === mon ? 'text-indigo-300 font-semibold' : 'muted'}">${mkShort(ws.wm)} 주${ws.wm === mon ? ' ●' : ''}</span>
-        <div class="flex-1 h-4 rounded overflow-hidden flex bg-slate-800/60">${sg.map(x => `<span title="${escapeAttr(x.g)} ${x.pct.toFixed(1)}%" style="width:${x.pct}%;background:${x.color}"></span>`).join('') || '<span class="text-[9px] muted px-2">데이터 없음</span>'}</div></div>`;
-    }).join('')}</div>
-    <div class="flex flex-wrap gap-x-3 gap-y-1 mt-3 text-[10px] text-slate-400">${[...topGenres, '기타'].map(g => `<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm" style="background:${g === '기타' ? '#475569' : bizGenreColor(g)}"></span>${escapeHtml(g)}</span>`).join('')}</div>
-    <div class="mt-3 pt-3 border-t border-slate-800">
-      <div class="text-[10px] muted mb-1.5">지난주 비중 · 전주 대비 게임 수 변화</div>
-      <div class="grid grid-cols-2 gap-x-4 gap-y-1">${topGenres.map(g => {
-        const pct = (lastShare.counts.get(g) || 0) / lastShare.total * 100;
-        const diff = prevShare.total ? (lastShare.uniq.get(g) || 0) - (prevShare.uniq.get(g) || 0) : null;
-        return `<div class="flex items-center justify-between text-xs"><span class="truncate text-slate-300">${escapeHtml(g)} <span class="muted text-[10px]">${pct.toFixed(0)}%</span></span><span class="text-[11px]">${mkDelta(diff)}</span></div>`;
-      }).join('')}</div>
-      <p class="text-[10px] muted mt-2">※ '기타'에는 세부 장르가 불명확하거나 미분류된 게임이 포함됩니다.</p>
-    </div>` : mkEmpty('지난주 데이터가 없습니다.');
-
-  /* 퍼블리셔 점유 */
-  const pub = mkTabs.wPub === 'sales' ? pubS : pubScores('popular');
-  const pubTop = pub.arr.slice(0, 5), maxScore = pubTop[0]?.score || 1;
-  document.getElementById('mkWPub').innerHTML = pubTop.length ? `<div class="space-y-2">${pubTop.map((x, i) => `
-    <div class="flex items-center gap-2 text-xs">
-      <span class="w-4 text-right text-[10px] muted">${i + 1}</span>
-      <span class="w-[120px] shrink-0 truncate text-slate-200" title="${escapeAttr(x.publisher)}">${escapeHtml(x.publisher)}</span>
-      <div class="flex-1 h-2 rounded bg-slate-800"><div class="h-2 rounded bg-indigo-400/80" style="width:${Math.round(x.score / maxScore * 100)}%"></div></div>
-      <span class="w-9 text-right text-[10px] text-indigo-300 font-semibold">${Math.round(x.score / pub.total * 100)}%</span>
-      <span class="w-14 text-right text-[10px] muted">${x.games.size}개 보유</span>
-    </div>`).join('')}</div>
-    <p class="text-[10px] muted mt-3 pt-3 border-t border-slate-800">점유 % = 퍼블리셔 점수 ÷ 전체 점수. 상위권 게임일수록 점수가 커서, 보유 개수보다 실제 영향력에 가깝습니다.</p>` : mkEmpty('지난주 데이터가 없습니다.');
 
   /* 급상승/급하락 (주 평균) */
   const mIdx = I[mkTabs.wMovers], wa = mkWeekAgg(mIdx, mon), wb = mkWeekAgg(mIdx, prevMon), pairs = [];
@@ -3126,16 +3112,347 @@ function mkRenderWeekly(){
 function mkRenderWeeklySkeleton(){
   setText('mkAsOf', '지난 기간 데이터를 불러오는 중...');
   document.getElementById('mkWeeklyKpis').innerHTML = skKpis(4);
-  ['mkWPosition', 'mkWGenre', 'mkWPub', 'mkWMovers', 'mkWEntries'].forEach(id => { document.getElementById(id).innerHTML = skBlocks(6); });
+  ['mkWMovers', 'mkWEntries'].forEach(id => { document.getElementById(id).innerHTML = skBlocks(6); });
+}
+
+/* ---------- 시장 구조 ---------- */
+/* 퍼블리셔 가중 점수: 주간 매일 (101 − 순위) 합산 */
+function mkPubScores(idx, mon){
+  const w = mkWeekAgg(idx, mon), m = new Map();
+  w.dates.forEach(d => idx.byDate.get(d).forEach((v, k) => {
+    const p = m.get(v.publisher) || { publisher: v.publisher, score: 0, games: new Set() };
+    p.score += 101 - v.rank; p.games.add(k); m.set(v.publisher, p);
+  }));
+  const arr = [...m.values()].filter(x => x.publisher !== '미상').sort((a, b) => b.score - a.score);
+  const total = [...m.values()].reduce((t, x) => t + x.score, 0);
+  return { arr, total };
+}
+
+const MK_POS_OUT = 106; /* 100위 밖 표시 위치 */
+const MK_POS_GROUPS = [
+  { key: 'both', label: '양쪽 상위', color: '#38bdf8' },
+  { key: 'sales', label: '매출형', color: '#818cf8' },
+  { key: 'popular', label: '인기형', color: '#34d399' },
+  { key: 'rest', label: '그 외', color: '#64748b' }
+];
+let mkPosChartInst = null;
+/* 포지션 산점도: 가로 매출 순위(오른쪽이 1위), 세로 인기 순위(위쪽이 1위) */
+function mkRenderPosScatter(sMap, pMap){
+  const canvas = document.getElementById('mkPosChart');
+  if(!canvas) return;
+  if(mkPosChartInst){ mkPosChartInst.destroy(); mkPosChartInst = null; }
+  const jitter = (k, v) => { if(v < MK_POS_OUT) return v; let h = 0; for(let i = 0; i < k.length; i++) h = (h * 31 + k.charCodeAt(i)) >>> 0; return v + (h % 5) - 2; };
+  const groups = Object.fromEntries(MK_POS_GROUPS.map(g => [g.key, []]));
+  new Set([...sMap.keys(), ...pMap.keys()]).forEach(k => {
+    const s = sMap.get(k), p = pMap.get(k), sr = s?.rank ?? 101, pr = p?.rank ?? 101;
+    const g = sr <= 50 && pr <= 50 ? 'both' : sr <= 50 ? 'sales' : pr <= 50 ? 'popular' : 'rest';
+    groups[g].push({ x: jitter(k + 's', sr > 100 ? MK_POS_OUT : sr), y: jitter(k + 'p', pr > 100 ? MK_POS_OUT : pr), name: (s || p).name, sr, pr });
+  });
+  const rk = v => v > 100 ? '100+' : String(Math.round(v));
+  const axis = title => ({
+    reverse: true, min: 0, max: MK_POS_OUT + 4,
+    afterBuildTicks: ax => { ax.ticks = [1, 25, 50, 75, 100, MK_POS_OUT].map(value => ({ value })); },
+    ticks: { color: '#94a3b8', font: { size: 11 }, callback: v => v === MK_POS_OUT ? '100+' : v },
+    grid: { color: c => c.tick?.value === 50 ? 'rgba(148,163,184,.45)' : 'rgba(71,85,105,.22)', lineWidth: c => c.tick?.value === 50 ? 1.5 : 1 },
+    title: { display: true, text: title, color: '#94a3b8', font: { size: 11, weight: '600' } }
+  });
+  const quadrantLabels = {
+    id: 'mkQuadrants',
+    afterDraw(chart){
+      /* 구역 이름은 50위 선 바로 옆에 (가장자리 100+ 점들과 겹치지 않게) */
+      const { ctx, chartArea: a, scales: { x, y } } = chart;
+      const mx = x.getPixelForValue(50), my = y.getPixelForValue(50);
+      ctx.save(); ctx.font = '600 11px sans-serif'; ctx.fillStyle = 'rgba(203,213,225,.6)'; ctx.textAlign = 'left';
+      ctx.fillText('양쪽 상위', mx + 8, a.top + 14); ctx.fillText('매출형', mx + 8, my + 16);
+      ctx.textAlign = 'right'; ctx.fillText('인기형', mx - 8, a.top + 14);
+      ctx.restore();
+    }
+  };
+  mkPosChartInst = new Chart(canvas.getContext('2d'), {
+    type: 'scatter',
+    data: { datasets: MK_POS_GROUPS.map(g => ({ label: `${g.label} ${groups[g.key].length}`, data: groups[g.key], backgroundColor: g.color + 'cc', borderColor: g.color, pointRadius: 4, pointHoverRadius: 7 })) },
+    options: {
+      maintainAspectRatio: false, animation: false,
+      scales: { x: axis('매출 순위 (오른쪽일수록 높음)'), y: axis('인기 순위 (위쪽일수록 높음)') },
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#cbd5e1', boxWidth: 10, boxHeight: 10, usePointStyle: true, font: { size: 11 } } },
+        tooltip: { callbacks: { label: c => `${c.raw.name} · 매출 ${rk(c.raw.sr)} · 인기 ${rk(c.raw.pr)}` } }
+      },
+      onClick: (e, els) => { if(els.length){ const pt = els[0]; openGameDetail(mkPosChartInst.data.datasets[pt.datasetIndex].data[pt.index].name); } },
+      onHover: (e, els) => { e.native.target.style.cursor = els.length ? 'pointer' : 'default'; }
+    },
+    plugins: [quadrantLabels]
+  });
+}
+
+function mkRenderStructure(){
+  const mon = mkTargetWeekMonday();
+  const I = { sales: mkGetIndex('sales'), popular: mkGetIndex('popular') };
+  const base = I.sales.dates.at(-1);
+  if(!mon || !base){ setText('mkAsOf', '데이터 없음'); return; }
+  setText('mkAsOf', `포지션 맵 ${mkTabs.posBase === 'day' ? `기준일 ${base}` : `지난주 ${mkWeekLabel(mon)}`} · 장르·퍼블리셔 지난주 ${mkWeekLabel(mon)}(월~일)`);
+
+  /* 포지션 맵: 기준일 순위 또는 지난주 평균 순위(관측되지 않은 날은 101로 계산) */
+  let sMap, pMap, opt;
+  if(mkTabs.posBase === 'day'){
+    sMap = I.sales.byDate.get(base) || new Map(); pMap = I.popular.byDate.get(I.popular.dates.at(-1)) || new Map();
+    opt = { unit: '' };
+    setText('mkPosDesc', `기준일 ${base} · 매출·인기 TOP100 게임 ${new Set([...sMap.keys(), ...pMap.keys()]).size}개`);
+  }else{
+    const weekRankMap = idx => {
+      const w = mkWeekAgg(idx, mon), n = w.dates.length, m = new Map();
+      if(!n) return m;
+      w.games.forEach((g, k) => m.set(k, { name: g.name, rank: (g.sum + (n - g.days) * 101) / n }));
+      return m;
+    };
+    sMap = weekRankMap(I.sales); pMap = weekRankMap(I.popular);
+    opt = { unit: '주 평균 ', note: '주중 일부만 순위권이었던 게임은 빠진 날을 100+로 반영해 평균이 낮아집니다.' };
+    setText('mkPosDesc', `지난주 ${mkWeekLabel(mon)} 주 평균 순위 · 빠진 날은 100+로 계산`);
+  }
+  if(sMap.size || pMap.size){ mkRenderPosScatter(sMap, pMap); mkRenderPositionMap('mkPosition', sMap, pMap, opt); }
+  else document.getElementById('mkPosition').innerHTML = mkEmpty('데이터가 없습니다.');
+
+  /* 장르 비중 8주 */
+  const gIdx = I[mkTabs.wGenre];
+  const weeks = Array.from({ length: 8 }, (_, i) => mkAddDays(mon, -7 * (7 - i)));
+  const weekShares = weeks.map(wm => {
+    const w = mkWeekAgg(gIdx, wm), counts = new Map(); let total = 0;
+    w.dates.forEach(d => gIdx.byDate.get(d).forEach(v => { counts.set(v.genre, (counts.get(v.genre) || 0) + 1); total++; }));
+    const uniq = new Map(); w.games.forEach(g => uniq.set(g.genre, (uniq.get(g.genre) || 0) + 1));
+    return { wm, counts, total, uniq };
+  });
+  const lastShare = weekShares.at(-1);
+  const topGenres = [...lastShare.counts.entries()].filter(([g]) => !bizIsMiscGenre(g)).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([g]) => g);
+  const segs = ws => {
+    if(!ws.total) return [];
+    let rest = ws.total;
+    const out = topGenres.map(g => { const c = ws.counts.get(g) || 0; rest -= c; return { g, pct: c / ws.total * 100, color: bizGenreColor(g) }; });
+    out.push({ g: '기타', pct: rest / ws.total * 100, color: '#475569' });
+    return out;
+  };
+  const prevShare = weekShares.at(-2);
+  document.getElementById('mkWGenre').innerHTML = lastShare.total ? `
+    <div class="space-y-1.5">${weekShares.slice(Math.max(0, weekShares.findIndex(ws => ws.total > 0))).map(ws => {
+      const sg = segs(ws);
+      return `<div class="flex items-center gap-2"><span class="w-[74px] shrink-0 text-[10px] ${ws.wm === mon ? 'text-indigo-300 font-semibold' : 'muted'}">${mkShort(ws.wm)} 주${ws.wm === mon ? ' ●' : ''}</span>
+        <div class="flex-1 h-4 rounded overflow-hidden flex bg-slate-800/60">${sg.map(x => `<span title="${escapeAttr(x.g)} ${x.pct.toFixed(1)}%" style="width:${x.pct}%;background:${x.color}"></span>`).join('') || '<span class="text-[9px] muted px-2">데이터 없음</span>'}</div></div>`;
+    }).join('')}</div>
+    <div class="flex flex-wrap gap-x-3 gap-y-1 mt-3 text-[10px] text-slate-400">${[...topGenres, '기타'].map(g => `<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm" style="background:${g === '기타' ? '#475569' : bizGenreColor(g)}"></span>${escapeHtml(g)}</span>`).join('')}</div>
+    <div class="mt-3 pt-3 border-t border-slate-800">
+      <div class="text-[10px] muted mb-1.5">지난주 비중 · 전주 대비 게임 수 변화</div>
+      <div class="grid grid-cols-2 gap-x-4 gap-y-1">${topGenres.map(g => {
+        const pct = (lastShare.counts.get(g) || 0) / lastShare.total * 100;
+        const diff = prevShare.total ? (lastShare.uniq.get(g) || 0) - (prevShare.uniq.get(g) || 0) : null;
+        return `<div class="flex items-center justify-between text-xs"><span class="truncate text-slate-300">${escapeHtml(g)} <span class="muted text-[10px]">${pct.toFixed(0)}%</span></span><span class="text-[11px]">${mkDelta(diff)}</span></div>`;
+      }).join('')}</div>
+      <p class="text-[10px] muted mt-2">※ '기타'에는 세부 장르가 불명확하거나 미분류된 게임이 포함됩니다.</p>
+    </div>` : mkEmpty('지난주 데이터가 없습니다.');
+
+  /* 퍼블리셔 점유 */
+  const pub = mkPubScores(I[mkTabs.wPub], mon);
+  const pubTop = pub.arr.slice(0, 5), maxScore = pubTop[0]?.score || 1;
+  document.getElementById('mkWPub').innerHTML = pubTop.length ? `<div class="space-y-2">${pubTop.map((x, i) => `
+    <div class="flex items-center gap-2 text-xs">
+      <span class="w-4 text-right text-[10px] muted">${i + 1}</span>
+      <span class="w-[120px] shrink-0 truncate text-slate-200" title="${escapeAttr(x.publisher)}">${escapeHtml(x.publisher)}</span>
+      <div class="flex-1 h-2 rounded bg-slate-800"><div class="h-2 rounded bg-indigo-400/80" style="width:${Math.round(x.score / maxScore * 100)}%"></div></div>
+      <span class="w-9 text-right text-[10px] text-indigo-300 font-semibold">${Math.round(x.score / pub.total * 100)}%</span>
+      <span class="w-14 text-right text-[10px] muted">${x.games.size}개 보유</span>
+    </div>`).join('')}</div>
+    <p class="text-[10px] muted mt-3 pt-3 border-t border-slate-800">점유 % = 퍼블리셔 점수 ÷ 전체 점수. 상위권 게임일수록 점수가 커서, 보유 개수보다 실제 영향력에 가깝습니다.</p>` : mkEmpty('지난주 데이터가 없습니다.');
+}
+function mkRenderStructureSkeleton(){
+  setText('mkAsOf', '지난 기간 데이터를 불러오는 중...');
+  setText('mkPosDesc', '-');
+  if(mkPosChartInst){ mkPosChartInst.destroy(); mkPosChartInst = null; }
+  ['mkPosition', 'mkWGenre', 'mkWPub'].forEach(id => { document.getElementById(id).innerHTML = skBlocks(6); });
+}
+
+/* ---------- 데뷔 게임 (순위 데이터만 사용) ---------- */
+const MK_DEBUT_WEEKS = 8;
+const mkFirstSeenCache = { sales: null, popular: null };
+const mkFirstSeenInFlight = {};
+async function mkGvizRows(sheetName, tq){
+  const params = new URLSearchParams();
+  params.set('tqx', 'out:json;headers:1'); params.set('sheet', sheetName); params.set('t', String(Date.now())); params.set('tq', tq);
+  const res = await fetch(`https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?${params.toString()}`, { cache: 'no-store' });
+  if(!res.ok) throw new Error(`${sheetName}: HTTP ${res.status}`);
+  const text = await res.text();
+  const json = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1));
+  if(json.status === 'error') throw new Error(json.errors?.[0]?.detailed_message || '집계 쿼리 오류');
+  return (json.table?.rows || []).map(r => r.c || []);
+}
+/* 시트 전체 기간에서 패키지별·게임명별 첫 등장일만 집계해서 받는다 (행 전체를 받지 않음) */
+function mkLoadFirstSeen(store){
+  if(mkFirstSeenCache[store]) return Promise.resolve(mkFirstSeenCache[store]);
+  if(mkFirstSeenInFlight[store]) return mkFirstSeenInFlight[store];
+  const sheet = SHEETS[store];
+  mkFirstSeenInFlight[store] = (async () => {
+    try{
+      const [pk, nm] = await Promise.all([
+        mkGvizRows(sheet, "select E, min(A) where E is not null and E != '' group by E"),
+        mkGvizRows(sheet, 'select D, min(A) where D is not null group by D')
+      ]);
+      const pkgFirst = new Map(), nameFirst = new Map();
+      pk.forEach(c => { const p = String(c[0]?.v || '').trim(), d = gsCellDate(c[1]); if(p.includes('.') && d) pkgFirst.set(p, d); });
+      nm.forEach(c => { const k = getGameKey(cleanValue(c[0])), d = gsCellDate(c[1]); if(k !== '-' && d && (!nameFirst.has(k) || d < nameFirst.get(k))) nameFirst.set(k, d); });
+      const pkgStart = [...pkgFirst.values()].sort()[0] || '';
+      return (mkFirstSeenCache[store] = { pkgFirst, nameFirst, pkgStart });
+    }finally{ delete mkFirstSeenInFlight[store]; }
+  })();
+  return mkFirstSeenInFlight[store];
+}
+function mkComputeDebuts(store){
+  const fs = mkFirstSeenCache[store], idx = mkGetIndex(store), base = idx.dates.at(-1);
+  if(!fs || !base) return null;
+  const windowStart = mkAddDays(mkMonday(base), -7 * (MK_DEBUT_WEEKS - 1));
+  const list = [];
+  fs.pkgFirst.forEach((first, pkg) => {
+    if(first <= fs.pkgStart || first < windowStart || first > base) return;
+    const key = `id:${pkg}`, ds = idx.dates.filter(d => d >= first);
+    const series = ds.map(d => idx.byDate.get(d).get(key)?.rank ?? null);
+    if(series[0] == null) return;
+    /* 같은 이름으로 패키지 수집 전·후에 이미 순위권에 있었다면 데뷔가 아님 */
+    const names = new Set(); ds.forEach(d => { const v = idx.byDate.get(d).get(key); if(v) names.add(getGameKey(v.name)); });
+    if([...names].some(n => (fs.nameFirst.get(n) || first) < first)) return;
+    const seen = series.map((r, i) => ({ r, d: ds[i] })).filter(x => x.r != null);
+    const bestX = seen.reduce((a, b) => b.r < a.r ? b : a);
+    const last = idx.byDate.get(seen.at(-1).d).get(key);
+    list.push({ key, name: last.name, publisher: last.publisher, genre: last.genre, first, debutRank: series[0], best: bestX.r, bestDate: bestX.d, now: series.at(-1), lastSeen: seen.at(-1).d, days: seen.length, span: series.length, series });
+  });
+  list.sort((a, b) => b.first.localeCompare(a.first) || a.debutRank - b.debutRank);
+  return { list, base, windowStart, pkgStart: fs.pkgStart };
+}
+/* 순위 추이 미니 선 그래프 (위가 높은 순위, 빈 구간 = TOP100 밖). 세로 눈금은 게임별 최고 순위~100위 */
+function mkRankSpark(series){
+  const top = Math.max(1, Math.floor((Math.min(...series.filter(r => r != null)) - 1) / 10) * 10 + 1), span = Math.max(1, 100 - top);
+  const w = 120, h = 28, n = series.length, xOf = i => n === 1 ? w / 2 : i / (n - 1) * (w - 4) + 2, yOf = r => 2 + (r - top) / span * (h - 4);
+  let path = '', pen = false;
+  series.forEach((r, i) => { if(r == null){ pen = false; return; } path += `${pen ? 'L' : 'M'}${xOf(i).toFixed(1)},${yOf(r).toFixed(1)}`; pen = true; });
+  const dots = series.map((r, i) => r != null && (i === 0 || series[i - 1] == null) && (i === n - 1 || series[i + 1] == null) ? `<circle cx="${xOf(i).toFixed(1)}" cy="${yOf(r).toFixed(1)}" r="1.6" fill="#818cf8"/>` : '').join('');
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" class="block" role="img" aria-label="${top}~100위 범위 순위 추이"><title>세로 범위 ${top}위~100위</title>${top <= 10 ? `<line x1="0" x2="${w}" y1="${yOf(10)}" y2="${yOf(10)}" stroke="rgba(148,163,184,.25)" stroke-dasharray="2 2"/>` : ''}<path d="${path}" fill="none" stroke="#818cf8" stroke-width="1.6" stroke-linejoin="round"/>${dots}</svg>`;
+}
+function mkRenderDebut(){
+  const store = mkTabs.debut, label = MK_STORE_LABEL[store], R = mkComputeDebuts(store);
+  if(!R){ mkRenderDebutSkeleton(); return; }
+  const { list, base, windowStart } = R;
+  const judgeStart = windowStart > R.pkgStart ? windowStart : mkAddDays(R.pkgStart, 1); /* 실제 판정이 가능한 첫날 */
+  setText('mkAsOf', `${label} 순위 · ${mkShort(judgeStart)}~${mkShort(base)} 데뷔${windowStart > R.pkgStart ? ` (최근 ${MK_DEBUT_WEEKS}주)` : ' (판정 가능한 전체 기간)'} · 기준일 ${base}`);
+  setText('mkDebutDesc', `${label} TOP100에 처음 나타난 게임 ${list.length}개 · 최신 데뷔순 · 행을 누르면 게임 상세`);
+  const kept = list.filter(x => x.now != null).length, top10 = list.filter(x => x.best <= 10).length;
+  const weeks = Array.from({ length: MK_DEBUT_WEEKS }, (_, i) => mkAddDays(windowStart, 7 * i));
+  const perWeek = weeks.map(m => list.filter(x => x.first >= m && x.first <= mkAddDays(m, 6)).length);
+  const avgBest = list.length ? list.reduce((t, x) => t + x.best, 0) / list.length : null;
+  document.getElementById('mkDebutKpis').innerHTML =
+    mkKpiSparkCard('데뷔 게임', `${list.length}개`, '', mkSpark(perWeek, 'bg-emerald-400', weeks.map((m, i) => `${mkShort(m)} 주 · ${perWeek[i]}개`)), `최근 ${MK_DEBUT_WEEKS}주 · 막대는 주별 데뷔 수`,
+      `${label} 순위 데이터에 처음 등장한 게임 수. 수집 초기에는 원래 있던 게임이 섞여 많게 잡힐 수 있고, 데이터가 쌓일수록 정확해집니다.`) +
+    mkKpiCard('지금도 TOP100', list.length ? `${kept}개 <span class="text-sm muted font-normal">(${Math.round(kept / list.length * 100)}%)</span>` : '-', `기준일 ${mkShort(base)} 순위권 유지`, 'muted', '데뷔한 게임 중 기준일에도 TOP100에 있는 게임 수와 비율.') +
+    mkKpiCard('TOP10 도달', `${top10}개`, '데뷔 후 한 번이라도 10위 이내', 'muted', '데뷔 이후 기준일까지 최고 순위가 10위 이내였던 게임 수.') +
+    mkKpiCard('평균 최고 순위', avgBest != null ? `${avgBest.toFixed(1)}위` : '-', '데뷔 게임들의 최고 순위 평균', 'muted', '각 데뷔 게임이 기준일까지 기록한 가장 높은 순위의 평균. 낮을수록(숫자가 작을수록) 성과가 좋음.');
+  document.getElementById('mkDebutTable').innerHTML = list.length ? `<table class="w-full min-w-[720px] text-left text-xs">
+    <thead><tr class="border-b border-slate-800 text-[10px] muted">
+      <th class="py-2 pl-1 pr-2">게임</th><th class="py-2 px-2 text-center">데뷔일</th><th class="py-2 px-2 text-right">데뷔 순위</th><th class="py-2 px-2 text-right">최고 순위</th><th class="py-2 px-2 text-right">현재</th><th class="py-2 px-2 text-right">TOP100 일수</th><th class="py-2 pl-3 pr-1">추이</th>
+    </tr></thead><tbody>${list.map(x => `<tr class="border-b border-slate-900 hover:bg-slate-800/60 cursor-pointer ${x.now == null ? 'opacity-70' : ''}" data-game="${escapeAttr(x.name)}">
+      <td class="py-2 pl-1 pr-2 max-w-[240px]">${mkGameCell(x.name, [x.genre, x.publisher].filter(v => v && v !== '미분류' && v !== '미상').join(' · '))}</td>
+      <td class="py-2 px-2 text-center text-[11px] muted">${mkShort(x.first)}</td>
+      <td class="py-2 px-2 text-right">${x.debutRank}위</td>
+      <td class="py-2 px-2 text-right"><span class="${x.best <= 10 ? 'text-amber-300' : 'text-indigo-300'} font-semibold">${x.best}위</span>${x.best < x.debutRank ? `<div class="text-[9px] muted">${mkShort(x.bestDate)}</div>` : ''}</td>
+      <td class="py-2 px-2 text-right">${x.now != null ? `${x.now}위` : `<span class="rank-down text-[11px]">이탈</span><div class="text-[9px] muted">${mkShort(x.lastSeen)}까지</div>`}</td>
+      <td class="py-2 px-2 text-right muted">${x.days}<span class="text-[10px]"> / ${x.span}일</span></td>
+      <td class="py-2 pl-3 pr-1">${mkRankSpark(x.series)}</td>
+    </tr>`).join('')}</tbody></table>
+    <p class="text-[10px] muted mt-3">패키지 수집 시작일(${mkShort(R.pkgStart)})에 이미 순위권이던 게임과, 같은 이름으로 그 전부터 순위권에 있던 게임은 제외했습니다. 추이 그래프는 게임마다 자기 최고 순위~100위 범위로 그려 움직임을 보기 쉽게 했고(점선은 10위), 끊긴 구간은 TOP100 밖입니다.</p>` : mkEmpty(`최근 ${MK_DEBUT_WEEKS}주 동안 데뷔한 게임이 없습니다.`);
+}
+function mkRenderDebutSkeleton(){
+  setText('mkAsOf', '데뷔 판정 데이터를 불러오는 중...');
+  setText('mkDebutDesc', '-');
+  document.getElementById('mkDebutKpis').innerHTML = skKpis(4);
+  document.getElementById('mkDebutTable').innerHTML = skBlocks(8);
+}
+
+/* ---------- 신작 동향 (신작 정보만 사용, 순위 데이터와 연결하지 않음) ---------- */
+const MK_REL_TYPES = [
+  { key: '정식', color: '#22c55e', test: t => t.includes('정식') },
+  { key: '테스트', color: '#f59e0b', test: t => /테스트|test|cbt|obt|베타|beta/i.test(t) },
+  { key: '얼리액세스', color: '#38bdf8', test: t => /얼리|early|앞서/i.test(t) },
+  { key: '기타', color: '#a78bfa', test: () => true }
+];
+let mkRelChartInst = null;
+function mkRelType(t){ const s = String(t || '').replace(/\s+/g, ''); return MK_REL_TYPES.find(x => x.test(s)).key; }
+function mkRenderReleases(){
+  const data = rawStore.newReleases;
+  const mobileOnly = document.getElementById('mkRelMobileOnly')?.checked;
+  const rows = (data?.rows || []).map(r => ({ d: rowDate(r), name: String(r[1] || '').trim(), platform: String(r[2] || ''), publisher: String(r[3] || '').trim() || '미상', type: mkRelType(r[4]) }))
+    .filter(x => /^\d{4}-\d{2}-\d{2}$/.test(x.d) && x.name && (!mobileOnly || x.platform.replace(/\s+/g, '').includes('모바일')));
+  const today = kstTodayStr(), ym = today.slice(0, 7), [ty, tm] = ym.split('-').map(Number), prevYm = ymKey(addMonthsYM(ty, tm, -1).y, addMonthsYM(ty, tm, -1).m);
+  setText('mkAsOf', `신작 정보 ${rows.length}건 ${mobileOnly ? '(모바일 포함 게임만)' : '(전체 플랫폼)'} · 오늘 ${today}`);
+  if(!rows.length){ ['mkRelKpis', 'mkRelPub', 'mkRelDow'].forEach(id => { document.getElementById(id).innerHTML = mkEmpty('신작 데이터가 없습니다.'); }); return; }
+
+  const thisM = rows.filter(x => x.d.startsWith(ym)), prevM = rows.filter(x => x.d.startsWith(prevYm));
+  const thisDone = thisM.filter(x => x.d <= today).length, next7 = rows.filter(x => x.d > today && x.d <= mkAddDays(today, 7)).sort((a, b) => a.d.localeCompare(b.d));
+  const openShare = thisM.length ? Math.round(thisM.filter(x => x.type === '정식').length / thisM.length * 100) : null;
+  const diff = thisM.length - prevM.length;
+  document.getElementById('mkRelKpis').innerHTML =
+    mkKpiCard(`${tm}월 출시`, `${thisM.length}개`, `출시 ${thisDone} · 예정 ${thisM.length - thisDone}`, 'muted', '이번 달 출시일이 잡힌 신작 수. 오늘 이후 날짜는 예정입니다.') +
+    mkKpiCard('지난달 대비', `${diff > 0 ? '+' : diff < 0 ? '−' : '±'}${Math.abs(diff)}개`, `지난달 ${prevM.length}개 · 이번 달은 예정 포함`, 'muted', '이번 달(예정 포함) 신작 수에서 지난달 신작 수를 뺀 값. 월 중에는 예정 일정이 더 추가될 수 있습니다.') +
+    mkKpiCard('앞으로 7일', `${next7.length}개`, next7.length ? `${escapeHtml(next7[0].name)}${next7.length > 1 ? ` 외 ${next7.length - 1}개` : ''}` : '예정된 신작 없음', 'muted', '내일부터 7일 안에 출시 예정인 신작 수.') +
+    mkKpiCard('정식 출시 비중', openShare != null ? `${openShare}%` : '-', `${tm}월 신작 중 정식 출시`, 'muted', '이번 달 신작 중 출시유형이 정식 출시인 비율. 나머지는 테스트·얼리액세스·소프트런칭·데모 등.');
+
+  /* 주차별 출시 수 (유형별 누적, 오늘 이후 주는 흐리게) */
+  const mons = [...new Set(rows.map(x => mkMonday(x.d)))].sort();
+  const allMons = []; for(let m = mons[0]; m <= mons.at(-1); m = mkAddDays(m, 7)) allMons.push(m);
+  const curMon = mkMonday(today);
+  const canvas = document.getElementById('mkRelWeekChart');
+  if(mkRelChartInst){ mkRelChartInst.destroy(); mkRelChartInst = null; }
+  if(canvas){
+    mkRelChartInst = new Chart(canvas.getContext('2d'), {
+      type: 'bar',
+      data: { labels: allMons.map(m => `${mkShort(m)}${m > curMon ? ' (예정)' : m === curMon ? ' (이번 주)' : ''}`),
+        datasets: MK_REL_TYPES.map(t => ({ label: t.key, data: allMons.map(m => rows.filter(x => x.type === t.key && mkMonday(x.d) === m).length),
+          backgroundColor: allMons.map(m => m > curMon ? t.color + '55' : t.color + 'cc'), borderRadius: 3, stack: 'r' })) },
+      options: { maintainAspectRatio: false, animation: false,
+        scales: { x: { stacked: true, ticks: { color: '#94a3b8', font: { size: 10 }, maxRotation: 0, autoSkip: true }, grid: { display: false } },
+                  y: { stacked: true, beginAtZero: true, ticks: { color: '#94a3b8', precision: 0 }, grid: { color: 'rgba(71,85,105,.22)' } } },
+        plugins: { legend: { position: 'bottom', labels: { color: '#cbd5e1', boxWidth: 10, boxHeight: 10, font: { size: 11 } } },
+          tooltip: { callbacks: { title: items => `${mkWeekLabel(allMons[items[0].dataIndex])} 주`, footer: items => `합계 ${items.reduce((t, i) => t + i.raw, 0)}개` } } } }
+    });
+  }
+
+  /* 퍼블리셔별: 이번 달 상위 8곳, 지난달 개수와 비교 */
+  const countBy = list => list.reduce((m, x) => m.set(x.publisher, (m.get(x.publisher) || 0) + 1), new Map());
+  const cT = countBy(thisM), cP = countBy(prevM);
+  const pubs = [...cT.entries()].filter(([p]) => p !== '미상').sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 8), pMax = Math.max(1, ...pubs.map(x => x[1]));
+  document.getElementById('mkRelPub').innerHTML = pubs.length ? `<div class="space-y-2">${pubs.map(([p, c]) => `
+    <div class="flex items-center gap-2 text-xs">
+      <span class="w-[130px] shrink-0 truncate text-slate-200" title="${escapeAttr(p)}">${escapeHtml(p)}</span>
+      <div class="flex-1 h-2 rounded bg-slate-800"><div class="h-2 rounded bg-emerald-400/80" style="width:${Math.round(c / pMax * 100)}%"></div></div>
+      <span class="w-8 text-right font-semibold text-slate-100">${c}</span>
+      <span class="w-16 text-right text-[10px] muted">지난달 ${cP.get(p) || 0}</span>
+    </div>`).join('')}</div>` : mkEmpty(`${tm}월 신작이 없습니다.`);
+
+  /* 출시 요일 (전체 기간) */
+  const dowNames = ['월', '화', '수', '목', '금', '토', '일'], dow = Array(7).fill(0);
+  rows.forEach(x => { dow[(mkToDate(x.d).getDay() + 6) % 7]++; });
+  const dMax = Math.max(1, ...dow), dTop = dow.indexOf(dMax);
+  document.getElementById('mkRelDow').innerHTML = `<div class="flex items-end gap-2 h-36">${dow.map((c, i) => `
+    <div class="flex-1 flex flex-col items-center justify-end h-full gap-1" title="${dowNames[i]}요일 ${c}개 (${Math.round(c / rows.length * 100)}%)">
+      <span class="text-[10px] ${i === dTop ? 'text-emerald-300 font-semibold' : 'muted'}">${c}</span>
+      <div class="w-full rounded-t ${i === dTop ? 'bg-emerald-400' : 'bg-slate-600'}" style="height:${Math.max(3, Math.round(c / dMax * 100))}%"></div>
+      <span class="text-[11px] ${i >= 5 ? 'text-rose-300/80' : 'text-slate-300'}">${dowNames[i]}</span>
+    </div>`).join('')}</div>
+    <p class="text-[10px] muted mt-3">${dowNames[dTop]}요일 출시가 가장 많습니다 (${Math.round(dMax / rows.length * 100)}%). 예정 일정 포함.</p>`;
 }
 
 /* ---------- 모드 / 탭 / 진입 ---------- */
+const MK_SECTION_EL = { change: 'mkSecChange', structure: 'mkSecStructure', debut: 'mkSecDebut', releases: 'mkSecReleases' };
 function mkSyncModeButtons(){
   document.querySelectorAll('#view-business .mk-mode').forEach(b => {
     const on = b.dataset.mode === mkMode;
     b.classList.toggle('bg-indigo-500', on); b.classList.toggle('text-white', on);
     b.classList.toggle('text-slate-400', !on); b.classList.toggle('hover:text-slate-200', !on);
   });
+  document.querySelectorAll('#view-business .mk-sec').forEach(b => b.classList.toggle('on', b.dataset.section === mkSection));
+  Object.entries(MK_SECTION_EL).forEach(([k, id]) => document.getElementById(id)?.classList.toggle('hidden', k !== mkSection));
   document.getElementById('mkDaily')?.classList.toggle('hidden', mkMode !== 'daily');
   document.getElementById('mkWeekly')?.classList.toggle('hidden', mkMode !== 'weekly');
 }
@@ -3145,9 +3462,23 @@ function mkRenderTabs(){
 function mkRender(){
   mkRenderTabs();
   try{
-    if(mkMode === 'daily') mkRenderDaily();
-    else if(mkMonthsReady) mkRenderWeekly();
-    else mkRenderWeeklySkeleton();
+    if(mkSection === 'change'){
+      if(mkMode === 'daily') mkRenderDaily();
+      else if(mkMonthsReady) mkRenderWeekly();
+      else mkRenderWeeklySkeleton();
+    }else if(mkSection === 'structure'){
+      if(mkMonthsReady) mkRenderStructure(); else mkRenderStructureSkeleton();
+    }else if(mkSection === 'debut'){
+      if(mkMonthsReady && mkFirstSeenCache[mkTabs.debut]) mkRenderDebut();
+      else{
+        mkRenderDebutSkeleton();
+        const store = mkTabs.debut;
+        mkLoadFirstSeen(store).then(() => { if(currentView === 'business' && mkSection === 'debut' && mkTabs.debut === store && mkMonthsReady) mkRender(); })
+          .catch(e => { console.error('데뷔 판정 데이터 로드 실패', e); setText('mkAsOf', '데뷔 판정 데이터를 불러오지 못했습니다.'); document.getElementById('mkDebutTable').innerHTML = mkEmpty('데이터를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.'); });
+      }
+    }else{
+      mkRenderReleases();
+    }
   }catch(e){
     console.error('시장 분석 렌더 실패', e);
     setText('mkAsOf', '분석 데이터 처리 중 오류가 발생했습니다.');
@@ -3159,12 +3490,18 @@ function mkSetMode(mode){
   mkRender();
   if(mode === 'weekly' && !mkMonthsReady) mkEnsureHistory();
 }
+function mkSetSection(section){
+  mkSection = section;
+  mkSyncModeButtons();
+  mkRender();
+  if(section !== 'releases' && !mkMonthsReady) mkEnsureHistory();
+}
 async function mkEnsureHistory(){
   /* 주간 8주 추이 + 전주 비교 + 재진입 판별을 위해 최신월 포함 이전 3개월 로드 (병렬, 캐시됨) */
   const latest = latestDate(rawStore.sales) || latestDate(rawStore.popular);
   if(!latest) return;
   const loading = document.getElementById('mkLoading');
-  if(mkMode === 'weekly') loading?.classList.remove('hidden');
+  if(mkMode === 'weekly' || mkSection === 'structure' || mkSection === 'debut') loading?.classList.remove('hidden');
   try{
     const d = mkToDate(latest), jobs = [];
     for(let i = 0; i <= 3; i++){
@@ -3223,7 +3560,7 @@ async function fetchAllData(){
 
     rebuildLookupIndices();
     currentCalYear = ty; currentCalMonth = tm;
-    renderToday(); clearDashboardSkeletons(); resetGameIndex(); mkMonthsReady = false;
+    renderToday(); clearDashboardSkeletons(); resetGameIndex(); mkMonthsReady = false; mkFirstSeenCache.sales = mkFirstSeenCache.popular = null;
     if(currentView==='sales'||currentView==='popular'||currentView==='newReleases')renderDatabase(currentView);
     if(currentView==='search')openSearchView();
     if(currentView==='calendar')ensureCalendarMonthLoaded();
