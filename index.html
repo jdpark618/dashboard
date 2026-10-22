@@ -159,7 +159,7 @@ select option { background-color: #0f172a; color: #f1f5f9; }
 .gs-hint.warn { color:#fbbf24; }
 .gs-head .gs-sec { padding:6px 12px 2px; }
 .gs-chips { display:flex; flex-wrap:wrap; align-items:center; gap:6px; min-height:26px; }
-.gs-chip { display:inline-flex; align-items:center; gap:6px; padding:3px 4px 3px 9px; border-radius:999px; background:rgba(30,41,59,.9); border:1px solid rgba(71,85,105,.7); font-size:11px; color:#e2e8f0; max-width:260px; }
+.gs-chip { display:inline-flex; align-items:center; gap:6px; padding:3px 4px 3px 9px; border-radius:999px; background:rgba(30,41,59,.9); border:1px solid rgba(71,85,105,.7); font-size:12px; color:#e2e8f0; max-width:360px; }
 .gs-chip .nm { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .gs-chip .dot { width:8px; height:8px; flex:0 0 8px; border-radius:50%; }
 .gs-chip button { color:#64748b; padding:0 4px; font-size:11px; line-height:1; }
@@ -363,7 +363,7 @@ select option { background-color: #0f172a; color: #f1f5f9; }
   <section id="watchSection">
     <div class="flex items-center justify-between mb-3 px-0.5">
       <h2 class="text-base font-bold text-slate-200 flex items-center gap-2"><i class="fa-solid fa-star text-amber-400"></i>관심 게임 <span id="watchCount" class="text-xs muted font-normal"></span></h2>
-      <span class="text-[11px] muted">이 브라우저에만 저장</span>
+      <span class="flex items-center gap-2"><span class="text-[11px] muted hidden sm:inline">이 브라우저에만 저장</span><button type="button" class="cal-today-btn" onclick="searchLoadWatch()"><i class="fa-solid fa-chart-line mr-1"></i>순위 비교</button></span>
     </div>
     <div id="watchList" class="card rounded-xl p-3"></div>
   </section>
@@ -661,51 +661,78 @@ select option { background-color: #0f172a; color: #f1f5f9; }
 </div>
 
 <!-- SEARCH VIEW -->
-<div id="view-search" class="hidden space-y-5">
-  <section class="card rounded-xl p-5">
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
-      <div>
+<div id="view-search" class="hidden space-y-4">
+  <!-- 검색·선택·조건 -->
+  <section class="card rounded-xl p-4 space-y-3">
+    <div class="flex flex-wrap items-center gap-2">
+      <div class="mr-auto">
         <h2 class="font-semibold flex items-center gap-2">타이틀 순위 검색
-          <span id="searchLoadingIndicator" class="hidden text-[10px] font-normal text-indigo-300"><i class="fa-solid fa-spinner fa-spin mr-1"></i>지난 기간 데이터 불러오는 중...</span>
+          <span id="searchLoadingIndicator" class="hidden text-[11px] font-normal text-indigo-300"><i class="fa-solid fa-spinner fa-spin mr-1"></i>지난 기간 데이터 불러오는 중...</span>
         </h2>
-        <p class="text-xs muted mt-1">게임명을 검색해 인기·매출 순위 추이를 확인하고 비교할 수 있습니다.</p>
+        <p class="text-xs muted mt-0.5">최대 5개 게임의 매출·인기 순위를 나란히 비교합니다.</p>
       </div>
-      <div class="flex flex-wrap items-center gap-3">
-        <div class="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs">
-          <span class="text-slate-400 font-medium"><i class="fa-regular fa-calendar mr-1.5"></i>조회 기간</span>
-          <select id="searchDuration" onchange="ensureSearchRangeLoaded()" class="bg-transparent text-slate-200 outline-none cursor-pointer">
-            <option value="7">최근 7일</option>
-            <option value="15" selected>최근 15일</option>
-            <option value="30">최근 30일</option>
-            <option value="60">최근 60일</option>
-            <option value="90">최근 90일</option>
-          </select>
-        </div>
-        <label class="flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 cursor-pointer">
-          <input type="checkbox" id="toggleSearchPopular" checked onchange="renderSearchCharts()"> <i class="fa-solid fa-fire t-pop"></i> 인기 순위
-        </label>
-        <label class="flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 cursor-pointer">
-          <input type="checkbox" id="toggleSearchSales" checked onchange="renderSearchCharts()"> <i class="fa-solid fa-coins t-sales"></i> 매출 순위
-        </label>
+      <button type="button" class="cal-today-btn" onclick="searchLoadWatch()" title="대시보드 관심 게임을 불러와 비교"><i class="fa-solid fa-star text-amber-400 mr-1"></i>관심 게임</button>
+      <select id="searchPub" class="mk-sel max-w-[190px]" onchange="searchAddPublisher(this.value)" aria-label="퍼블리셔 게임 한 번에 추가"><option value="">퍼블리셔 게임 추가</option></select>
+      <button type="button" class="cal-today-btn" onclick="searchExportCsv()" title="날짜별 순위표를 CSV로 받기"><i class="fa-solid fa-file-arrow-down mr-1"></i>CSV</button>
+      <button type="button" class="cal-today-btn" onclick="searchCopyLink()" title="선택한 게임과 기간이 담긴 링크 복사"><i class="fa-solid fa-link mr-1"></i>링크 복사</button>
+    </div>
+    <div class="gs-wrap">
+      <input id="searchQuery" placeholder="게임 검색 또는 눌러서 TOP 10에서 선택" autocomplete="off"
+        class="w-full bg-slate-900 border border-slate-700 rounded-lg pl-3 pr-8 py-2 text-[13px] focus:outline-none focus:border-indigo-500">
+      <span class="gs-clear hidden" data-for="searchQuery" title="검색어 지우기"><i class="fa-solid fa-xmark"></i></span>
+    </div>
+    <div id="searchChips" class="gs-chips"></div>
+    <div class="flex flex-wrap items-center gap-2 pt-1">
+      <div class="mk-seg" id="searchPeriodSel">
+        <button type="button" data-d="7" onclick="searchSetDays(7)">7일</button>
+        <button type="button" data-d="15" onclick="searchSetDays(15)">15일</button>
+        <button type="button" data-d="30" onclick="searchSetDays(30)">30일</button>
+        <button type="button" data-d="60" onclick="searchSetDays(60)">60일</button>
+        <button type="button" data-d="90" onclick="searchSetDays(90)">90일</button>
+        <button type="button" data-d="0" onclick="searchSetDays(0)">직접 지정</button>
       </div>
-    </div>
-    <div class="mb-5 space-y-2.5">
-      <div class="gs-wrap">
-        <input id="searchQuery" placeholder="게임 검색 또는 클릭해서 현재 TOP 10에서 선택 (최대 5개)" autocomplete="off"
-          class="w-full bg-slate-900 border border-slate-700 rounded-lg pl-3 pr-8 py-2 text-xs focus:outline-none focus:border-indigo-500">
-        <span class="gs-clear hidden" data-for="searchQuery" title="검색어 지우기"><i class="fa-solid fa-xmark"></i></span>
+      <div id="searchCustomRange" class="hidden items-center gap-1.5 text-xs text-slate-400">
+        <input type="date" id="searchFrom" class="mk-sel" onchange="searchSetCustom()" aria-label="시작일"> ~
+        <input type="date" id="searchTo" class="mk-sel" onchange="searchSetCustom()" aria-label="종료일">
       </div>
-      <div id="searchChips" class="gs-chips"></div>
+      <div class="mk-seg" id="searchLayoutSel">
+        <button type="button" data-l="combined" onclick="searchSetLayout('combined')">통합</button>
+        <button type="button" data-l="split" onclick="searchSetLayout('split')">따로</button>
+        <button type="button" data-l="sales" onclick="searchSetLayout('sales')">매출만</button>
+        <button type="button" data-l="popular" onclick="searchSetLayout('popular')">인기만</button>
+      </div>
+      <label class="cal-toggle"><input type="checkbox" id="searchRatingToggle" onchange="searchState.rating = this.checked; renderSearchCharts()"><span class="knob"></span>평점 추이</label>
+      <span id="searchMsg" class="text-[11px] text-indigo-300 transition-opacity"></span>
     </div>
-    <div id="searchAnchorNote" class="hidden -mt-2 mb-4 text-[11px] text-amber-300/90"></div>
-    <div id="searchPopularWrap" class="mb-6">
-      <div class="text-xs font-semibold muted mb-2"><i class="fa-solid fa-fire t-pop mr-1"></i>인기 순위 추이</div>
-      <div class="h-[300px]"><canvas id="searchPopularChart"></canvas></div>
+    <div id="searchAnchorNote" class="hidden text-[11px] text-amber-300/90"></div>
+  </section>
+
+  <!-- 비교 요약 -->
+  <section class="card rounded-xl p-4">
+    <div class="flex items-center justify-between mb-2"><h3 class="font-semibold text-sm">비교 요약</h3><span id="searchRangeLabel" class="text-[11px] muted">-</span></div>
+    <div id="searchSummary"></div>
+  </section>
+
+  <!-- 순위 추이 -->
+  <section class="card rounded-xl p-4" id="searchChartsCard">
+    <div id="searchEmptyChart" class="hidden py-14 text-center text-xs muted">게임을 선택하면 순위 추이가 나타납니다.</div>
+    <div id="searchCombinedWrap">
+      <div class="text-xs font-semibold text-slate-300 mb-2 flex flex-wrap items-center gap-x-3">매출·인기 순위 추이<span class="font-normal muted">매출 실선 · 인기 점선 · 로그 눈금</span></div>
+      <div class="h-[340px] md:h-[400px]"><canvas id="searchCombinedChart"></canvas></div>
     </div>
-    <div id="searchSalesWrap">
-      <div class="text-xs font-semibold muted mb-2"><i class="fa-solid fa-coins t-sales mr-1"></i>매출 순위 추이</div>
-      <div class="h-[300px]"><canvas id="searchSalesChart"></canvas></div>
+    <div id="searchSalesWrap" class="hidden">
+      <div class="text-xs font-semibold text-slate-300 mb-2"><i class="fa-solid fa-coins t-sales mr-1"></i>매출 순위 추이</div>
+      <div class="h-[280px] md:h-[320px]"><canvas id="searchSalesChart"></canvas></div>
     </div>
+    <div id="searchPopularWrap" class="hidden mt-5">
+      <div class="text-xs font-semibold text-slate-300 mb-2"><i class="fa-solid fa-fire t-pop mr-1"></i>인기 순위 추이</div>
+      <div class="h-[280px] md:h-[320px]"><canvas id="searchPopularChart"></canvas></div>
+    </div>
+  </section>
+
+  <section class="card rounded-xl p-4 hidden" id="searchRatingWrap">
+    <div class="text-xs font-semibold text-slate-300 mb-2"><i class="fa-solid fa-star text-amber-400/80 mr-1"></i>평점 추이 <span class="font-normal muted ml-1">9/8부터 수집</span></div>
+    <div class="h-[220px]"><canvas id="searchRatingChart"></canvas></div>
   </section>
 </div>
 
@@ -760,6 +787,7 @@ select option { background-color: #0f172a; color: #f1f5f9; }
       </div>
     </div>
     <div class="flex items-center gap-3 shrink-0 ml-2">
+      <button type="button" onclick="searchAddFromDetail()" class="text-slate-400 hover:text-indigo-300 text-base" title="순위 검색에서 비교" aria-label="순위 검색에서 비교"><i class="fa-solid fa-chart-line"></i></button>
       <button id="detailWatchBtn" type="button" onclick="mkWatchToggle(detailCurrentName)" class="text-slate-400 hover:text-amber-300 text-lg" title="관심 게임에 추가" aria-label="관심 게임에 추가" aria-pressed="false"><i class="fa-regular fa-star"></i></button>
       <button onclick="closeGameDetail()" class="text-slate-400 hover:text-white" aria-label="닫기"><i class="fa-solid fa-xmark text-xl"></i></button>
     </div>
@@ -1591,7 +1619,7 @@ function switchView(view){
 }
 
 const VALID_VIEWS = ['dashboard','business','calendar','sales','popular','newReleases','search'];
-function viewFromHash(){ const v = decodeURIComponent(location.hash.slice(1)); return VALID_VIEWS.includes(v) ? v : 'dashboard'; }
+function viewFromHash(){ const v = decodeURIComponent(location.hash.slice(1)).split('?')[0]; return VALID_VIEWS.includes(v) ? v : 'dashboard'; }
 
 /* KST 기준 오늘 날짜 (사용자 PC 시간대와 무관하게 스토어 집계일과 비교) */
 function kstTodayStr(){ return new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' }); }
@@ -1607,6 +1635,7 @@ function expectedLatestDateStr(){
 function daysBetween(a, b){ return Math.round((dateValue(b) - dateValue(a)) / 86400000); }
 
 async function openSearchView(){
+  searchApplyHashOnce(); /* #search?g=...&p=... 링크로 들어온 경우 */
   loadGameIndex(); /* 전체 기간 게임명 인덱스는 백그라운드로 준비 (차트 렌더를 막지 않음) */
   gsApplyDefaultSelection();
   await ensureSearchRangeLoaded();
@@ -2015,7 +2044,7 @@ function gsHighlight(name, raw){
 
 /* ---------- 게임 칩 선택 ---------- */
 const SEARCH_MAX_GAMES = 5;
-const SEARCH_CHIP_PALETTE = ['#818cf8', '#fbbf24', '#34d399', '#f87171', '#60a5fa'];
+const SEARCH_CHIP_PALETTE = ['#c084fc', '#f472b6', '#22d3ee', '#a3e635', '#fb923c']; /* 매출·인기·상승·하락 색과 겹치지 않게 */
 let searchSelected = [];          /* 선택한 게임명 (칩 순서 = 차트 순서) */
 const searchColorOf = {};         /* gameKey -> 고정 색상 */
 let searchDefaultApplied = false; /* 최초 진입 시 매출 TOP3 기본 선택은 한 번만 */
@@ -2059,12 +2088,17 @@ function gsApplyDefaultSelection(){
 function gsRenderChips(){
   const el = document.getElementById('searchChips'); if(!el) return;
   if(!searchSelected.length){
-    el.innerHTML = `<span class="gs-chipnote"><i class="fa-regular fa-circle-question mr-1"></i>선택한 게임이 없어 각 차트의 TOP3를 표시 중입니다</span>`;
+    el.innerHTML = `<span class="gs-chipnote"><i class="fa-regular fa-circle-question mr-1"></i>선택한 게임이 없습니다 · 검색하거나 아래 빠른 선택을 이용하세요</span>`;
     return;
   }
-  el.innerHTML = searchSelected.map((n, i) =>
-    `<span class="gs-chip" title="${escapeAttr(n)}"><span class="dot" style="background:${searchColorOf[getGameKey(n)]}"></span><span class="nm">${escapeHtml(n)}</span><button type="button" data-i="${i}" aria-label="${escapeAttr(n)} 제거"><i class="fa-solid fa-xmark"></i></button></span>`
-  ).join('') + `<span class="gs-chipnote">${searchSelected.length}/${SEARCH_MAX_GAMES}</span>`;
+  /* 칩 = 범례: 선 색 · 아이콘 · 이름 · 현재 매출/인기 순위 */
+  el.innerHTML = searchSelected.map((n, i) => {
+    const s = gsCurrentRank(n, 'sales'), p = gsCurrentRank(n, 'popular'), url = getIconUrlForGame(n);
+    return `<span class="gs-chip" title="${escapeAttr(n)}"><span class="dot" style="background:${searchColorOf[getGameKey(n)]}"></span>`
+      + (url ? `<img src="${escapeAttr(url)}" alt="" class="w-5 h-5 rounded-md object-cover shrink-0" loading="lazy" onerror="this.style.display='none'">` : '')
+      + `<span class="nm">${escapeHtml(n)}</span><span class="text-[10px] whitespace-nowrap"><span class="t-sales">매출 ${s ? s + '위' : '-'}</span><span class="text-slate-600"> · </span><span class="t-pop">인기 ${p ? p + '위' : '-'}</span></span>`
+      + `<button type="button" data-i="${i}" aria-label="${escapeAttr(n)} 제거"><i class="fa-solid fa-xmark"></i></button></span>`;
+  }).join('') + `<span class="gs-chipnote">${searchSelected.length}/${SEARCH_MAX_GAMES}</span>`;
 }
 
 function gsItemHtml(name, raw, idx, rank){
@@ -2178,6 +2212,15 @@ function initSearchAutocomplete(){
 }
 
 /* 선택한 게임이 모두 현재 조회 기간 이전에만 기록이 있으면, 마지막 100위권 기록일을 기준으로 기간을 잡는다. */
+/* ---------- 순위 검색: 상태 · 기간 ---------- */
+const searchState = { days: 15, from: '', to: '', layout: 'combined', rating: false, sort: { key: 'sales', dir: 1 } };
+const SEARCH_PERIODS = [7, 15, 30, 60, 90];
+const SEARCH_TICKS = [1, 2, 3, 5, 10, 20, 30, 50, 100];
+const SEARCH_OUT_Y = 150;      /* 100위 밖 표시 높이 (로그 눈금) */
+const searchCharts = {};
+let searchHashApplied = false;
+
+/* 기준일: 선택한 게임이 최근 기간에 기록이 없으면 마지막 100위권 기록일로 */
 function getSearchBaseDate(titles, duration){
   const latest = latestDate(rawStore.sales) || latestDate(rawStore.popular) || new Date().toISOString().slice(0, 10);
   if(!titles.length || !gameIndex) return latest;
@@ -2192,140 +2235,387 @@ function getSearchBaseDate(titles, duration){
 function updateSearchAnchorNote(titles, baseDate){
   const el = document.getElementById('searchAnchorNote'); if(!el) return;
   const latest = latestDate(rawStore.sales) || latestDate(rawStore.popular) || '';
-  const anchored = titles.length && baseDate && latest && baseDate !== latest;
+  const anchored = searchState.days && titles.length && baseDate && latest && baseDate !== latest;
   el.classList.toggle('hidden', !anchored);
   if(anchored) el.innerHTML = `<i class="fa-solid fa-clock-rotate-left mr-1"></i>최근 조회 기간에 기록이 없어, 마지막 100위권 기록일(${baseDate}) 기준으로 표시합니다.`;
 }
 
-document.addEventListener('DOMContentLoaded', initSearchAutocomplete);
-
-let searchPopularChartInst=null, searchSalesChartInst=null, detailChartInst=null, detailScoreChartInst=null;
-
-function drawChartShared(canvasId, prevInst, data, titles, colors, baseDate, duration, padding=15) {
-  if(!data || !data.rows) return prevInst;
-  const canvasEl = document.getElementById(canvasId);
-  if(!canvasEl) return prevInst;
-  const ctx = canvasEl.getContext('2d');
-  
-  let allDates = getDates(data);
-  if(baseDate) allDates = allDates.filter(d => d <= baseDate);
-  const dates = allDates.slice(-duration);
-
-  const validTitles = titles.filter(Boolean);
-  const targetKeySet = new Set(validTitles.map(t => getGameKey(t)));
-  const rankMapByGame = new Map();
-  targetKeySet.forEach(k => rankMapByGame.set(k, new Map()));
-
-  for (let i = 0; i < data.rows.length; i++) {
-    const r = data.rows[i];
-    const k = getGameKey(r);
-    if (targetKeySet.has(k)) {
-      const d = rowDate(r);
-      const rank = rankOf(r);
-      if (d && rank) {
-        rankMapByGame.get(k).set(d, rank);
-      }
-    }
+/* 조회 범위: 최근 N일(관측일 기준) 또는 직접 지정한 시작~종료일 */
+function searchRange(titles){
+  const all = [...new Set([...getDates(rawStore.sales), ...getDates(rawStore.popular)])].sort();
+  if(!searchState.days && searchState.from && searchState.to){
+    const from = searchState.from <= searchState.to ? searchState.from : searchState.to, to = searchState.from <= searchState.to ? searchState.to : searchState.from;
+    return { dates: all.filter(d => d >= from && d <= to), from, to, base: to };
   }
+  const days = searchState.days || 15, base = getSearchBaseDate(titles, days);
+  const dates = all.filter(d => d <= base).slice(-days);
+  const [y, m, d] = base.split('-').map(Number);
+  return { dates, from: dateMinusDaysStr(y, m, d, days - 1), to: base, base };
+}
 
-  const datasets = validTitles.map((t, i) => {
-    const k = getGameKey(t);
-    const dateRankMap = rankMapByGame.get(k);
-    return {
-      label: t, clip: false,
-      data: dates.map(d => dateRankMap ? (dateRankMap.get(d) ?? null) : null),
-      borderColor: colors[i % colors.length],
-      backgroundColor: 'transparent',
-      borderWidth: 2,
-      pointRadius: 2,
-      tension: .25,
-      spanGaps: true
-    };
+function searchSetDays(n){
+  searchState.days = n;
+  if(!n && !(searchState.from && searchState.to)){
+    /* 직접 지정을 처음 고르면 최근 30일로 채워 둠 */
+    const latest = latestDate(rawStore.sales) || kstTodayStr(), [y, m, d] = latest.split('-').map(Number);
+    searchState.from = dateMinusDaysStr(y, m, d, 29); searchState.to = latest;
+  }
+  ensureSearchRangeLoaded();
+}
+function searchSetCustom(){
+  const f = document.getElementById('searchFrom').value, t = document.getElementById('searchTo').value;
+  if(!f || !t) return;
+  searchState.days = 0; searchState.from = f; searchState.to = t;
+  ensureSearchRangeLoaded();
+}
+function searchSetLayout(l){ searchState.layout = l; renderSearchCharts(); }
+
+/* 짧은 안내 문구 */
+let searchMsgTimer = null;
+function searchFlash(text){
+  const el = document.getElementById('searchMsg'); if(!el) return;
+  el.textContent = text; el.style.opacity = '1';
+  clearTimeout(searchMsgTimer); searchMsgTimer = setTimeout(() => { el.style.opacity = '0'; }, 2600);
+}
+
+/* ---------- 데이터 묶기 ---------- */
+function searchSeries(titles){
+  const keys = new Set(titles.map(getGameKey));
+  const out = { sales: new Map(), popular: new Map(), score: new Map() };
+  keys.forEach(k => { out.sales.set(k, new Map()); out.popular.set(k, new Map()); out.score.set(k, new Map()); });
+  ['sales', 'popular'].forEach(s => (rawStore[s]?.rows || []).forEach(r => {
+    const k = getGameKey(r);
+    if(!keys.has(k)) return;
+    const d = rowDate(r), rk = rankOf(r);
+    if(d && rk) out[s].get(k).set(d, rk);
+    const sc = parseFloat(scoreOf(r));
+    if(d && !isNaN(sc) && sc > 0 && sc <= 5) out.score.get(k).set(d, sc);
+  }));
+  return out;
+}
+
+/* 게임별 요약: 현재·기간 변화·최고·순위권 일수·평점 */
+function searchStats(name, S, dates){
+  const k = getGameKey(name), one = store => {
+    const m = S[store].get(k), vals = dates.map(d => m.get(d) ?? null), seen = vals.map((v, i) => ({ v, d: dates[i] })).filter(x => x.v != null);
+    const now = vals.at(-1), first = vals[0];
+    const best = seen.length ? seen.reduce((a, b) => b.v < a.v ? b : a) : null;
+    return { now, first, change: now != null && first != null ? first - now : null, entered: first == null && now != null, left: first != null && now == null,
+      best: best?.v ?? null, bestDate: best?.d ?? '', days: seen.length, top10: seen.filter(x => x.v <= 10).length };
+  };
+  const scm = S.score.get(k), scs = dates.map(d => scm.get(d)).filter(v => v != null);
+  return { name, color: searchColorOf[k], sales: one('sales'), popular: one('popular'), score: scs.at(-1) ?? null, scoreChange: scs.length > 1 ? Math.round((scs.at(-1) - scs[0]) * 10) / 10 : null };
+}
+
+/* ---------- 비교 요약표 ---------- */
+function searchChangeHtml(x){
+  if(x.entered) return '<span class="t-new text-[11px] font-semibold">진입</span>';
+  if(x.left) return '<span class="text-[11px] muted">이탈</span>';
+  if(x.change == null || x.change === 0) return '<span class="text-[11px] muted">-</span>';
+  return x.change > 0 ? `<span class="rank-up text-[11px] font-semibold">▲${x.change}</span>` : `<span class="rank-down text-[11px] font-semibold">▼${-x.change}</span>`;
+}
+function searchRankCell(x, cls){
+  return x.now != null ? `<b class="${cls}">${x.now}위</b> ${searchChangeHtml(x)}` : `<span class="text-[11px] muted">100위 밖</span>${x.left ? ' <span class="text-[11px] muted">(이탈)</span>' : ''}`;
+}
+function searchSort(key){
+  const s = searchState.sort;
+  if(s.key === key) s.dir *= -1; else { s.key = key; s.dir = 1; }
+  renderSearchCharts();
+}
+function renderSearchSummary(stats, dates){
+  const box = document.getElementById('searchSummary');
+  if(!stats.length){
+    box.innerHTML = `<div class="py-6 text-center"><div class="text-xs muted mb-3">비교할 게임을 검색하거나 바로 골라 보세요</div>
+      <div class="flex flex-wrap justify-center gap-2">
+        <button type="button" class="cal-today-btn" onclick="searchQuick('sales')"><i class="fa-solid fa-coins t-sales mr-1"></i>매출 TOP 3</button>
+        <button type="button" class="cal-today-btn" onclick="searchQuick('popular')"><i class="fa-solid fa-fire t-pop mr-1"></i>인기 TOP 3</button>
+        <button type="button" class="cal-today-btn" onclick="searchLoadWatch()"><i class="fa-solid fa-star text-amber-400 mr-1"></i>관심 게임</button>
+      </div></div>`;
+    return;
+  }
+  const { key, dir } = searchState.sort, n = v => v ?? 999;
+  const sorters = { name: (a, b) => a.name.localeCompare(b.name, 'ko'), sales: (a, b) => n(a.sales.now) - n(b.sales.now), popular: (a, b) => n(a.popular.now) - n(b.popular.now),
+    bestS: (a, b) => n(a.sales.best) - n(b.sales.best), bestP: (a, b) => n(a.popular.best) - n(b.popular.best), days: (a, b) => (b.sales.days + b.popular.days) - (a.sales.days + a.popular.days), score: (a, b) => (b.score ?? -1) - (a.score ?? -1) };
+  const list = stats.slice().sort((a, b) => dir * sorters[key](a, b));
+  const dot = s => `<span class="inline-block w-2.5 h-2.5 rounded-full shrink-0" style="background:${s.color}"></span>`;
+  const scoreHtml = s => s.score != null ? `<span class="text-slate-200">★ ${s.score.toFixed(1)}</span>${s.scoreChange ? ` <span class="text-[11px] ${s.scoreChange > 0 ? 'rank-up' : 'rank-down'}">${s.scoreChange > 0 ? '▲' : '▼'}${Math.abs(s.scoreChange).toFixed(1)}</span>` : ''}` : '<span class="muted">-</span>';
+  const best = x => x.best != null ? `${x.best}위<div class="text-[10px] muted">${mkShort(x.bestDate)}</div>` : '<span class="muted">-</span>';
+  if(innerWidth < 640){
+    box.innerHTML = `<div class="space-y-2">${list.map(s => `
+      <div class="rounded-lg border border-slate-800 bg-slate-900/50 p-3 cursor-pointer" data-game="${escapeAttr(s.name)}">
+        <div class="flex items-center gap-2 mb-2">${dot(s)}<span class="text-[13px] font-semibold text-slate-100 truncate">${escapeHtml(s.name)}</span><span class="ml-auto text-xs">${scoreHtml(s)}</span></div>
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <div><div class="text-[10px] muted">매출</div>${searchRankCell(s.sales, 't-sales')}<div class="text-[10px] muted mt-0.5">최고 ${s.sales.best ?? '-'}${s.sales.best ? '위' : ''} · 순위권 ${s.sales.days}/${dates.length}일</div></div>
+          <div><div class="text-[10px] muted">인기</div>${searchRankCell(s.popular, 't-pop')}<div class="text-[10px] muted mt-0.5">최고 ${s.popular.best ?? '-'}${s.popular.best ? '위' : ''} · 순위권 ${s.popular.days}/${dates.length}일</div></div>
+        </div>
+      </div>`).join('')}</div>`;
+    return;
+  }
+  const th = (label, k, cls = '') => `<th class="py-2 px-2 ${cls} cursor-pointer select-none hover:text-slate-200 ${key === k ? 'text-indigo-300' : ''}" onclick="searchSort('${k}')" aria-sort="${key === k ? (dir > 0 ? 'ascending' : 'descending') : 'none'}">${label}${key === k ? `<i class="fa-solid fa-sort-${dir > 0 ? 'up' : 'down'} ml-1 text-[9px]"></i>` : ''}</th>`;
+  box.innerHTML = `<div class="overflow-x-auto scrollbar"><table class="w-full min-w-[720px] text-left text-xs">
+    <thead><tr class="border-b border-slate-800 text-[11px] muted">${th('게임', 'name', 'pl-1')}${th('매출 (기간 변화)', 'sales', 'text-right')}${th('인기 (기간 변화)', 'popular', 'text-right')}${th('최고 매출', 'bestS', 'text-right')}${th('최고 인기', 'bestP', 'text-right')}${th('순위권 일수 매출·인기', 'days', 'text-right')}${th('평점', 'score', 'text-right pr-1')}</tr></thead>
+    <tbody>${list.map(s => `<tr class="border-b border-slate-900 hover:bg-slate-800/50 cursor-pointer" data-game="${escapeAttr(s.name)}">
+      <td class="py-2.5 pl-1 pr-2"><div class="flex items-center gap-2 min-w-0">${dot(s)}${mkIcon(s.name)}<span class="font-medium text-slate-100 truncate">${escapeHtml(s.name)}</span></div></td>
+      <td class="py-2.5 px-2 text-right whitespace-nowrap">${searchRankCell(s.sales, 't-sales')}</td>
+      <td class="py-2.5 px-2 text-right whitespace-nowrap">${searchRankCell(s.popular, 't-pop')}</td>
+      <td class="py-2.5 px-2 text-right">${best(s.sales)}</td>
+      <td class="py-2.5 px-2 text-right">${best(s.popular)}</td>
+      <td class="py-2.5 px-2 text-right whitespace-nowrap">${s.sales.days} · ${s.popular.days}<span class="muted"> / ${dates.length}일</span>${s.sales.top10 ? `<div class="text-[10px] muted">매출 TOP10 ${s.sales.top10}일</div>` : ''}</td>
+      <td class="py-2.5 pr-1 pl-2 text-right whitespace-nowrap">${scoreHtml(s)}</td>
+    </tr>`).join('')}</tbody></table></div>
+    <p class="text-[10px] muted mt-2">기간 변화는 조회 시작일 대비 마지막 날 순위입니다. 행을 누르면 게임 상세가 열립니다.</p>`;
+}
+
+/* ---------- 순위 차트 (로그 눈금 · 범위 자동 · 100위 밖 띠) ---------- */
+function drawSearchRankChart(canvasId, lines, dates){
+  if(searchCharts[canvasId]){ searchCharts[canvasId].destroy(); delete searchCharts[canvasId]; }
+  const canvas = document.getElementById(canvasId); if(!canvas) return;
+  const vals = lines.flatMap(l => l.values).filter(v => v != null);
+  const hasOut = lines.some(l => l.values.some(v => v == null));
+  const best = vals.length ? Math.min(...vals) : 1, worst = vals.length ? Math.max(...vals) : 100;
+  const min = ([...SEARCH_TICKS].reverse().find(t => t < best * 0.95) || 1) * 0.8;
+  const max = hasOut ? SEARCH_OUT_Y * 1.12 : Math.min(125, (SEARCH_TICKS.find(t => t >= worst * 1.15) || 100) * 1.2);
+  const datasets = [];
+  lines.forEach(l => {
+    datasets.push({ label: l.label, data: l.values, borderColor: l.color, backgroundColor: l.color, borderDash: l.dash || [], borderWidth: 2.2, pointRadius: dates.length > 40 ? 0 : 2.2, pointHoverRadius: 5, tension: .25, spanGaps: false, clip: false, _kind: 'rank' });
+    if(l.values.some(v => v == null)) datasets.push({ label: l.label, data: l.values.map(v => v == null ? SEARCH_OUT_Y : null), showLine: false, pointStyle: 'line', pointRadius: 5, pointHoverRadius: 6, borderWidth: 2.5, borderColor: l.color, backgroundColor: l.color, _kind: 'out' });
   });
-
-  if(prevInst) prevInst.destroy();
-  return new Chart(ctx,{
-    type:'line', data:{labels:dates,datasets},
-    options:{
-      layout:{padding:{top:padding}}, responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
-      plugins:{legend:{labels:{color:'#cbd5e1',font:{size:10}}}, tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.raw??'-'}위`}}},
-      scales:{
-        x:{grid:{color:'rgba(51,65,85,.35)'},ticks:{color:'#94a3b8',maxTicksLimit:12,callback: function(val) { const label = this.getLabelForValue(val); return label ? label.substring(5).replace('-', '/') : ''; }}},
-        y:{reverse:true,min:1,suggestedMax:100,grid:{color:'rgba(51,65,85,.35)'},ticks:{color:'#94a3b8'}}
-      }
+  const band = {
+    id: 'searchOutBand',
+    beforeDatasetsDraw(chart){
+      if(!hasOut) return;
+      const { ctx, chartArea: a, scales: { y } } = chart, top = y.getPixelForValue(112);
+      ctx.save(); ctx.fillStyle = 'rgba(30,41,59,.55)'; ctx.fillRect(a.left, top, a.right - a.left, a.bottom - top);
+      ctx.fillStyle = '#64748b'; ctx.font = '600 11px "Pretendard Variable", sans-serif'; ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+      ctx.fillText('100위 밖', a.right - 6, top + 4); ctx.restore();
     }
+  };
+  searchCharts[canvasId] = new Chart(canvas.getContext('2d'), {
+    type: 'line', data: { labels: dates, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: false, layout: { padding: { top: 6, right: 6 } },
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          filter: c => c.raw != null,
+          itemSort: (a, b) => a.raw - b.raw,
+          callbacks: {
+            title: items => { const d = items[0]?.label || ''; return d ? `${d} (${CAL_DOW[mkToDate(d).getDay()]})` : ''; },
+            label: c => {
+              if(c.dataset._kind === 'out') return ` ${c.dataset.label}: 100위 밖`;
+              const prev = c.dataIndex > 0 ? c.dataset.data[c.dataIndex - 1] : null, diff = prev != null ? prev - c.raw : null;
+              return ` ${c.dataset.label}: ${c.raw}위${diff ? (diff > 0 ? ` ▲${diff}` : ` ▼${-diff}`) : ''}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(51,65,85,.3)' }, ticks: { color: '#94a3b8', maxTicksLimit: innerWidth < 640 ? 5 : 10, maxRotation: 0, callback: function(v){ const l = this.getLabelForValue(v); return l ? l.substring(5).replace('-', '/') : ''; } } },
+        y: { type: 'logarithmic', reverse: true, min, max,
+          afterBuildTicks: ax => { ax.ticks = SEARCH_TICKS.filter(t => t >= min && t <= Math.max(max, 100)).map(value => ({ value })); },
+          grid: { color: c => c.tick?.value === 10 ? 'rgba(148,163,184,.35)' : 'rgba(51,65,85,.3)' },
+          ticks: { color: '#94a3b8', callback: v => SEARCH_TICKS.includes(v) ? `${v}위` : '' } }
+      }
+    },
+    plugins: [band]
+  });
+}
+
+function drawSearchRatingChart(titles, S, dates){
+  const id = 'searchRatingChart';
+  if(searchCharts[id]){ searchCharts[id].destroy(); delete searchCharts[id]; }
+  const lines = titles.map(t => ({ t, k: getGameKey(t) })).map(({ t, k }) => ({ label: t, color: searchColorOf[k], values: dates.map(d => S.score.get(k).get(d) ?? null) }));
+  const vals = lines.flatMap(l => l.values).filter(v => v != null);
+  const min = vals.length ? Math.max(0, Math.floor((Math.min(...vals) - 0.2) * 10) / 10) : 0, max = vals.length ? Math.min(5, Math.ceil((Math.max(...vals) + 0.2) * 10) / 10) : 5;
+  searchCharts[id] = new Chart(document.getElementById(id).getContext('2d'), {
+    type: 'line',
+    data: { labels: dates, datasets: lines.map(l => ({ label: l.label, data: l.values, borderColor: l.color, backgroundColor: l.color, borderWidth: 2, pointRadius: dates.length > 40 ? 0 : 2, tension: 0, spanGaps: true })) },
+    options: { responsive: true, maintainAspectRatio: false, animation: false, interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { display: false }, tooltip: { filter: c => c.raw != null, itemSort: (a, b) => b.raw - a.raw, callbacks: { label: c => ` ${c.dataset.label}: ★ ${c.raw.toFixed(1)}` } } },
+      scales: { x: { grid: { display: false }, ticks: { color: '#94a3b8', maxTicksLimit: innerWidth < 640 ? 5 : 10, maxRotation: 0, callback: function(v){ const l = this.getLabelForValue(v); return l ? l.substring(5).replace('-', '/') : ''; } } },
+        y: { min, max, grid: { color: 'rgba(51,65,85,.3)' }, ticks: { color: '#fbbf24', stepSize: 0.1, maxTicksLimit: 6, callback: v => v.toFixed(1) } } } }
   });
 }
 
 function debouncedRenderSearchCharts(){
   if(searchDebounceTimer) clearTimeout(searchDebounceTimer);
-  searchDebounceTimer = setTimeout(() => {
-    renderSearchCharts();
-  }, 300);
+  searchDebounceTimer = setTimeout(() => { renderSearchCharts(); }, 300);
 }
 
 function renderSearchCharts(){
-  if(!rawStore.sales&&!rawStore.popular)return;
-  const titles=[...searchSelected];
-  const showPop=document.getElementById('toggleSearchPopular').checked, showSales=document.getElementById('toggleSearchSales').checked;
-  const duration = parseInt(document.getElementById('searchDuration')?.value || '15', 10);
-  const baseDate = getSearchBaseDate(titles, duration);
-  updateSearchAnchorNote(titles, baseDate);
+  if(!rawStore.sales && !rawStore.popular) return;
+  const titles = [...searchSelected];
+  const R = searchRange(titles);
+  updateSearchAnchorNote(titles, R.base);
 
-  document.getElementById('searchPopularWrap').classList.toggle('hidden',!showPop);
-  document.getElementById('searchSalesWrap').classList.toggle('hidden',!showSales);
-  const colors=['#818cf8', '#fbbf24', '#34d399', '#f87171', '#60a5fa', '#a78bfa', '#f472b6', '#2dd4bf', '#fb923c', '#94a3b8'];
+  /* 컨트롤 상태 */
+  document.querySelectorAll('#searchPeriodSel button').forEach(b => b.classList.toggle('on', Number(b.dataset.d) === searchState.days));
+  const custom = document.getElementById('searchCustomRange');
+  custom.classList.toggle('hidden', !!searchState.days); custom.classList.toggle('flex', !searchState.days);
+  if(!searchState.days){ document.getElementById('searchFrom').value = searchState.from; document.getElementById('searchTo').value = searchState.to; }
+  document.querySelectorAll('#searchLayoutSel button').forEach(b => b.classList.toggle('on', b.dataset.l === searchState.layout));
+  document.getElementById('searchRatingToggle').checked = searchState.rating;
+  setText('searchRangeLabel', R.dates.length ? `${R.dates[0]} ~ ${R.dates.at(-1)} · ${R.dates.length}일` : '-');
+  searchPopulatePublishers();
 
-  /* 선택한 게임이 있으면 두 차트 모두 같은 게임·같은 색(칩 색)으로, 없으면 차트별 TOP3 */
-  const popTitles = titles.length > 0 ? titles : getTopTitlesSafe(rawStore.popular, 3);
-  const salesTitles = titles.length > 0 ? titles : getTopTitlesSafe(rawStore.sales, 3);
-  const chipColors = titles.length > 0 ? titles.map(t => searchColorOf[getGameKey(t)] || colors[0]) : colors;
+  const S = searchSeries(titles), stats = titles.map(t => searchStats(t, S, R.dates));
+  renderSearchSummary(stats, R.dates);
 
-  if(showPop) searchPopularChartInst=drawChartShared('searchPopularChart',searchPopularChartInst,rawStore.popular,popTitles,chipColors, baseDate, duration);
-  if(showSales) searchSalesChartInst=drawChartShared('searchSalesChart',searchSalesChartInst,rawStore.sales,salesTitles,chipColors, baseDate, duration);
+  const empty = !titles.length, L = searchState.layout;
+  document.getElementById('searchEmptyChart').classList.toggle('hidden', !empty);
+  document.getElementById('searchCombinedWrap').classList.toggle('hidden', empty || L !== 'combined');
+  document.getElementById('searchSalesWrap').classList.toggle('hidden', empty || !(L === 'split' || L === 'sales'));
+  document.getElementById('searchPopularWrap').classList.toggle('hidden', empty || !(L === 'split' || L === 'popular'));
+  document.getElementById('searchPopularWrap').classList.toggle('mt-5', L === 'split');
+  document.getElementById('searchRatingWrap').classList.toggle('hidden', empty || !searchState.rating);
+  Object.keys(searchCharts).forEach(id => { searchCharts[id].destroy(); delete searchCharts[id]; });
+  searchSyncHash();
+  if(empty) return;
+
+  const line = (t, store, dash) => { const k = getGameKey(t); return { label: dash ? `${t} · 인기` : (L === 'combined' ? `${t} · 매출` : t), color: searchColorOf[k], dash, values: R.dates.map(d => S[store].get(k).get(d) ?? null) }; };
+  if(L === 'combined') drawSearchRankChart('searchCombinedChart', titles.flatMap(t => [line(t, 'sales'), line(t, 'popular', [5, 4])]), R.dates);
+  if(L === 'split' || L === 'sales') drawSearchRankChart('searchSalesChart', titles.map(t => line(t, 'sales')), R.dates);
+  if(L === 'split' || L === 'popular') drawSearchRankChart('searchPopularChart', titles.map(t => ({ ...line(t, 'popular'), label: t })), R.dates);
+  if(searchState.rating) drawSearchRatingChart(titles, S, R.dates);
 }
 
+/* 필요한 달 계산 (최근 N일 또는 직접 지정 범위) */
 function computeSearchNeededMonths(){
-  const duration = parseInt(document.getElementById('searchDuration')?.value || '15', 10);
-  const latest = getSearchBaseDate([...searchSelected], duration);
-  const [y, m, d] = latest.split('-').map(Number);
-  const baseDate = new Date(y, m - 1, d);
-  const months = new Set();
-  for(let i = 0; i < duration; i++){
-    const dt = new Date(baseDate);
-    dt.setDate(dt.getDate() - i);
-    months.add(ymKey(dt.getFullYear(), dt.getMonth() + 1));
+  let from, to;
+  if(!searchState.days && searchState.from && searchState.to){ from = searchState.from < searchState.to ? searchState.from : searchState.to; to = searchState.from < searchState.to ? searchState.to : searchState.from; }
+  else{
+    const days = searchState.days || 15; to = getSearchBaseDate([...searchSelected], days);
+    const [y, m, d] = to.split('-').map(Number); from = dateMinusDaysStr(y, m, d, days - 1);
   }
-  return [...months].map(k => { const [yy, mm] = k.split('-'); return { y: Number(yy), m: Number(mm) }; });
+  const months = []; let [y, m] = from.split('-').map(Number); const [ty, tm] = to.split('-').map(Number);
+  while(y < ty || (y === ty && m <= tm)){ months.push({ y, m }); ({ y, m } = addMonthsYM(y, m, 1)); }
+  return months;
 }
 
 async function ensureSearchRangeLoaded(){
-  /* [체감 개선] 탭 클릭 핸들러 안에서 바로 차트를 그리면 계산이 끝날 때까지 화면 전환이 지연된다.
-     rAF → setTimeout으로 한 프레임 양보해 탭 화면이 먼저 페인트된 뒤 차트를 그린다. */
+  /* [체감 개선] 탭 화면이 먼저 페인트된 뒤 차트를 그리도록 한 프레임 양보 */
   await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 0)));
-
-  /* 지금 가진 데이터로 즉시 한 번 그린다. */
   renderSearchCharts();
-
-  /* 아직 로드되지 않은 월만 추린다. 추가로 받을 데이터가 없으면 로딩 표시·재렌더를 생략한다. */
-  const months = computeSearchNeededMonths().filter(({y, m}) => {
-    const k = ymKey(y, m);
-    return !loadedMonths.sales.has(k) || !loadedMonths.popular.has(k);
-  });
+  const months = computeSearchNeededMonths().filter(({ y, m }) => { const k = ymKey(y, m); return !loadedMonths.sales.has(k) || !loadedMonths.popular.has(k); });
   if(!months.length) return;
-
-  /* 한 달 요청이 실패해도(네트워크 순간 오류 등) 나머지 데이터로는 반드시 다시 그리도록 catch/finally로 감싼다. */
-  const indicator = document.getElementById('searchLoadingIndicator');
-  if(indicator) indicator.classList.remove('hidden');
+  const indicator = document.getElementById('searchLoadingIndicator'), card = document.getElementById('searchChartsCard');
+  indicator?.classList.remove('hidden'); card?.classList.add('opacity-60');
   try{
-    await Promise.all(months.flatMap(({y, m}) => [ensureMonthLoaded('sales', y, m), ensureMonthLoaded('popular', y, m)]));
+    await Promise.all(months.flatMap(({ y, m }) => [ensureMonthLoaded('sales', y, m), ensureMonthLoaded('popular', y, m)]));
   }catch(e){
     console.error('순위 검색 기간 데이터 로드 중 일부 실패', e);
   }finally{
-    if(indicator) indicator.classList.add('hidden');
+    indicator?.classList.add('hidden'); card?.classList.remove('opacity-60');
     renderSearchCharts();
   }
 }
+
+/* ---------- 빠른 선택 · 관심 게임 · 퍼블리셔 · 다른 화면에서 추가 ---------- */
+function searchSetSelection(names){
+  searchSelected = []; Object.keys(searchColorOf).forEach(k => delete searchColorOf[k]);
+  names.slice(0, SEARCH_MAX_GAMES).forEach(n => {
+    const k = getGameKey(n); if(k === '-' || searchSelected.some(x => getGameKey(x) === k)) return;
+    const used = new Set(Object.values(searchColorOf));
+    searchColorOf[k] = SEARCH_CHIP_PALETTE.find(c => !used.has(c)) || SEARCH_CHIP_PALETTE[0];
+    searchSelected.push(n);
+  });
+  searchDefaultApplied = true;
+  gsRenderChips();
+  ensureSearchRangeLoaded();
+}
+function searchQuick(store){ searchSetSelection(gsTopList(store, 3)); }
+function searchLoadWatch(){
+  const list = mkWatchList();
+  if(!list.length){ searchFlash('관심 게임이 없습니다. 게임 상세의 ☆로 추가하세요.'); return; }
+  if(currentView !== 'search') switchView('search');
+  searchSetSelection(list);
+  searchFlash(list.length > SEARCH_MAX_GAMES ? `관심 게임 ${list.length}개 중 앞의 ${SEARCH_MAX_GAMES}개를 불러왔습니다` : `관심 게임 ${list.length}개를 불러왔습니다`);
+}
+function searchAddFromDetail(){
+  const name = detailCurrentName; if(!name) return;
+  closeGameDetail();
+  if(!gsIsSelected(name)){
+    if(searchSelected.length >= SEARCH_MAX_GAMES) searchSelected.pop(); /* 꽉 찼으면 마지막 게임과 교체 */
+    searchSetSelection([...searchSelected, name]);
+  }
+  if(currentView !== 'search') switchView('search');
+  searchFlash(`${name} 을(를) 비교에 추가했습니다`);
+}
+function searchPopulatePublishers(){
+  const sel = document.getElementById('searchPub'); if(!sel || sel.dataset.ready === latestDate(rawStore.sales)) return;
+  const m = new Map();
+  [salesLatestMap, popularLatestMap].forEach(map => map.forEach(r => { const p = rankRowMeta(r).publisher; if(p && p !== '-') { const k = getGameKey(r); (m.get(p) || m.set(p, new Set()).get(p)).add(k); } }));
+  sel.innerHTML = '<option value="">퍼블리셔 게임 추가</option>' + [...m].filter(([, s]) => s.size > 0).sort((a, b) => b[1].size - a[1].size || a[0].localeCompare(b[0], 'ko'))
+    .map(([p, s]) => `<option value="${escapeAttr(p)}">${escapeHtml(p)} (${s.size})</option>`).join('');
+  sel.dataset.ready = latestDate(rawStore.sales);
+}
+function searchAddPublisher(pub){
+  const sel = document.getElementById('searchPub');
+  if(!pub) return;
+  const games = new Map();
+  [salesLatestMap, popularLatestMap].forEach(map => map.forEach(r => {
+    if(rankRowMeta(r).publisher !== pub) return;
+    const k = getGameKey(r), g = games.get(k) || { name: gameName(r), best: 999 };
+    g.best = Math.min(g.best, rankOf(r) || 999); games.set(k, g);
+  }));
+  const add = [...games.values()].sort((a, b) => a.best - b.best).map(g => g.name).filter(n => !gsIsSelected(n));
+  const room = SEARCH_MAX_GAMES - searchSelected.length;
+  if(room <= 0){ searchFlash('이미 5개를 선택했습니다. 칩을 빼고 추가하세요.'); sel.value = ''; return; }
+  searchSetSelection([...searchSelected, ...add.slice(0, room)]);
+  searchFlash(add.length > room ? `${pub}: 순위권 ${add.length}개 중 ${room}개를 추가했습니다` : `${pub}: ${Math.min(add.length, room)}개를 추가했습니다`);
+  sel.value = '';
+}
+
+/* ---------- CSV · 링크 공유 ---------- */
+function searchExportCsv(){
+  const titles = [...searchSelected];
+  if(!titles.length){ searchFlash('먼저 게임을 선택하세요'); return; }
+  const R = searchRange(titles), S = searchSeries(titles), q = v => `"${String(v).replace(/"/g, '""')}"`;
+  const head = ['날짜', ...titles.flatMap(t => [`${t} 매출 순위`, `${t} 인기 순위`, `${t} 평점`])];
+  const rows = R.dates.map(d => [d, ...titles.flatMap(t => { const k = getGameKey(t); return [S.sales.get(k).get(d) ?? '', S.popular.get(k).get(d) ?? '', S.score.get(k).get(d) ?? '']; })]);
+  const csv = '﻿' + [head, ...rows].map(r => r.map(q).join(',')).join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  a.download = `순위비교_${R.dates[0] || ''}_${R.dates.at(-1) || ''}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  searchFlash(`CSV 저장 (${R.dates.length}일 × ${titles.length}개)`);
+}
+async function searchCopyLink(){
+  searchSyncHash();
+  try{ await navigator.clipboard.writeText(location.href); searchFlash('링크를 복사했습니다'); }
+  catch(e){ searchFlash('복사하지 못했습니다. 주소창의 링크를 복사하세요.'); }
+}
+
+/* 주소에 선택 상태 저장: #search?g=이름|이름&p=30 (또는 p=2026-09-01~2026-10-22)&l=combined&r=1 */
+function searchSyncHash(){
+  if(currentView !== 'search') return;
+  const p = new URLSearchParams();
+  if(searchSelected.length) p.set('g', searchSelected.join('|'));
+  p.set('p', searchState.days ? String(searchState.days) : `${searchState.from}~${searchState.to}`);
+  if(searchState.layout !== 'combined') p.set('l', searchState.layout);
+  if(searchState.rating) p.set('r', '1');
+  history.replaceState(null, '', `#search?${p.toString()}`);
+}
+function searchApplyHashOnce(){
+  if(searchHashApplied) return;
+  searchHashApplied = true;
+  const raw = location.hash.slice(1), i = raw.indexOf('?');
+  if(!raw.startsWith('search') || i < 0) return;
+  const p = new URLSearchParams(raw.slice(i + 1));
+  const per = p.get('p') || '';
+  if(/^\d+$/.test(per) && SEARCH_PERIODS.includes(Number(per))) searchState.days = Number(per);
+  else if(/^\d{4}-\d{2}-\d{2}~\d{4}-\d{2}-\d{2}$/.test(per)){ [searchState.from, searchState.to] = per.split('~'); searchState.days = 0; }
+  if(['combined', 'split', 'sales', 'popular'].includes(p.get('l'))) searchState.layout = p.get('l');
+  searchState.rating = p.get('r') === '1';
+  const g = (p.get('g') || '').split('|').map(s => s.trim()).filter(Boolean);
+  if(g.length) searchSetSelection(g);
+}
+
+document.addEventListener('DOMContentLoaded', initSearchAutocomplete);
+
+let detailChartInst=null, detailScoreChartInst=null;
 
 function setDefaultDateFilters(store){
   const data = rawStore[store];
