@@ -781,118 +781,119 @@ select option { background-color: #0f172a; color: #f1f5f9; }
 </footer>
 </div>
 
-<!-- GAME DETAIL SIDE PANEL -->
+<!-- GAME DETAIL SIDE PANEL (매출·인기 순위 데이터) -->
 <div id="detailOverlay" class="fixed inset-0 bg-black/70 z-40 hidden opacity-0 transition-opacity duration-300" onclick="closeGameDetail()"></div>
-<div id="detailPanel" class="fixed top-0 right-0 w-full max-w-[450px] h-full bg-slate-900 shadow-2xl z-50 transform translate-x-full transition-transform duration-300 overflow-y-auto border-l border-slate-700 flex flex-col">
-  <div class="p-5 border-b border-slate-800 flex justify-between items-center sticky top-0 bg-slate-900/95 backdrop-blur z-20">
-    <div class="flex items-center gap-3 pr-2 min-w-0">
-      <img id="detailAppIcon" src="" class="w-11 h-11 rounded-xl object-cover bg-slate-800 hidden shrink-0 shadow" alt="">
-      <div class="min-w-0">
-        <div class="text-[11px] text-slate-300 font-semibold mb-0.5 truncate" id="detailGenrePub">-</div>
-        <h2 class="text-lg font-bold leading-tight truncate" id="detailTitle">-</h2>
+<div id="detailPanel" class="fixed top-0 right-0 w-full max-w-[460px] h-full bg-slate-900 shadow-2xl z-50 transform translate-x-full transition-transform duration-300 overflow-y-auto border-l border-slate-700 flex flex-col" role="dialog" aria-labelledby="detailTitle">
+  <div class="px-5 pt-4 pb-3 border-b border-slate-800 sticky top-0 bg-slate-900/95 backdrop-blur z-20">
+    <div class="flex items-start gap-3">
+      <img id="detailAppIcon" src="" class="w-12 h-12 rounded-xl object-cover bg-slate-800 hidden shrink-0 shadow" alt="">
+      <div class="min-w-0 flex-1">
+        <h2 class="text-[17px] font-bold leading-snug line-clamp-2" id="detailTitle">-</h2>
+        <div id="detailChips" class="flex flex-wrap gap-1 mt-1"></div>
       </div>
+      <button onclick="closeGameDetail()" class="text-slate-400 hover:text-white shrink-0 -mr-1 p-1" aria-label="닫기 (Esc)"><i class="fa-solid fa-xmark text-xl"></i></button>
     </div>
-    <div class="flex items-center gap-3 shrink-0 ml-2">
-      <button type="button" onclick="searchAddFromDetail()" class="text-slate-400 hover:text-indigo-300 text-base" title="순위 검색에서 비교" aria-label="순위 검색에서 비교"><i class="fa-solid fa-chart-line"></i></button>
-      <button id="detailWatchBtn" type="button" onclick="mkWatchToggle(detailCurrentName)" class="text-slate-400 hover:text-amber-300 text-lg" title="관심 게임에 추가" aria-label="관심 게임에 추가" aria-pressed="false"><i class="fa-regular fa-star"></i></button>
-      <button onclick="closeGameDetail()" class="text-slate-400 hover:text-white" aria-label="닫기"><i class="fa-solid fa-xmark text-xl"></i></button>
+    <div class="flex flex-wrap gap-1.5 mt-3">
+      <button type="button" onclick="searchAddFromDetail()" class="cal-today-btn"><i class="fa-solid fa-chart-line mr-1 text-indigo-300"></i>순위 비교</button>
+      <button id="detailWatchBtn" type="button" onclick="mkWatchToggle(detailCurrentName)" class="cal-today-btn" aria-pressed="false"><i class="fa-regular fa-star mr-1"></i>관심 게임</button>
+      <a id="detailPlayStoreLink" href="#" target="_blank" rel="noopener" class="cal-today-btn"><i class="fa-brands fa-google-play mr-1 text-emerald-400"></i>Google Play</a>
     </div>
   </div>
 
   <div class="p-5 space-y-5 flex-1">
-    <div class="flex items-center gap-2">
-      <a id="detailPlayStoreLink" href="#" target="_blank" class="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sm font-semibold transition-colors">
-        <i class="fa-brands fa-google-play text-emerald-400 text-lg"></i> Google Play 검색
-      </a>
-      <div class="px-4 py-2.5 rounded-xl bg-slate-800/80 border border-amber-500/30 flex items-center gap-1.5 shrink-0">
-        <i class="fa-solid fa-star text-amber-400 text-sm"></i>
-        <span class="text-base font-bold text-amber-300" id="detailScoreBadge">-</span>
-      </div>
-    </div>
-    <div class="grid grid-cols-2 gap-3">
-      <div class="card p-4 rounded-xl border-slate-700/50 bg-slate-800/30">
-        <div class="text-[11px] muted mb-1"><i class="fa-solid fa-coins t-sales mr-1.5"></i>현재 매출 순위</div>
-        <div class="flex items-end gap-2 mt-2">
-          <span class="text-2xl font-bold" id="detailSalesRank">-</span>
-          <span id="detailSalesChange" class="mb-0.5"></span>
+    <!-- 현재 상태: 매출 · 인기 · 평점 -->
+    <div class="grid grid-cols-3 gap-2" id="detailKpis"></div>
+    <div id="detailContext" class="text-[12px] text-slate-300 -mt-2"></div>
+
+    <!-- 추이 -->
+    <div>
+      <div class="flex items-center justify-between gap-2 mb-2">
+        <h4 class="text-sm font-semibold">순위 추이 <span class="text-[11px] font-normal muted ml-1">매출 실선 · 인기 점선 · 로그 눈금</span></h4>
+        <div class="mk-seg" id="detailPeriodSel">
+          <button type="button" data-d="7" onclick="detailSetDays(7)">7일</button>
+          <button type="button" data-d="15" onclick="detailSetDays(15)">15일</button>
+          <button type="button" data-d="30" onclick="detailSetDays(30)">30일</button>
+          <button type="button" data-d="0" onclick="detailSetDays(0)">전체</button>
         </div>
       </div>
-      <div class="card p-4 rounded-xl border-slate-700/50 bg-slate-800/30">
-        <div class="text-[11px] muted mb-1"><i class="fa-solid fa-fire t-pop mr-1.5"></i>현재 인기 순위</div>
-        <div class="flex items-end gap-2 mt-2">
-          <span class="text-2xl font-bold" id="detailPopRank">-</span>
-          <span id="detailPopChange" class="mb-0.5"></span>
-        </div>
-      </div>
+      <div class="h-[230px] card rounded-xl p-2.5 border-slate-700/50 relative"><canvas id="detailChart"></canvas><div id="detailLoading" class="hidden absolute inset-0 flex items-center justify-center text-[11px] text-indigo-300 bg-slate-900/60 rounded-xl"><i class="fa-solid fa-spinner fa-spin mr-1"></i>지난 기간 불러오는 중</div></div>
     </div>
     <div>
-      <div class="flex items-center justify-between mb-3">
-        <h4 class="text-sm font-semibold">순위 복합 추이 <span class="text-[11px] font-normal text-slate-400">(최근 15일)</span></h4>
-        <div class="flex items-center gap-3 text-[10px] font-medium">
-          <span class="flex items-center gap-1 t-sales"><span class="w-2 h-2 rounded-full bg-sales"></span>매출</span>
-          <span class="flex items-center gap-1 t-pop"><span class="w-2 h-2 rounded-full bg-pop"></span>인기</span>
-        </div>
-      </div>
-      <div class="h-[220px] card rounded-xl p-3 border-slate-700/50"><canvas id="detailChart"></canvas></div>
+      <h4 class="text-sm font-semibold mb-2">평점 추이 <span class="text-[11px] font-normal muted ml-1">눈금은 변동 폭에 맞춤</span></h4>
+      <div class="h-[130px] card rounded-xl p-2.5 border-slate-700/50"><canvas id="detailScoreChart"></canvas></div>
     </div>
-    <div class="mt-2">
-      <div class="flex items-center justify-between mb-2">
-        <h4 class="text-sm font-semibold">평점 추이 <span class="text-[11px] font-normal text-slate-400">(최근 15일)</span></h4>
-        <span class="text-amber-400 text-[10px] font-medium"><i class="fa-solid fa-star mr-1"></i>0.0 ~ 5.0</span>
-      </div>
-      <div class="h-[130px] card rounded-xl p-3 border-slate-700/50"><canvas id="detailScoreChart"></canvas></div>
-    </div>
+
+    <!-- 기간 분석 -->
     <div>
-      <h4 class="text-sm font-semibold mb-3">순위 분석 <span class="text-[11px] muted font-normal ml-1">(최근 15일 데이터 기준)</span></h4>
-      <div class="card rounded-xl border-slate-700/50 divide-y divide-slate-700/50 text-sm">
-        <div class="flex justify-between items-center p-3.5">
-          <span class="muted text-xs">최고 매출 순위</span><span class="font-bold t-sales" id="detailSalesHigh">-</span>
-        </div>
-        <div class="flex justify-between items-center p-3.5">
-          <span class="muted text-xs">평균 매출 순위</span><span class="font-bold text-slate-200" id="detailSalesAvg">-</span>
-        </div>
-        <div class="flex justify-between items-center p-3.5">
-          <span class="muted text-xs">최고 인기 순위</span><span class="font-bold t-pop" id="detailPopHigh">-</span>
-        </div>
-        <div class="flex justify-between items-center p-3.5">
-          <span class="muted text-xs">TOP 10 진입 일수</span><span class="font-bold text-slate-200" id="detailTop10Days">-</span>
-        </div>
-      </div>
+      <h4 class="text-sm font-semibold mb-2">기간 분석 <span id="detailRangeLabel" class="text-[11px] muted font-normal ml-1">-</span></h4>
+      <div id="detailStats"></div>
+    </div>
+
+    <!-- 같은 퍼블리셔 -->
+    <div id="detailPubWrap" class="hidden">
+      <h4 class="text-sm font-semibold mb-2">같은 퍼블리셔의 순위권 게임 <span id="detailPubName" class="text-[11px] muted font-normal ml-1"></span></h4>
+      <div id="detailPubList" class="space-y-1"></div>
     </div>
   </div>
 </div>
 
-<!-- NEW RELEASE (WAME) DETAIL PANEL -->
+<!-- NEW RELEASE DETAIL PANEL (신작 DB) -->
 <div id="releaseDetailOverlay" class="fixed inset-0 bg-black/70 z-40 hidden opacity-0 transition-opacity duration-300" onclick="closeReleaseDetail()"></div>
-<div id="releaseDetailPanel" class="fixed top-0 right-0 w-full max-w-[450px] h-full bg-slate-900 shadow-2xl z-50 transform translate-x-full transition-transform duration-300 overflow-y-auto border-l border-slate-700 flex flex-col">
-  <div class="p-5 border-b border-slate-800 flex justify-between items-center sticky top-0 bg-slate-900/95 backdrop-blur z-20">
-    <div class="flex items-center gap-3 pr-2 min-w-0">
-      <img id="releaseDetailIcon" src="" class="w-11 h-11 rounded-xl object-cover bg-slate-800 hidden shrink-0 shadow" alt="">
-      <div class="min-w-0">
-        <div class="text-[11px] text-indigo-400 font-semibold mb-0.5 truncate" id="releaseDetailPub">-</div>
-        <h2 class="text-lg font-bold leading-tight truncate" id="releaseDetailTitle">-</h2>
+<div id="releaseDetailPanel" class="fixed top-0 right-0 w-full max-w-[460px] h-full bg-slate-900 shadow-2xl z-50 transform translate-x-full transition-transform duration-300 overflow-y-auto border-l border-slate-700 flex flex-col" role="dialog" aria-labelledby="releaseDetailTitle">
+  <div class="px-5 pt-4 pb-3 border-b border-slate-800 sticky top-0 bg-slate-900/95 backdrop-blur z-20">
+    <div class="flex items-start gap-3">
+      <img id="releaseDetailIcon" src="" class="w-12 h-12 rounded-xl object-cover bg-slate-800 hidden shrink-0 shadow" alt="">
+      <div class="min-w-0 flex-1">
+        <h2 class="text-[17px] font-bold leading-snug line-clamp-2" id="releaseDetailTitle">-</h2>
+        <div class="text-[12px] text-slate-400 mt-0.5 truncate" id="releaseDetailPub">-</div>
+      </div>
+      <div class="flex items-center gap-1 shrink-0">
+        <button type="button" id="releasePrevBtn" onclick="releaseNav(-1)" class="cal-navbtn" aria-label="이전 신작 (←)"><i class="fa-solid fa-chevron-left"></i></button>
+        <button type="button" id="releaseNextBtn" onclick="releaseNav(1)" class="cal-navbtn" aria-label="다음 신작 (→)"><i class="fa-solid fa-chevron-right"></i></button>
+        <button onclick="closeReleaseDetail()" class="text-slate-400 hover:text-white p-1 ml-1" aria-label="닫기 (Esc)"><i class="fa-solid fa-xmark text-xl"></i></button>
       </div>
     </div>
-    <button onclick="closeReleaseDetail()" class="text-slate-400 hover:text-white shrink-0 ml-2"><i class="fa-solid fa-xmark text-xl"></i></button>
+  </div>
+
+  <div id="releaseDetailBanner" class="hidden relative h-40 shrink-0 overflow-hidden cursor-zoom-in" onclick="openLightbox(0)">
+    <img id="releaseDetailBannerImg" src="" alt="" class="w-full h-full object-cover" onerror="document.getElementById('releaseDetailBanner').classList.add('hidden')">
+    <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/20 to-transparent"></div>
   </div>
 
   <div class="p-5 space-y-5 flex-1">
     <div class="flex flex-wrap items-center gap-2" id="releaseDetailBadges"></div>
 
-    <div class="card p-4 rounded-xl border-slate-700/50 bg-slate-800/30">
-      <div class="text-[11px] muted mb-1"><i class="fa-regular fa-calendar mr-1.5"></i>출시(예정)일</div>
-      <div class="text-base font-bold mt-1" id="releaseDetailDate">-</div>
+    <div class="card p-4 rounded-xl border-slate-700/50 bg-slate-800/30 flex items-center justify-between gap-3">
+      <div>
+        <div class="text-[11px] muted mb-1"><i class="fa-regular fa-calendar mr-1.5"></i>출시(예정)일</div>
+        <div class="text-base font-bold" id="releaseDetailDate">-</div>
+      </div>
+      <span id="releaseDetailStatus" class="text-[12px] font-bold px-2.5 py-1 rounded-lg shrink-0"></span>
     </div>
+
+    <a id="releasePlayLink" href="#" target="_blank" rel="noopener" class="cal-today-btn inline-flex"><i class="fa-brands fa-google-play mr-1.5 text-emerald-400"></i>Google Play에서 검색</a>
 
     <div id="releaseDetailSummaryWrap" class="hidden">
       <h4 class="text-sm font-semibold mb-2">게임 소개</h4>
-      <p class="text-xs leading-relaxed text-slate-300" id="releaseDetailSummary">-</p>
+      <p class="text-[13px] leading-relaxed text-slate-300 whitespace-pre-line" id="releaseDetailSummary">-</p>
     </div>
 
     <div id="releaseDetailShotsWrap" class="hidden">
-      <h4 class="text-sm font-semibold mb-2">스크린샷</h4>
+      <h4 class="text-sm font-semibold mb-2">스크린샷 <span id="releaseShotCount" class="text-[11px] muted font-normal"></span></h4>
       <div id="releaseDetailShots" class="flex gap-2 overflow-x-auto scrollbar pb-1"></div>
     </div>
+
+    <div id="releaseSameDayWrap" class="hidden">
+      <h4 class="text-sm font-semibold mb-2">같은 날 출시 <span id="releaseSameDayCount" class="text-[11px] muted font-normal"></span></h4>
+      <div id="releaseSameDay" class="space-y-1"></div>
+    </div>
+
+    <div id="releaseSamePubWrap" class="hidden">
+      <h4 class="text-sm font-semibold mb-2">같은 퍼블리셔의 다른 신작</h4>
+      <div id="releaseSamePub" class="space-y-1"></div>
+    </div>
+
+    <div id="releaseCheckedAt" class="text-[11px] text-slate-500 pt-2 border-t border-slate-800"></div>
 
     <!--
     <a id="releaseDetailWameLink" href="#" target="_blank" class="hidden items-center justify-center gap-2 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sm font-semibold transition-colors">
@@ -1904,7 +1905,7 @@ function calHideHover(){ document.getElementById('calHover')?.classList.add('hid
     view.addEventListener('mouseout', e => { const it = e.target.closest('.cal-item'); if(it && !it.contains(e.relatedTarget)) calHideHover(); });
   }
   window.addEventListener('scroll', calHideHover, { passive: true });
-  document.addEventListener('keydown', e => { if(e.key === 'Escape' && !document.getElementById('calDayPanel').classList.contains('translate-x-full')) closeCalDay(); });
+  document.addEventListener('keydown', e => { if(e.key === 'Escape' && !document.getElementById('calDayPanel').classList.contains('translate-x-full') && document.getElementById('releaseDetailPanel').classList.contains('translate-x-full')) closeCalDay(); });
   /* 휴대폰 폭 ↔ 넓은 폭을 넘나들면 보기 다시 그리기 */
   let t = null;
   window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(() => { if(currentView === 'calendar' && calNarrow !== null && calNarrow !== calIsNarrow()) renderCalendar(); }, 150); });
@@ -2373,8 +2374,8 @@ function renderSearchSummary(stats, dates){
 }
 
 /* ---------- 순위 차트 (로그 눈금 · 범위 자동 · 100위 밖 띠) ---------- */
-function drawSearchRankChart(canvasId, lines, dates){
-  if(searchCharts[canvasId]){ searchCharts[canvasId].destroy(); delete searchCharts[canvasId]; }
+function drawSearchRankChart(canvasId, lines, dates, store = searchCharts){
+  if(store[canvasId]){ store[canvasId].destroy(); delete store[canvasId]; }
   const canvas = document.getElementById(canvasId); if(!canvas) return;
   const vals = lines.flatMap(l => l.values).filter(v => v != null);
   const hasOut = lines.some(l => l.values.some(v => v == null));
@@ -2396,7 +2397,7 @@ function drawSearchRankChart(canvasId, lines, dates){
       ctx.fillText('100위 밖', a.right - 6, top + 4); ctx.restore();
     }
   };
-  searchCharts[canvasId] = new Chart(canvas.getContext('2d'), {
+  store[canvasId] = new Chart(canvas.getContext('2d'), {
     type: 'line', data: { labels: dates, datasets },
     options: {
       responsive: true, maintainAspectRatio: false, animation: false, layout: { padding: { top: 6, right: 6 } },
@@ -2621,7 +2622,6 @@ function searchApplyHashOnce(){
 
 document.addEventListener('DOMContentLoaded', initSearchAutocomplete);
 
-let detailChartInst=null, detailScoreChartInst=null;
 
 function setDefaultDateFilters(store){
   const data = rawStore[store];
@@ -2879,104 +2879,160 @@ function renderDatabase(view){
   else populateYearOptions(view);
 }
 
-function getMetricsForGame(data, gameNameTarget, recentDays=15){
-  if(!data || !data.rows) return { currentRank:'-', change:'-', high:'-', avg:'-', top10:0, genre:'', pub:'', score:'-', appId:'' };
-  const dates = getDates(data), latest = dates[dates.length-1], targetKey = getGameKey(gameNameTarget);
-  let currentRank='-', change='-', genre='', pub='', score='-', validRanks=[], top10Count=0, appId='';
+/* ---------- 게임 상세 패널 (매출·인기 순위 데이터) ---------- */
+const detailState = { days: 15 };
+const detailCharts = {};
+let detailLoadToken = 0;
 
-  const latestRow = data.rows.find(r => rowDate(r) === latest && getGameKey(r) === targetKey);
-  if(latestRow) {
-    currentRank = rankOf(latestRow) || '-'; change = latestRow[2] !== undefined ? latestRow[2] : '-';
-    const isNewSchema = rowDate(latestRow) >= '2026-09-08';
-    appId = isNewSchema ? String(latestRow[4] || '').trim() : ''; genre = isNewSchema ? (latestRow[5] || '') : (latestRow[4] || '');
-    pub = isNewSchema ? (latestRow[6] || '') : (latestRow[5] || ''); score = scoreOf(latestRow);
-  }
+function detailSetDays(n){ detailState.days = n; renderGameDetail(); detailEnsureRange(); }
 
-  dates.slice(-recentDays).forEach(d => {
-    const row = data.rows.find(r => rowDate(r) === d && getGameKey(r) === targetKey);
-    if(row){
-      const rnk = rankOf(row);
-      if(rnk){
-        validRanks.push(rnk); if(rnk <= 10) top10Count++;
-        const isNewSchema = rowDate(row) >= '2026-09-08';
-        if(!genre) genre = isNewSchema ? (row[5] || '') : (row[4] || ''); if(!pub) pub = isNewSchema ? (row[6] || '') : (row[5] || '');
-        if(!appId && isNewSchema) appId = String(row[4] || '').trim(); if(score === '-' || !score) score = scoreOf(row);
-      }
-    }
+/* 이 게임의 가장 최근 행 (장르·퍼블리셔·패키지명용) */
+function detailLatestRow(k){
+  let best = salesLatestMap.get(k) || popularLatestMap.get(k) || null;
+  if(best) return best;
+  ['sales', 'popular'].forEach(s => (rawStore[s]?.rows || []).forEach(r => { if(getGameKey(r) === k && (!best || rowDate(r) > rowDate(best))) best = r; }));
+  return best;
+}
+
+/* 스토어별 현재 상태: 현재 순위, 전일 대비, 순위권 밖이면 마지막 기록일 */
+function detailNow(map, store){
+  const ds = getDates(rawStore[store]), last = ds.at(-1), prev = ds.at(-2);
+  const now = map.get(last) ?? null, before = prev ? map.get(prev) ?? null : null;
+  const lastSeen = [...map.keys()].sort().at(-1) || '';
+  return { now, change: now != null && before != null ? before - now : null, entered: now != null && prev && before == null, left: now == null && before != null, lastSeen };
+}
+function detailStatsOf(map, dates){
+  const seen = dates.map(d => ({ d, v: map.get(d) })).filter(x => x.v != null);
+  const best = seen.length ? seen.reduce((a, b) => b.v < a.v ? b : a) : null;
+  return { days: seen.length, top10: seen.filter(x => x.v <= 10).length, best: best?.v ?? null, bestDate: best?.d || '', avg: seen.length ? Math.round(seen.reduce((t, x) => t + x.v, 0) / seen.length) : null };
+}
+function detailKpiHtml(label, icon, cls, n){
+  let sub;
+  if(n.now == null) sub = n.left ? '<span class="text-[11px] rank-down">오늘 이탈</span>' : `<span class="text-[11px] muted">${n.lastSeen ? `마지막 순위권 ${mkShort(n.lastSeen)}` : '최근 기록 없음'}</span>`;
+  else if(n.entered) sub = '<span class="text-[11px] t-new font-semibold">오늘 진입</span>';
+  else if(n.change) sub = `<span class="text-[11px] font-semibold ${n.change > 0 ? 'rank-up' : 'rank-down'}">${n.change > 0 ? '▲' : '▼'}${Math.abs(n.change)} <span class="muted font-normal">전일 대비</span></span>`;
+  else sub = '<span class="text-[11px] muted">전일과 같음</span>';
+  return `<div class="card rounded-xl p-3 border-slate-700/50 bg-slate-800/30 min-w-0">
+    <div class="text-[11px] muted mb-1 truncate">${icon}${label}</div>
+    ${n.now != null ? `<div class="text-xl font-bold ${cls}">${n.now}위</div>` : '<div class="text-[15px] font-bold text-slate-400 mt-1">100위 밖</div>'}
+    <div class="mt-0.5 leading-tight">${sub}</div></div>`;
+}
+
+function renderGameDetail(){
+  const name = detailCurrentName; if(!name) return;
+  const k = getGameKey(name), S = searchSeries([name]), sales = S.sales.get(k), pop = S.popular.get(k), score = S.score.get(k);
+  const row = detailLatestRow(k), meta = row ? rankRowMeta(row) : { genre: '', publisher: '', appId: '' };
+  const genre = meta.genre && meta.genre !== '미분류' ? meta.genre : '', pub = meta.publisher && meta.publisher !== '-' ? meta.publisher : '';
+
+  /* 헤더 */
+  setText('detailTitle', name);
+  document.getElementById('detailChips').innerHTML = [
+    genre ? `<span class="inline-flex items-center gap-1 text-[11px] text-slate-300 bg-slate-800 border border-slate-700 rounded-full px-2 py-0.5"><i class="w-1.5 h-1.5 rounded-full" style="background:${bizGenreColor(genre)}"></i>${escapeHtml(genre)}</span>` : '',
+    pub ? `<span class="text-[11px] text-slate-300 bg-slate-800 border border-slate-700 rounded-full px-2 py-0.5 truncate max-w-[240px]" title="${escapeAttr(pub)}">${escapeHtml(pub)}</span>` : ''
+  ].join('');
+  const iconUrl = getIconUrlForGame(name), iconEl = document.getElementById('detailAppIcon');
+  if(iconUrl){ iconEl.src = iconUrl; iconEl.classList.remove('hidden'); } else iconEl.classList.add('hidden');
+  const link = document.getElementById('detailPlayStoreLink');
+  link.href = meta.appId ? `https://play.google.com/store/apps/details?id=${encodeURIComponent(meta.appId)}` : `https://play.google.com/store/search?q=${encodeURIComponent(name)}&c=apps`;
+  link.innerHTML = `<i class="fa-brands fa-google-play mr-1 text-emerald-400"></i>${meta.appId ? 'Google Play' : 'Google Play 검색'}`;
+
+  /* 현재: 매출 · 인기 · 평점(7일 변화) */
+  const nS = detailNow(sales, 'sales'), nP = detailNow(pop, 'popular');
+  const scDates = [...score.keys()].sort(), scNow = scDates.length ? score.get(scDates.at(-1)) : null;
+  const scRef = scDates.filter(d => d <= mkAddDays(scDates.at(-1) || '2000-01-01', -7)).at(-1), scDiff = scRef ? Math.round((scNow - score.get(scRef)) * 10) / 10 : null;
+  document.getElementById('detailKpis').innerHTML = detailKpiHtml('매출', '<i class="fa-solid fa-coins t-sales mr-1"></i>', 't-sales', nS) + detailKpiHtml('인기', '<i class="fa-solid fa-fire t-pop mr-1"></i>', 't-pop', nP)
+    + `<div class="card rounded-xl p-3 border-slate-700/50 bg-slate-800/30 min-w-0"><div class="text-[11px] muted mb-1"><i class="fa-solid fa-star text-amber-400/80 mr-1"></i>평점</div>
+        ${scNow != null ? `<div class="text-xl font-bold text-amber-300">${scNow.toFixed(1)}</div><div class="mt-0.5 leading-tight">${scDiff ? `<span class="text-[11px] font-semibold ${scDiff > 0 ? 'rank-up' : 'rank-down'}">${scDiff > 0 ? '▲' : '▼'}${Math.abs(scDiff).toFixed(1)} <span class="muted font-normal">7일</span></span>` : '<span class="text-[11px] muted">7일 변동 없음</span>'}</div>` : '<div class="text-[15px] font-bold text-slate-400 mt-1">-</div><div class="text-[11px] muted">평점 기록 없음</div>'}</div>`;
+
+  /* 장르 안에서의 위치 */
+  const genreRank = (map, cur) => {
+    if(!genre || cur == null) return null;
+    const ranks = [...map.values()].filter(r => rankRowMeta(r).genre === genre).map(rankOf).filter(Boolean).sort((a, b) => a - b);
+    return { pos: ranks.indexOf(cur) + 1, total: ranks.length };
+  };
+  const gS = genreRank(salesLatestMap, nS.now), gP = genreRank(popularLatestMap, nP.now);
+  const ctx = [gS && gS.pos ? `매출 <b class="t-sales">${gS.pos}위</b><span class="muted">/${gS.total}개</span>` : '', gP && gP.pos ? `인기 <b class="t-pop">${gP.pos}위</b><span class="muted">/${gP.total}개</span>` : ''].filter(Boolean);
+  document.getElementById('detailContext').innerHTML = ctx.length ? `<i class="fa-solid fa-layer-group text-slate-500 mr-1"></i>${escapeHtml(genre)} 장르 안에서 ${ctx.join(' · ')}` : '';
+
+  /* 기간: 최근 N일 또는 수집 이후 전체 (불러온 범위) */
+  document.querySelectorAll('#detailPeriodSel button').forEach(b => b.classList.toggle('on', Number(b.dataset.d) === detailState.days));
+  const all = [...new Set([...getDates(rawStore.sales), ...getDates(rawStore.popular)])].sort();
+  const dates = detailState.days ? all.slice(-detailState.days) : all;
+  setText('detailRangeLabel', dates.length ? `${dates[0]} ~ ${dates.at(-1)} · ${dates.length}일` : '-');
+
+  drawSearchRankChart('detailChart', [
+    { label: '매출', color: '#fbbf24', values: dates.map(d => sales.get(d) ?? null) },
+    { label: '인기', color: '#2dd4bf', dash: [5, 4], values: dates.map(d => pop.get(d) ?? null) }
+  ], dates, detailCharts);
+
+  /* 평점: 눈금을 변동 폭에 맞춤 */
+  if(detailCharts.detailScoreChart){ detailCharts.detailScoreChart.destroy(); delete detailCharts.detailScoreChart; }
+  const scVals = dates.map(d => score.get(d) ?? null), sv = scVals.filter(v => v != null);
+  const yMin = sv.length ? Math.max(0, Math.floor((Math.min(...sv) - 0.2) * 10) / 10) : 0, yMax = sv.length ? Math.min(5, Math.ceil((Math.max(...sv) + 0.2) * 10) / 10) : 5;
+  detailCharts.detailScoreChart = new Chart(document.getElementById('detailScoreChart').getContext('2d'), {
+    type: 'line', data: { labels: dates, datasets: [{ label: '평점', data: scVals, borderColor: '#fbbf24', backgroundColor: 'rgba(251,191,36,.1)', borderWidth: 2, pointRadius: dates.length > 40 ? 0 : 2, tension: 0, spanGaps: true, fill: true }] },
+    options: { responsive: true, maintainAspectRatio: false, animation: false, interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { display: false }, tooltip: { filter: c => c.raw != null, callbacks: { label: c => ` 평점 ★ ${c.raw.toFixed(1)}` } } },
+      scales: { x: { grid: { display: false }, ticks: { color: '#94a3b8', maxTicksLimit: 6, maxRotation: 0, callback: function(v){ const l = this.getLabelForValue(v); return l ? l.substring(5).replace('-', '/') : ''; } } },
+        y: { min: yMin, max: yMax, grid: { color: 'rgba(51,65,85,.35)' }, ticks: { color: '#fbbf24', maxTicksLimit: 5, includeBounds: false, callback: v => Number(v).toFixed(1) } } } }
   });
 
-  const high = validRanks.length ? Math.min(...validRanks) : '-', avg = validRanks.length ? Math.round(validRanks.reduce((a,b)=>a+b,0)/validRanks.length) : '-';
-  if (dates.length > 1 && validRanks.length > 0) { if (dates.findIndex(d => data.rows.some(r => rowDate(r) === d && getGameKey(r) === targetKey && rankOf(r))) === dates.length - 1) change = 'NEW'; }
-  else if (dates.length === 1 && validRanks.length > 0) { change = 'NEW'; }
-  return { currentRank, change, high, avg, top10: top10Count, validRanks, genre, pub, score, appId };
+  /* 기간 분석: 매출·인기 각각 (순위권 날 평균은 순위권이었던 날만으로 계산) */
+  const sS = detailStatsOf(sales, dates), sP = detailStatsOf(pop, dates);
+  const bestTxt = s => s.best != null ? `${s.best}위 <span class="text-[10px] muted">${mkShort(s.bestDate)}</span>` : '<span class="muted">-</span>';
+  document.getElementById('detailStats').innerHTML = `<div class="card rounded-xl border-slate-700/50 overflow-hidden"><table class="w-full text-xs">
+    <thead><tr class="text-[11px] muted border-b border-slate-800"><th class="text-left py-2 px-3 font-medium">구분</th><th class="text-right py-2 px-2 font-medium">최고</th><th class="text-right py-2 px-2 font-medium">순위권</th><th class="text-right py-2 px-2 font-medium">TOP10</th><th class="text-right py-2 px-3 font-medium">순위권 날 평균</th></tr></thead>
+    <tbody>
+      <tr class="border-b border-slate-800/70"><td class="py-2.5 px-3 font-semibold t-sales">매출</td><td class="text-right px-2">${bestTxt(sS)}</td><td class="text-right px-2">${sS.days}<span class="muted">/${dates.length}일</span></td><td class="text-right px-2">${sS.top10}일</td><td class="text-right px-3">${sS.avg != null ? `${sS.avg}위` : '<span class="muted">-</span>'}</td></tr>
+      <tr><td class="py-2.5 px-3 font-semibold t-pop">인기</td><td class="text-right px-2">${bestTxt(sP)}</td><td class="text-right px-2">${sP.days}<span class="muted">/${dates.length}일</span></td><td class="text-right px-2">${sP.top10}일</td><td class="text-right px-3">${sP.avg != null ? `${sP.avg}위` : '<span class="muted">-</span>'}</td></tr>
+    </tbody></table></div>`;
+
+  /* 같은 퍼블리셔의 현재 순위권 게임 */
+  const others = new Map();
+  if(pub) [['sales', salesLatestMap], ['popular', popularLatestMap]].forEach(([s, map]) => map.forEach(r => {
+    if(rankRowMeta(r).publisher !== pub) return;
+    const gk = getGameKey(r); if(gk === k) return;
+    const o = others.get(gk) || { name: gameName(r), sales: null, popular: null };
+    o[s] = rankOf(r); others.set(gk, o);
+  }));
+  const list = [...others.values()].sort((a, b) => Math.min(a.sales ?? 999, a.popular ?? 999) - Math.min(b.sales ?? 999, b.popular ?? 999)).slice(0, 8);
+  document.getElementById('detailPubWrap').classList.toggle('hidden', !list.length);
+  setText('detailPubName', pub);
+  document.getElementById('detailPubList').innerHTML = list.map(o => `
+    <button type="button" class="w-full flex items-center gap-2.5 p-2 rounded-lg hover:bg-slate-800/70 text-left" onclick="openGameDetail('${escapeAttr(o.name).replace(/&#039;/g, "\\'")}')">
+      ${mkIcon(o.name)}<span class="flex-1 min-w-0 text-[13px] text-slate-100 truncate">${escapeHtml(o.name)}</span>
+      <span class="text-[11px] whitespace-nowrap"><span class="t-sales">매출 ${o.sales ? o.sales + '위' : '-'}</span><span class="text-slate-600"> · </span><span class="t-pop">인기 ${o.popular ? o.popular + '위' : '-'}</span></span>
+    </button>`).join('');
+}
+
+/* 30일·전체를 고르면 필요한 지난 달을 불러온 뒤 다시 그림 */
+async function detailEnsureRange(){
+  const token = ++detailLoadToken, latest = latestDate(rawStore.sales) || kstTodayStr();
+  let from;
+  if(detailState.days){ const [y, m, d] = latest.split('-').map(Number); from = dateMinusDaysStr(y, m, d, detailState.days + 3); }
+  else{ const av = await getAvailableDates('sales'); from = [...av].sort()[0] || latest; }
+  const months = []; let [y, m] = from.split('-').map(Number); const [ty, tm] = latest.split('-').map(Number);
+  while(y < ty || (y === ty && m <= tm)){ months.push({ y, m }); ({ y, m } = addMonthsYM(y, m, 1)); }
+  const need = months.filter(({ y, m }) => { const key = ymKey(y, m); return !loadedMonths.sales.has(key) || !loadedMonths.popular.has(key); });
+  if(!need.length) return;
+  const loading = document.getElementById('detailLoading');
+  loading.classList.remove('hidden');
+  try{ await Promise.all(need.flatMap(({ y, m }) => [ensureMonthLoaded('sales', y, m), ensureMonthLoaded('popular', y, m)])); }
+  catch(e){ console.error('게임 상세 기간 데이터 로드 실패', e); }
+  finally{
+    loading.classList.add('hidden');
+    if(token === detailLoadToken && !document.getElementById('detailPanel').classList.contains('translate-x-full')) renderGameDetail();
+  }
 }
 
 function openGameDetail(targetName) {
   detailCurrentName = targetName;
   syncDetailWatchBtn(targetName);
-  setText('detailTitle', targetName);
-  const salesMetrics = getMetricsForGame(rawStore.sales, targetName, 15), popMetrics = getMetricsForGame(rawStore.popular, targetName, 15);
-  setText('detailGenrePub', `${salesMetrics.genre || popMetrics.genre || '-'} · ${salesMetrics.pub || popMetrics.pub || '-'}`);
-  setText('detailSalesRank', salesMetrics.currentRank + (salesMetrics.currentRank !== '-' ? '위' : ''));
-  document.getElementById('detailSalesChange').innerHTML = rankChangeBadge(salesMetrics.change, true);
-  setText('detailPopRank', popMetrics.currentRank + (popMetrics.currentRank !== '-' ? '위' : ''));
-  document.getElementById('detailPopChange').innerHTML = rankChangeBadge(popMetrics.change, true);
-  setText('detailScoreBadge', (salesMetrics.score !== '-' ? salesMetrics.score : null) || (popMetrics.score !== '-' ? popMetrics.score : null) || '-');
-
-  const finalIconUrl = getIconUrlForGame(targetName);
-  const iconEl = document.getElementById('detailAppIcon');
-  if (iconEl) {
-    if (finalIconUrl) {
-      iconEl.src = finalIconUrl;
-      iconEl.classList.remove('hidden');
-    } else {
-      iconEl.classList.add('hidden');
-    }
-  }
-
-  const finalAppId = salesMetrics.appId || popMetrics.appId || '';
-  const linkEl = document.getElementById('detailPlayStoreLink');
-  if (finalAppId && finalAppId !== '-' && finalAppId.includes('.')) {
-      linkEl.href = `https://play.google.com/store/apps/details?id=${encodeURIComponent(finalAppId)}`;
-      linkEl.innerHTML = `<i class="fa-brands fa-google-play text-emerald-400 text-lg"></i> Google Play`;
-  } else {
-      linkEl.href = `https://play.google.com/store/search?q=${encodeURIComponent(targetName)}&c=apps`;
-      linkEl.innerHTML = `<i class="fa-brands fa-google-play text-emerald-400 text-lg"></i> Google Play 검색`;
-  }
-
-  setText('detailSalesHigh', salesMetrics.high + (salesMetrics.high !== '-' ? '위' : '')); setText('detailSalesAvg', salesMetrics.avg + (salesMetrics.avg !== '-' ? '위' : ''));
-  setText('detailPopHigh', popMetrics.high + (popMetrics.high !== '-' ? '위' : '')); setText('detailTop10Days', (salesMetrics.top10 + popMetrics.top10 > 0) ? (salesMetrics.top10 + '일') : '0일');
-
-  const allDates = [...new Set([...getDates(rawStore.sales), ...getDates(rawStore.popular)])].sort((a,b)=>dateValue(a)-dateValue(b)).slice(-15);
-  const targetKey = getGameKey(targetName);
-  const getRankData = (data, d) => { const row = data?.rows?.find(r => rowDate(r) === d && getGameKey(r) === targetKey); return row ? rankOf(row) : null; };
-  const getScoreData = (data, d) => { const row = data?.rows?.find(r => rowDate(r) === d && getGameKey(r) === targetKey); if(!row) return null; const val = parseFloat(scoreOf(row)); return (!isNaN(val) && val >= 0 && val <= 5) ? val : null; };
-
-  if(detailChartInst) detailChartInst.destroy();
-  detailChartInst = new Chart(document.getElementById('detailChart').getContext('2d'), {
-    type: 'line', data: { labels: allDates, datasets: [
-      { label: '매출 순위', clip: false, data: allDates.map(d => getRankData(rawStore.sales, d)), borderColor: '#fbbf24', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 2, tension: .25, spanGaps: true },
-      { label: '인기 순위', clip: false, data: allDates.map(d => getRankData(rawStore.popular, d)), borderColor: '#2dd4bf', backgroundColor: 'transparent', borderWidth: 2, borderDash: [4,4], pointRadius: 2, tension: .25, spanGaps: true }
-    ] },
-    options: {
-      layout: { padding: { top: 10 } }, responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
-      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.raw??'-'}위` } } },
-      scales: { x: { grid: { display: false }, ticks: { color: '#94a3b8', maxTicksLimit: 6, callback: function(val) { const label = this.getLabelForValue(val); return label ? label.substring(5).replace('-', '/') : ''; } } }, y: { reverse: true, min: 1, suggestedMax: 100, grid: { color: 'rgba(51,65,85,.35)' }, ticks: { color: '#94a3b8' } } }
-    }
-  });
-
-  if(detailScoreChartInst) detailScoreChartInst.destroy();
-  detailScoreChartInst = new Chart(document.getElementById('detailScoreChart').getContext('2d'), {
-    type: 'line', data: { labels: allDates, datasets: [{ label: '통합 평점', clip: false, data: allDates.map(d => getScoreData(rawStore.sales, d) || getScoreData(rawStore.popular, d) || null), borderColor: '#fbbf24', backgroundColor: 'rgba(251, 191, 36, 0.1)', borderWidth: 2, pointRadius: 2, tension: 0, spanGaps: true, fill: true }] },
-    options: {
-      layout: { padding: { top: 15, bottom: 5 } }, responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
-      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `평점: ${c.raw??'-'}` } } },
-      scales: { x: { display: true, grid: { display: false }, ticks: { color: '#94a3b8', maxTicksLimit: 6, callback: function(val) { const label = this.getLabelForValue(val); return label ? label.substring(5).replace('-', '/') : ''; } } }, y: { min: 0, max: 5, grid: { color: 'rgba(51,65,85,.35)' }, ticks: { color: '#fbbf24', stepSize: 1, autoSkip: false } } }
-    }
-  });
-
+  renderGameDetail();
+  document.getElementById('detailPanel').scrollTop = 0;
   document.getElementById('detailOverlay').classList.remove('hidden');
   setTimeout(() => { document.getElementById('detailOverlay').classList.remove('opacity-0'); document.getElementById('detailPanel').classList.remove('translate-x-full'); }, 10);
+  detailEnsureRange();
 }
 
 function closeGameDetail() {
@@ -3003,66 +3059,115 @@ function findNewReleaseRow(key){
   return null;
 }
 
+/* ---------- 신작 상세 패널 (신작 DB만 사용) ---------- */
+let releaseCurrentKey = '';
+function releaseKeyOf(r){ const id = String(r[5] || '').trim(); return id ? `id:${id}` : `nm:${String(r[1] || '').trim()}|${String(r[2] || '').trim()}`; }
+/* 날짜순(같은 날은 이름순) 전체 신작 순서: 이전/다음 이동용 */
+function releaseOrder(){
+  return (rawStore.newReleases?.rows || []).filter(r => String(r[0] || '').trim()).slice()
+    .sort((a, b) => String(a[0]).localeCompare(String(b[0])) || String(a[1]).localeCompare(String(b[1]), 'ko')).map(releaseKeyOf);
+}
+function releaseMiniHtml(r, sub){
+  let icon = String(r[6] || '').trim(); if(icon.startsWith("'")) icon = icon.slice(1);
+  const type = resolveCalType(r[4]), raw = String(r[4] || '').trim();
+  return `<button type="button" class="w-full flex items-center gap-2.5 p-2 rounded-lg hover:bg-slate-800/70 text-left" onclick="openReleaseDetail('${escapeAttr(releaseKeyOf(r)).replace(/&#039;/g, "\\'")}')">
+    ${icon.startsWith('http') ? `<img src="${escapeAttr(icon)}" alt="" loading="lazy" class="w-8 h-8 rounded-lg object-cover bg-slate-800 shrink-0" onerror="this.style.visibility='hidden'">` : '<span class="w-8 h-8 rounded-lg bg-slate-800 shrink-0"></span>'}
+    <span class="flex-1 min-w-0"><span class="block text-[13px] text-slate-100 truncate">${escapeHtml(String(r[1] || '-'))}</span><span class="block text-[11px] muted truncate">${escapeHtml(sub)}</span></span>
+    ${type !== 'OPEN' || (raw && raw.replace(/\s+/g, '') !== '정식출시') ? `<span class="cal-tag shrink-0" style="color:${CAL_TYPE_COLOR[type]};background:${CAL_TYPE_COLOR[type]}22">${escapeHtml(raw || CAL_TYPE_LABEL[type])}</span>` : ''}
+  </button>`;
+}
+
 function openReleaseDetail(key){
   const row = findNewReleaseRow(key);
   if(!row) return;
-
-  const date = String(row[0]||'').trim() || '-';
-  const name = String(row[1]||'').trim() || '-';
-  const platform = String(row[2]||'').trim() || '-';
-  const publisher = String(row[3]||'').trim() || '-';
-  const releaseType = String(row[4]||'').trim() || '-';
-  const gameId = String(row[5]||'').trim();
-  const icon = String(row[6]||'').trim();
-  const summary = String(row[7]||'').trim();
-  const shots = String(row[8]||'').trim();
+  releaseCurrentKey = key;
+  const date = String(row[0] || '').trim() || '-', name = String(row[1] || '').trim() || '-', platform = String(row[2] || '').trim() || '-';
+  const publisher = String(row[3] || '').trim() || '-', releaseType = String(row[4] || '').trim() || '-';
+  let icon = String(row[6] || '').trim(); if(icon.startsWith("'")) icon = icon.slice(1);
+  const summary = String(row[7] || '').trim(), shots = String(row[8] || '').trim();
+  const checkedAt = String(row[9] || '').trim(), detailAt = String(row[10] || '').trim();
 
   setText('releaseDetailTitle', name);
   setText('releaseDetailPub', publisher);
-  setText('releaseDetailDate', date);
-
   const iconEl = document.getElementById('releaseDetailIcon');
-  if(icon && icon.startsWith('http')){ iconEl.src = icon; iconEl.classList.remove('hidden'); }
-  else { iconEl.classList.add('hidden'); }
+  if(icon.startsWith('http')){ iconEl.src = icon; iconEl.classList.remove('hidden'); } else iconEl.classList.add('hidden');
 
+  /* 날짜 + 요일 + 상태 (D-n · 오늘 출시 · 출시 n일 경과) */
+  const isDate = /^\d{4}-\d{2}-\d{2}$/.test(date);
+  setText('releaseDetailDate', isDate ? `${date} (${CAL_DOW[mkToDate(date).getDay()]})` : date);
+  const st = document.getElementById('releaseDetailStatus');
+  if(isDate){
+    const diff = daysBetween(kstTodayStr(), date);
+    st.textContent = diff > 0 ? `D-${diff} 출시 예정` : diff === 0 ? '오늘 출시' : `출시 ${-diff}일 경과`;
+    st.className = `text-[12px] font-bold px-2.5 py-1 rounded-lg shrink-0 ${diff > 0 ? 'bg-indigo-500/20 text-indigo-200' : diff === 0 ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-700/60 text-slate-300'}`;
+  }else{ st.textContent = ''; st.className = 'hidden'; }
+
+  /* 배지: 출시유형(달력 칩과 같은 색) + 플랫폼 */
   const type = resolveCalType(releaseType);
-  const badgesEl = document.getElementById('releaseDetailBadges');
-  const platformBadges = platform.split('/').map(p=>p.trim()).filter(Boolean).map(p=>badgePill(p, '#94a3b8'));
-  badgesEl.innerHTML = [badgePill(releaseType, CAL_TYPE_COLOR[type])].concat(platformBadges).join('');
+  document.getElementById('releaseDetailBadges').innerHTML = [badgePill(releaseType, CAL_TYPE_COLOR[type])]
+    .concat(platform.split('/').map(p => p.trim()).filter(Boolean).map(p => badgePill(p, '#94a3b8'))).join('');
+  document.getElementById('releasePlayLink').href = `https://play.google.com/store/search?q=${encodeURIComponent(name)}&c=apps`;
 
   const summaryWrap = document.getElementById('releaseDetailSummaryWrap');
-  if(summary){ setText('releaseDetailSummary', summary); summaryWrap.classList.remove('hidden'); }
-  else summaryWrap.classList.add('hidden');
+  if(summary){ setText('releaseDetailSummary', summary); summaryWrap.classList.remove('hidden'); } else summaryWrap.classList.add('hidden');
 
-  const shotsWrap = document.getElementById('releaseDetailShotsWrap');
-  const shotsEl = document.getElementById('releaseDetailShots');
-  const shotList = shots ? shots.split('|').map(s=>s.trim()).filter(Boolean) : [];
+  /* 스크린샷: 첫 장은 상단 배너로도 사용 */
+  const shotList = shots ? shots.split('|').map(s => s.trim()).filter(Boolean) : [];
   currentShotList = shotList;
+  const banner = document.getElementById('releaseDetailBanner');
+  if(shotList.length){ document.getElementById('releaseDetailBannerImg').src = shotList[0]; banner.classList.remove('hidden'); } else banner.classList.add('hidden');
+  const shotsWrap = document.getElementById('releaseDetailShotsWrap'), shotsEl = document.getElementById('releaseDetailShots');
+  setText('releaseShotCount', shotList.length ? `${shotList.length}장 · 눌러서 크게 보기` : '');
   if(shotList.length){
-    shotsEl.innerHTML = shotList.map((u,i)=>`
+    shotsEl.innerHTML = shotList.map((u, i) => `
       <div class="relative group shrink-0 cursor-pointer" onclick="openLightbox(${i})">
-        <img src="${escapeAttr(u)}" class="h-32 max-w-[240px] rounded-lg object-cover block" alt="" onerror="this.parentElement.style.display='none'">
+        <img src="${escapeAttr(u)}" class="h-36 max-w-[260px] rounded-lg object-cover block" alt="" loading="lazy" onerror="this.parentElement.style.display='none'">
         <div class="absolute inset-0 rounded-lg bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center pointer-events-none">
           <i class="fa-solid fa-magnifying-glass-plus text-white text-base opacity-0 group-hover:opacity-100 transition-opacity"></i>
         </div>
       </div>`).join('');
     shotsWrap.classList.remove('hidden');
-  } else shotsWrap.classList.add('hidden');
+  }else shotsWrap.classList.add('hidden');
 
-  /*
-  const linkEl = document.getElementById('releaseDetailWameLink');
-  if(gameId){
-    linkEl.href = `https://www.wame.is/ko/game/${encodeURIComponent(gameId)}`;
-    linkEl.classList.remove('hidden'); linkEl.classList.add('flex');
-  } else { linkEl.classList.add('hidden'); linkEl.classList.remove('flex'); }
-  */
+  /* 같은 날 출시 · 같은 퍼블리셔 (모두 신작 DB 안에서) */
+  const rows = rawStore.newReleases?.rows || [];
+  const sameDay = isDate ? rows.filter(r => String(r[0] || '').trim() === date && releaseKeyOf(r) !== key) : [];
+  document.getElementById('releaseSameDayWrap').classList.toggle('hidden', !sameDay.length);
+  setText('releaseSameDayCount', sameDay.length ? `${sameDay.length}개` : '');
+  document.getElementById('releaseSameDay').innerHTML = sameDay.slice(0, 12).map(r => releaseMiniHtml(r, [calPlatformShort(r[2]), String(r[3] || '').trim()].filter(Boolean).join(' · '))).join('')
+    + (sameDay.length > 12 ? `<div class="text-[11px] muted px-2 pt-1">외 ${sameDay.length - 12}개 · 신작 달력에서 전체 보기</div>` : '');
+  const samePub = publisher !== '-' ? rows.filter(r => String(r[3] || '').trim() === publisher && releaseKeyOf(r) !== key).sort((a, b) => String(b[0]).localeCompare(String(a[0]))).slice(0, 8) : [];
+  document.getElementById('releaseSamePubWrap').classList.toggle('hidden', !samePub.length);
+  document.getElementById('releaseSamePub').innerHTML = samePub.map(r => releaseMiniHtml(r, `${String(r[0] || '').trim()} · ${calPlatformShort(r[2])}`)).join('');
 
+  setText('releaseCheckedAt', checkedAt ? `정보 확인 ${checkedAt}${detailAt ? ` · 상세 확인 ${detailAt}` : ''}` : '');
+
+  /* 이전/다음 */
+  const order = releaseOrder(), i = order.indexOf(key);
+  document.getElementById('releasePrevBtn').disabled = i <= 0;
+  document.getElementById('releaseNextBtn').disabled = i < 0 || i >= order.length - 1;
+  ['releasePrevBtn', 'releaseNextBtn'].forEach(id => document.getElementById(id).classList.toggle('opacity-40', document.getElementById(id).disabled));
+
+  document.getElementById('releaseDetailPanel').scrollTop = 0;
   document.getElementById('releaseDetailOverlay').classList.remove('hidden');
   setTimeout(() => {
     document.getElementById('releaseDetailOverlay').classList.remove('opacity-0');
     document.getElementById('releaseDetailPanel').classList.remove('translate-x-full');
   }, 10);
 }
+function releaseNav(d){
+  const order = releaseOrder(), next = order[order.indexOf(releaseCurrentKey) + d];
+  if(next) openReleaseDetail(next);
+}
+
+/* 패널 키보드: Esc 닫기, 신작 패널은 ←/→ 이전·다음 (스크린샷 확대 중에는 그쪽이 우선) */
+document.addEventListener('keydown', e => {
+  if(!document.getElementById('shotLightbox')?.classList.contains('hidden')) return;
+  const relOpen = !document.getElementById('releaseDetailPanel').classList.contains('translate-x-full');
+  const detOpen = !document.getElementById('detailPanel').classList.contains('translate-x-full');
+  if(e.key === 'Escape'){ if(relOpen) closeReleaseDetail(); else if(detOpen) closeGameDetail(); }
+  else if(relOpen && !e.target?.matches?.('input, select, textarea') && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')){ e.preventDefault(); releaseNav(e.key === 'ArrowLeft' ? -1 : 1); }
+});
 
 function closeReleaseDetail() {
   document.getElementById('releaseDetailPanel').classList.add('translate-x-full');
@@ -4219,8 +4324,8 @@ function syncDetailWatchBtn(name){
   const b = document.getElementById('detailWatchBtn');
   if(!b) return;
   const on = mkWatchKeys().has(getGameKey(name));
-  b.innerHTML = `<i class="fa-${on ? 'solid' : 'regular'} fa-star"></i>`;
-  b.classList.toggle('text-amber-400', on); b.classList.toggle('text-slate-400', !on);
+  b.innerHTML = `<i class="fa-${on ? 'solid text-amber-400' : 'regular'} fa-star mr-1"></i>${on ? '관심 게임 등록됨' : '관심 게임'}`;
+  b.classList.toggle('text-amber-200', on);
   b.title = on ? '관심 게임에서 빼기' : '관심 게임에 추가';
   b.setAttribute('aria-label', b.title); b.setAttribute('aria-pressed', on ? 'true' : 'false');
 }
