@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Game Market Intelligence</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 <style>
 :root { color-scheme: dark; }
@@ -164,7 +164,7 @@ select option { background-color: #0f172a; color: #f1f5f9; }
     </div>
     <p class="text-xs muted mt-1">Google Play 시장 모니터링</p>
   </div>
-  <div class="flex items-center gap-2.5">
+  <div class="flex flex-wrap items-center gap-2.5 [&>*]:whitespace-nowrap">
     <span id="todayLabel" class="text-xs muted font-medium"></span>
     <span id="syncStatus" class="text-xs px-3 py-1.5 rounded-full bg-slate-800 text-slate-400">초기화 중</span>
     <button id="refreshBtn" onclick="fetchAllData()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white text-xs font-medium transition-colors">
@@ -313,7 +313,7 @@ select option { background-color: #0f172a; color: #f1f5f9; }
       </div>
 
       <!-- 매출 TOP100 장르 점유 -->
-      <div class="card rounded-xl p-4 relative overflow-hidden flex flex-col">
+      <div class="card rounded-xl p-4 relative overflow-hidden flex flex-col col-span-2 lg:col-span-1">
         <i class="fa-solid fa-crown text-amber-400/10 text-4xl absolute -bottom-2 -right-2 pointer-events-none z-0"></i>
         <div class="text-[11px] muted relative z-10">장르 점유 (매출 TOP100)</div>
         <div id="todayGenreStack" class="flex w-full h-2 rounded-full overflow-hidden bg-slate-800 mt-2.5 relative z-10"></div>
@@ -1410,7 +1410,25 @@ function switchView(view){
   if(view==='business')openBusinessAnalysis();
   if(view==='search')openSearchView();
   if(view==='calendar')ensureCalendarMonthLoaded();
+  /* 현재 탭을 URL 해시에 기록: 새로고침·링크 공유 시 같은 탭으로 열림 */
+  history.replaceState(null, '', view === 'dashboard' ? location.pathname + location.search : `#${view}`);
 }
+
+const VALID_VIEWS = ['dashboard','business','calendar','sales','popular','newReleases','search'];
+function viewFromHash(){ const v = decodeURIComponent(location.hash.slice(1)); return VALID_VIEWS.includes(v) ? v : 'dashboard'; }
+
+/* KST 기준 오늘 날짜 (사용자 PC 시간대와 무관하게 스토어 집계일과 비교) */
+function kstTodayStr(){ return new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' }); }
+/* 크롤러는 KST 07시 전후 실행 → 08시 전까지는 전일 데이터가 최신이어도 정상으로 본다 */
+const CRAWL_READY_HOUR_KST = 8;
+function expectedLatestDateStr(){
+  const kstHour = Number(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul', hour: 'numeric', hourCycle: 'h23' }));
+  const today = kstTodayStr();
+  if(kstHour >= CRAWL_READY_HOUR_KST) return today;
+  const [y, m, d] = today.split('-').map(Number);
+  return dateMinusDaysStr(y, m, d, 1);
+}
+function daysBetween(a, b){ return Math.round((dateValue(b) - dateValue(a)) / 86400000); }
 
 async function openSearchView(){
   loadGameIndex(); /* 전체 기간 게임명 인덱스는 백그라운드로 준비 (차트 렌더를 막지 않음) */
@@ -3150,17 +3168,42 @@ async function fetchAllData(){
     if(currentView==='search')openSearchView();
     if(currentView==='calendar')ensureCalendarMonthLoaded();
     if(currentView==='business')openBusinessAnalysis();
-    document.getElementById('view-dashboard').classList.remove('hidden');
-    status.className='text-xs px-3 py-1.5 rounded-full bg-emerald-950 text-emerald-300';
-    status.innerHTML='<span class="inline-block w-1.5 h-1.5 bg-emerald-400 rounded-full mr-1"></span> 정상 동기화';
+    if(currentView==='dashboard') document.getElementById('view-dashboard').classList.remove('hidden');
+    lastSyncAt = Date.now();
+    const syncTime = new Date(lastSyncAt).toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' });
+    /* 수집 파이프라인 지연 감지: 최신 데이터 날짜가 기대 수집일(KST 08시 기준)보다 이전이면 경고 표시 */
+    const latest = latestDate(rawStore.sales), expected = expectedLatestDateStr();
+    const lag = latest ? daysBetween(latest, kstTodayStr()) : null;
+    if(latest && latest < expected){
+      status.className='text-xs px-3 py-1.5 rounded-full bg-amber-950 text-amber-300';
+      status.innerHTML=`<i class="fa-solid fa-clock mr-1"></i> 수집 지연 · ${lag}일 전 데이터 · ${syncTime}`;
+      status.title=`최신 수집일 ${latest} (기대 수집일 ${expected}, KST ${CRAWL_READY_HOUR_KST}시 기준). 크롤러 실행 상태를 확인하세요.`;
+    }else{
+      status.className='text-xs px-3 py-1.5 rounded-full bg-emerald-950 text-emerald-300';
+      status.innerHTML=`<span class="inline-block w-1.5 h-1.5 bg-emerald-400 rounded-full mr-1"></span> 정상 동기화 · ${syncTime}`;
+      status.title=`최신 수집일 ${latest}`;
+    }
   }catch(err){
     console.error(err);
     status.className='text-xs px-3 py-1.5 rounded-full bg-rose-950 text-rose-300';
-    status.innerHTML=`<i class="fa-solid fa-circle-exclamation mr-1"></i> 에러: ${err.message}`;
+    status.innerHTML=`<i class="fa-solid fa-circle-exclamation mr-1"></i> 에러: ${escapeHtml(err.message)}`;
   }finally{btn.disabled=false;}
 }
 
-window.addEventListener('DOMContentLoaded',fetchAllData);
+let lastSyncAt = 0;
+const AUTO_REFRESH_MS = 30 * 60 * 1000;
+
+window.addEventListener('DOMContentLoaded', async () => {
+  await fetchAllData();
+  const initial = viewFromHash();
+  if(initial !== 'dashboard') switchView(initial);
+});
+window.addEventListener('hashchange', () => { const v = viewFromHash(); if(v !== currentView) switchView(v); });
+/* 탭을 오래 열어두었다가 돌아오면 30분 경과 시 자동 갱신 */
+document.addEventListener('visibilitychange', () => {
+  const btn = document.getElementById('refreshBtn');
+  if(document.visibilityState === 'visible' && lastSyncAt && Date.now() - lastSyncAt > AUTO_REFRESH_MS && !btn.disabled) fetchAllData();
+});
 </script>
 </body>
 </html>
