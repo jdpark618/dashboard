@@ -3201,7 +3201,7 @@ function mkPubScores(idx, mon){
 
 /* ---------- 포지션 맵 ---------- */
 const mkPos = { period: 'day', month: '', trail: true, size: false, genre: '', pub: '', q: '', railOpen: { sales: false, popular: false } };
-const MK_POS_RAIL_SHOWN = 8;
+const MK_POS_RAIL_SHOWN = 24; /* 접힌 줄에 넣어 둘 칩 후보 수 (보이는 개수는 화면 폭에 맞춤) */
 const MK_POS_TICKS = [1, 2, 3, 5, 10, 20, 30, 50, 100];
 let mkPosChartInst = null;
 const mkImgCache = new Map();
@@ -3302,13 +3302,19 @@ function mkRenderPosScatter(D){
   if(mkPosChartInst){ mkPosChartInst.destroy(); mkPosChartInst = null; }
   const watch = mkWatchKeys();
   /* 검색에 걸린 게임은 필터와 상관없이 보이게 */
-  const pts = D.plane.map(it => { const hl = mkPosHit(it); return { x: it.sr, y: it.pr, it, dim: !hl && !mkPosMatch(it), hl, watch: watch.has(getGameKey(it.name)), size: mkPosIconSize(it) }; });
+  /* tx·ty = 실제 순위, x·y = 겹침을 풀어 그리는 위치 */
+  const pts = D.plane.map(it => { const hl = mkPosHit(it); return { x: it.sr, y: it.pr, tx: it.sr, ty: it.pr, it, dim: !hl && !mkPosMatch(it), hl, watch: watch.has(getGameKey(it.name)), size: mkPosIconSize(it) }; });
   /* 그리는 순서: 흐린 것 → 일반 → 강조(검색·관심) */
   pts.sort((a, b) => (b.dim - a.dim) || ((a.hl || a.watch) - (b.hl || b.watch)));
   const font = w => `${w} 11px "Pretendard Variable", Pretendard, sans-serif`;
-  const axis = title => ({
-    type: 'logarithmic', reverse: true, min: 0.8, max: 125,
-    afterBuildTicks: ax => { ax.ticks = MK_POS_TICKS.map(value => ({ value })); },
+  /* 눈금 범위: 데이터(이동 궤적 포함)의 가장 높은 순위보다 한 칸 위부터 → 빈 상단을 줄임 */
+  const axisMin = key => {
+    const top = Math.min(100, ...pts.flatMap(p => [p.it[key], ...(mkPos.trail && p.it.prev ? [p.it.prev[key]] : [])]));
+    return ([...MK_POS_TICKS].reverse().find(t => t < top * 0.95) || 1) * 0.8;
+  };
+  const axis = (title, min) => ({
+    type: 'logarithmic', reverse: true, min, max: 125,
+    afterBuildTicks: ax => { ax.ticks = MK_POS_TICKS.filter(t => t >= min).map(value => ({ value })); },
     ticks: { color: '#94a3b8', font: { size: 11 }, callback: v => MK_POS_TICKS.includes(v) ? `${v}` : '' },
     grid: { color: c => [10, 50].includes(c.tick?.value) ? 'rgba(148,163,184,.42)' : 'rgba(71,85,105,.2)', lineWidth: c => [10, 50].includes(c.tick?.value) ? 1.2 : 1 },
     title: { display: true, text: title, color: '#94a3b8', font: { size: 11, weight: '600' } }
@@ -3327,7 +3333,7 @@ function mkRenderPosScatter(D){
         const x0 = x.getPixelForValue(p.it.prev.sr), y0 = y.getPixelForValue(p.it.prev.pr), x1 = x.getPixelForValue(p.x), y1 = y.getPixelForValue(p.y);
         const len = Math.hypot(x1 - x0, y1 - y0), stop = p.size / 2 + 3;
         if(len < stop + 6) return;
-        const better = (p.it.prev.sr + p.it.prev.pr) > (p.x + p.y), col = better ? 'rgba(248,113,113,.75)' : 'rgba(96,165,250,.75)';
+        const better = (p.it.prev.sr + p.it.prev.pr) > (p.tx + p.ty), col = better ? 'rgba(248,113,113,.75)' : 'rgba(96,165,250,.75)';
         const ex = x1 - (x1 - x0) / len * stop, ey = y1 - (y1 - y0) / len * stop, ang = Math.atan2(ey - y0, ex - x0);
         ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = 1.3;
         ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(ex, ey); ctx.stroke();
@@ -3360,7 +3366,7 @@ function mkRenderPosScatter(D){
       /* 이름표: 검색·관심 → 양쪽 10위권 → 이동 폭 큰 순. 겹치면 생략, 최대 10개(검색·관심은 항상) */
       const live = pts.filter(p => !p.dim);
       const boxes = live.map(p => { const [cx, cy] = pos(p); return [cx - p.size / 2 - 1, cy - p.size / 2 - 1, cx + p.size / 2 + 1, cy + p.size / 2 + 1]; });
-      const cand = live.map(p => ({ p, score: (p.hl ? 1e4 : 0) + (p.watch ? 5e3 : 0) + (p.x <= 10 && p.y <= 10 ? 300 : 0) + (p.it.prev ? Math.abs(Math.log(p.it.prev.sr / p.x)) + Math.abs(Math.log(p.it.prev.pr / p.y)) : 0) * 60 + (100 - Math.min(p.x, p.y)) / 5 })).sort((a, b) => b.score - a.score);
+      const cand = live.map(p => ({ p, score: (p.hl ? 1e4 : 0) + (p.watch ? 5e3 : 0) + (p.tx <= 10 && p.ty <= 10 ? 300 : 0) + (p.it.prev ? Math.abs(Math.log(p.it.prev.sr / p.tx)) + Math.abs(Math.log(p.it.prev.pr / p.ty)) : 0) * 60 + (100 - Math.min(p.tx, p.ty)) / 5 })).sort((a, b) => b.score - a.score);
       const placed = [], hit = (r, q) => !(r[2] < q[0] || r[0] > q[2] || r[3] < q[1] || r[1] > q[3]);
       ctx.font = font(600); ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
       let n = 0;
@@ -3380,12 +3386,39 @@ function mkRenderPosScatter(D){
       ctx.restore();
     }
   };
+  /* 겹친 아이콘을 실제 위치 근처에서 서로 밀어 퍼뜨림 (크기·화면이 바뀔 때마다 다시 계산) */
+  const spread = {
+    id: 'mkPosSpread',
+    afterLayout(chart){
+      const { chartArea: a, scales: { x, y } } = chart;
+      const P = pts.map(p => { const ox = x.getPixelForValue(p.tx), oy = y.getPixelForValue(p.ty); return { p, ox, oy, x: ox, y: oy }; });
+      for(let round = 0; round < 80; round++){
+        let moved = false;
+        for(let i = 0; i < P.length; i++) for(let j = i + 1; j < P.length; j++){
+          const A = P[i], B = P[j], need = (A.p.size + B.p.size) / 2 + 2;
+          let dx = B.x - A.x, dy = B.y - A.y, d = Math.hypot(dx, dy);
+          if(d >= need) continue;
+          if(d < 0.01){ dx = Math.cos(i * 7 + j); dy = Math.sin(i * 7 + j); d = 1; }
+          const push = (need - d) / 2;
+          A.x -= dx / d * push; A.y -= dy / d * push; B.x += dx / d * push; B.y += dy / d * push;
+          moved = true;
+        }
+        P.forEach(q => {
+          const h = q.p.size / 2;
+          q.x += (q.ox - q.x) * 0.03; q.y += (q.oy - q.y) * 0.03;
+          q.x = Math.min(a.right - h, Math.max(a.left + h, q.x)); q.y = Math.min(a.bottom - h, Math.max(a.top + h, q.y));
+        });
+        if(!moved) break;
+      }
+      P.forEach(q => { q.p.x = x.getValueForPixel(q.x); q.p.y = y.getValueForPixel(q.y); });
+    }
+  };
   mkPosChartInst = new Chart(canvas.getContext('2d'), {
     type: 'scatter',
     data: { datasets: [{ data: pts, pointRadius: c => (c.raw?.size || 24) / 2, pointHoverRadius: c => (c.raw?.size || 24) / 2 + 2, backgroundColor: 'rgba(0,0,0,0)', borderColor: 'rgba(0,0,0,0)', hoverBackgroundColor: 'rgba(0,0,0,0)', hoverBorderColor: 'rgba(0,0,0,0)', clip: false }] },
     options: {
       maintainAspectRatio: false, animation: false, layout: { padding: { top: 6, right: 14, left: 4 } },
-      scales: { x: axis('매출 순위 (오른쪽이 1위 · 로그 눈금)'), y: axis('인기 순위 (위쪽이 1위 · 로그 눈금)') },
+      scales: { x: axis('매출 순위 (오른쪽이 1위 · 로그 눈금)', axisMin('sr')), y: axis('인기 순위 (위쪽이 1위 · 로그 눈금)', axisMin('pr')) },
       plugins: {
         legend: { display: false },
         tooltip: {
@@ -3405,7 +3438,7 @@ function mkRenderPosScatter(D){
       onClick: (e, els) => { const p = els.length && mkPosChartInst.data.datasets[0].data[els[0].index]; if(p && !p.dim) openGameDetail(p.it.name); },
       onHover: (e, els) => { const p = els.length && mkPosChartInst.data.datasets[0].data[els[0].index]; e.native.target.style.cursor = p && !p.dim ? 'pointer' : 'default'; }
     },
-    plugins: [draw]
+    plugins: [spread, draw]
   });
 }
 
@@ -3413,19 +3446,44 @@ function mkRenderPosScatter(D){
 function mkRenderPosRails(D){
   const watch = mkWatchKeys();
   const row = (store, label, cls) => {
-    const list = D.rails[store], open = mkPos.railOpen[store];
-    /* 접힌 상태에서도 검색에 걸린 칩은 함께 보여줌 */
+    const list = D.rails[store], open = !!mkPos.railOpen[store];
+    /* 접힌 상태: 앞쪽 칩 후보 + 검색에 걸린 칩. 실제로 보일 개수는 mkFitRails가 화면 폭에 맞춰 정함 */
     const shown = open ? list : [...list.slice(0, MK_POS_RAIL_SHOWN), ...(mkPos.q ? list.slice(MK_POS_RAIL_SHOWN).filter(mkPosHit) : [])];
     const chips = shown.map(it => {
       const url = getIconUrlForGame(it.name), r = store === 'sales' ? it.sr : it.pr, hl = mkPosHit(it);
       const st = `${hl || mkPosMatch(it) ? '' : 'dim'} ${hl ? 'hl' : ''} ${watch.has(getGameKey(it.name)) ? 'watch' : ''}`;
       return `<span class="pos-chip ${st}" data-game="${escapeAttr(it.name)}" title="${escapeAttr(it.name)}">${url ? `<img src="${escapeAttr(url)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">` : '<span class="ph"></span>'}<span class="nm">${escapeHtml(it.name)}</span><b class="${cls} font-semibold shrink-0">${mkPosRank(r)}위</b></span>`;
     }).join('');
-    const more = list.length > MK_POS_RAIL_SHOWN ? `<button type="button" class="pos-chip" style="padding-left:10px" data-railtoggle="${store}">${open ? '접기' : `+${list.length - MK_POS_RAIL_SHOWN}개 더`}</button>` : '';
-    return `<div class="flex flex-wrap items-center gap-1.5"><span class="text-[11px] font-semibold ${cls} w-[120px] shrink-0">${label} ${list.length}개</span>${chips || '<span class="text-[11px] muted">없음</span>'}${more}</div>`;
+    const more = list.length ? `<button type="button" class="pos-chip" style="padding-left:10px" data-railtoggle="${store}">${open ? '접기' : `+${list.length - shown.length}개 더`}</button>` : '';
+    return `<div class="flex flex-wrap items-center gap-1.5" data-rail="${store}" data-total="${list.length}" data-open="${open ? 1 : 0}"><span class="text-[11px] font-semibold ${cls} w-[120px] shrink-0">${label} ${list.length}개</span>${chips || '<span class="text-[11px] muted">없음</span>'}${more}</div>`;
   };
   document.getElementById('mkPosRails').innerHTML = row('sales', '매출에만 순위권', 't-sales') + row('popular', '인기에만 순위권', 't-pop');
+  mkFitRails();
 }
+
+/* 접힌 줄: 화면 폭에 맞춰 넘치는 칩을 숨기고 "+N개 더"에 합침 (좁은 화면은 3줄까지, 검색 칩은 항상 표시) */
+function mkFitRails(){
+  document.querySelectorAll('#mkPosRails [data-rail]').forEach(row => {
+    const more = row.querySelector('[data-railtoggle]');
+    if(!more) return;
+    if(row.dataset.open === '1'){ more.style.display = ''; return; }
+    const chips = [...row.querySelectorAll('.pos-chip[data-game]')], total = Number(row.dataset.total);
+    chips.forEach(c => { c.style.display = ''; });
+    more.style.display = '';
+    const lines = innerWidth < 640 ? 3 : 1, top = row.firstElementChild.offsetTop, lineH = more.offsetHeight + 6;
+    const fits = () => more.offsetTop + more.offsetHeight <= top + lines * lineH;
+    let visible = chips.length;
+    const label = () => { more.textContent = `+${total - visible}개 더`; };
+    label();
+    for(let i = chips.length - 1; i > 0 && !fits(); i--){
+      if(chips[i].classList.contains('hl')) continue;
+      chips[i].style.display = 'none'; visible--; label();
+    }
+    if(total - visible <= 0) more.style.display = 'none';
+  });
+}
+let mkFitTimer = null;
+window.addEventListener('resize', () => { clearTimeout(mkFitTimer); mkFitTimer = setTimeout(() => { if(currentView === 'business' && mkSection === 'structure') mkFitRails(); }, 150); });
 
 function mkRenderPosition(){
   const D = mkPosData();
