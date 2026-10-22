@@ -7,16 +7,21 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
-:root { color-scheme: dark; }
-body { background:#080d18; }
-.card { background:rgba(15,23,42,.86); border:1px solid rgba(71,85,105,.5); }
+:root { color-scheme: dark;
+  /* 배경 → 카드 3단계 톤 */
+  --bg:#070b14; --surface:#0e1626; --surface-2:#141e33; --line:rgba(51,65,85,.7);
+  /* 의미색: 색 하나에 의미 하나 */
+  --c-sales:#fbbf24; --c-pop:#2dd4bf; --c-up:#f87171; --c-down:#60a5fa; --c-new:#a78bfa; }
+body { background:var(--bg); font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFont,system-ui,'Apple SD Gothic Neo','Malgun Gothic',sans-serif; font-variant-numeric:tabular-nums; letter-spacing:-0.01em; }
+.card { background:var(--surface); border:1px solid var(--line); }
 .muted { color:#94a3b8; }
 .tab { font-size:12px; font-weight:600; color:#64748b; padding:10px 15px; border-bottom:2px solid transparent; cursor:pointer; }
 .tab:hover { color:#cbd5e1; }
 .tab.active { color:#818cf8; border-color:#6366f1; }
-.rank-up { color:#34d399; }
-.rank-down { color:#fb7185; }
+.rank-up { color:var(--c-up); }
+.rank-down { color:var(--c-down); }
 .rank-flat { color:#94a3b8; }
 .scrollbar::-webkit-scrollbar { height:7px; width:7px; }
 .scrollbar::-webkit-scrollbar-thumb { background:#334155; border-radius:8px; }
@@ -121,8 +126,8 @@ select option { background-color: #0f172a; color: #f1f5f9; }
 .gs-nm { flex:1; min-width:0; font-size:12px; color:#e2e8f0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .gs-nm mark { background:rgba(250,204,21,.22); color:#fde68a; border-radius:2px; }
 .gs-bd { font-size:10px; font-weight:600; padding:2px 6px; border-radius:4px; white-space:nowrap; }
-.gs-bd.s { background:rgba(99,102,241,.2); color:#c7d2fe; }
-.gs-bd.p { background:rgba(16,185,129,.18); color:#a7f3d0; }
+.gs-bd.s { background:rgba(251,191,36,.15); color:#fde68a; }
+.gs-bd.p { background:rgba(45,212,191,.15); color:#99f6e4; }
 .gs-bd.old { background:rgba(51,65,85,.5); color:#94a3b8; font-weight:500; }
 .gs-empty { font-size:12px; color:#64748b; padding:10px 12px; }
 .mk-card-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:12px; }
@@ -159,6 +164,17 @@ select option { background-color: #0f172a; color: #f1f5f9; }
 .mk-sec { font-size:13px; font-weight:600; color:#64748b; padding:9px 14px; border-bottom:2px solid transparent; margin-bottom:-1px; white-space:nowrap; transition:color .15s; }
 .mk-sec:hover { color:#cbd5e1; }
 .mk-sec.on { color:#e0e7ff; border-color:#6366f1; }
+/* 의미색 유틸리티 */
+.t-sales { color:var(--c-sales); } .t-pop { color:var(--c-pop); } .t-up { color:var(--c-up); } .t-down { color:var(--c-down); } .t-new { color:var(--c-new); }
+.bg-sales { background-color:var(--c-sales); } .bg-pop { background-color:var(--c-pop); } .bg-up { background-color:var(--c-up); } .bg-down { background-color:var(--c-down); } .bg-new { background-color:var(--c-new); }
+.chip-up { background:rgba(248,113,113,.14); color:#fca5a5; } .chip-down { background:rgba(96,165,250,.14); color:#93c5fd; } .chip-new { background:rgba(167,139,250,.14); color:#c4b5fd; }
+/* 키보드 이동 시 포커스 표시 */
+:focus-visible { outline:2px solid #818cf8; outline-offset:2px; border-radius:6px; }
+/* 대시보드·시장 분석의 아주 작은 글씨를 읽을 수 있는 크기로 */
+#view-dashboard .text-\[9px\], #view-dashboard .text-\[9\.5px\], #view-dashboard .text-\[10px\], #view-business .text-\[9px\], #view-business .text-\[10px\] { font-size:11px; }
+#view-dashboard .text-\[10\.5px\], #view-business .text-\[11px\] { font-size:12px; }
+/* ⓘ 설명을 눌러서도 보기 (휴대폰) */
+.tap-tip { position:fixed; z-index:200; max-width:280px; background:#0f172a; color:#e2e8f0; border:1px solid rgba(99,102,241,.5); border-radius:8px; padding:8px 10px; font-size:12px; line-height:1.55; box-shadow:0 10px 25px -3px rgba(0,0,0,.7); }
 </style>
 </head>
 
@@ -216,12 +232,9 @@ select option { background-color: #0f172a; color: #f1f5f9; }
   <section>
     <div class="flex items-center justify-between mb-3 px-0.5">
       <h2 class="text-base font-bold text-slate-200 flex items-center gap-2">
-        <i class="fa-solid fa-chart-simple text-indigo-400"></i>Today Market Summary
+        <i class="fa-solid fa-chart-simple text-indigo-400"></i>오늘의 시장 요약
       </h2>
-      <div class="flex items-center gap-2">
-        <span class="text-[11px] muted">기준일:</span>
-        <span id="snapshotDate" class="text-xs px-2.5 py-0.5 rounded-md bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 font-semibold">-</span>
-      </div>
+      <span class="text-[11px] muted">카드를 누르면 게임 상세</span>
     </div>
 
     <div id="freezeWarning" class="hidden mb-4 flex items-center gap-2 px-4 py-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-400 text-sm font-medium">
@@ -232,18 +245,17 @@ select option { background-color: #0f172a; color: #f1f5f9; }
       </div>
     </div>
 
-    <div class="grid grid-cols-2 lg:grid-cols-5 gap-3">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
       <!-- 인기 1위 -->
       <div id="cardPopular1" class="card rounded-xl p-4 relative overflow-hidden summary-card-hover flex flex-col justify-between">
         <div>
-          <i class="fa-solid fa-fire text-emerald-400/10 text-4xl absolute -bottom-2 -right-2 pointer-events-none"></i>
           <div class="text-[11px] muted flex justify-between items-center">
-            <span class="font-semibold text-emerald-400">인기 1위</span>
+            <span class="font-semibold t-pop">인기 1위</span>
             <span id="todayPopularChange"></span>
           </div>
           <div class="flex items-center gap-2.5 mt-2.5 relative z-10">
-            <img id="todayPopularIcon" src="" class="w-8 h-8 rounded-lg object-cover bg-slate-800 hidden shrink-0" alt="">
-            <div id="todayPopularTop" class="text-[14px] font-bold truncate text-slate-100">-</div>
+            <img id="todayPopularIcon" src="" class="w-10 h-10 rounded-xl object-cover bg-slate-800 hidden shrink-0" alt="">
+            <div id="todayPopularTop" class="text-[15px] font-bold truncate text-slate-50">-</div>
           </div>
         </div>
         <div class="flex items-center justify-between gap-1.5 text-[11px] mt-3 pt-2 border-t border-slate-800/80 relative z-10">
@@ -258,14 +270,13 @@ select option { background-color: #0f172a; color: #f1f5f9; }
       <!-- 매출 1위 -->
       <div id="cardSales1" class="card rounded-xl p-4 relative overflow-hidden summary-card-hover flex flex-col justify-between">
         <div>
-          <i class="fa-solid fa-coins text-indigo-400/10 text-4xl absolute -bottom-2 -right-2 pointer-events-none"></i>
           <div class="text-[11px] muted flex justify-between items-center">
-            <span class="font-semibold text-indigo-400">매출 1위</span>
+            <span class="font-semibold t-sales">매출 1위</span>
             <span id="todaySalesChange"></span>
           </div>
           <div class="flex items-center gap-2.5 mt-2.5 relative z-10">
-            <img id="todaySalesIcon" src="" class="w-8 h-8 rounded-lg object-cover bg-slate-800 hidden shrink-0" alt="">
-            <div id="todaySalesTop" class="text-[14px] font-bold truncate text-slate-100">-</div>
+            <img id="todaySalesIcon" src="" class="w-10 h-10 rounded-xl object-cover bg-slate-800 hidden shrink-0" alt="">
+            <div id="todaySalesTop" class="text-[15px] font-bold truncate text-slate-50">-</div>
           </div>
         </div>
         <div class="flex items-center justify-between gap-1.5 text-[11px] mt-3 pt-2 border-t border-slate-800/80 relative z-10">
@@ -280,14 +291,13 @@ select option { background-color: #0f172a; color: #f1f5f9; }
       <!-- 인기순위 신규 진입 -->
       <div id="cardNew1" class="card rounded-xl p-4 relative overflow-hidden summary-card-hover flex flex-col justify-between">
         <div>
-          <i class="fa-solid fa-seedling text-sky-400/10 text-4xl absolute -bottom-2 -right-2 pointer-events-none"></i>
           <div class="text-[11px] muted flex justify-between items-center">
-            <span class="font-semibold text-sky-400">인기 신규 진입</span>
+            <span class="font-semibold t-new">인기 신규 진입</span>
             <span id="todayNewChange"></span>
           </div>
           <div class="flex items-center gap-2.5 mt-2.5 relative z-10">
-            <img id="todayNewIcon" src="" class="w-8 h-8 rounded-lg object-cover bg-slate-800 hidden shrink-0" alt="">
-            <div id="todayNewTop" class="text-[14px] font-bold truncate text-slate-100">-</div>
+            <img id="todayNewIcon" src="" class="w-10 h-10 rounded-xl object-cover bg-slate-800 hidden shrink-0" alt="">
+            <div id="todayNewTop" class="text-[15px] font-bold truncate text-slate-50">-</div>
           </div>
         </div>
         <div class="flex items-center justify-between gap-1.5 text-[11px] mt-3 pt-2 border-t border-slate-800/80 relative z-10">
@@ -302,14 +312,13 @@ select option { background-color: #0f172a; color: #f1f5f9; }
       <!-- 매출 최고 상승 -->
       <div id="cardRising1" class="card rounded-xl p-4 relative overflow-hidden summary-card-hover flex flex-col justify-between">
         <div>
-          <i class="fa-solid fa-rocket text-rose-400/10 text-4xl absolute -bottom-2 -right-2 pointer-events-none"></i>
           <div class="text-[11px] muted flex justify-between items-center">
-            <span class="font-semibold text-rose-400">매출 최고 상승</span>
+            <span class="font-semibold t-up">매출 최고 상승</span>
             <span id="todayRisingChange"></span>
           </div>
           <div class="flex items-center gap-2.5 mt-2.5 relative z-10">
-            <img id="todayRisingIcon" src="" class="w-8 h-8 rounded-lg object-cover bg-slate-800 hidden shrink-0" alt="">
-            <div id="todayRisingTop" class="text-[14px] font-bold truncate text-slate-100">-</div>
+            <img id="todayRisingIcon" src="" class="w-10 h-10 rounded-xl object-cover bg-slate-800 hidden shrink-0" alt="">
+            <div id="todayRisingTop" class="text-[15px] font-bold truncate text-slate-50">-</div>
           </div>
         </div>
         <div class="flex items-center justify-between gap-1.5 text-[11px] mt-3 pt-2 border-t border-slate-800/80 relative z-10">
@@ -321,13 +330,6 @@ select option { background-color: #0f172a; color: #f1f5f9; }
         </div>
       </div>
 
-      <!-- 매출 TOP100 장르 점유 -->
-      <div class="card rounded-xl p-4 relative overflow-hidden flex flex-col col-span-2 lg:col-span-1">
-        <i class="fa-solid fa-crown text-amber-400/10 text-4xl absolute -bottom-2 -right-2 pointer-events-none z-0"></i>
-        <div class="text-[11px] muted relative z-10">장르 점유 (매출 TOP100)</div>
-        <div id="todayGenreStack" class="flex w-full h-2 rounded-full overflow-hidden bg-slate-800 mt-2.5 relative z-10"></div>
-        <div id="todayGenreLegend" class="flex flex-col gap-1 mt-2 text-[10px] font-medium relative z-10"></div>
-      </div>
     </div>
   </section>
 
@@ -341,7 +343,7 @@ select option { background-color: #0f172a; color: #f1f5f9; }
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <div class="card rounded-xl p-5">
         <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-800/80">
-          <h3 class="font-semibold text-sm flex items-center gap-1.5 text-emerald-400">
+          <h3 class="font-semibold text-sm flex items-center gap-1.5 t-pop">
             <i class="fa-solid fa-fire"></i> 인기순위 TOP 10
           </h3>
           <span class="text-[10px] muted">Google Play 인기</span>
@@ -350,7 +352,7 @@ select option { background-color: #0f172a; color: #f1f5f9; }
       </div>
       <div class="card rounded-xl p-5">
         <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-800/80">
-          <h3 class="font-semibold text-sm flex items-center gap-1.5 text-indigo-400">
+          <h3 class="font-semibold text-sm flex items-center gap-1.5 t-sales">
             <i class="fa-solid fa-coins"></i> 매출순위 TOP 10
           </h3>
           <span class="text-[10px] muted">Google Play 매출</span>
@@ -367,24 +369,24 @@ select option { background-color: #0f172a; color: #f1f5f9; }
         <i class="fa-solid fa-arrow-trend-up text-indigo-400"></i>오늘의 순위 변동
       </h2>
     </div>
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
       <div class="card rounded-xl p-5">
-        <div class="text-xs font-semibold mb-3 flex items-center justify-between text-sky-400 pb-2 border-b border-slate-800">
-          <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-sky-400"></span>인기순위 신규 진입</span>
+        <div class="text-xs font-semibold mb-3 flex items-center justify-between t-new pb-2 border-b border-slate-800">
+          <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-new"></span>인기순위 신규 진입</span>
           <span class="text-[10px] muted font-normal">인기 순위 기준</span>
         </div>
         <ul id="newEntriesList" class="divide-y divide-slate-900/70"></ul>
       </div>
       <div class="card rounded-xl p-5">
-        <div class="text-xs font-semibold mb-3 flex items-center justify-between text-emerald-400 pb-2 border-b border-slate-800">
-          <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400"></span>매출 급상승</span>
+        <div class="text-xs font-semibold mb-3 flex items-center justify-between t-up pb-2 border-b border-slate-800">
+          <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-up"></span>매출 급상승</span>
           <span class="text-[10px] muted font-normal">전일 대비 매출</span>
         </div>
         <ul id="salesRisingList" class="divide-y divide-slate-900/70"></ul>
       </div>
       <div class="card rounded-xl p-5">
-        <div class="text-xs font-semibold mb-3 flex items-center justify-between text-rose-400 pb-2 border-b border-slate-800">
-          <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-rose-400"></span>매출 급하락</span>
+        <div class="text-xs font-semibold mb-3 flex items-center justify-between t-down pb-2 border-b border-slate-800">
+          <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-down"></span>매출 급하락</span>
           <span class="text-[10px] muted font-normal">전일 대비 매출</span>
         </div>
         <ul id="salesFallingList" class="divide-y divide-slate-900/70"></ul>
@@ -405,7 +407,7 @@ select option { background-color: #0f172a; color: #f1f5f9; }
         <div>
           <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-800/80">
             <h3 class="font-semibold text-sm text-slate-200">인기순위 TOP 100 장르 비중</h3>
-            <span class="text-[10px] text-emerald-400 font-semibold">인기 기준</span>
+            <span class="text-[10px] t-pop font-semibold">인기 기준</span>
           </div>
           <div id="popularGenreBars"></div>
         </div>
@@ -414,7 +416,7 @@ select option { background-color: #0f172a; color: #f1f5f9; }
         <div>
           <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-800/80">
             <h3 class="font-semibold text-sm text-slate-200">매출순위 TOP 100 장르 비중</h3>
-            <span class="text-[10px] text-indigo-400 font-semibold">매출 기준</span>
+            <span class="text-[10px] t-sales font-semibold">매출 기준</span>
           </div>
           <div id="salesGenreBars"></div>
         </div>
@@ -629,10 +631,10 @@ select option { background-color: #0f172a; color: #f1f5f9; }
           </select>
         </div>
         <label class="flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 cursor-pointer">
-          <input type="checkbox" id="toggleSearchPopular" checked onchange="renderSearchCharts()"> <i class="fa-solid fa-fire text-emerald-400"></i> 인기 순위
+          <input type="checkbox" id="toggleSearchPopular" checked onchange="renderSearchCharts()"> <i class="fa-solid fa-fire t-pop"></i> 인기 순위
         </label>
         <label class="flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 cursor-pointer">
-          <input type="checkbox" id="toggleSearchSales" checked onchange="renderSearchCharts()"> <i class="fa-solid fa-coins text-indigo-400"></i> 매출 순위
+          <input type="checkbox" id="toggleSearchSales" checked onchange="renderSearchCharts()"> <i class="fa-solid fa-coins t-sales"></i> 매출 순위
         </label>
       </div>
     </div>
@@ -646,11 +648,11 @@ select option { background-color: #0f172a; color: #f1f5f9; }
     </div>
     <div id="searchAnchorNote" class="hidden -mt-2 mb-4 text-[11px] text-amber-300/90"></div>
     <div id="searchPopularWrap" class="mb-6">
-      <div class="text-xs font-semibold muted mb-2"><i class="fa-solid fa-fire text-emerald-400 mr-1"></i>인기 순위 추이</div>
+      <div class="text-xs font-semibold muted mb-2"><i class="fa-solid fa-fire t-pop mr-1"></i>인기 순위 추이</div>
       <div class="h-[300px]"><canvas id="searchPopularChart"></canvas></div>
     </div>
     <div id="searchSalesWrap">
-      <div class="text-xs font-semibold muted mb-2"><i class="fa-solid fa-coins text-indigo-400 mr-1"></i>매출 순위 추이</div>
+      <div class="text-xs font-semibold muted mb-2"><i class="fa-solid fa-coins t-sales mr-1"></i>매출 순위 추이</div>
       <div class="h-[300px]"><canvas id="searchSalesChart"></canvas></div>
     </div>
   </section>
@@ -702,7 +704,7 @@ select option { background-color: #0f172a; color: #f1f5f9; }
     <div class="flex items-center gap-3 pr-2 min-w-0">
       <img id="detailAppIcon" src="" class="w-11 h-11 rounded-xl object-cover bg-slate-800 hidden shrink-0 shadow" alt="">
       <div class="min-w-0">
-        <div class="text-[11px] text-indigo-400 font-semibold mb-0.5 truncate" id="detailGenrePub">-</div>
+        <div class="text-[11px] text-slate-300 font-semibold mb-0.5 truncate" id="detailGenrePub">-</div>
         <h2 class="text-lg font-bold leading-tight truncate" id="detailTitle">-</h2>
       </div>
     </div>
@@ -721,14 +723,14 @@ select option { background-color: #0f172a; color: #f1f5f9; }
     </div>
     <div class="grid grid-cols-2 gap-3">
       <div class="card p-4 rounded-xl border-slate-700/50 bg-slate-800/30">
-        <div class="text-[11px] muted mb-1"><i class="fa-solid fa-coins text-indigo-400 mr-1.5"></i>현재 매출 순위</div>
+        <div class="text-[11px] muted mb-1"><i class="fa-solid fa-coins t-sales mr-1.5"></i>현재 매출 순위</div>
         <div class="flex items-end gap-2 mt-2">
           <span class="text-2xl font-bold" id="detailSalesRank">-</span>
           <span id="detailSalesChange" class="mb-0.5"></span>
         </div>
       </div>
       <div class="card p-4 rounded-xl border-slate-700/50 bg-slate-800/30">
-        <div class="text-[11px] muted mb-1"><i class="fa-solid fa-fire text-emerald-400 mr-1.5"></i>현재 인기 순위</div>
+        <div class="text-[11px] muted mb-1"><i class="fa-solid fa-fire t-pop mr-1.5"></i>현재 인기 순위</div>
         <div class="flex items-end gap-2 mt-2">
           <span class="text-2xl font-bold" id="detailPopRank">-</span>
           <span id="detailPopChange" class="mb-0.5"></span>
@@ -739,8 +741,8 @@ select option { background-color: #0f172a; color: #f1f5f9; }
       <div class="flex items-center justify-between mb-3">
         <h4 class="text-sm font-semibold">순위 복합 추이 <span class="text-[11px] font-normal text-slate-400">(최근 15일)</span></h4>
         <div class="flex items-center gap-3 text-[10px] font-medium">
-          <span class="flex items-center gap-1 text-indigo-300"><span class="w-2 h-2 rounded-full bg-indigo-400"></span>매출</span>
-          <span class="flex items-center gap-1 text-emerald-300"><span class="w-2 h-2 rounded-full bg-emerald-400"></span>인기</span>
+          <span class="flex items-center gap-1 t-sales"><span class="w-2 h-2 rounded-full bg-sales"></span>매출</span>
+          <span class="flex items-center gap-1 t-pop"><span class="w-2 h-2 rounded-full bg-pop"></span>인기</span>
         </div>
       </div>
       <div class="h-[220px] card rounded-xl p-3 border-slate-700/50"><canvas id="detailChart"></canvas></div>
@@ -756,13 +758,13 @@ select option { background-color: #0f172a; color: #f1f5f9; }
       <h4 class="text-sm font-semibold mb-3">순위 분석 <span class="text-[11px] muted font-normal ml-1">(최근 15일 데이터 기준)</span></h4>
       <div class="card rounded-xl border-slate-700/50 divide-y divide-slate-700/50 text-sm">
         <div class="flex justify-between items-center p-3.5">
-          <span class="muted text-xs">최고 매출 순위</span><span class="font-bold text-indigo-300" id="detailSalesHigh">-</span>
+          <span class="muted text-xs">최고 매출 순위</span><span class="font-bold t-sales" id="detailSalesHigh">-</span>
         </div>
         <div class="flex justify-between items-center p-3.5">
           <span class="muted text-xs">평균 매출 순위</span><span class="font-bold text-slate-200" id="detailSalesAvg">-</span>
         </div>
         <div class="flex justify-between items-center p-3.5">
-          <span class="muted text-xs">최고 인기 순위</span><span class="font-bold text-emerald-300" id="detailPopHigh">-</span>
+          <span class="muted text-xs">최고 인기 순위</span><span class="font-bold t-pop" id="detailPopHigh">-</span>
         </div>
         <div class="flex justify-between items-center p-3.5">
           <span class="muted text-xs">TOP 10 진입 일수</span><span class="font-bold text-slate-200" id="detailTop10Days">-</span>
@@ -850,8 +852,8 @@ const monthFetchInFlight = {};
 let searchDebounceTimer = null;
 
 /* 공통 장르 고정 색상 팔레트 */
-const BIZ_GENRE_COLORS={'롤플레잉':'#f87171','RPG':'#f87171','전략':'#818cf8','퍼즐':'#34d399','어드벤처':'#38bdf8','카지노':'#fbbf24','스포츠':'#a78bfa','카드':'#fb7185','액션':'#22d3ee','시뮬레이션':'#facc15','보드':'#4ade80','캐주얼':'#f472b6','아케이드':'#2dd4bf','단어':'#c084fc','기타':'#64748b','미분류':'#475569'};
-const BIZ_GENRE_FALLBACK_PALETTE=['#818cf8','#34d399','#38bdf8','#fbbf24','#a78bfa','#fb7185','#22d3ee','#facc15','#4ade80','#f472b6'];
+const BIZ_GENRE_COLORS={'롤플레잉':'#f97316','RPG':'#f97316','전략':'#818cf8','퍼즐':'#a3e635','어드벤처':'#22d3ee','카지노':'#eab308','스포츠':'#c084fc','카드':'#fb7185','액션':'#0ea5e9','시뮬레이션':'#d97706','보드':'#10b981','캐주얼':'#f472b6','아케이드':'#14b8a6','단어':'#e879f9','음악':'#fda4af','레이싱':'#fdba74','기타':'#64748b','미분류':'#475569'};
+const BIZ_GENRE_FALLBACK_PALETTE=['#93c5fd','#bef264','#f9a8d4','#67e8f9','#d8b4fe','#fcd34d','#86efac','#fca5a5','#a5b4fc','#5eead4'];
 function bizIsMiscGenre(g){ return g==='기타'||g==='미분류'||g.includes('기타'); }
 function bizGenreColor(g){
   if(BIZ_GENRE_COLORS[g]) return BIZ_GENRE_COLORS[g];
@@ -1247,12 +1249,12 @@ function buildSnapshotFallback(salesData, popData) {
 function rankChangeBadge(change, large=false, flatLabel='-'){
   const c=String(change||'').trim(), textClass = large ? 'text-sm' : 'text-[11px]';
   if(!c || c === '-' || c === '0' || c.includes('유지')) return `<span class="rank-flat ${textClass} font-semibold whitespace-nowrap">${flatLabel}</span>`;
-  if(/new/i.test(c)) return `<span class="text-indigo-300 ${textClass} font-semibold whitespace-nowrap">NEW</span>`;
+  if(/new/i.test(c)) return `<span class="t-new ${textClass} font-semibold whitespace-nowrap">NEW</span>`;
   if(c.startsWith('▲')) return `<span class="rank-up ${textClass} font-semibold whitespace-nowrap">${escapeHtml(c)}</span>`;
   if(c.startsWith('▼')) return `<span class="rank-down ${textClass} font-semibold whitespace-nowrap">${escapeHtml(c)}</span>`;
   const num = Number(c);
   if(!isNaN(num)) {
-    if(num > 900) return `<span class="text-indigo-300 ${textClass} font-semibold whitespace-nowrap">NEW</span>`;
+    if(num > 900) return `<span class="t-new ${textClass} font-semibold whitespace-nowrap">NEW</span>`;
     if(num > 0) return `<span class="rank-up ${textClass} font-semibold whitespace-nowrap">▲ ${num}</span>`;
     if(num < 0) return `<span class="rank-down ${textClass} font-semibold whitespace-nowrap">▼ ${Math.abs(num)}</span>`;
   }
@@ -1272,62 +1274,46 @@ function getLatestScore(gameTitle) {
 /* 통일된 평점 뱃지 헬퍼 */
 function renderScoreBadgeHtml(scoreVal) {
   if (!scoreVal || scoreVal === '-') return '';
-  return `<span class="text-amber-400 font-semibold text-[11px] flex items-center shrink-0 bg-amber-400/10 px-1.5 py-0.5 rounded border border-amber-400/20"><i class="fa-solid fa-star text-[9px] mr-1"></i>${escapeHtml(scoreVal)}</span>`;
+  return `<span class="whitespace-nowrap text-slate-300"><i class="fa-solid fa-star text-amber-400/70 text-[9px] mr-0.5"></i>${escapeHtml(scoreVal)}</span>`;
 }
 
-/* 리스트 렌더링: 순위 강조, 라벨링(인기/매출 N위), 쉐브론 클릭 힌트, 메타정보 통일 */
+/* 리스트 렌더링: 1줄 게임명 · 2줄 순위/장르/평점, 오른쪽은 변동만 (좁은 칸에서도 게임명이 보이도록) */
 function renderRankList(elId, items, {showMeta=true, listType='normal'}={}) {
   const el = document.getElementById(elId);
   if (!items || !items.length) { el.innerHTML = '<li class="text-xs muted py-4 text-center">데이터 없음</li>'; return; }
-  
+
   el.innerHTML = items.map((it, idx) => {
     const rawScore = it.score || getLatestScore(it.name);
     const scoreVal = (rawScore && !isNaN(parseFloat(rawScore))) ? parseFloat(rawScore).toFixed(1) : rawScore;
-    const scoreBadge = renderScoreBadgeHtml(scoreVal);
-    
+
     let displayChange = it.change;
     if (elId === 'newEntriesList' && (!displayChange || displayChange === '-' || displayChange === '0')) displayChange = 'NEW';
 
     const iconUrl = it.iconUrl || getIconUrlForGame(it.name);
     const iconHtml = iconUrl
-      ? `<img src="${iconUrl}" class="w-6 h-6 rounded-md object-cover bg-slate-800 shrink-0" alt="" onerror="this.style.display='none'">`
-      : '';
+      ? `<img src="${iconUrl}" class="w-8 h-8 rounded-lg object-cover bg-slate-800 shrink-0" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`
+      : '<span class="w-8 h-8 rounded-lg bg-slate-800 shrink-0"></span>';
 
-    /* 순위 시각적 위계 및 라벨링 */
-    let rankBadgeHtml = '';
-    if (listType === 'top10') {
-      const rankNum = idx + 1;
-      let rankColor = 'text-slate-400';
-      if (rankNum === 1) rankColor = 'text-amber-400 font-black text-sm';
-      else if (rankNum === 2) rankColor = 'text-slate-300 font-bold text-sm';
-      else if (rankNum === 3) rankColor = 'text-amber-600 font-bold text-sm';
-      else rankColor = 'text-slate-400 font-semibold text-xs';
-      rankBadgeHtml = `<span class="${rankColor} w-5 text-right shrink-0">${rankNum}</span>`;
-    } else if (listType === 'newPop') {
-      rankBadgeHtml = `<span class="text-[10px] font-semibold text-sky-400 bg-sky-500/10 px-1.5 py-0.5 rounded border border-sky-500/20 whitespace-nowrap shrink-0">인기 ${it.rank}위</span>`;
-    } else if (listType === 'risingSales') {
-      rankBadgeHtml = `<span class="text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 whitespace-nowrap shrink-0">매출 ${it.rank}위</span>`;
-    } else if (listType === 'fallingSales') {
-      rankBadgeHtml = `<span class="text-[10px] font-semibold text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20 whitespace-nowrap shrink-0">매출 ${it.rank}위</span>`;
-    } else {
-      rankBadgeHtml = `<span class="text-[11px] muted w-5 text-right shrink-0">${escapeHtml(it.rank)}</span>`;
-    }
+    /* TOP10은 왼쪽에 순위 숫자, 나머지는 2줄째에 해당 스토어 순위 */
+    const rankNumHtml = listType === 'top10'
+      ? `<span class="w-5 text-right shrink-0 font-bold ${idx < 3 ? 'text-slate-100 text-sm' : 'text-slate-400 text-xs'}">${idx + 1}</span>`
+      : '';
+    const meta = [];
+    if (listType === 'newPop') meta.push(`<span class="t-pop font-semibold">인기 ${escapeHtml(it.rank)}위</span>`);
+    else if (listType === 'risingSales' || listType === 'fallingSales') meta.push(`<span class="t-sales font-semibold">매출 ${escapeHtml(it.rank)}위</span>`);
+    if (showMeta && it.genre) meta.push(escapeHtml(it.genre));
+    if (showMeta && listType === 'top10' && it.publisher) meta.push(escapeHtml(it.publisher));
+    if (scoreVal && scoreVal !== '-') meta.push(renderScoreBadgeHtml(scoreVal));
 
     return `
-      <li class="group flex items-center justify-between gap-2 py-2 border-b border-slate-900/70 last:border-0 hover:bg-slate-800/40 cursor-pointer rounded-lg px-2 transition-colors" onclick="openGameDetail('${escapeAttr(it.name).replace(/&#039;/g,"\\'")}')">
-        <div class="flex items-center gap-2.5 min-w-0 flex-1">
-          ${rankBadgeHtml}
-          ${iconHtml}
-          <div class="min-w-0 flex-1">
-            <div class="text-xs font-medium truncate text-slate-200 group-hover:text-indigo-300 transition-colors">${escapeHtml(it.name)}</div>
-            ${showMeta ? `<div class="text-[10px] muted truncate mt-0.5">${escapeHtml(it.genre || '-')}${it.genre && it.publisher ? ' · ' : ''}${escapeHtml(it.publisher || '-')}</div>` : ''}
-          </div>
+      <li class="group flex items-center gap-2.5 py-2 border-b border-slate-900/70 last:border-0 hover:bg-slate-800/40 cursor-pointer rounded-lg px-2 transition-colors" onclick="openGameDetail('${escapeAttr(it.name).replace(/&#039;/g,"\\'")}')">
+        ${rankNumHtml}
+        ${iconHtml}
+        <div class="min-w-0 flex-1">
+          <div class="text-[13px] font-medium truncate text-slate-100 group-hover:text-white">${escapeHtml(it.name)}</div>
+          <div class="text-[11px] muted truncate mt-0.5">${meta.join('<span class="mx-1 text-slate-600">·</span>')}</div>
         </div>
-        <div class="flex items-center gap-2 shrink-0">
-          ${scoreBadge}
-          <div class="w-14 text-right flex justify-end">${rankChangeBadge(displayChange)}</div>
-          <i class="fa-solid fa-chevron-right text-[9px] text-slate-600 group-hover:text-slate-300 transition-colors ml-0.5"></i>
-        </div>
+        <div class="w-14 text-right flex justify-end shrink-0">${rankChangeBadge(displayChange, false)}</div>
       </li>`;
   }).join('');
 }
@@ -1433,7 +1419,7 @@ function renderToday(){
     if(topEl) topEl.textContent = item.name;
     if(rankEl) rankEl.textContent = item.rank ? `${item.rank}위` : '';
     if(metaEl) metaEl.textContent = `${item.genre || '-'} · ${item.publisher || '-'}`;
-    if(changeEl) changeEl.innerHTML = customBadge || rankChangeBadge(item.change, false, '유지');
+    if(changeEl) changeEl.innerHTML = customBadge || rankChangeBadge(item.change, false, '-');
 
     const rawSc = item.score || getLatestScore(item.name);
     const formattedScore = (rawSc && !isNaN(parseFloat(rawSc))) ? parseFloat(rawSc).toFixed(1) : rawSc;
@@ -1458,12 +1444,12 @@ function renderToday(){
   /* 신규 진입 게임 중복 방지 (인기 1위와 같을 경우 2순위 후보 폴백) */
   const pop1Name = p.popularTop10[0]?.name;
   let newCandidate = p.newEntries.find(x => x.name !== pop1Name) || p.newEntries[0];
-  const newRankBadge = newCandidate ? `<span class="text-[10px] px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-300 font-semibold border border-sky-500/20 whitespace-nowrap">인기 ${newCandidate.rank}위</span>` : null;
+  const newRankBadge = newCandidate ? `<span class="text-[10px] px-1.5 py-0.5 rounded chip-new font-semibold whitespace-nowrap">인기 ${newCandidate.rank}위</span>` : null;
   bindTopCard(newCandidate, 'New', newRankBadge);
 
   /* 최고 상승 카드: 구체적 랭크 표기 */
   const risingItem = p.salesRising[0];
-  const risingBadge = risingItem ? `<span class="text-[10px] px-1.5 py-0.5 rounded bg-rose-500/10 text-rose-300 font-semibold border border-rose-500/20 whitespace-nowrap">▲${risingItem.diff} (${risingItem.rank}위)</span>` : null;
+  const risingBadge = risingItem ? `<span class="text-[10px] px-1.5 py-0.5 rounded chip-up font-semibold whitespace-nowrap">▲${risingItem.diff}</span>` : null;
   bindTopCard(risingItem, 'Rising', risingBadge);
 
   /* 장르 점유: 1위 장르만 보여주면 나머지 분포가 안 보여서, 상위 3개 + 그 외로 100% 스택 바를 그린다 */
@@ -2494,8 +2480,8 @@ function openGameDetail(targetName) {
   if(detailChartInst) detailChartInst.destroy();
   detailChartInst = new Chart(document.getElementById('detailChart').getContext('2d'), {
     type: 'line', data: { labels: allDates, datasets: [
-      { label: '매출 순위', clip: false, data: allDates.map(d => getRankData(rawStore.sales, d)), borderColor: '#818cf8', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 2, tension: .25, spanGaps: true },
-      { label: '인기 순위', clip: false, data: allDates.map(d => getRankData(rawStore.popular, d)), borderColor: '#34d399', backgroundColor: 'transparent', borderWidth: 2, borderDash: [4,4], pointRadius: 2, tension: .25, spanGaps: true }
+      { label: '매출 순위', clip: false, data: allDates.map(d => getRankData(rawStore.sales, d)), borderColor: '#fbbf24', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 2, tension: .25, spanGaps: true },
+      { label: '인기 순위', clip: false, data: allDates.map(d => getRankData(rawStore.popular, d)), borderColor: '#2dd4bf', backgroundColor: 'transparent', borderWidth: 2, borderDash: [4,4], pointRadius: 2, tension: .25, spanGaps: true }
     ] },
     options: {
       layout: { padding: { top: 10 } }, responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
@@ -2766,7 +2752,7 @@ function mkEmpty(text){ return `<div class="muted text-xs py-6 text-center">${te
 function mkInfo(tip){ return tip ? `<i class="fa-regular fa-circle-question mk-info" title="${escapeAttr(tip)}" aria-label="${escapeAttr(tip)}"></i>` : ''; }
 /* KPI 값: 매출·인기 두 값을 한 줄에 (라벨은 작게, 숫자는 크게) */
 function mkPair(salesVal, popVal){
-  return `<span class="text-[11px] font-semibold text-indigo-300">매출</span> ${salesVal} <span class="muted font-normal">·</span> <span class="text-[11px] font-semibold text-emerald-300">인기</span> ${popVal}`;
+  return `<span class="text-[11px] font-semibold t-sales">매출</span> ${salesVal} <span class="muted font-normal">·</span> <span class="text-[11px] font-semibold t-pop">인기</span> ${popVal}`;
 }
 function mkKpiCard(label, value, sub, subCls = 'muted', tip = ''){
   return `<div class="card rounded-xl p-4"><div class="text-[11px] muted">${label}${mkInfo(tip)}</div><div class="text-xl font-bold mt-2 truncate">${value}</div><div class="text-[10px] mt-1 ${subCls} truncate">${sub}</div></div>`;
@@ -2856,7 +2842,7 @@ function mkSpark(values, color, titles = []){
 function mkSparkInOut(days){
   const max = Math.max(1, ...days.map(x => Math.max(x.inn, x.out)));
   const col = (x, i) => { const last = i === days.length - 1 ? '' : 'opacity-40';
-    return `<div class="flex-1 flex flex-col" title="${mkShort(x.d)} 진입 ${x.inn} / 이탈 ${x.out}"><div class="h-4 flex items-end"><div class="w-full rounded-t-sm bg-emerald-400 ${last}" style="height:${Math.round(x.inn / max * 100)}%"></div></div><div class="h-4 flex items-start"><div class="w-full rounded-b-sm bg-rose-400 ${last}" style="height:${Math.round(x.out / max * 100)}%"></div></div></div>`; };
+    return `<div class="flex-1 flex flex-col" title="${mkShort(x.d)} 진입 ${x.inn} / 이탈 ${x.out}"><div class="h-4 flex items-end"><div class="w-full rounded-t-sm bg-up ${last}" style="height:${Math.round(x.inn / max * 100)}%"></div></div><div class="h-4 flex items-start"><div class="w-full rounded-b-sm bg-down ${last}" style="height:${Math.round(x.out / max * 100)}%"></div></div></div>`; };
   return `<div class="flex gap-[3px] border-slate-700">${days.map(col).join('')}</div>`;
 }
 function mkKpiSparkCard(label, valueHtml, tagHtml, sparkHtml, sub, tip = ''){
@@ -2884,7 +2870,7 @@ function mkRenderDaily(){
   ['sales', 'popular'].forEach(s => {
     const days = mkDailySeries(B[s].idx), t = days.at(-1);
     const label = `${MK_STORE_LABEL[s]} TOP100 변동`;
-    const tip = `전일 ${MK_STORE_LABEL[s]} TOP100에 없다가 기준일에 들어온 게임 수(진입)와, 전일 TOP100에 있다가 기준일에 빠진 게임 수(이탈). 막대는 최근 7일, 위쪽 초록이 진입·아래쪽 빨강이 이탈.`;
+    const tip = `전일 ${MK_STORE_LABEL[s]} TOP100에 없다가 기준일에 들어온 게임 수(진입)와, 전일 TOP100에 있다가 기준일에 빠진 게임 수(이탈). 막대는 최근 7일, 위쪽 빨강이 진입·아래쪽 파랑이 이탈.`;
     if(!t){ kpiHtml.push(mkKpiCard(label, '-', '전일 데이터 없음', 'muted', tip)); return; }
     const avg = mkAvgPast(days, x => x.inn + x.out);
     kpiHtml.push(mkKpiSparkCard(label,
@@ -2917,8 +2903,8 @@ function mkRenderDaily(){
       cc.ins.forEach(k => trackMap.set(k, { key: k, entryDate: ds[i], entryRank: cc.b.get(k).rank, name: cc.b.get(k).name, publisher: cc.b.get(k).publisher }));
     }
     mkTypeButtons('mkDEntryType', 'dEntryType', [
-      ['in', `오늘 진입 ${c.ins.length}`, 'bg-emerald-500/15 text-emerald-300'],
-      ['out', `오늘 이탈 ${c.outs.length}`, 'bg-rose-500/15 text-rose-300'],
+      ['in', `오늘 진입 ${c.ins.length}`, 'chip-up'],
+      ['out', `오늘 이탈 ${c.outs.length}`, 'chip-down'],
       ['track', `최근 7일 진입 ${trackMap.size}`, 'bg-indigo-500/20 text-indigo-300']
     ]);
     const box = document.getElementById('mkDEntries');
@@ -2987,15 +2973,15 @@ function mkRenderPositionMap(elId, sMap, pMap, opt){
       <div class="${expanded ? 'max-h-[260px] overflow-y-auto scrollbar pr-1' : ''}">${shown.length ? shown.map(x => `
         <div class="flex items-center gap-2 py-1.5 px-1.5 -mx-1.5 rounded-lg hover:bg-slate-800/60 cursor-pointer" data-game="${escapeAttr(x.name)}">
           <div class="flex-1 min-w-0 text-xs">${mkGameCell(x.name)}</div>
-          <span class="text-[10px] whitespace-nowrap"><span class="text-indigo-300">매출 ${rk(x.sr)}</span> <span class="muted">·</span> <span class="text-emerald-300">인기 ${rk(x.pr)}</span></span>
+          <span class="text-[10px] whitespace-nowrap"><span class="t-sales">매출 ${rk(x.sr)}</span> <span class="muted">·</span> <span class="t-pop">인기 ${rk(x.pr)}</span></span>
         </div>`).join('') : '<div class="muted text-[11px] py-3 text-center">해당 게임 없음</div>'}</div>
       ${list.length > 5 ? `<button type="button" data-posexpand="${stateKey}" class="mt-1 text-[10px] text-slate-400 hover:text-slate-200 text-left">${expanded ? '접기' : `외 ${list.length - 5}개 더 보기`}</button>` : ''}
     </div>`;
   };
   document.getElementById(elId).innerHTML = `<div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-    ${col('sales', '매출형', `매출 ${opt.unit}50위 이내 · 인기 50위 밖`, 'text-indigo-300', 'bg-indigo-400')}
-    ${col('popular', '인기형', `인기 ${opt.unit}50위 이내 · 매출 50위 밖`, 'text-emerald-300', 'bg-emerald-400')}
-    ${col('both', '양쪽 상위', `매출·인기 모두 ${opt.unit}50위 이내`, 'text-sky-300', 'bg-sky-400')}
+    ${col('sales', '매출형', `매출 ${opt.unit}50위 이내 · 인기 50위 밖`, 't-sales', 'bg-sales')}
+    ${col('popular', '인기형', `인기 ${opt.unit}50위 이내 · 매출 50위 밖`, 't-pop', 'bg-pop')}
+    ${col('both', '양쪽 상위', `매출·인기 모두 ${opt.unit}50위 이내`, 'text-slate-100', 'bg-slate-100')}
   </div>
   <p class="text-[10px] muted mt-3">매출형은 소수 유저 과금 비중이 큰 구조, 인기형은 유입 대비 수익화가 약한 구조일 가능성이 높습니다. 정렬은 두 순위 차이가 큰 순입니다.${opt.note ? ' ' + opt.note : ''}</p>`;
 }
@@ -3047,9 +3033,9 @@ function mkRenderWeekly(){
       const sc = wk.map(m => mkWeekEntrants(I.sales, m)), pc = wk.map(m => mkWeekEntrants(I.popular, m));
       const bars = wk.map((m, i) => ({ m, s: sc[i].prevHasData ? sc[i].list.length : 0, p: pc[i].prevHasData ? pc[i].list.length : 0 }));
       const max = Math.max(1, ...bars.flatMap(x => [x.s, x.p]));
-      const spark = `<div class="flex items-end gap-[3px] h-7">${bars.map((x, i) => `<div class="flex-1 flex items-end gap-px h-full ${i === bars.length - 1 ? '' : 'opacity-40'}" title="${mkShort(x.m)} 주 · 매출 ${x.s} / 인기 ${x.p}"><div class="flex-1 rounded-sm bg-indigo-400" style="height:${Math.max(6, Math.round(x.s / max * 100))}%"></div><div class="flex-1 rounded-sm bg-emerald-400" style="height:${Math.max(6, Math.round(x.p / max * 100))}%"></div></div>`).join('')}</div>`;
+      const spark = `<div class="flex items-end gap-[3px] h-7">${bars.map((x, i) => `<div class="flex-1 flex items-end gap-px h-full ${i === bars.length - 1 ? '' : 'opacity-40'}" title="${mkShort(x.m)} 주 · 매출 ${x.s} / 인기 ${x.p}"><div class="flex-1 rounded-sm bg-sales" style="height:${Math.max(6, Math.round(x.s / max * 100))}%"></div><div class="flex-1 rounded-sm bg-pop" style="height:${Math.max(6, Math.round(x.p / max * 100))}%"></div></div>`).join('')}</div>`;
       return mkKpiSparkCard('주간 신규 진입', mkPair(ent.sales.list.length, ent.popular.list.length), '', spark, `최근 8주 · 전주 대비 매출 ${dTxt(cntDelta('sales'))} · 인기 ${dTxt(cntDelta('popular'))}`,
-        '전주에는 TOP100 기록이 없다가 지난주에 하루라도 TOP100에 든 게임 수. 막대는 최근 8주(파랑 매출·초록 인기).');
+        '전주에는 TOP100 기록이 없다가 지난주에 하루라도 TOP100에 든 게임 수. 막대는 최근 8주(골드 매출·청록 인기).');
     })() +
     mkKpiCard('4주 후 순위권 유지율', mkPair(rS != null ? rS + '%' : '-', rP != null ? rP + '%' : '-'),
       '4주 전 TOP100 게임 중 지난주에도 남은 비율', 'muted',
@@ -3068,7 +3054,7 @@ function mkRenderWeekly(){
   /* 신규 진입 (주간) · 탭: 진입 게임 / 잔존율 */
   const we = ent[mkTabs.wEntries];
   mkTypeButtons('mkWEntryType', 'wEntryType', [
-    ['list', `진입 게임 ${we.prevHasData ? we.list.length : '-'}`, 'bg-emerald-500/15 text-emerald-300'],
+    ['list', `진입 게임 ${we.prevHasData ? we.list.length : '-'}`, 'chip-up'],
     ['cohort', '잔존율', 'bg-indigo-500/20 text-indigo-300']
   ]);
   if(mkTabs.wEntryType === 'list'){
@@ -3130,9 +3116,9 @@ function mkPubScores(idx, mon){
 
 const MK_POS_OUT = 106; /* 100위 밖 표시 위치 */
 const MK_POS_GROUPS = [
-  { key: 'both', label: '양쪽 상위', color: '#38bdf8' },
-  { key: 'sales', label: '매출형', color: '#818cf8' },
-  { key: 'popular', label: '인기형', color: '#34d399' },
+  { key: 'both', label: '양쪽 상위', color: '#f1f5f9' },
+  { key: 'sales', label: '매출형', color: '#fbbf24' },
+  { key: 'popular', label: '인기형', color: '#2dd4bf' },
   { key: 'rest', label: '그 외', color: '#64748b' }
 ];
 let mkPosChartInst = null;
@@ -3344,7 +3330,7 @@ function mkRenderDebut(){
   const perWeek = weeks.map(m => list.filter(x => x.first >= m && x.first <= mkAddDays(m, 6)).length);
   const avgBest = list.length ? list.reduce((t, x) => t + x.best, 0) / list.length : null;
   document.getElementById('mkDebutKpis').innerHTML =
-    mkKpiSparkCard('데뷔 게임', `${list.length}개`, '', mkSpark(perWeek, 'bg-emerald-400', weeks.map((m, i) => `${mkShort(m)} 주 · ${perWeek[i]}개`)), `최근 ${MK_DEBUT_WEEKS}주 · 막대는 주별 데뷔 수`,
+    mkKpiSparkCard('데뷔 게임', `${list.length}개`, '', mkSpark(perWeek, 'bg-new',weeks.map((m, i) => `${mkShort(m)} 주 · ${perWeek[i]}개`)), `최근 ${MK_DEBUT_WEEKS}주 · 막대는 주별 데뷔 수`,
       `${label} 순위 데이터에 처음 등장한 게임 수. 수집 초기에는 원래 있던 게임이 섞여 많게 잡힐 수 있고, 데이터가 쌓일수록 정확해집니다.`) +
     mkKpiCard('지금도 TOP100', list.length ? `${kept}개 <span class="text-sm muted font-normal">(${Math.round(kept / list.length * 100)}%)</span>` : '-', `기준일 ${mkShort(base)} 순위권 유지`, 'muted', '데뷔한 게임 중 기준일에도 TOP100에 있는 게임 수와 비율.') +
     mkKpiCard('TOP10 도달', `${top10}개`, '데뷔 후 한 번이라도 10위 이내', 'muted', '데뷔 이후 기준일까지 최고 순위가 10위 이내였던 게임 수.') +
@@ -3597,6 +3583,20 @@ window.addEventListener('DOMContentLoaded', async () => {
   const initial = viewFromHash();
   if(initial !== 'dashboard') switchView(initial);
 });
+/* ⓘ 아이콘을 누르면 설명 말풍선 (마우스가 없는 휴대폰용, 다른 곳을 누르면 닫힘) */
+document.addEventListener('click', e => {
+  document.querySelectorAll('.tap-tip').forEach(t => t.remove());
+  const icon = e.target.closest('.mk-info');
+  if(!icon || !icon.title) return;
+  e.stopPropagation();
+  const tip = document.createElement('div');
+  tip.className = 'tap-tip'; tip.textContent = icon.title;
+  document.body.appendChild(tip);
+  const r = icon.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight;
+  tip.style.left = `${Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2))}px`;
+  tip.style.top = `${r.bottom + 6 + h > innerHeight ? r.top - h - 6 : r.bottom + 6}px`;
+}, true);
+window.addEventListener('scroll', () => document.querySelectorAll('.tap-tip').forEach(t => t.remove()), { passive: true });
 window.addEventListener('hashchange', () => { const v = viewFromHash(); if(v !== currentView) switchView(v); });
 /* 탭을 오래 열어두었다가 돌아오면 30분 경과 시 자동 갱신 */
 document.addEventListener('visibilitychange', () => {
