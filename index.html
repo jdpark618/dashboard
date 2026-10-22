@@ -1696,7 +1696,7 @@ function calSearchInput(v){
 
 /* 일정 조각 */
 function calReleaseKey(g){ return g.gameId ? `id:${g.gameId}` : `nm:${g.name}|${g.platform}`; }
-function calBarColor(g){ return g.type === 'OPEN' ? '#475569' : CAL_TYPE_COLOR[g.type]; }
+function calBarColor(g){ return CAL_TYPE_COLOR[g.type]; } /* 막대 색 = 유형 칩(범례) 색 */
 function calPlatformShort(p){ return String(p || '').split('/').map(s => s.trim()).filter(Boolean).join('·'); }
 function calTagHtml(g){
   if(g.type === 'TEST') return '<span class="cal-tag t-test">테스트</span>';
