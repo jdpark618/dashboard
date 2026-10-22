@@ -792,7 +792,7 @@ html.panel-lock { overflow: hidden; }
 </div>
 
 <!-- FULL RANKING SIDE PANEL (전체순위보기) -->
-<div id="rankOverlay" class="fixed inset-0 bg-black/60 z-[44] hidden opacity-0 transition-opacity duration-300" onclick="closeRankPanel()"></div>
+<div id="rankOverlay" class="fixed inset-0 bg-black/60 z-[43] hidden opacity-0 transition-opacity duration-300" onclick="closeRankPanel()"></div>
 <div id="rankPanel" class="fixed top-0 right-0 w-full max-w-[520px] h-full bg-slate-900 shadow-2xl z-[45] transform translate-x-full transition-transform duration-300 border-l border-slate-700 flex flex-col" role="dialog" aria-labelledby="rankPanelTitle">
   <div class="px-4 pt-4 pb-3 border-b border-slate-800 space-y-2.5 shrink-0">
     <div class="flex items-start justify-between gap-2">
@@ -3088,11 +3088,30 @@ function openRankPanel(store){
   setTimeout(() => { document.getElementById('rankOverlay').classList.remove('opacity-0'); document.getElementById('rankPanel').classList.remove('translate-x-full'); }, 10);
 }
 function closeRankPanel(){
+  const dp = document.getElementById('detailPanel'), side = !!dp.style.right;
+  if(side){
+    if(dp.classList.contains('translate-x-full')){
+      /* 이미 닫힌 상세가 순위 패널 뒤에 숨어 있으면, 순위 패널이 빠지기 전에 화면 밖 원래 자리로 */
+      detailResetSide();
+    }else{
+      /* 나란히 열린 상세는 순위 패널과 함께 화면 밖까지 밀어냄 (중간에 멈춰 보이지 않게) */
+      dp.style.transform = `translateX(calc(100% + ${RANK_PANEL_W}px))`;
+      closeGameDetail();
+      setTimeout(detailResetSide, 320);
+    }
+  }
   document.getElementById('rankPanel').classList.add('translate-x-full');
   document.getElementById('rankOverlay').classList.add('opacity-0');
   setTimeout(() => document.getElementById('rankOverlay').classList.add('hidden'), 300);
-  if(document.getElementById('detailPanel').style.right) closeGameDetail();
-  setTimeout(() => { const o = document.getElementById('detailOverlay'); o.style.display = ''; o.style.zIndex = ''; document.getElementById('detailPanel').style.right = ''; }, 320);
+  const o = document.getElementById('detailOverlay'); o.style.zIndex = '';
+}
+/* 나란히 보기 설정 해제: 상세 패널을 기본 위치(오른쪽 끝, 화면 밖)로 */
+function detailResetSide(){
+  const dp = document.getElementById('detailPanel');
+  dp.style.transition = 'none';
+  dp.style.right = ''; dp.style.transform = ''; dp.style.zIndex = '';
+  document.getElementById('detailOverlay').style.display = '';
+  void dp.offsetWidth; dp.style.transition = '';
 }
 function rankSetStore(s){ rankState.store = s; rankState.filter = ''; rankState.genre = ''; renderRankPanel(); document.getElementById('rankList').scrollTop = 0; }
 function rankSetFilter(f){ rankState.filter = rankState.filter === f ? '' : f; renderRankPanel(); document.getElementById('rankList').scrollTop = 0; }
@@ -3175,8 +3194,12 @@ window.addEventListener('keydown', e => {
 function openGameDetail(targetName) {
   detailCurrentName = targetName;
   syncDetailWatchBtn(targetName);
-  const side = rankPanelOpen() && innerWidth >= 1280, overlay = document.getElementById('detailOverlay');
-  document.getElementById('detailPanel').style.right = side ? `${RANK_PANEL_W}px` : '';
+  const side = rankPanelOpen() && innerWidth >= 1280, overlay = document.getElementById('detailOverlay'), dp = document.getElementById('detailPanel');
+  if(side && !dp.style.right && !dp.classList.contains('translate-x-full')) detailResetSide();
+  if(side){
+    /* 나란히: 순위 패널 왼쪽에 붙고, 순위 패널 뒤(z 44 < 45)에서 미끄러져 나옴 → 닫을 때도 그 뒤로 들어감 */
+    dp.style.transition = 'none'; dp.style.right = `${RANK_PANEL_W}px`; dp.style.zIndex = '44'; void dp.offsetWidth; dp.style.transition = '';
+  }else if(dp.style.right) detailResetSide();
   overlay.style.display = side ? 'none' : '';          /* 나란히 볼 때는 순위 목록을 계속 누를 수 있게 */
   overlay.style.zIndex = rankPanelOpen() && !side ? '46' : '';  /* 겹칠 때는 바깥을 누르면 상세만 닫힘 */
   document.querySelectorAll('#rankList li[data-key]').forEach(li => li.classList.toggle('bg-indigo-500/15', li.dataset.key === getGameKey(targetName)));
