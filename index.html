@@ -174,6 +174,20 @@ select option { background-color: #0f172a; color: #f1f5f9; }
 #view-dashboard .text-\[9px\], #view-dashboard .text-\[9\.5px\], #view-dashboard .text-\[10px\], #view-business .text-\[9px\], #view-business .text-\[10px\] { font-size:11px; }
 #view-dashboard .text-\[10\.5px\], #view-business .text-\[11px\] { font-size:12px; }
 /* ⓘ 설명을 눌러서도 보기 (휴대폰) */
+/* 포지션 맵 컨트롤·레일 */
+.mk-sel { background:#0b1222; border:1px solid var(--line); border-radius:8px; color:#cbd5e1; font-size:12px; padding:6px 10px; outline:none; }
+.mk-sel:focus { border-color:#6366f1; }
+.mk-seg { display:inline-flex; gap:2px; padding:2px; background:#0b1222; border:1px solid var(--line); border-radius:8px; }
+.mk-seg button { font-size:12px; font-weight:600; padding:5px 10px; border-radius:6px; color:#94a3b8; }
+.mk-seg button:hover { color:#e2e8f0; }
+.mk-seg button.on { background:#4338ca; color:#e0e7ff; }
+.pos-chip { display:inline-flex; align-items:center; gap:6px; padding:3px 9px 3px 3px; border-radius:999px; background:rgba(30,41,59,.75); border:1px solid var(--line); font-size:12px; color:#e2e8f0; cursor:pointer; max-width:220px; transition:opacity .15s, border-color .15s; }
+.pos-chip:hover { border-color:rgba(148,163,184,.6); }
+.pos-chip img, .pos-chip .ph { width:22px; height:22px; border-radius:6px; flex-shrink:0; object-fit:cover; background:#1e293b; }
+.pos-chip .nm { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.pos-chip.dim { opacity:.3; }
+.pos-chip.hl { border-color:#f1f5f9; box-shadow:0 0 0 1px #f1f5f9; }
+.pos-chip.watch { border-color:rgba(251,191,36,.7); }
 .tap-tip { position:fixed; z-index:200; max-width:280px; background:#0f172a; color:#e2e8f0; border:1px solid rgba(99,102,241,.5); border-radius:8px; padding:8px 10px; font-size:12px; line-height:1.55; box-shadow:0 10px 25px -3px rgba(0,0,0,.7); }
 </style>
 </head>
@@ -333,6 +347,15 @@ select option { background-color: #0f172a; color: #f1f5f9; }
     </div>
   </section>
 
+  <!-- 관심 게임 (이 브라우저에만 저장) -->
+  <section id="watchSection">
+    <div class="flex items-center justify-between mb-3 px-0.5">
+      <h2 class="text-base font-bold text-slate-200 flex items-center gap-2"><i class="fa-solid fa-star text-amber-400"></i>관심 게임 <span id="watchCount" class="text-xs muted font-normal"></span></h2>
+      <span class="text-[11px] muted">이 브라우저에만 저장</span>
+    </div>
+    <div id="watchList" class="card rounded-xl p-3"></div>
+  </section>
+
   <!-- 섹션 2: 일간 TOP 10 -->
   <section>
     <div class="flex items-center justify-between mb-3 px-0.5">
@@ -486,6 +509,10 @@ select option { background-color: #0f172a; color: #f1f5f9; }
       </div>
     </section>
   </div>
+  <section class="card rounded-xl p-5">
+    <div class="mk-card-head"><div><h3 class="font-semibold text-sm">평점 변화<i class="fa-regular fa-circle-question mk-info" title="기준일에 매출 또는 인기 TOP100에 있는 게임의 Google Play 평점을 7일 전 무렵(7일 전 또는 그 직전 수집일)과 비교합니다. 0.1 이상 변한 게임을 하락·상승 순으로 최대 6개씩 보여줍니다."></i></h3><p id="mkRatingDesc" class="text-[10px] muted mt-1">-</p></div></div>
+    <div id="mkRating"></div>
+  </section>
   </div>
 
   <!-- ② 시장 구조 -->
@@ -493,11 +520,25 @@ select option { background-color: #0f172a; color: #f1f5f9; }
     <p class="text-[11px] muted">어떤 게임이 매출형·인기형인지, 어떤 장르와 퍼블리셔가 순위권을 차지하는지</p>
     <section class="card rounded-xl p-5">
       <div class="mk-card-head">
-        <div><h3 class="font-semibold text-sm">시장 포지션 맵<i class="fa-regular fa-circle-question mk-info" title="가로는 매출 순위, 세로는 인기 순위입니다. 오른쪽 위로 갈수록 두 순위 모두 높습니다. 50위 선으로 네 구역을 나누고, 100위 밖은 가장자리(100+)에 표시합니다. 점을 누르면 게임 상세가 열립니다."></i></h3><p id="mkPosDesc" class="text-[10px] muted mt-1">-</p></div>
-        <div class="mk-tabs" data-tab="posBase"></div>
+        <div><h3 class="font-semibold text-sm">시장 포지션 맵<i class="fa-regular fa-circle-question mk-info" title="매출·인기 둘 다 TOP100인 게임만 평면에 아이콘으로 놓습니다. 가로는 매출 순위(오른쪽이 1위), 세로는 인기 순위(위쪽이 1위)이고, 상위권이 잘 보이도록 로그 눈금을 씁니다. 한쪽에만 순위권인 게임은 아래 두 줄에 순위순으로 모았습니다. 기간 평균은 기간의 절반 이상 순위권이었던 게임만 포함하며, 빠진 날은 100+로 계산합니다. 아이콘을 누르면 게임 상세가 열립니다."></i></h3><p id="mkPosDesc" class="text-[10px] muted mt-1">-</p></div>
       </div>
-      <div class="relative h-[380px] md:h-[440px]"><canvas id="mkPosChart"></canvas></div>
-      <div id="mkPosition" class="mt-4"></div>
+      <div class="flex flex-wrap items-center gap-2 mb-3">
+        <div class="mk-seg" id="mkPosPeriod">
+          <button type="button" data-v="day" onclick="mkPosSet('period','day')">기준일</button>
+          <button type="button" data-v="7d" onclick="mkPosSet('period','7d')">최근 7일</button>
+          <button type="button" data-v="30d" onclick="mkPosSet('period','30d')">최근 30일</button>
+          <button type="button" data-v="month" onclick="mkPosSet('period','month')">월별</button>
+        </div>
+        <select id="mkPosMonth" class="mk-sel hidden" onchange="mkPosSet('month', this.value)" aria-label="월 선택"></select>
+        <label class="cal-toggle"><input type="checkbox" id="mkPosTrail" checked onchange="mkPosSet('trail', this.checked)"><span class="knob"></span>이동 궤적</label>
+        <label class="cal-toggle"><input type="checkbox" id="mkPosSize" onchange="mkPosSet('size', this.checked)"><span class="knob"></span>크기 = 순위권 일수</label>
+        <select id="mkPosGenre" class="mk-sel" onchange="mkPosSet('genre', this.value)" aria-label="장르 필터"><option value="">전체 장르</option></select>
+        <select id="mkPosPub" class="mk-sel max-w-[180px]" onchange="mkPosSet('pub', this.value)" aria-label="퍼블리셔 필터"><option value="">전체 퍼블리셔</option></select>
+        <div class="relative"><input id="mkPosSearch" list="mkPosNames" class="mk-sel w-44 pr-7" placeholder="게임 검색해 강조" autocomplete="off" oninput="mkPosSet('q', this.value)"><datalist id="mkPosNames"></datalist><button type="button" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-200 text-xs" onclick="document.getElementById('mkPosSearch').value=''; mkPosSet('q','')" aria-label="검색 지우기"><i class="fa-solid fa-xmark"></i></button></div>
+      </div>
+      <div class="relative h-[420px] md:h-[500px]"><canvas id="mkPosChart"></canvas></div>
+      <div id="mkPosRails" class="mt-4 space-y-2.5"></div>
+      <div id="mkPosition" class="mt-5"></div>
     </section>
     <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <div class="card rounded-xl p-5">
@@ -708,7 +749,10 @@ select option { background-color: #0f172a; color: #f1f5f9; }
         <h2 class="text-lg font-bold leading-tight truncate" id="detailTitle">-</h2>
       </div>
     </div>
-    <button onclick="closeGameDetail()" class="text-slate-400 hover:text-white shrink-0 ml-2"><i class="fa-solid fa-xmark text-xl"></i></button>
+    <div class="flex items-center gap-3 shrink-0 ml-2">
+      <button id="detailWatchBtn" type="button" onclick="mkWatchToggle(detailCurrentName)" class="text-slate-400 hover:text-amber-300 text-lg" title="관심 게임에 추가" aria-label="관심 게임에 추가" aria-pressed="false"><i class="fa-regular fa-star"></i></button>
+      <button onclick="closeGameDetail()" class="text-slate-400 hover:text-white" aria-label="닫기"><i class="fa-solid fa-xmark text-xl"></i></button>
+    </div>
   </div>
 
   <div class="p-5 space-y-5 flex-1">
@@ -991,6 +1035,36 @@ function mergeRowsIntoStore(storeKey, newRows){
   store.rows = Array.from(map.values());
 }
 
+/* ---------- 지난 달 순위 데이터 캐시 (IndexedDB, 이 브라우저에만) ----------
+   지난 달 데이터는 다시 바뀌지 않으므로 받아 둔 것을 3일 동안 재사용한다. 저장소를 못 쓰면 매번 새로 받는다. */
+const MONTH_CACHE_TTL = 3 * 86400000;
+let monthCacheDbPromise = null;
+function monthCacheDb(){
+  if(monthCacheDbPromise) return monthCacheDbPromise;
+  monthCacheDbPromise = new Promise(resolve => {
+    try{
+      const req = indexedDB.open('gmi-cache', 1);
+      req.onupgradeneeded = () => req.result.createObjectStore('months');
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => resolve(null);
+    }catch(e){ resolve(null); }
+  });
+  return monthCacheDbPromise;
+}
+async function monthCacheGet(key){
+  const db = await monthCacheDb();
+  if(!db) return null;
+  return new Promise(resolve => {
+    try{ const r = db.transaction('months').objectStore('months').get(key); r.onsuccess = () => resolve(r.result || null); r.onerror = () => resolve(null); }
+    catch(e){ resolve(null); }
+  });
+}
+async function monthCacheSet(key, value){
+  const db = await monthCacheDb();
+  if(!db) return;
+  try{ db.transaction('months', 'readwrite').objectStore('months').put(value, key); }catch(e){}
+}
+
 async function ensureMonthLoaded(storeKey, y, m){
   if(storeKey === 'newReleases') return;
   const key = ymKey(y,m);
@@ -1005,7 +1079,15 @@ async function ensureMonthLoaded(storeKey, y, m){
 
   const promise = (async () => {
     try{
-      const { rows } = await fetchSheetData(SHEETS[storeKey], 1, whereClause);
+      /* 이번 달 이전 데이터는 캐시 우선 */
+      const isPast = key < kstTodayStr().slice(0, 7), cacheKey = `${SHEETS[storeKey]}:${key}`;
+      const cached = isPast ? await monthCacheGet(cacheKey) : null;
+      let rows;
+      if(cached && Array.isArray(cached.rows) && Date.now() - cached.savedAt < MONTH_CACHE_TTL) rows = cached.rows;
+      else{
+        ({ rows } = await fetchSheetData(SHEETS[storeKey], 1, whereClause));
+        if(isPast) monthCacheSet(cacheKey, { rows, savedAt: Date.now() }); /* 수집 전이라 빈 달도 저장 */
+      }
       mergeRowsIntoStore(storeKey, rows);
       loadedMonths[storeKey].add(key);
       if(storeKey === 'sales' || storeKey === 'popular') rebuildLookupIndices();
@@ -1480,6 +1562,7 @@ function renderToday(){
 
   renderGenreBars('popularGenreBars', p.popularGenre);
   renderGenreBars('salesGenreBars', p.salesGenre);
+  renderWatchlist();
 }
 
 function switchView(view){
@@ -2439,6 +2522,8 @@ function getMetricsForGame(data, gameNameTarget, recentDays=15){
 }
 
 function openGameDetail(targetName) {
+  detailCurrentName = targetName;
+  syncDetailWatchBtn(targetName);
   setText('detailTitle', targetName);
   const salesMetrics = getMetricsForGame(rawStore.sales, targetName, 15), popMetrics = getMetricsForGame(rawStore.popular, targetName, 15);
   setText('detailGenrePub', `${salesMetrics.genre || popMetrics.genre || '-'} · ${salesMetrics.pub || popMetrics.pub || '-'}`);
@@ -2646,9 +2731,9 @@ const MK_STORE_LABEL = { sales: '매출', popular: '인기' };
 let mkMode = 'daily';
 let mkSection = 'change';
 const mkPosExpand = {};
-const mkTabs = { dMovers: 'sales', dEntries: 'sales', dEntryType: 'in', wEntryType: 'list', wGenre: 'sales', wPub: 'sales', wMovers: 'sales', wEntries: 'sales', wCohort: 'sales', posBase: 'day', debut: 'sales' };
+const mkTabs = { dMovers: 'sales', dEntries: 'sales', dEntryType: 'in', wEntryType: 'list', wGenre: 'sales', wPub: 'sales', wMovers: 'sales', wEntries: 'sales', wCohort: 'sales', debut: 'sales' };
 /* 탭 버튼 선택지: 기본은 매출/인기 */
-const MK_TAB_OPTIONS = { posBase: [['day', '기준일'], ['week', '지난주 평균']] };
+const MK_TAB_OPTIONS = {};
 const mkIndexCache = { sales: null, popular: null };
 let mkMonthsReady = false;
 
@@ -3114,61 +3199,264 @@ function mkPubScores(idx, mon){
   return { arr, total };
 }
 
-const MK_POS_OUT = 106; /* 100위 밖 표시 위치 */
-const MK_POS_GROUPS = [
-  { key: 'both', label: '양쪽 상위', color: '#f1f5f9' },
-  { key: 'sales', label: '매출형', color: '#fbbf24' },
-  { key: 'popular', label: '인기형', color: '#2dd4bf' },
-  { key: 'rest', label: '그 외', color: '#64748b' }
-];
+/* ---------- 포지션 맵 ---------- */
+const mkPos = { period: 'day', month: '', trail: true, size: false, genre: '', pub: '', q: '', railOpen: { sales: false, popular: false } };
+const MK_POS_RAIL_SHOWN = 8;
+const MK_POS_TICKS = [1, 2, 3, 5, 10, 20, 30, 50, 100];
 let mkPosChartInst = null;
-/* 포지션 산점도: 가로 매출 순위(오른쪽이 1위), 세로 인기 순위(위쪽이 1위) */
-function mkRenderPosScatter(sMap, pMap){
+const mkImgCache = new Map();
+
+function mkPosSet(key, val){
+  mkPos[key] = val;
+  if(currentView === 'business' && mkSection === 'structure' && mkMonthsReady) mkRenderPosition();
+}
+
+/* 기간 창 (매출 순위 관측일 기준): 현재 기간 + 비교할 직전 기간 */
+function mkPosWindows(){
+  const dates = mkGetIndex('sales').dates, base = dates.at(-1);
+  if(!base) return null;
+  if(mkPos.period === 'day'){
+    const prev = dates.filter(d => d <= mkAddDays(base, -7)).at(-1);
+    return { cur: [base], prev: prev ? [prev] : [], label: `기준일 ${base}`, prevLabel: prev ? `1주 전(${mkShort(prev)})` : '' };
+  }
+  if(mkPos.period === '7d' || mkPos.period === '30d'){
+    const n = mkPos.period === '7d' ? 7 : 30, cur = dates.slice(-n), prev = dates.slice(-2 * n, -n);
+    return { cur, prev: prev.length >= Math.ceil(n / 2) ? prev : [], label: `${mkShort(cur[0])}~${mkShort(base)} ${n}일 평균`, prevLabel: `직전 ${n}일 평균` };
+  }
+  const months = [...new Set(dates.map(d => d.slice(0, 7)))];
+  const ym = months.includes(mkPos.month) ? mkPos.month : months.at(-1);
+  const pym = months[months.indexOf(ym) - 1] || null;
+  const cur = dates.filter(d => d.startsWith(ym)), prev = pym ? dates.filter(d => d.startsWith(pym)) : [];
+  return { cur, prev, months, ym, label: `${Number(ym.slice(5))}월 평균${ym === base.slice(0, 7) ? ` (${mkShort(base)}까지)` : ''}`, prevLabel: pym ? `${Number(pym.slice(5))}월 평균` : '' };
+}
+
+/* 기간 집계: 기간의 절반 이상 TOP100이었던 게임만, 빠진 날은 101로 평균 */
+function mkPosAgg(idx, dates){
+  const n = dates.length, need = Math.ceil(n / 2), m = new Map(), out = new Map();
+  dates.forEach(d => (idx.byDate.get(d) || new Map()).forEach((v, k) => {
+    const g = m.get(k) || { sum: 0, days: 0 };
+    g.sum += v.rank; g.days++; g.name = v.name; g.genre = v.genre; g.publisher = v.publisher;
+    m.set(k, g);
+  }));
+  m.forEach((g, k) => { if(n && g.days >= need) out.set(k, { ...g, rank: Math.min(100, (g.sum + (n - g.days) * 101) / n) }); });
+  return out;
+}
+
+function mkPosData(){
+  const W = mkPosWindows();
+  if(!W || !W.cur.length) return null;
+  const S = mkGetIndex('sales'), P = mkGetIndex('popular');
+  const cs = mkPosAgg(S, W.cur), cp = mkPosAgg(P, W.cur);
+  const ps = W.prev.length ? mkPosAgg(S, W.prev) : new Map(), pp = W.prev.length ? mkPosAgg(P, W.prev) : new Map();
+  /* 크기용: 최근 30 관측일 중 매출 또는 인기 TOP100에 있던 날 수 */
+  const last30 = S.dates.slice(-30);
+  const days30 = k => last30.filter(d => S.byDate.get(d)?.has(k) || P.byDate.get(d)?.has(k)).length;
+  const plane = [], rails = { sales: [], popular: [] };
+  new Set([...cs.keys(), ...cp.keys()]).forEach(k => {
+    const s = cs.get(k), p = cp.get(k), meta = s || p;
+    const it = { key: k, name: meta.name, genre: meta.genre, publisher: meta.publisher, sr: s?.rank ?? null, pr: p?.rank ?? null, days: days30(k) };
+    if(s && p){
+      const a = ps.get(k), b = pp.get(k);
+      if(a && b) it.prev = { sr: a.rank, pr: b.rank };
+      plane.push(it);
+    }else rails[s ? 'sales' : 'popular'].push(it);
+  });
+  rails.sales.sort((a, b) => a.sr - b.sr);
+  rails.popular.sort((a, b) => a.pr - b.pr);
+  return { W, plane, rails, cs, cp };
+}
+
+/* 필터·검색 */
+function mkPosMatch(it){ return (!mkPos.genre || it.genre === mkPos.genre) && (!mkPos.pub || it.publisher === mkPos.pub); }
+function mkPosHit(it){ const q = getGameKey(String(mkPos.q || '').trim()); return q !== '-' && getGameKey(it.name).includes(q); }
+function mkPosRank(v){ return v == null ? '-' : String(Math.round(v)); }
+
+/* 아이콘 이미지: 처음엔 이니셜, 로드되면 차트를 다시 그림 */
+function mkPosImg(url){
+  if(!url) return null;
+  let e = mkImgCache.get(url);
+  if(!e){
+    const img = new Image();
+    e = { img, ok: false };
+    mkImgCache.set(url, e);
+    img.onload = () => { e.ok = true; mkPosChartInst?.draw(); };
+    img.src = url;
+  }
+  return e.ok ? e.img : null;
+}
+function mkRoundRect(ctx, x, y, w, h, r){
+  ctx.beginPath(); ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+/* 아이콘 크기: 기본 24px, '크기 = 순위권 일수'면 16~32px. 좁은 화면은 25% 작게 */
+function mkPosIconSize(it){
+  const s = mkPos.size ? 16 + Math.round(Math.min(30, it.days) / 30 * 16) : 24;
+  return Math.round(s * (innerWidth < 640 ? 0.75 : 1));
+}
+
+/* 포지션 산점도: 가로 매출 순위(오른쪽이 1위), 세로 인기 순위(위쪽이 1위), 로그 눈금, 점 대신 게임 아이콘 */
+function mkRenderPosScatter(D){
   const canvas = document.getElementById('mkPosChart');
   if(!canvas) return;
   if(mkPosChartInst){ mkPosChartInst.destroy(); mkPosChartInst = null; }
-  const jitter = (k, v) => { if(v < MK_POS_OUT) return v; let h = 0; for(let i = 0; i < k.length; i++) h = (h * 31 + k.charCodeAt(i)) >>> 0; return v + (h % 5) - 2; };
-  const groups = Object.fromEntries(MK_POS_GROUPS.map(g => [g.key, []]));
-  new Set([...sMap.keys(), ...pMap.keys()]).forEach(k => {
-    const s = sMap.get(k), p = pMap.get(k), sr = s?.rank ?? 101, pr = p?.rank ?? 101;
-    const g = sr <= 50 && pr <= 50 ? 'both' : sr <= 50 ? 'sales' : pr <= 50 ? 'popular' : 'rest';
-    groups[g].push({ x: jitter(k + 's', sr > 100 ? MK_POS_OUT : sr), y: jitter(k + 'p', pr > 100 ? MK_POS_OUT : pr), name: (s || p).name, sr, pr });
-  });
-  const rk = v => v > 100 ? '100+' : String(Math.round(v));
+  const watch = mkWatchKeys();
+  /* 검색에 걸린 게임은 필터와 상관없이 보이게 */
+  const pts = D.plane.map(it => { const hl = mkPosHit(it); return { x: it.sr, y: it.pr, it, dim: !hl && !mkPosMatch(it), hl, watch: watch.has(getGameKey(it.name)), size: mkPosIconSize(it) }; });
+  /* 그리는 순서: 흐린 것 → 일반 → 강조(검색·관심) */
+  pts.sort((a, b) => (b.dim - a.dim) || ((a.hl || a.watch) - (b.hl || b.watch)));
+  const font = w => `${w} 11px "Pretendard Variable", Pretendard, sans-serif`;
   const axis = title => ({
-    reverse: true, min: 0, max: MK_POS_OUT + 4,
-    afterBuildTicks: ax => { ax.ticks = [1, 25, 50, 75, 100, MK_POS_OUT].map(value => ({ value })); },
-    ticks: { color: '#94a3b8', font: { size: 11 }, callback: v => v === MK_POS_OUT ? '100+' : v },
-    grid: { color: c => c.tick?.value === 50 ? 'rgba(148,163,184,.45)' : 'rgba(71,85,105,.22)', lineWidth: c => c.tick?.value === 50 ? 1.5 : 1 },
+    type: 'logarithmic', reverse: true, min: 0.8, max: 125,
+    afterBuildTicks: ax => { ax.ticks = MK_POS_TICKS.map(value => ({ value })); },
+    ticks: { color: '#94a3b8', font: { size: 11 }, callback: v => MK_POS_TICKS.includes(v) ? `${v}` : '' },
+    grid: { color: c => [10, 50].includes(c.tick?.value) ? 'rgba(148,163,184,.42)' : 'rgba(71,85,105,.2)', lineWidth: c => [10, 50].includes(c.tick?.value) ? 1.2 : 1 },
     title: { display: true, text: title, color: '#94a3b8', font: { size: 11, weight: '600' } }
   });
-  const quadrantLabels = {
-    id: 'mkQuadrants',
-    afterDraw(chart){
-      /* 구역 이름은 50위 선 바로 옆에 (가장자리 100+ 점들과 겹치지 않게) */
+  const draw = {
+    id: 'mkPosDraw',
+    beforeDatasetsDraw(chart){
       const { ctx, chartArea: a, scales: { x, y } } = chart;
-      const mx = x.getPixelForValue(50), my = y.getPixelForValue(50);
-      ctx.save(); ctx.font = '600 11px sans-serif'; ctx.fillStyle = 'rgba(203,213,225,.6)'; ctx.textAlign = 'left';
-      ctx.fillText('양쪽 상위', mx + 8, a.top + 14); ctx.fillText('매출형', mx + 8, my + 16);
-      ctx.textAlign = 'right'; ctx.fillText('인기형', mx - 8, a.top + 14);
+      ctx.save();
+      ctx.font = font(600); ctx.fillStyle = 'rgba(203,213,225,.42)'; ctx.textBaseline = 'alphabetic';
+      ctx.textAlign = 'left'; ctx.fillText('양쪽 10위권', x.getPixelForValue(10) + 6, a.top + 14); ctx.fillText('인기 강세', a.left + 6, a.top + 14);
+      ctx.textAlign = 'right'; ctx.fillText('매출 강세', a.right - 6, a.bottom - 8);
+      /* 이동 궤적: 직전 기간 위치(작은 점) → 현재 아이콘. 오른쪽 위로 가면 빨강(상승), 반대면 파랑(하락) */
+      if(mkPos.trail) pts.forEach(p => {
+        if(!p.it.prev || p.dim) return;
+        const x0 = x.getPixelForValue(p.it.prev.sr), y0 = y.getPixelForValue(p.it.prev.pr), x1 = x.getPixelForValue(p.x), y1 = y.getPixelForValue(p.y);
+        const len = Math.hypot(x1 - x0, y1 - y0), stop = p.size / 2 + 3;
+        if(len < stop + 6) return;
+        const better = (p.it.prev.sr + p.it.prev.pr) > (p.x + p.y), col = better ? 'rgba(248,113,113,.75)' : 'rgba(96,165,250,.75)';
+        const ex = x1 - (x1 - x0) / len * stop, ey = y1 - (y1 - y0) / len * stop, ang = Math.atan2(ey - y0, ex - x0);
+        ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = 1.3;
+        ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(ex, ey); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(ex, ey); ctx.lineTo(ex - 6 * Math.cos(ang - 0.45), ey - 6 * Math.sin(ang - 0.45)); ctx.lineTo(ex - 6 * Math.cos(ang + 0.45), ey - 6 * Math.sin(ang + 0.45)); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.arc(x0, y0, 2.4, 0, Math.PI * 2); ctx.fill();
+      });
+      ctx.restore();
+    },
+    afterDatasetsDraw(chart){
+      const { ctx, chartArea: a, scales: { x, y } } = chart;
+      const pos = p => [x.getPixelForValue(p.x), y.getPixelForValue(p.y)];
+      ctx.save();
+      pts.forEach(p => {
+        const [cx, cy] = pos(p), s = p.size, l = cx - s / 2, t = cy - s / 2;
+        ctx.globalAlpha = p.dim ? 0.16 : 1;
+        const img = mkPosImg(getIconUrlForGame(p.it.name));
+        ctx.save(); mkRoundRect(ctx, l, t, s, s, s * 0.24); ctx.clip();
+        if(img) ctx.drawImage(img, l, t, s, s);
+        else{
+          ctx.fillStyle = bizGenreColor(p.it.genre || '기타'); ctx.fillRect(l, t, s, s);
+          ctx.fillStyle = '#0b1222'; ctx.font = `700 ${Math.round(s * 0.5)}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText(p.it.name.slice(0, 1), cx, cy + 1);
+        }
+        ctx.restore();
+        ctx.lineWidth = p.hl || p.watch ? 2 : 1;
+        ctx.strokeStyle = p.hl ? '#f8fafc' : p.watch ? '#fbbf24' : 'rgba(7,11,20,.9)';
+        mkRoundRect(ctx, l - (p.hl || p.watch ? 2 : 0), t - (p.hl || p.watch ? 2 : 0), s + (p.hl || p.watch ? 4 : 0), s + (p.hl || p.watch ? 4 : 0), s * 0.28); ctx.stroke();
+      });
+      ctx.globalAlpha = 1;
+      /* 이름표: 검색·관심 → 양쪽 10위권 → 이동 폭 큰 순. 겹치면 생략, 최대 10개(검색·관심은 항상) */
+      const live = pts.filter(p => !p.dim);
+      const boxes = live.map(p => { const [cx, cy] = pos(p); return [cx - p.size / 2 - 1, cy - p.size / 2 - 1, cx + p.size / 2 + 1, cy + p.size / 2 + 1]; });
+      const cand = live.map(p => ({ p, score: (p.hl ? 1e4 : 0) + (p.watch ? 5e3 : 0) + (p.x <= 10 && p.y <= 10 ? 300 : 0) + (p.it.prev ? Math.abs(Math.log(p.it.prev.sr / p.x)) + Math.abs(Math.log(p.it.prev.pr / p.y)) : 0) * 60 + (100 - Math.min(p.x, p.y)) / 5 })).sort((a, b) => b.score - a.score);
+      const placed = [], hit = (r, q) => !(r[2] < q[0] || r[0] > q[2] || r[3] < q[1] || r[1] > q[3]);
+      ctx.font = font(600); ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+      let n = 0;
+      for(const { p } of cand){
+        const must = p.hl || p.watch;
+        if(n >= 10 && !must) continue;
+        const [cx, cy] = pos(p), name = p.it.name.length > 14 ? p.it.name.slice(0, 13) + '…' : p.it.name;
+        const w = ctx.measureText(name).width + 10, h = 18, g = p.size / 2 + 4;
+        const spots = [[cx + g, cy - h / 2], [cx - g - w, cy - h / 2], [cx - w / 2, cy - g - h], [cx - w / 2, cy + g]];
+        const spot = spots.map(([lx, ly]) => [lx, ly, lx + w, ly + h]).find(r => r[0] >= a.left && r[2] <= a.right && r[1] >= a.top && r[3] <= a.bottom && !placed.some(q => hit(r, q)) && !boxes.some(q => hit(r, q)));
+        if(!spot) continue;
+        ctx.fillStyle = 'rgba(7,11,20,.82)'; mkRoundRect(ctx, spot[0], spot[1], w, h, 5); ctx.fill();
+        ctx.fillStyle = p.hl ? '#ffffff' : p.watch ? '#fde68a' : '#e2e8f0';
+        ctx.fillText(name, spot[0] + 5, spot[1] + h / 2 + 0.5);
+        placed.push(spot); n++;
+      }
       ctx.restore();
     }
   };
   mkPosChartInst = new Chart(canvas.getContext('2d'), {
     type: 'scatter',
-    data: { datasets: MK_POS_GROUPS.map(g => ({ label: `${g.label} ${groups[g.key].length}`, data: groups[g.key], backgroundColor: g.color + 'cc', borderColor: g.color, pointRadius: 4, pointHoverRadius: 7 })) },
+    data: { datasets: [{ data: pts, pointRadius: c => (c.raw?.size || 24) / 2, pointHoverRadius: c => (c.raw?.size || 24) / 2 + 2, backgroundColor: 'rgba(0,0,0,0)', borderColor: 'rgba(0,0,0,0)', hoverBackgroundColor: 'rgba(0,0,0,0)', hoverBorderColor: 'rgba(0,0,0,0)', clip: false }] },
     options: {
-      maintainAspectRatio: false, animation: false,
-      scales: { x: axis('매출 순위 (오른쪽일수록 높음)'), y: axis('인기 순위 (위쪽일수록 높음)') },
+      maintainAspectRatio: false, animation: false, layout: { padding: { top: 6, right: 14, left: 4 } },
+      scales: { x: axis('매출 순위 (오른쪽이 1위 · 로그 눈금)'), y: axis('인기 순위 (위쪽이 1위 · 로그 눈금)') },
       plugins: {
-        legend: { position: 'bottom', labels: { color: '#cbd5e1', boxWidth: 10, boxHeight: 10, usePointStyle: true, font: { size: 11 } } },
-        tooltip: { callbacks: { label: c => `${c.raw.name} · 매출 ${rk(c.raw.sr)} · 인기 ${rk(c.raw.pr)}` } }
+        legend: { display: false },
+        tooltip: {
+          filter: c => !c.raw.dim,
+          callbacks: {
+            title: items => items[0].raw.it.name,
+            label: c => {
+              const it = c.raw.it, lines = [`매출 ${mkPosRank(it.sr)}위 · 인기 ${mkPosRank(it.pr)}위`];
+              if(it.prev) lines.push(`${D.W.prevLabel}: 매출 ${mkPosRank(it.prev.sr)}위 · 인기 ${mkPosRank(it.prev.pr)}위`);
+              lines.push([it.genre, it.publisher].filter(v => v && v !== '미분류' && v !== '미상').join(' · ') || '-');
+              lines.push(`최근 30일 중 순위권 ${it.days}일`);
+              return lines;
+            }
+          }
+        }
       },
-      onClick: (e, els) => { if(els.length){ const pt = els[0]; openGameDetail(mkPosChartInst.data.datasets[pt.datasetIndex].data[pt.index].name); } },
-      onHover: (e, els) => { e.native.target.style.cursor = els.length ? 'pointer' : 'default'; }
+      onClick: (e, els) => { const p = els.length && mkPosChartInst.data.datasets[0].data[els[0].index]; if(p && !p.dim) openGameDetail(p.it.name); },
+      onHover: (e, els) => { const p = els.length && mkPosChartInst.data.datasets[0].data[els[0].index]; e.native.target.style.cursor = p && !p.dim ? 'pointer' : 'default'; }
     },
-    plugins: [quadrantLabels]
+    plugins: [draw]
   });
+}
+
+/* 한쪽에만 순위권인 게임: 순위순 칩 몇 개 + 나머지 개수로 압축 */
+function mkRenderPosRails(D){
+  const watch = mkWatchKeys();
+  const row = (store, label, cls) => {
+    const list = D.rails[store], open = mkPos.railOpen[store];
+    /* 접힌 상태에서도 검색에 걸린 칩은 함께 보여줌 */
+    const shown = open ? list : [...list.slice(0, MK_POS_RAIL_SHOWN), ...(mkPos.q ? list.slice(MK_POS_RAIL_SHOWN).filter(mkPosHit) : [])];
+    const chips = shown.map(it => {
+      const url = getIconUrlForGame(it.name), r = store === 'sales' ? it.sr : it.pr, hl = mkPosHit(it);
+      const st = `${hl || mkPosMatch(it) ? '' : 'dim'} ${hl ? 'hl' : ''} ${watch.has(getGameKey(it.name)) ? 'watch' : ''}`;
+      return `<span class="pos-chip ${st}" data-game="${escapeAttr(it.name)}" title="${escapeAttr(it.name)}">${url ? `<img src="${escapeAttr(url)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">` : '<span class="ph"></span>'}<span class="nm">${escapeHtml(it.name)}</span><b class="${cls} font-semibold shrink-0">${mkPosRank(r)}위</b></span>`;
+    }).join('');
+    const more = list.length > MK_POS_RAIL_SHOWN ? `<button type="button" class="pos-chip" style="padding-left:10px" data-railtoggle="${store}">${open ? '접기' : `+${list.length - MK_POS_RAIL_SHOWN}개 더`}</button>` : '';
+    return `<div class="flex flex-wrap items-center gap-1.5"><span class="text-[11px] font-semibold ${cls} w-[120px] shrink-0">${label} ${list.length}개</span>${chips || '<span class="text-[11px] muted">없음</span>'}${more}</div>`;
+  };
+  document.getElementById('mkPosRails').innerHTML = row('sales', '매출에만 순위권', 't-sales') + row('popular', '인기에만 순위권', 't-pop');
+}
+
+function mkRenderPosition(){
+  const D = mkPosData();
+  if(!D){ document.getElementById('mkPosition').innerHTML = mkEmpty('데이터가 없습니다.'); return null; }
+  /* 컨트롤 상태 */
+  document.querySelectorAll('#mkPosPeriod button').forEach(b => b.classList.toggle('on', b.dataset.v === mkPos.period));
+  const mSel = document.getElementById('mkPosMonth');
+  mSel.classList.toggle('hidden', mkPos.period !== 'month');
+  if(D.W.months){ mkPos.month = D.W.ym; mSel.innerHTML = D.W.months.slice().reverse().map(m => `<option value="${m}" ${m === D.W.ym ? 'selected' : ''}>${m.slice(0, 4)}년 ${Number(m.slice(5))}월</option>`).join(''); }
+  document.getElementById('mkPosTrail').checked = mkPos.trail;
+  document.getElementById('mkPosSize').checked = mkPos.size;
+  const all = [...D.plane, ...D.rails.sales, ...D.rails.popular];
+  const countBy = f => [...all.reduce((m, it) => { const v = it[f]; if(v && v !== '미분류' && v !== '미상') m.set(v, (m.get(v) || 0) + 1); return m; }, new Map())].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'ko'));
+  const fill = (id, list, cur, allLabel) => {
+    if(cur && !list.some(([v]) => v === cur)) list.push([cur, 0]);
+    document.getElementById(id).innerHTML = `<option value="">${allLabel}</option>` + list.map(([v, c]) => `<option value="${escapeAttr(v)}" ${v === cur ? 'selected' : ''}>${escapeHtml(v)} (${c})</option>`).join('');
+  };
+  fill('mkPosGenre', countBy('genre'), mkPos.genre, '전체 장르');
+  fill('mkPosPub', countBy('publisher').slice(0, 40), mkPos.pub, '전체 퍼블리셔');
+  document.getElementById('mkPosNames').innerHTML = all.map(it => `<option value="${escapeAttr(it.name)}"></option>`).join('');
+  const hits = mkPos.q ? all.filter(mkPosHit).length : 0;
+  setText('mkPosDesc', `${D.W.label} · 양쪽 TOP100 ${D.plane.length}개 · 매출에만 ${D.rails.sales.length}개 · 인기에만 ${D.rails.popular.length}개`
+    + (mkPos.trail && D.W.prev.length ? ` · 화살표는 ${D.W.prevLabel} 위치에서 이동` : '')
+    + (mkPos.genre || mkPos.pub ? ` · 필터 일치 ${all.filter(mkPosMatch).length}개` : '')
+    + (mkPos.q ? ` · 검색 일치 ${hits}개` : ''));
+  mkRenderPosScatter(D);
+  mkRenderPosRails(D);
+  /* 구역별 목록 (50위 기준) */
+  const toMap = m => new Map([...m].map(([k, v]) => [k, { name: v.name, rank: v.rank }]));
+  mkRenderPositionMap('mkPosition', toMap(D.cs), toMap(D.cp), mkPos.period === 'day' ? { unit: '' } : { unit: '평균 ', note: '기간 평균은 절반 이상 순위권이었던 게임만, 빠진 날은 100+로 계산했습니다.' });
+  return D;
 }
 
 function mkRenderStructure(){
@@ -3176,27 +3464,8 @@ function mkRenderStructure(){
   const I = { sales: mkGetIndex('sales'), popular: mkGetIndex('popular') };
   const base = I.sales.dates.at(-1);
   if(!mon || !base){ setText('mkAsOf', '데이터 없음'); return; }
-  setText('mkAsOf', `포지션 맵 ${mkTabs.posBase === 'day' ? `기준일 ${base}` : `지난주 ${mkWeekLabel(mon)}`} · 장르·퍼블리셔 지난주 ${mkWeekLabel(mon)}(월~일)`);
-
-  /* 포지션 맵: 기준일 순위 또는 지난주 평균 순위(관측되지 않은 날은 101로 계산) */
-  let sMap, pMap, opt;
-  if(mkTabs.posBase === 'day'){
-    sMap = I.sales.byDate.get(base) || new Map(); pMap = I.popular.byDate.get(I.popular.dates.at(-1)) || new Map();
-    opt = { unit: '' };
-    setText('mkPosDesc', `기준일 ${base} · 매출·인기 TOP100 게임 ${new Set([...sMap.keys(), ...pMap.keys()]).size}개`);
-  }else{
-    const weekRankMap = idx => {
-      const w = mkWeekAgg(idx, mon), n = w.dates.length, m = new Map();
-      if(!n) return m;
-      w.games.forEach((g, k) => m.set(k, { name: g.name, rank: (g.sum + (n - g.days) * 101) / n }));
-      return m;
-    };
-    sMap = weekRankMap(I.sales); pMap = weekRankMap(I.popular);
-    opt = { unit: '주 평균 ', note: '주중 일부만 순위권이었던 게임은 빠진 날을 100+로 반영해 평균이 낮아집니다.' };
-    setText('mkPosDesc', `지난주 ${mkWeekLabel(mon)} 주 평균 순위 · 빠진 날은 100+로 계산`);
-  }
-  if(sMap.size || pMap.size){ mkRenderPosScatter(sMap, pMap); mkRenderPositionMap('mkPosition', sMap, pMap, opt); }
-  else document.getElementById('mkPosition').innerHTML = mkEmpty('데이터가 없습니다.');
+  const D = mkRenderPosition();
+  setText('mkAsOf', `포지션 맵 ${D ? D.W.label : '-'} · 장르·퍼블리셔 지난주 ${mkWeekLabel(mon)}(월~일)`);
 
   /* 장르 비중 8주 */
   const gIdx = I[mkTabs.wGenre];
@@ -3251,7 +3520,7 @@ function mkRenderStructureSkeleton(){
   setText('mkAsOf', '지난 기간 데이터를 불러오는 중...');
   setText('mkPosDesc', '-');
   if(mkPosChartInst){ mkPosChartInst.destroy(); mkPosChartInst = null; }
-  ['mkPosition', 'mkWGenre', 'mkWPub'].forEach(id => { document.getElementById(id).innerHTML = skBlocks(6); });
+  ['mkPosition', 'mkPosRails', 'mkWGenre', 'mkWPub'].forEach(id => { document.getElementById(id).innerHTML = skBlocks(6); });
 }
 
 /* ---------- 데뷔 게임 (순위 데이터만 사용) ---------- */
@@ -3429,6 +3698,91 @@ function mkRenderReleases(){
     <p class="text-[10px] muted mt-3">${dowNames[dTop]}요일 출시가 가장 많습니다 (${Math.round(dMax / rows.length * 100)}%). 예정 일정 포함.</p>`;
 }
 
+/* ---------- 평점 변화 (기준일 vs 7일 전 무렵, 순위 데이터의 평점 컬럼) ---------- */
+function mkRenderRating(){
+  const box = document.getElementById('mkRating');
+  if(!box) return;
+  const base = latestDate(rawStore.sales);
+  if(!base){ box.innerHTML = mkEmpty('데이터가 없습니다.'); return; }
+  const ref = mkAddDays(base, -7), scores = new Map(), names = new Map(), inTop = new Set();
+  ['sales', 'popular'].forEach(s => (rawStore[s]?.rows || []).forEach(r => {
+    const d = rowDate(r), k = getGameKey(r), v = parseFloat(scoreOf(r));
+    if(k === '-' || isNaN(v) || v <= 0 || v > 5) return;
+    if(!scores.has(k)) scores.set(k, new Map());
+    scores.get(k).set(d, v);
+    if(d === base){ inTop.add(k); names.set(k, gameName(r)); }
+  }));
+  const list = [];
+  inTop.forEach(k => {
+    const m = scores.get(k), now = m.get(base), past = [...m.keys()].filter(d => d <= ref).sort().at(-1);
+    if(past == null) return;
+    const before = m.get(past), delta = Math.round((now - before) * 10) / 10;
+    if(Math.abs(delta) >= 0.1) list.push({ name: names.get(k), now, before, delta });
+  });
+  const down = list.filter(x => x.delta < 0).sort((a, b) => a.delta - b.delta).slice(0, 6);
+  const up = list.filter(x => x.delta > 0).sort((a, b) => b.delta - a.delta).slice(0, 6);
+  setText('mkRatingDesc', `기준일 ${base} vs 7일 전 무렵 · 순위권 게임 ${inTop.size}개 중 0.1 이상 변한 ${list.length}개`);
+  const rows = arr => arr.length ? arr.map(x => `
+    <div class="flex items-center gap-3 py-1.5 px-2 -mx-2 rounded-lg hover:bg-slate-800/50 cursor-pointer" data-game="${escapeAttr(x.name)}">
+      <div class="flex-1 min-w-0 text-xs">${mkGameCell(x.name)}</div>
+      <span class="text-[11px] muted whitespace-nowrap">★ ${x.before.toFixed(1)} → ${x.now.toFixed(1)}</span>
+      <span class="w-12 text-right text-xs font-bold ${x.delta > 0 ? 'rank-up' : 'rank-down'}">${x.delta > 0 ? '▲' : '▼'} ${Math.abs(x.delta).toFixed(1)}</span>
+    </div>`).join('') : '<div class="muted text-[11px] py-2">해당 게임 없음</div>';
+  box.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
+      <div><div class="text-[10px] font-semibold rank-down mb-1">평점 하락</div>${rows(down)}</div>
+      <div><div class="text-[10px] font-semibold rank-up mb-1">평점 상승</div>${rows(up)}</div>
+    </div>
+    <p class="text-[10px] muted mt-3">Google Play에 표시되는 평점(소수점 한 자리) 기준이라 0.1 변화도 의미가 있습니다. 평점은 9/8부터 수집됐습니다.</p>`;
+}
+
+/* ---------- 관심 게임 (이 브라우저에만 저장) ---------- */
+const WATCH_KEY = 'gmi.watchlist.v1';
+let detailCurrentName = '';
+function mkWatchList(){
+  try{ const v = JSON.parse(localStorage.getItem(WATCH_KEY) || '[]'); return Array.isArray(v) ? v.filter(x => typeof x === 'string') : []; }
+  catch(e){ return []; }
+}
+function mkWatchKeys(){ return new Set(mkWatchList().map(getGameKey)); }
+function mkWatchToggle(name){
+  if(!name) return;
+  const list = mkWatchList(), k = getGameKey(name), i = list.findIndex(n => getGameKey(n) === k);
+  if(i >= 0) list.splice(i, 1); else list.unshift(name);
+  try{ localStorage.setItem(WATCH_KEY, JSON.stringify(list.slice(0, 30))); }catch(e){}
+  renderWatchlist();
+  syncDetailWatchBtn(name);
+  if(currentView === 'business' && mkSection === 'structure' && mkMonthsReady) mkRenderPosition();
+}
+function syncDetailWatchBtn(name){
+  const b = document.getElementById('detailWatchBtn');
+  if(!b) return;
+  const on = mkWatchKeys().has(getGameKey(name));
+  b.innerHTML = `<i class="fa-${on ? 'solid' : 'regular'} fa-star"></i>`;
+  b.classList.toggle('text-amber-400', on); b.classList.toggle('text-slate-400', !on);
+  b.title = on ? '관심 게임에서 빼기' : '관심 게임에 추가';
+  b.setAttribute('aria-label', b.title); b.setAttribute('aria-pressed', on ? 'true' : 'false');
+}
+function renderWatchlist(){
+  const box = document.getElementById('watchList');
+  if(!box) return;
+  const list = mkWatchList();
+  setText('watchCount', list.length ? `${list.length}개` : '');
+  if(!list.length){
+    box.innerHTML = '<div class="text-xs muted py-1.5 px-1">게임 상세에서 <i class="fa-regular fa-star text-amber-400/80"></i> 를 누르면 여기에 모아 볼 수 있습니다.</div>';
+    return;
+  }
+  const cell = (row, label, cls) => row
+    ? `<span class="inline-flex items-center gap-1 text-[12px]"><span class="${cls} font-semibold">${label} ${rankOf(row)}위</span>${rankChangeBadge(String(row[2] || '-'))}</span>`
+    : `<span class="text-[11px] muted">${label} 순위권 밖</span>`;
+  box.innerHTML = `<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2">${list.map(name => {
+    const k = getGameKey(name), s = salesLatestMap.get(k), p = popularLatestMap.get(k), url = getIconUrlForGame(name), sc = scoreOf(s || p);
+    return `<div class="flex items-center gap-2.5 p-2.5 rounded-lg bg-slate-900/60 border border-slate-800 hover:border-slate-600 cursor-pointer transition-colors" onclick="openGameDetail('${escapeAttr(name).replace(/&#039;/g, "\\'")}')">
+      ${url ? `<img src="${escapeAttr(url)}" class="w-9 h-9 rounded-lg object-cover bg-slate-800 shrink-0" alt="" loading="lazy">` : '<span class="w-9 h-9 rounded-lg bg-slate-800 shrink-0"></span>'}
+      <div class="min-w-0 flex-1"><div class="text-[13px] font-medium truncate text-slate-100">${escapeHtml(name)}</div><div class="flex flex-wrap gap-x-3 gap-y-0.5 mt-0.5">${cell(s, '매출', 't-sales')}${cell(p, '인기', 't-pop')}</div></div>
+      ${sc !== '-' ? `<span class="text-[11px] text-slate-300 shrink-0"><i class="fa-solid fa-star text-amber-400/70 text-[9px] mr-0.5"></i>${escapeHtml(sc)}</span>` : ''}
+    </div>`;
+  }).join('')}</div>`;
+}
+
 /* ---------- 모드 / 탭 / 진입 ---------- */
 const MK_SECTION_EL = { change: 'mkSecChange', structure: 'mkSecStructure', debut: 'mkSecDebut', releases: 'mkSecReleases' };
 function mkSyncModeButtons(){
@@ -3452,6 +3806,7 @@ function mkRender(){
       if(mkMode === 'daily') mkRenderDaily();
       else if(mkMonthsReady) mkRenderWeekly();
       else mkRenderWeeklySkeleton();
+      mkRenderRating();
     }else if(mkSection === 'structure'){
       if(mkMonthsReady) mkRenderStructure(); else mkRenderStructureSkeleton();
     }else if(mkSection === 'debut'){
@@ -3508,6 +3863,8 @@ function mkInitEvents(){
   root.addEventListener('click', e => {
     const exp = e.target.closest('button[data-posexpand]');
     if(exp){ const k = exp.dataset.posexpand; mkPosExpand[k] = !mkPosExpand[k]; mkRender(); return; }
+    const rail = e.target.closest('button[data-railtoggle]');
+    if(rail){ const s = rail.dataset.railtoggle; mkPos.railOpen[s] = !mkPos.railOpen[s]; mkRenderPosition(); return; }
     const tab = e.target.closest('button[data-tabkey]');
     if(tab){ mkTabs[tab.dataset.tabkey] = tab.dataset.store; mkRender(); return; }
     const game = e.target.closest('[data-game]');
