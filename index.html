@@ -445,10 +445,10 @@ html.panel-lock { overflow: hidden; }
 
   <!-- 다가오는 신작 (신작 정보만 사용, 순위 데이터와 연결하지 않음) -->
   <section id="upcomingSection">
-    <div class="card rounded-xl p-5" data-snap>
+    <div class="card rounded-xl p-5">
       <div class="flex items-center justify-between gap-2 mb-3">
         <h2 class="text-base font-bold text-slate-200 flex items-center gap-2"><i class="fa-regular fa-calendar-plus t-new"></i>다가오는 신작 <span id="upcomingSub" class="text-xs muted font-normal"></span></h2>
-        <span class="flex items-center gap-2"><button type="button" class="snap-btn" data-nosnap onclick="snapEl(this, '다가오는신작')" title="이미지로 저장" aria-label="이미지로 저장"><i class="fa-solid fa-camera"></i></button><button type="button" data-nosnap onclick="switchView('calendar')" class="text-[12px] font-semibold text-indigo-300 hover:text-indigo-200 whitespace-nowrap">신작 달력에서 보기<i class="fa-solid fa-chevron-right ml-1 text-[10px]"></i></button></span>
+        <span class="flex items-center gap-2"><button type="button" onclick="switchView('calendar')" class="text-[12px] font-semibold text-indigo-300 hover:text-indigo-200 whitespace-nowrap">신작 달력에서 보기<i class="fa-solid fa-chevron-right ml-1 text-[10px]"></i></button></span>
       </div>
       <div id="upcomingList"><div class="text-xs muted py-2">불러오는 중...</div></div>
     </div>
@@ -462,21 +462,21 @@ html.panel-lock { overflow: hidden; }
       </h2>
     </div>
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <div class="card rounded-xl p-5" data-snap>
+      <div class="card rounded-xl p-5">
         <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-800/80">
           <h3 class="font-semibold text-sm flex items-center gap-1.5 t-pop">
             <i class="fa-solid fa-fire"></i> 인기순위 TOP 10
           </h3>
-          <span class="flex items-center gap-2"><button type="button" class="snap-btn" data-nosnap onclick="snapEl(this, '인기TOP10')" title="이미지로 저장" aria-label="이미지로 저장"><i class="fa-solid fa-camera"></i></button><button type="button" data-nosnap onclick="openRankPanel('popular')" class="text-[12px] font-semibold text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700 border border-slate-700 rounded-lg px-2.5 py-1 whitespace-nowrap transition-colors">전체순위보기<i class="fa-solid fa-chevron-right ml-1 text-[10px] t-pop"></i></button></span>
+          <span class="flex items-center gap-2"><button type="button" onclick="openRankPanel('popular')" class="text-[12px] font-semibold text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700 border border-slate-700 rounded-lg px-2.5 py-1 whitespace-nowrap transition-colors">전체순위보기<i class="fa-solid fa-chevron-right ml-1 text-[10px] t-pop"></i></button></span>
         </div>
         <ol id="popularTop10List" class="divide-y divide-slate-900/70"></ol>
       </div>
-      <div class="card rounded-xl p-5" data-snap>
+      <div class="card rounded-xl p-5">
         <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-800/80">
           <h3 class="font-semibold text-sm flex items-center gap-1.5 t-sales">
             <i class="fa-solid fa-coins"></i> 매출순위 TOP 10
           </h3>
-          <span class="flex items-center gap-2"><button type="button" class="snap-btn" data-nosnap onclick="snapEl(this, '매출TOP10')" title="이미지로 저장" aria-label="이미지로 저장"><i class="fa-solid fa-camera"></i></button><button type="button" data-nosnap onclick="openRankPanel('sales')" class="text-[12px] font-semibold text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700 border border-slate-700 rounded-lg px-2.5 py-1 whitespace-nowrap transition-colors">전체순위보기<i class="fa-solid fa-chevron-right ml-1 text-[10px] t-sales"></i></button></span>
+          <span class="flex items-center gap-2"><button type="button" onclick="openRankPanel('sales')" class="text-[12px] font-semibold text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700 border border-slate-700 rounded-lg px-2.5 py-1 whitespace-nowrap transition-colors">전체순위보기<i class="fa-solid fa-chevron-right ml-1 text-[10px] t-sales"></i></button></span>
         </div>
         <ol id="salesTop10List" class="divide-y divide-slate-900/70"></ol>
       </div>
@@ -1862,7 +1862,7 @@ function renderUpcoming(){
       <div class="flex-1 min-w-0"><div class="text-[13px] font-medium text-slate-100 truncate">${escapeHtml(String(r[1] || '-'))}</div><div class="text-[11px] muted truncate mt-0.5">${mkShort(d)} (${dow})${pub && pub !== '-' ? ' · ' + escapeHtml(pub) : ''}</div></div>
       <div class="flex flex-col items-end gap-1 shrink-0"><span class="up-d${diff === 0 ? ' today' : ''}">${diff === 0 ? '오늘' : `D-${diff}`}</span>${tag}</div>
     </div>`;
-  }).join('')}</div>${list.length > shown.length ? `<button type="button" data-nosnap onclick="switchView('calendar')" class="mt-2 text-[12px] text-slate-400 hover:text-slate-200">외 ${list.length - shown.length}개 · 신작 달력에서 전체 보기</button>` : ''}`;
+  }).join('')}</div>${list.length > shown.length ? `<button type="button" onclick="switchView('calendar')" class="mt-2 text-[12px] text-slate-400 hover:text-slate-200">외 ${list.length - shown.length}개 · 신작 달력에서 전체 보기</button>` : ''}`;
 }
 
 function daysBetween(a, b){ return Math.round((dateValue(b) - dateValue(a)) / 86400000); }
