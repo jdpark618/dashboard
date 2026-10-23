@@ -1893,6 +1893,7 @@ function dashChgSet(k){
 
 function switchView(view){
   currentView=view;
+  if(view !== 'report' && typeof RP_BASE_TITLE !== 'undefined') document.title = RP_BASE_TITLE;
   document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.view===view));
   /* 고정 메뉴 아래에서 새 화면이 시작되게, 휴대폰은 현재 메뉴가 보이도록 가로 스크롤 */
   const nav = document.getElementById('topNav'), act = nav.querySelector('.tab.active');
@@ -5120,6 +5121,7 @@ async function openReportView(){
   document.getElementById('rpWeekSel').innerHTML = weeks.map((w, i) => `<option value="${w}" ${w === mon ? 'selected' : ''}>${rpWeekName(w)} · ${rpWeekRange(w)}${i === 0 ? ' (최신)' : ''}</option>`).join('');
   setText('rpSub', `${rpWeekName(mon)} · ${rpWeekRange(mon)} · 전주 대비 · A4 4쪽`);
   history.replaceState(null, '', `#report?w=${mon}`);
+  document.title = `주간리포트_${mon}`;
   try{ pages.innerHTML = rpRender(rpBuild(mon)); }
   catch(e){ console.error('리포트 생성 실패', e); pages.innerHTML = mkEmpty('리포트를 만들지 못했습니다.'); return; }
   rpFit();
@@ -5137,18 +5139,20 @@ function reportCopyLink(){
   const done = ok => { msg.textContent = ok ? '리포트 링크를 복사했습니다.' : url; msg.classList.remove('hidden'); setTimeout(() => msg.classList.add('hidden'), 2500); };
   (navigator.clipboard?.writeText(url) || Promise.reject()).then(() => done(true), () => done(false));
 }
-/* PDF로 저장: 페이지 사본만 남기고 브라우저 인쇄 (파일 이름은 문서 제목을 따름) */
-function reportPrint(){
+/* PDF로 저장: 페이지 사본만 남기고 브라우저 인쇄. 파일 이름은 문서 제목을 따르므로
+   리포트 화면에 있는 동안은 제목을 '주간리포트_날짜'로 유지 (인쇄 창 열린 뒤 바뀌는 타이밍 문제 방지) */
+const RP_BASE_TITLE = document.title;
+function rpPreparePrint(){
+  if(document.getElementById('rpPrintRoot')) return;
   const root = document.createElement('div'); root.id = 'rpPrintRoot';
-  root.innerHTML = `<div id="reportPages" style="zoom:1">${document.getElementById('reportPages').innerHTML}</div>`;
-  root.querySelector('#reportPages').id = 'rpPrintPages';
+  root.innerHTML = `<div id="rpPrintPages">${document.getElementById('reportPages').innerHTML}</div>`;
   document.body.appendChild(root); document.body.classList.add('rp-printing');
-  const title = document.title; document.title = `주간리포트_${rpState.week}`;
-  const restore = () => { document.body.classList.remove('rp-printing'); root.remove(); document.title = title; window.removeEventListener('afterprint', restore); };
-  window.addEventListener('afterprint', restore);
-  window.print();
-  setTimeout(() => { if(document.body.contains(root) && !matchMedia('print').matches) restore(); }, 1000);
 }
+function rpCleanupPrint(){ document.body.classList.remove('rp-printing'); document.getElementById('rpPrintRoot')?.remove(); }
+function reportPrint(){ rpPreparePrint(); window.print(); }
+/* Ctrl+P로 인쇄해도 리포트 페이지만 */
+window.addEventListener('beforeprint', () => { if(currentView === 'report' && document.querySelector('#reportPages .rp-page')) rpPreparePrint(); });
+window.addEventListener('afterprint', rpCleanupPrint);
 
 /* ---- 리포트 데이터 ---- */
 function rpBuild(mon){
