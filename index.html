@@ -562,7 +562,7 @@ html.panel-lock { overflow: hidden; }
   <!-- 질문 단위 탭 -->
   <nav class="flex gap-1 overflow-x-auto overflow-y-hidden border-b border-slate-800" id="mkSectionTabs">
     <button type="button" data-section="change" onclick="mkSetSection('change')" class="mk-sec"><i class="fa-solid fa-arrow-trend-up mr-1.5"></i>순위 변동</button>
-    <button type="button" data-section="monthly" onclick="mkSetSection('monthly')" class="mk-sec"><i class="fa-solid fa-table-list mr-1.5"></i>월간 순위</button>
+    <button type="button" data-section="monthly" onclick="mkSetSection('monthly')" class="mk-sec"><i class="fa-solid fa-table-list mr-1.5"></i>월간/주간 순위</button>
     <button type="button" data-section="structure" onclick="mkSetSection('structure')" class="mk-sec"><i class="fa-solid fa-chess-board mr-1.5"></i>시장 구조</button>
     <button type="button" data-section="debut" onclick="mkSetSection('debut')" class="mk-sec"><i class="fa-solid fa-seedling mr-1.5"></i>첫 차트인</button>
     <button type="button" data-section="releases" onclick="mkSetSection('releases')" class="mk-sec"><i class="fa-regular fa-calendar-plus mr-1.5"></i>신작 동향</button>
@@ -620,14 +620,21 @@ html.panel-lock { overflow: hidden; }
   </section>
   </div>
 
-  <!-- 월간 순위 -->
+  <!-- 월간/주간 순위 -->
   <div id="mkSecMonthly" class="hidden space-y-4">
     <div class="flex flex-wrap items-center justify-between gap-2">
-      <p class="text-[11px] muted">월 평균 순위로 본 이번 달과 지난달 비교 · 그 달 절반 이상 TOP100이었던 게임, 빠진 날은 101위로 계산</p>
-      <div class="flex flex-wrap items-center gap-2"><select id="mkMonthlySel" class="mk-sel" onchange="mkMonthly.ym = this.value; mkMonthly.all = false; mkRender()" aria-label="월 선택"></select><div class="mk-tabs" data-tab="monthly"></div></div>
+      <p class="text-[11px] muted">기간 평균 순위로 본 선택 기간과 직전 기간 비교 · 그 기간 절반 이상 TOP100이었던 게임, 빠진 날은 101위로 계산</p>
+      <div class="flex flex-wrap items-center gap-2">
+        <div class="mk-seg" id="mkRankPeriod">
+          <button type="button" data-v="month" onclick="mkRankPeriodSet('month')">월간</button>
+          <button type="button" data-v="week" onclick="mkRankPeriodSet('week')">주간</button>
+        </div>
+        <select id="mkMonthlySel" class="mk-sel" onchange="mkMonthly[mkMonthly.period === 'week' ? 'wk' : 'ym'] = this.value; mkMonthly.all = false; mkRender()" aria-label="기간 선택"></select>
+        <div class="mk-tabs" data-tab="monthly"></div>
+      </div>
     </div>
     <section class="card rounded-xl p-5" data-snap>
-      <div class="mk-card-head"><div><h3 class="font-semibold text-sm flex items-center gap-2">월간 순위표 <span class="mk-store" data-storeof="monthly"></span></h3><p id="mkMonthlyDesc" class="text-[10px] muted mt-1">-</p></div><button type="button" class="snap-btn" data-nosnap onclick="snapEl(this, '월간순위표')" title="이미지로 저장" aria-label="이미지로 저장"><i class="fa-solid fa-camera"></i></button></div>
+      <div class="mk-card-head"><div><h3 class="font-semibold text-sm flex items-center gap-2"><span id="mkRankTitle">월간 순위표</span> <span class="mk-store" data-storeof="monthly"></span></h3><p id="mkMonthlyDesc" class="text-[10px] muted mt-1">-</p></div><button type="button" class="snap-btn" data-nosnap onclick="snapEl(this, mkMonthly.period === 'week' ? '주간순위표' : '월간순위표')" title="이미지로 저장" aria-label="이미지로 저장"><i class="fa-solid fa-camera"></i></button></div>
       <div id="mkMonthlyTable" class="overflow-x-auto scrollbar"></div>
     </section>
   </div>
@@ -3609,7 +3616,8 @@ let mkSection = 'change';
 const mkPosExpand = {};
 /* 탭 단위 매출/인기 전환: 한 번에 그 탭의 카드들을 같이 바꿈 */
 const MK_TAB_GROUPS = { secChange: ['dMovers', 'dEntries', 'wMovers', 'wEntries'], secStructure: ['wGenre', 'wPub'] };
-const mkMonthly = { ym: '', all: false };
+const mkMonthly = { period: 'month', ym: '', wk: '', all: false };
+function mkRankPeriodSet(v){ mkMonthly.period = v; mkMonthly.all = false; mkRender(); }
 const mkTabs = { monthly: 'sales', secChange: 'sales', secStructure: 'sales', dMovers: 'sales', dEntries: 'sales', dEntryType: 'in', wEntryType: 'list', wGenre: 'sales', wPub: 'sales', wMovers: 'sales', wEntries: 'sales', wCohort: 'sales', debut: 'sales' };
 /* 탭 버튼 선택지: 기본은 매출/인기 */
 const MK_TAB_OPTIONS = {};
@@ -4476,21 +4484,39 @@ function mkRenderStructureSkeleton(){
   ['mkPosition', 'mkPosRails', 'mkWGenre', 'mkWPub'].forEach(id => { document.getElementById(id).innerHTML = skBlocks(6); });
 }
 
-/* ---------- 월간 순위표: 월 평균 순위로 이번 달 vs 지난달 ---------- */
+/* ---------- 월간/주간 순위표: 기간 평균 순위로 선택 기간 vs 직전 기간 ---------- */
+/* 기간 목록과 선택: 월간은 달, 주간은 월~일 (기본은 지난 완료 주) */
+function mkRankPeriods(idx){
+  const base = idx.dates.at(-1);
+  if(mkMonthly.period === 'week'){
+    const mons = [...new Set(idx.dates.map(mkMonday))].slice(-12);
+    const target = mkTargetWeekMonday();
+    if(!mons.includes(mkMonthly.wk)) mkMonthly.wk = mons.includes(target) ? target : mons.at(-1);
+    const sel = mkMonthly.wk, i = mons.indexOf(sel), prevKey = i > 0 ? mons[i - 1] : (idx.dates.some(d => d >= mkAddDays(sel, -7) && d < sel) ? mkAddDays(sel, -7) : null);
+    const inWeek = k => d => d >= k && d <= mkAddDays(k, 6);
+    const lab = k => `${mkShort(k)} 주`;
+    return { sel, prevKey, keys: mons, cur: idx.dates.filter(inWeek(sel)), prev: prevKey ? idx.dates.filter(inWeek(prevKey)) : [], label: lab, unit: '주간', prevWord: '전주',
+      option: k => `${mkWeekLabel(k)}${base <= mkAddDays(k, 6) ? ` (진행 중 · ${mkShort(base)}까지)` : ''}` };
+  }
+  const months = [...new Set(idx.dates.map(d => d.slice(0, 7)))];
+  if(!months.includes(mkMonthly.ym)) mkMonthly.ym = months.at(-1);
+  const sel = mkMonthly.ym, prevKey = months[months.indexOf(sel) - 1] || null, lab = k => `${Number(k.slice(5))}월`;
+  return { sel, prevKey, keys: months, cur: idx.dates.filter(d => d.startsWith(sel)), prev: prevKey ? idx.dates.filter(d => d.startsWith(prevKey)) : [], label: lab, unit: '월간', prevWord: '지난달',
+    option: k => `${k.slice(0, 4)}년 ${lab(k)}${k === base.slice(0, 7) ? ` (${mkShort(base)}까지)` : ''}` };
+}
 function mkRenderMonthly(){
   const store = mkTabs.monthly, label = MK_STORE_LABEL[store], idx = mkGetIndex(store);
-  const months = [...new Set(idx.dates.map(d => d.slice(0, 7)))];
-  if(!months.length){ setText('mkAsOf', '데이터 없음'); return; }
-  if(!months.includes(mkMonthly.ym)) mkMonthly.ym = months.at(-1);
-  const ym = mkMonthly.ym, pym = months[months.indexOf(ym) - 1] || null, base = idx.dates.at(-1);
-  const mLabel = k => `${Number(k.slice(5))}월`;
-  document.getElementById('mkMonthlySel').innerHTML = months.slice().reverse().map(k => `<option value="${k}" ${k === ym ? 'selected' : ''}>${k.slice(0, 4)}년 ${mLabel(k)}${k === base.slice(0, 7) ? ` (${mkShort(base)}까지)` : ''}</option>`).join('');
-  const cur = idx.dates.filter(d => d.startsWith(ym)), prev = pym ? idx.dates.filter(d => d.startsWith(pym)) : [];
+  document.querySelectorAll('#mkRankPeriod button').forEach(b => b.classList.toggle('on', b.dataset.v === mkMonthly.period));
+  if(!idx.dates.length){ setText('mkAsOf', '데이터 없음'); return; }
+  const P = mkRankPeriods(idx), base = idx.dates.at(-1);
+  const ym = P.sel, pym = P.prevKey, cur = P.cur, prev = P.prev, mLabel = P.label;
+  setText('mkRankTitle', `${P.unit} 순위표`);
+  document.getElementById('mkMonthlySel').innerHTML = P.keys.slice().reverse().map(k => `<option value="${k}" ${k === ym ? 'selected' : ''}>${P.option(k)}</option>`).join('');
   const ca = mkPosAgg(idx, cur), pa = prev.length ? mkPosAgg(idx, prev) : new Map();
   const order = m => [...m].sort((a, b) => a[1].rank - b[1].rank);
   const curList = order(ca), prevPos = new Map(order(pa).map(([k], i) => [k, i + 1]));
-  setText('mkAsOf', `${label} 월간 순위 · ${mLabel(ym)}${pym ? ` vs ${mLabel(pym)}` : ''} · 기준일 ${base}`);
-  setText('mkMonthlyDesc', `${mLabel(ym)} 관측 ${cur.length}일${pym ? ` · ${mLabel(pym)} 관측 ${prev.length}일` : ' · 비교할 지난달 데이터 없음'} · ${curList.length}개 · 행을 누르면 게임 상세`);
+  setText('mkAsOf', `${label} ${P.unit} 순위 · ${mLabel(ym)}${pym ? ` vs ${mLabel(pym)}` : ''} · 기준일 ${base}`);
+  setText('mkMonthlyDesc', `${mLabel(ym)} 관측 ${cur.length}일${pym ? ` · ${mLabel(pym)} 관측 ${prev.length}일` : ` · 비교할 ${P.prevWord} 데이터 없음`} · ${curList.length}개 · 행을 누르면 게임 상세`);
   const fmt = v => v >= 100 ? '100+' : v.toFixed(1);
   const shown = mkMonthly.all ? curList : curList.slice(0, 30);
   document.getElementById('mkMonthlyTable').innerHTML = curList.length ? `<table class="w-full min-w-[560px] text-left text-xs">
@@ -4512,7 +4538,7 @@ function mkRenderMonthly(){
       </tr>`;
     }).join('')}</tbody></table>
     ${curList.length > 30 ? `<button type="button" data-nosnap onclick="mkMonthly.all = !mkMonthly.all; mkRender()" class="mt-2 text-[12px] text-slate-400 hover:text-slate-200">${mkMonthly.all ? '30위까지만 보기' : `전체 ${curList.length}개 보기`}</button>` : ''}
-    <p class="text-[10px] muted mt-3">순위 칸 색은 지난달 평균보다 좋아졌으면 빨강, 나빠졌으면 파랑입니다. 추세는 월간 순위표 안에서의 자리 변화이며, NEW는 지난달 표에 없던 게임입니다.</p>` : mkEmpty('이 달에 집계할 게임이 없습니다.');
+    <p class="text-[10px] muted mt-3">순위 칸 색은 ${P.prevWord} 평균보다 좋아졌으면 빨강, 나빠졌으면 파랑입니다. 추세는 ${P.unit} 순위표 안에서의 자리 변화이며, NEW는 ${P.prevWord} 표에 없던 게임입니다.</p>` : mkEmpty('이 기간에 집계할 게임이 없습니다.');
 }
 
 /* ---------- 첫 차트인 (순위 데이터만 사용) ---------- */
