@@ -229,6 +229,24 @@ html.panel-lock { overflow: hidden; }
 .mk-sel { height:32px; }
 .cal-today-btn, .cal-toggle { height:32px; display:inline-flex; align-items:center; }
 #view-calendar .cal-chip { height:32px; }
+@media (max-width:767px){ #dashChg > [data-chg]:not(.on) { display:none; } }
+.cal-pastbtn { width:100%; margin:4px 0 6px; padding:10px; border-radius:8px; border:1px dashed rgba(71,85,105,.7); color:#94a3b8; font-size:12px; font-weight:600; }
+.cal-pastbtn:hover { color:#e2e8f0; border-color:rgba(99,102,241,.5); }
+/* 읽는 글씨 최소 11px: 순위 검색·슬라이드 패널·달력 목록 (달력 칸 안 배지는 촘촘해서 10px 유지) */
+#view-search .text-\[10px\], #detailPanel .text-\[10px\], #releaseDetailPanel .text-\[10px\], #rankPanel .text-\[10px\], #calDayPanel .text-\[10px\] { font-size:11px; }
+#view-search .gs-chip .gs-bd, #calListBody .cal-cnt, #calListBody .cal-tag, #calListBody .cal-now, #calListBody .text-\[10px\], #calDayBody .cal-tag { font-size:11px; }
+/* 휴대폰: 누르는 조작은 34~36px */
+@media (max-width:767px){
+  .mk-seg button, .mk-tabs button { height:30px; }
+  .mk-seg.sm button { height:28px; }
+  .mk-sel, .cal-today-btn, .cal-toggle, #view-calendar .cal-chip { height:36px; }
+  .cal-navbtn { width:36px; height:36px; }
+  .cal-weeknav button { min-height:34px; }
+  #mkDEntryType button, #mkWEntryType button { min-height:34px; }
+  .gs-chip button { padding:8px 6px; margin:-6px 0; }
+  button[onclick^="openRankPanel"], #dashMoreLink { min-height:34px; }
+  #calSearch + button, #mkPosSearch ~ button, .gs-clear { padding:10px; margin-right:-6px; }
+}
 .tap-tip { position:fixed; z-index:200; max-width:280px; background:#0f172a; color:#e2e8f0; border:1px solid rgba(99,102,241,.5); border-radius:8px; padding:8px 10px; font-size:12px; line-height:1.55; box-shadow:0 10px 25px -3px rgba(0,0,0,.7); }
 </style>
 </head>
@@ -393,8 +411,11 @@ html.panel-lock { overflow: hidden; }
   <!-- 관심 게임 (이 브라우저에만 저장) -->
   <section id="watchSection">
     <div class="flex items-center justify-between mb-3 px-0.5">
-      <h2 class="text-base font-bold text-slate-200 flex items-center gap-2"><i class="fa-solid fa-star text-amber-400"></i>관심 게임 <span id="watchCount" class="text-xs muted font-normal"></span></h2>
-      <span class="flex items-center gap-2"><span class="text-[11px] muted hidden sm:inline">이 브라우저에만 저장</span><button type="button" class="cal-today-btn" onclick="searchLoadWatch()"><i class="fa-solid fa-chart-line mr-1"></i>순위 비교</button></span>
+      <div class="flex flex-wrap items-center gap-x-3 gap-y-1 min-w-0">
+        <h2 class="text-base font-bold text-slate-200 flex items-center gap-2"><i class="fa-solid fa-star text-amber-400"></i>관심 게임 <span id="watchCount" class="text-xs muted font-normal"></span></h2>
+        <span id="watchEmptyHint" class="hidden text-[12px] muted">게임 상세에서 <i class="fa-regular fa-star text-amber-400/80"></i> 를 누르면 여기에 모입니다 · 이 브라우저에만 저장</span>
+      </div>
+      <span id="watchActions" class="flex items-center gap-2"><span class="text-[11px] muted hidden sm:inline">이 브라우저에만 저장</span><button type="button" class="cal-today-btn" onclick="searchLoadWatch()"><i class="fa-solid fa-chart-line mr-1"></i>순위 비교</button></span>
     </div>
     <div id="watchList" class="card rounded-xl p-5"></div>
   </section>
@@ -434,24 +455,29 @@ html.panel-lock { overflow: hidden; }
       <h2 class="text-base font-bold text-slate-200 flex items-center gap-2">
         <i class="fa-solid fa-arrow-trend-up text-indigo-400"></i>오늘의 순위 변동
       </h2>
-      <button type="button" onclick="mkSection = 'change'; mkMode = 'daily'; switchView('business')" class="text-[12px] font-semibold text-indigo-300 hover:text-indigo-200 whitespace-nowrap">시장 분석에서 더 보기<i class="fa-solid fa-chevron-right ml-1 text-[10px]"></i></button>
+      <button type="button" id="dashMoreLink" onclick="mkSection = 'change'; mkMode = 'daily'; switchView('business')" class="inline-flex items-center text-[12px] font-semibold text-indigo-300 hover:text-indigo-200 whitespace-nowrap">시장 분석에서 더 보기<i class="fa-solid fa-chevron-right ml-1 text-[10px]"></i></button>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-      <div class="card rounded-xl p-5">
+    <div class="mk-seg md:hidden" id="dashChgSel">
+      <button type="button" data-chg="new" class="on" onclick="dashChgSet('new')">신규 진입</button>
+      <button type="button" data-chg="up" onclick="dashChgSet('up')">급상승</button>
+      <button type="button" data-chg="down" onclick="dashChgSet('down')">급하락</button>
+    </div>
+    <div id="dashChg" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      <div class="card rounded-xl p-5 on" data-chg="new">
         <div class="text-xs font-semibold mb-3 flex items-center justify-between t-new pb-2 border-b border-slate-800">
           <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-new"></span>인기순위 신규 진입</span>
           <span class="text-[10px] muted font-normal">인기 순위 기준</span>
         </div>
         <ul id="newEntriesList" class="divide-y divide-slate-900/70"></ul>
       </div>
-      <div class="card rounded-xl p-5">
+      <div class="card rounded-xl p-5" data-chg="up">
         <div class="text-xs font-semibold mb-3 flex items-center justify-between t-up pb-2 border-b border-slate-800">
           <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-up"></span>매출 급상승</span>
           <span class="text-[10px] muted font-normal">전일 대비 매출</span>
         </div>
         <ul id="salesRisingList" class="divide-y divide-slate-900/70"></ul>
       </div>
-      <div class="card rounded-xl p-5">
+      <div class="card rounded-xl p-5" data-chg="down">
         <div class="text-xs font-semibold mb-3 flex items-center justify-between t-down pb-2 border-b border-slate-800">
           <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-down"></span>매출 급하락</span>
           <span class="text-[10px] muted font-normal">전일 대비 매출</span>
@@ -467,7 +493,7 @@ html.panel-lock { overflow: hidden; }
       <h2 class="text-base font-bold text-slate-200 flex items-center gap-2">
         <i class="fa-solid fa-chart-pie text-indigo-400"></i>TOP 100 장르 점유율
       </h2>
-      <span class="text-[11px] muted">전체 100% 기준 비례 막대 (동일 장르 고정 색상)</span>
+      <span class="text-[11px] muted hidden sm:inline">전체 100% 기준 비례 막대 (동일 장르 고정 색상)</span>
     </div>
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <div class="card rounded-xl p-5 flex flex-col justify-between min-h-[420px]">
@@ -1621,7 +1647,7 @@ function renderToday(){
     if(topEl) topEl.textContent = item.name;
     if(rankEl) rankEl.textContent = item.rank ? `${item.rank}위` : '';
     if(metaEl) metaEl.textContent = `${item.genre || '-'} · ${item.publisher || '-'}`;
-    if(changeEl) changeEl.innerHTML = customBadge || rankChangeBadge(item.change, false, '-');
+    if(changeEl) changeEl.innerHTML = customBadge || rankChangeBadge(item.change, false, '전일과 같음');
 
     const rawSc = item.score || getLatestScore(item.name);
     const formattedScore = (rawSc && !isNaN(parseFloat(rawSc))) ? parseFloat(rawSc).toFixed(1) : rawSc;
@@ -1684,6 +1710,11 @@ function renderToday(){
   renderGenreBars('popularGenreBars', p.popularGenre);
   renderGenreBars('salesGenreBars', p.salesGenre);
   renderWatchlist();
+}
+
+/* 휴대폰 대시보드 '오늘의 순위 변동': 세 목록 중 하나만 (넓은 화면은 모두 표시) */
+function dashChgSet(k){
+  document.querySelectorAll('#dashChgSel button, #dashChg > [data-chg]').forEach(el => el.classList.toggle('on', el.dataset.chg === k));
 }
 
 function switchView(view){
@@ -1759,7 +1790,7 @@ async function ensureCalendarMonthLoaded(){
 }
 
 let calMaxPerCell = 4;
-const calState = { view: 'grid', types: new Set(['OPEN', 'TEST', 'EARLY']), pub: '', q: '' };
+const calState = { showPast: false, view: 'grid', types: new Set(['OPEN', 'TEST', 'EARLY']), pub: '', q: '' };
 const CAL_TYPE_LABEL = { OPEN: '정식', TEST: '테스트', EARLY: '얼리 액세스' };
 const CAL_DOW = ['일', '월', '화', '수', '목', '금', '토'];
 let calMonthGames = [];      /* 현재 화면에 그린 일정 (미리보기·하루 패널이 참조) */
@@ -1921,18 +1952,25 @@ function renderCalList(){
   calMonthGames.forEach(g => { if(!byDay.has(g.day)) byDay.set(g.day, []); byDay.get(g.day).push(g); });
   const body = document.getElementById('calListBody');
   body.classList.toggle('searching', !!calState.q.trim());
-  body.innerHTML = byDay.size ? [...byDay].map(([d, list]) => {
+  /* 휴대폰: 이번 달은 오늘부터 보여 주고 지난 날짜는 접기 (검색 중이면 모두) */
+  const past = [...byDay.keys()].filter(d => `${ym}-${pad2(d)}` < today);
+  const fold = calIsNarrow() && !calState.showPast && !calState.q.trim() && past.length && past.length < byDay.size;
+  const pastCnt = past.reduce((t, d) => t + byDay.get(d).length, 0);
+  body.innerHTML = (fold ? `<button type="button" class="cal-pastbtn" onclick="calState.showPast = true; renderCalendar()"><i class="fa-solid fa-chevron-down mr-1.5"></i>지난 날짜 ${past.length}일 · ${pastCnt}개 펼치기</button>` : '')
+    + (byDay.size ? [...byDay].filter(([d]) => !fold || !past.includes(d)).map(([d, list]) => {
     const ds = `${ym}-${pad2(d)}`, dow = new Date(y, m - 1, d).getDay(), st = ds === today ? 'today' : ds < today ? 'past' : '';
     return `<section class="cal-day ${st}" id="calList-${d}">
       <div class="cal-day-h"><span class="${dow === 0 ? 'text-rose-300' : dow === 6 ? 'text-sky-300' : ''}">${m}월 ${d}일 (${CAL_DOW[dow]})</span><span class="cal-cnt">${list.length}개</span>${st === 'today' ? '<span class="cal-now">오늘</span>' : ''}${st === 'past' ? '<span class="text-[10px] muted font-normal">출시됨</span>' : ''}</div>
       ${list.map(calRowHtml).join('')}
     </section>`;
-  }).join('') : mkEmpty('조건에 맞는 신작 일정이 없습니다.');
+  }).join('') : mkEmpty('조건에 맞는 신작 일정이 없습니다.'));
 }
 
 /* 날짜로 이동 (오늘 버튼·주차 칩) */
 function calFocusDay(d){
-  const el = document.getElementById(calIsNarrow() || calState.view === 'list' ? `calList-${d}` : `calDay-${d}`);
+  const id = calIsNarrow() || calState.view === 'list' ? `calList-${d}` : `calDay-${d}`;
+  if(!document.getElementById(id) && !calState.showPast){ calState.showPast = true; renderCalendar(); } /* 접힌 지난 날짜로 이동 */
+  const el = document.getElementById(id);
   if(!el) return;
   el.scrollIntoView({ block: 'center', behavior: 'smooth' });
   el.classList.remove('cal-flash'); void el.offsetWidth; el.classList.add('cal-flash');
@@ -4573,10 +4611,12 @@ function renderWatchlist(){
   if(!box) return;
   const list = mkWatchList();
   setText('watchCount', list.length ? `${list.length}개` : '');
-  if(!list.length){
-    box.innerHTML = '<div class="text-xs muted py-1.5 px-1">게임 상세에서 <i class="fa-regular fa-star text-amber-400/80"></i> 를 누르면 여기에 모아 볼 수 있습니다.</div>';
-    return;
-  }
+  /* 비어 있으면 카드·순위 비교 버튼 없이 제목 줄의 한 줄 안내만 */
+  box.classList.toggle('hidden', !list.length);
+  document.getElementById('watchActions')?.classList.toggle('hidden', !list.length);
+  document.getElementById('watchEmptyHint')?.classList.toggle('hidden', !!list.length);
+  box.previousElementSibling?.classList.toggle('mb-3', !!list.length);
+  if(!list.length){ box.innerHTML = ''; return; }
   const cell = (row, label, cls) => row
     ? `<span class="inline-flex items-center gap-1 text-[12px]"><span class="${cls} font-semibold">${label} ${rankOf(row)}위</span>${rankChangeBadge(String(row[2] || '-'))}</span>`
     : `<span class="text-[11px] muted">${label} TOP100 밖</span>`;
