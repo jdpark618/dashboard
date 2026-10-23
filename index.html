@@ -842,7 +842,7 @@ html.panel-lock { overflow: hidden; }
   <!-- 순위 추이: 보기 방식·평점은 차트 머리에 -->
   <section class="card rounded-xl p-5" id="searchChartsCard" data-snap>
     <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-      <h3 class="font-semibold text-sm">순위 추이 <span class="text-[11px] font-normal muted ml-1">매출 실선 · 인기 점선 · 로그 눈금</span></h3>
+      <h3 class="font-semibold text-sm">순위 추이 <span id="searchLegendNote" class="text-[11px] font-normal muted ml-1">매출 실선 · 인기 점선 · 로그 눈금</span></h3>
       <div class="flex flex-wrap items-center gap-2"><button type="button" class="snap-btn" data-nosnap onclick="snapEl(this, '순위추이')" title="이미지로 저장" aria-label="이미지로 저장"><i class="fa-solid fa-camera"></i></button><div class="contents" data-nosnap>
       <div class="mk-seg" id="searchLayoutSel">
         <button type="button" data-l="combined" onclick="searchSetLayout('combined')">통합</button>
@@ -857,13 +857,15 @@ html.panel-lock { overflow: hidden; }
     <div id="searchCombinedWrap">
       <div class="h-[340px] md:h-[400px]"><canvas id="searchCombinedChart"></canvas></div>
     </div>
-    <div id="searchSalesWrap" class="hidden">
+    <div id="searchSplitGrid" class="grid grid-cols-1 gap-5">
+    <div id="searchSalesWrap" class="hidden min-w-0">
       <div class="text-xs font-semibold text-slate-300 mb-2"><i class="fa-solid fa-coins t-sales mr-1"></i>매출 순위 추이</div>
       <div class="h-[280px] md:h-[320px]"><canvas id="searchSalesChart"></canvas></div>
     </div>
-    <div id="searchPopularWrap" class="hidden mt-5">
+    <div id="searchPopularWrap" class="hidden min-w-0">
       <div class="text-xs font-semibold text-slate-300 mb-2"><i class="fa-solid fa-fire t-pop mr-1"></i>인기 순위 추이</div>
       <div class="h-[280px] md:h-[320px]"><canvas id="searchPopularChart"></canvas></div>
+    </div>
     </div>
   </section>
 
@@ -2548,7 +2550,7 @@ function searchSeries(titles){
   return out;
 }
 
-/* 게임별 요약: 현재·기간 변화·최고·순위권 일수·평점 */
+/* 게임별 요약: 현재·기간 변화·최고·TOP100/TOP10 일수·평점 */
 function searchStats(name, S, dates){
   const k = getGameKey(name), one = store => {
     const m = S[store].get(k), vals = dates.map(d => m.get(d) ?? null), seen = vals.map((v, i) => ({ v, d: dates[i] })).filter(x => x.v != null);
@@ -2589,7 +2591,7 @@ function renderSearchSummary(stats, dates){
   }
   const { key, dir } = searchState.sort, n = v => v ?? 999;
   const sorters = { name: (a, b) => a.name.localeCompare(b.name, 'ko'), sales: (a, b) => n(a.sales.now) - n(b.sales.now), popular: (a, b) => n(a.popular.now) - n(b.popular.now),
-    bestS: (a, b) => n(a.sales.best) - n(b.sales.best), bestP: (a, b) => n(a.popular.best) - n(b.popular.best), days: (a, b) => (b.sales.days + b.popular.days) - (a.sales.days + a.popular.days), score: (a, b) => (b.score ?? -1) - (a.score ?? -1) };
+    bestS: (a, b) => n(a.sales.best) - n(b.sales.best), bestP: (a, b) => n(a.popular.best) - n(b.popular.best), days: (a, b) => (b.sales.days + b.popular.days) - (a.sales.days + a.popular.days), top10: (a, b) => (b.sales.top10 + b.popular.top10) - (a.sales.top10 + a.popular.top10), score: (a, b) => (b.score ?? -1) - (a.score ?? -1) };
   const list = stats.slice().sort((a, b) => dir * sorters[key](a, b));
   const dot = s => `<span class="inline-block w-2.5 h-2.5 rounded-full shrink-0" style="background:${s.color}"></span>`;
   const scoreHtml = s => s.score != null ? `<span class="text-slate-200">★ ${s.score.toFixed(1)}</span>${s.scoreChange ? ` <span class="text-[11px] ${s.scoreChange > 0 ? 'rank-up' : 'rank-down'}">${s.scoreChange > 0 ? '▲' : '▼'}${Math.abs(s.scoreChange).toFixed(1)}</span>` : ''}` : '<span class="muted">-</span>';
@@ -2599,41 +2601,68 @@ function renderSearchSummary(stats, dates){
       <div class="rounded-lg border border-slate-800 bg-slate-900/50 p-3 cursor-pointer" data-game="${escapeAttr(s.name)}">
         <div class="flex items-center gap-2 mb-2">${dot(s)}<span class="text-[13px] font-semibold text-slate-100 truncate">${escapeHtml(s.name)}</span><span class="ml-auto text-xs">${scoreHtml(s)}</span></div>
         <div class="grid grid-cols-2 gap-2 text-xs">
-          <div><div class="text-[10px] muted">매출</div>${searchRankCell(s.sales, 't-sales')}<div class="text-[10px] muted mt-0.5">최고 ${s.sales.best ?? '-'}${s.sales.best ? '위' : ''} · 순위권 ${s.sales.days}/${dates.length}일</div></div>
-          <div><div class="text-[10px] muted">인기</div>${searchRankCell(s.popular, 't-pop')}<div class="text-[10px] muted mt-0.5">최고 ${s.popular.best ?? '-'}${s.popular.best ? '위' : ''} · 순위권 ${s.popular.days}/${dates.length}일</div></div>
+          <div><div class="text-[10px] muted">매출</div>${searchRankCell(s.sales, 't-sales')}<div class="text-[10px] muted mt-0.5">최고 ${s.sales.best ?? '-'}${s.sales.best ? '위' : ''} · TOP100 ${s.sales.days}/${dates.length}일${s.sales.top10 ? ` · TOP10 ${s.sales.top10}일` : ''}</div></div>
+          <div><div class="text-[10px] muted">인기</div>${searchRankCell(s.popular, 't-pop')}<div class="text-[10px] muted mt-0.5">최고 ${s.popular.best ?? '-'}${s.popular.best ? '위' : ''} · TOP100 ${s.popular.days}/${dates.length}일${s.popular.top10 ? ` · TOP10 ${s.popular.top10}일` : ''}</div></div>
         </div>
       </div>`).join('')}</div>`;
     return;
   }
   const th = (label, k, cls = '') => `<th class="py-2 px-2 ${cls} cursor-pointer select-none hover:text-slate-200 ${key === k ? 'text-indigo-300' : ''}" onclick="searchSort('${k}')" aria-sort="${key === k ? (dir > 0 ? 'ascending' : 'descending') : 'none'}">${label}${key === k ? `<i class="fa-solid fa-sort-${dir > 0 ? 'up' : 'down'} ml-1 text-[9px]"></i>` : ''}</th>`;
-  box.innerHTML = `<div class="overflow-x-auto scrollbar"><table class="w-full min-w-[720px] text-left text-xs">
-    <thead><tr class="border-b border-slate-800 text-[11px] muted">${th('게임', 'name', 'pl-1')}${th('매출 (기간 변화)', 'sales', 'text-right')}${th('인기 (기간 변화)', 'popular', 'text-right')}${th('최고 매출', 'bestS', 'text-right')}${th('최고 인기', 'bestP', 'text-right')}${th('순위권 일수 매출·인기', 'days', 'text-right')}${th('평점', 'score', 'text-right pr-1')}</tr></thead>
+  box.innerHTML = `<div class="overflow-x-auto scrollbar"><table class="w-full min-w-[800px] text-left text-xs">
+    <thead><tr class="border-b border-slate-800 text-[11px] muted">${th('게임', 'name', 'pl-1')}${th('매출 (기간 변화)', 'sales', 'text-right')}${th('인기 (기간 변화)', 'popular', 'text-right')}${th('최고 매출', 'bestS', 'text-right')}${th('최고 인기', 'bestP', 'text-right')}${th('TOP100 일수 매출·인기', 'days', 'text-right')}${th('TOP10 일수 매출·인기', 'top10', 'text-right')}${th('평점', 'score', 'text-right pr-1')}</tr></thead>
     <tbody>${list.map(s => `<tr class="border-b border-slate-900 hover:bg-slate-800/50 cursor-pointer" data-game="${escapeAttr(s.name)}">
       <td class="py-2.5 pl-1 pr-2"><div class="flex items-center gap-2 min-w-0">${dot(s)}${mkIcon(s.name)}<span class="font-medium text-slate-100 truncate">${escapeHtml(s.name)}</span></div></td>
       <td class="py-2.5 px-2 text-right whitespace-nowrap">${searchRankCell(s.sales, 't-sales')}</td>
       <td class="py-2.5 px-2 text-right whitespace-nowrap">${searchRankCell(s.popular, 't-pop')}</td>
       <td class="py-2.5 px-2 text-right">${best(s.sales)}</td>
       <td class="py-2.5 px-2 text-right">${best(s.popular)}</td>
-      <td class="py-2.5 px-2 text-right whitespace-nowrap">${s.sales.days} · ${s.popular.days}<span class="muted"> / ${dates.length}일</span>${s.sales.top10 ? `<div class="text-[10px] muted">매출 TOP10 ${s.sales.top10}일</div>` : ''}</td>
+      <td class="py-2.5 px-2 text-right whitespace-nowrap">${s.sales.days} · ${s.popular.days}<span class="muted"> / ${dates.length}일</span></td>
+      <td class="py-2.5 px-2 text-right whitespace-nowrap">${s.sales.top10 || s.popular.top10 ? `${s.sales.top10} · ${s.popular.top10}<span class="muted">일</span>` : '<span class="muted">-</span>'}</td>
       <td class="py-2.5 pr-1 pl-2 text-right whitespace-nowrap">${scoreHtml(s)}</td>
     </tr>`).join('')}</tbody></table></div>
     <p class="text-[10px] muted mt-2">기간 변화는 조회 시작일 대비 마지막 날 순위입니다. 행을 누르면 게임 상세가 열립니다.</p>`;
 }
 
 /* ---------- 순위 차트 (로그 눈금 · 범위 자동 · 100위 밖 띠) ---------- */
-function drawSearchRankChart(canvasId, lines, dates, store = searchCharts){
+/* opts.labels: 선 끝 게임 이름 + 100위 밖 게임 이름 (순위 검색 전용, 게임 상세 차트는 끔) */
+function drawSearchRankChart(canvasId, lines, dates, store = searchCharts, opts = {}){
   if(store[canvasId]){ store[canvasId].destroy(); delete store[canvasId]; }
   const canvas = document.getElementById(canvasId); if(!canvas) return;
   const vals = lines.flatMap(l => l.values).filter(v => v != null);
   const hasOut = lines.some(l => l.values.some(v => v == null));
   const best = vals.length ? Math.min(...vals) : 1, worst = vals.length ? Math.max(...vals) : 100;
   const min = ([...SEARCH_TICKS].reverse().find(t => t < best * 0.95) || 1) * 0.8;
-  const max = hasOut ? SEARCH_OUT_Y * 1.12 : Math.min(125, (SEARCH_TICKS.find(t => t >= worst * 1.15) || 100) * 1.2);
+  /* 100위 밖인 게임이 여럿이면 띠를 늘리고 게임마다 줄을 나눔 (맨 위 줄은 '100위 밖' 글자 자리) */
+  const outLines = lines.filter(l => l.values.some(v => v == null)), multiOut = outLines.length > 1;
+  const OUT_TOP = 112, OUT_STEP = 1.2;   /* 띠 시작값과 줄 간격(로그 배율) */
+  const outY = l => multiOut ? OUT_TOP * Math.pow(OUT_STEP, 1.8 + outLines.indexOf(l)) : SEARCH_OUT_Y;
+  const max = hasOut ? (multiOut ? OUT_TOP * Math.pow(OUT_STEP, 1.8 + outLines.length - 1 + 0.8) : SEARCH_OUT_Y * 1.12) : Math.min(125, (SEARCH_TICKS.find(t => t >= worst * 1.15) || 100) * 1.2);
   const datasets = [];
   lines.forEach(l => {
-    datasets.push({ label: l.label, data: l.values, borderColor: l.color, backgroundColor: l.color, borderDash: l.dash || [], borderWidth: 2.2, pointRadius: dates.length > 40 ? 0 : 2.2, pointHoverRadius: 5, tension: .25, spanGaps: false, clip: false, _kind: 'rank' });
-    if(l.values.some(v => v == null)) datasets.push({ label: l.label, data: l.values.map(v => v == null ? SEARCH_OUT_Y : null), showLine: false, pointStyle: 'line', pointRadius: 5, pointHoverRadius: 6, borderWidth: 2.5, borderColor: l.color, backgroundColor: l.color, _kind: 'out' });
+    datasets.push({ label: l.label, data: l.values, borderColor: l.color, backgroundColor: l.color, borderDash: l.dash || [], borderWidth: 2.2, pointRadius: dates.length > 40 ? 0 : 2.2, pointHoverRadius: 5, tension: .25, spanGaps: false, clip: false, _kind: 'rank', _line: l });
+    if(l.values.some(v => v == null)) datasets.push({ label: l.label, data: l.values.map(v => v == null ? outY(l) : null), showLine: false, pointStyle: 'line', pointRadius: 5, pointHoverRadius: 6, borderWidth: 2.5, borderColor: l.color, backgroundColor: l.color, _kind: 'out', _line: l });
   });
+  /* 선 끝 이름표: 마지막 날 위치(그날 100위 밖이면 띠 안 표시 위치) 오른쪽에, 겹치면 위아래로 벌림 */
+  const narrow = innerWidth < 640, maxChars = narrow ? 6 : 9;
+  const short = l => { const nm = l.name || l.label; return (nm.length > maxChars ? nm.slice(0, maxChars) + '…' : nm) + (l.tag ? ` ${l.tag}` : ''); };
+  const LABEL_FONT = '600 11px "Pretendard Variable", Pretendard, sans-serif';
+  const meas = document.createElement('canvas').getContext('2d'); meas.font = LABEL_FONT;
+  const labelW = !opts.labels ? 0 : Math.min(narrow ? 92 : 150, Math.max(0, ...lines.map(l => meas.measureText(short(l)).width)) + 12);
+  const endLabels = {
+    id: 'searchEndLabels',
+    afterDatasetsDraw(chart){
+      const { ctx, chartArea: a, scales: { x, y } } = chart, last = dates.length - 1;
+      const items = lines.map(l => { const v = l.values[last]; return { l, y: y.getPixelForValue(v != null ? v : outY(l)) }; }).sort((p, q) => p.y - q.y);
+      const gap = 13;
+      for(let i = 1; i < items.length; i++) if(items[i].y - items[i - 1].y < gap) items[i].y = items[i - 1].y + gap;
+      const over = items.length ? items.at(-1).y - (a.bottom + 4) : 0;
+      if(over > 0) items.forEach(it => { it.y -= over; });
+      for(let i = items.length - 2; i >= 0; i--) if(items[i + 1].y - items[i].y < gap) items[i].y = items[i + 1].y - gap;
+      ctx.save(); ctx.font = LABEL_FONT; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+      items.forEach(it => { ctx.fillStyle = it.l.color; ctx.fillText(short(it.l), x.getPixelForValue(last) + 8, it.y); });
+      ctx.restore();
+    }
+  };
   const band = {
     id: 'searchOutBand',
     beforeDatasetsDraw(chart){
@@ -2647,7 +2676,7 @@ function drawSearchRankChart(canvasId, lines, dates, store = searchCharts){
   store[canvasId] = new Chart(canvas.getContext('2d'), {
     type: 'line', data: { labels: dates, datasets },
     options: {
-      responsive: true, maintainAspectRatio: false, animation: false, layout: { padding: { top: 6, right: 6 } },
+      responsive: true, maintainAspectRatio: false, animation: false, layout: { padding: { top: 6, right: 6 + labelW } },
       interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: { display: false },
@@ -2672,7 +2701,7 @@ function drawSearchRankChart(canvasId, lines, dates, store = searchCharts){
           ticks: { color: '#94a3b8', callback: v => SEARCH_TICKS.includes(v) ? `${v}위` : '' } }
       }
     },
-    plugins: [band]
+    plugins: opts.labels ? [band, endLabels] : [band]
   });
 }
 
@@ -2721,16 +2750,17 @@ function renderSearchCharts(){
   document.getElementById('searchCombinedWrap').classList.toggle('hidden', empty || L !== 'combined');
   document.getElementById('searchSalesWrap').classList.toggle('hidden', empty || !(L === 'split' || L === 'sales'));
   document.getElementById('searchPopularWrap').classList.toggle('hidden', empty || !(L === 'split' || L === 'popular'));
-  document.getElementById('searchPopularWrap').classList.toggle('mt-5', L === 'split');
+  document.getElementById('searchSplitGrid').classList.toggle('xl:grid-cols-2', L === 'split');
+  setText('searchLegendNote', L === 'combined' ? '매출 실선 · 인기 점선 · 로그 눈금 · 선 끝에 게임 이름' : '로그 눈금 · 선 끝에 게임 이름');
   document.getElementById('searchRatingWrap').classList.toggle('hidden', empty || !searchState.rating);
   Object.keys(searchCharts).forEach(id => { searchCharts[id].destroy(); delete searchCharts[id]; });
   searchSyncHash();
   if(empty) return;
 
-  const line = (t, store, dash) => { const k = getGameKey(t); return { label: dash ? `${t} · 인기` : (L === 'combined' ? `${t} · 매출` : t), color: searchColorOf[k], dash, values: R.dates.map(d => S[store].get(k).get(d) ?? null) }; };
-  if(L === 'combined') drawSearchRankChart('searchCombinedChart', titles.flatMap(t => [line(t, 'sales'), line(t, 'popular', [5, 4])]), R.dates);
-  if(L === 'split' || L === 'sales') drawSearchRankChart('searchSalesChart', titles.map(t => line(t, 'sales')), R.dates);
-  if(L === 'split' || L === 'popular') drawSearchRankChart('searchPopularChart', titles.map(t => ({ ...line(t, 'popular'), label: t })), R.dates);
+  const line = (t, store, dash) => { const k = getGameKey(t); return { label: dash ? `${t} · 인기` : (L === 'combined' ? `${t} · 매출` : t), tag: L === 'combined' ? (dash ? '인기' : '매출') : '', name: t, color: searchColorOf[k], dash, values: R.dates.map(d => S[store].get(k).get(d) ?? null) }; };
+  if(L === 'combined') drawSearchRankChart('searchCombinedChart', titles.flatMap(t => [line(t, 'sales'), line(t, 'popular', [5, 4])]), R.dates, searchCharts, { labels: true });
+  if(L === 'split' || L === 'sales') drawSearchRankChart('searchSalesChart', titles.map(t => line(t, 'sales')), R.dates, searchCharts, { labels: true });
+  if(L === 'split' || L === 'popular') drawSearchRankChart('searchPopularChart', titles.map(t => ({ ...line(t, 'popular'), label: t })), R.dates, searchCharts, { labels: true });
   if(searchState.rating) drawSearchRatingChart(titles, S, R.dates);
 }
 
