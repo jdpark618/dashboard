@@ -260,6 +260,16 @@ html.panel-lock { overflow: hidden; }
   button[onclick^="openRankPanel"], #dashMoreLink { min-height:34px; }
   #calSearch + button, #mkPosSearch ~ button, .gs-clear { padding:10px; margin-right:-6px; }
 }
+/* 이미지로 저장 버튼 */
+.snap-btn { width:28px; height:28px; flex-shrink:0; display:inline-flex; align-items:center; justify-content:center; border-radius:8px; color:#94a3b8; border:1px solid var(--line); background:rgba(30,41,59,.6); font-size:12px; transition:color .15s, border-color .15s; }
+.snap-btn:hover { color:#e2e8f0; border-color:rgba(99,102,241,.5); }
+@media (max-width:767px){ .snap-btn { width:34px; height:34px; } }
+/* 다가오는 신작 */
+.up-item { display:flex; align-items:center; gap:10px; padding:10px; border-radius:10px; background:rgba(15,23,42,.6); border:1px solid rgba(30,41,59,1); border-left:3px solid var(--tc,#475569); cursor:pointer; min-width:0; transition:border-color .15s; }
+.up-item:hover { border-color:rgba(100,116,139,.8); border-left-color:var(--tc,#475569); }
+.up-item img, .up-item .ph { width:38px; height:38px; border-radius:9px; object-fit:cover; flex-shrink:0; background:#1e293b; }
+.up-d { font-size:11px; font-weight:700; padding:2px 7px; border-radius:6px; white-space:nowrap; background:rgba(99,102,241,.18); color:#c7d2fe; }
+.up-d.today { background:rgba(34,197,94,.18); color:#86efac; }
 .tap-tip { position:fixed; z-index:200; max-width:280px; background:#0f172a; color:#e2e8f0; border:1px solid rgba(99,102,241,.5); border-radius:8px; padding:8px 10px; font-size:12px; line-height:1.55; box-shadow:0 10px 25px -3px rgba(0,0,0,.7); }
 </style>
 </head>
@@ -433,6 +443,17 @@ html.panel-lock { overflow: hidden; }
     <div id="watchList" class="card rounded-xl p-5"></div>
   </section>
 
+  <!-- 다가오는 신작 (신작 정보만 사용, 순위 데이터와 연결하지 않음) -->
+  <section id="upcomingSection">
+    <div class="card rounded-xl p-5" data-snap>
+      <div class="flex items-center justify-between gap-2 mb-3">
+        <h2 class="text-base font-bold text-slate-200 flex items-center gap-2"><i class="fa-regular fa-calendar-plus t-new"></i>다가오는 신작 <span id="upcomingSub" class="text-xs muted font-normal"></span></h2>
+        <span class="flex items-center gap-2"><button type="button" class="snap-btn" data-nosnap onclick="snapEl(this, '다가오는신작')" title="이미지로 저장" aria-label="이미지로 저장"><i class="fa-solid fa-camera"></i></button><button type="button" data-nosnap onclick="switchView('calendar')" class="text-[12px] font-semibold text-indigo-300 hover:text-indigo-200 whitespace-nowrap">신작 달력에서 보기<i class="fa-solid fa-chevron-right ml-1 text-[10px]"></i></button></span>
+      </div>
+      <div id="upcomingList"><div class="text-xs muted py-2">불러오는 중...</div></div>
+    </div>
+  </section>
+
   <!-- 섹션 2: 일간 TOP 10 -->
   <section>
     <div class="flex items-center justify-between mb-3 px-0.5">
@@ -441,21 +462,21 @@ html.panel-lock { overflow: hidden; }
       </h2>
     </div>
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <div class="card rounded-xl p-5">
+      <div class="card rounded-xl p-5" data-snap>
         <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-800/80">
           <h3 class="font-semibold text-sm flex items-center gap-1.5 t-pop">
             <i class="fa-solid fa-fire"></i> 인기순위 TOP 10
           </h3>
-          <button type="button" onclick="openRankPanel('popular')" class="text-[12px] font-semibold text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700 border border-slate-700 rounded-lg px-2.5 py-1 whitespace-nowrap transition-colors">전체순위보기<i class="fa-solid fa-chevron-right ml-1 text-[10px] t-pop"></i></button>
+          <span class="flex items-center gap-2"><button type="button" class="snap-btn" data-nosnap onclick="snapEl(this, '인기TOP10')" title="이미지로 저장" aria-label="이미지로 저장"><i class="fa-solid fa-camera"></i></button><button type="button" data-nosnap onclick="openRankPanel('popular')" class="text-[12px] font-semibold text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700 border border-slate-700 rounded-lg px-2.5 py-1 whitespace-nowrap transition-colors">전체순위보기<i class="fa-solid fa-chevron-right ml-1 text-[10px] t-pop"></i></button></span>
         </div>
         <ol id="popularTop10List" class="divide-y divide-slate-900/70"></ol>
       </div>
-      <div class="card rounded-xl p-5">
+      <div class="card rounded-xl p-5" data-snap>
         <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-800/80">
           <h3 class="font-semibold text-sm flex items-center gap-1.5 t-sales">
             <i class="fa-solid fa-coins"></i> 매출순위 TOP 10
           </h3>
-          <button type="button" onclick="openRankPanel('sales')" class="text-[12px] font-semibold text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700 border border-slate-700 rounded-lg px-2.5 py-1 whitespace-nowrap transition-colors">전체순위보기<i class="fa-solid fa-chevron-right ml-1 text-[10px] t-sales"></i></button>
+          <span class="flex items-center gap-2"><button type="button" class="snap-btn" data-nosnap onclick="snapEl(this, '매출TOP10')" title="이미지로 저장" aria-label="이미지로 저장"><i class="fa-solid fa-camera"></i></button><button type="button" data-nosnap onclick="openRankPanel('sales')" class="text-[12px] font-semibold text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700 border border-slate-700 rounded-lg px-2.5 py-1 whitespace-nowrap transition-colors">전체순위보기<i class="fa-solid fa-chevron-right ml-1 text-[10px] t-sales"></i></button></span>
         </div>
         <ol id="salesTop10List" class="divide-y divide-slate-900/70"></ol>
       </div>
@@ -541,6 +562,7 @@ html.panel-lock { overflow: hidden; }
   <!-- 질문 단위 탭 -->
   <nav class="flex gap-1 overflow-x-auto overflow-y-hidden border-b border-slate-800" id="mkSectionTabs">
     <button type="button" data-section="change" onclick="mkSetSection('change')" class="mk-sec"><i class="fa-solid fa-arrow-trend-up mr-1.5"></i>순위 변동</button>
+    <button type="button" data-section="monthly" onclick="mkSetSection('monthly')" class="mk-sec"><i class="fa-solid fa-table-list mr-1.5"></i>월간 순위</button>
     <button type="button" data-section="structure" onclick="mkSetSection('structure')" class="mk-sec"><i class="fa-solid fa-chess-board mr-1.5"></i>시장 구조</button>
     <button type="button" data-section="debut" onclick="mkSetSection('debut')" class="mk-sec"><i class="fa-solid fa-seedling mr-1.5"></i>첫 차트인</button>
     <button type="button" data-section="releases" onclick="mkSetSection('releases')" class="mk-sec"><i class="fa-regular fa-calendar-plus mr-1.5"></i>신작 동향</button>
@@ -598,17 +620,30 @@ html.panel-lock { overflow: hidden; }
   </section>
   </div>
 
+  <!-- 월간 순위 -->
+  <div id="mkSecMonthly" class="hidden space-y-4">
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <p class="text-[11px] muted">월 평균 순위로 본 이번 달과 지난달 비교 · 그 달 절반 이상 TOP100이었던 게임, 빠진 날은 101위로 계산</p>
+      <div class="flex flex-wrap items-center gap-2"><select id="mkMonthlySel" class="mk-sel" onchange="mkMonthly.ym = this.value; mkMonthly.all = false; mkRender()" aria-label="월 선택"></select><div class="mk-tabs" data-tab="monthly"></div></div>
+    </div>
+    <section class="card rounded-xl p-5" data-snap>
+      <div class="mk-card-head"><div><h3 class="font-semibold text-sm flex items-center gap-2">월간 순위표 <span class="mk-store" data-storeof="monthly"></span></h3><p id="mkMonthlyDesc" class="text-[10px] muted mt-1">-</p></div><button type="button" class="snap-btn" data-nosnap onclick="snapEl(this, '월간순위표')" title="이미지로 저장" aria-label="이미지로 저장"><i class="fa-solid fa-camera"></i></button></div>
+      <div id="mkMonthlyTable" class="overflow-x-auto scrollbar"></div>
+    </section>
+  </div>
+
   <!-- ② 시장 구조 -->
   <div id="mkSecStructure" class="hidden space-y-4">
     <div class="flex flex-wrap items-center justify-between gap-2">
       <p class="text-[11px] muted">어떤 게임이 매출 강세·인기 강세인지, 어떤 장르와 퍼블리셔가 TOP100을 차지하는지</p>
       <div class="flex items-center gap-2"><span class="text-[11px] muted">장르·퍼블리셔 기준</span><div class="mk-tabs" data-tab="secStructure"></div></div>
     </div>
-    <section class="card rounded-xl p-5">
+    <section class="card rounded-xl p-5" data-snap>
       <div class="mk-card-head">
         <div><h3 class="font-semibold text-sm">시장 포지션 맵<i class="fa-regular fa-circle-question mk-info" title="매출·인기 둘 다 TOP100인 게임만 평면에 아이콘으로 놓습니다. 가로는 매출 순위(오른쪽이 1위), 세로는 인기 순위(위쪽이 1위)이고, 상위권이 잘 보이도록 로그 눈금을 씁니다. 한쪽에만 TOP100인 게임은 아래 두 줄에 순위순으로 모았습니다. 기간 평균은 기간의 절반 이상 TOP100이었던 게임만 포함하며, 빠진 날은 100+로 계산합니다. 아이콘을 누르면 게임 상세가 열립니다."></i></h3><p id="mkPosDesc" class="text-[10px] muted mt-1">-</p></div>
+        <button type="button" class="snap-btn" data-nosnap onclick="snapEl(this, '포지션맵')" title="이미지로 저장" aria-label="이미지로 저장"><i class="fa-solid fa-camera"></i></button>
       </div>
-      <div class="flex flex-wrap items-center gap-2 mb-3">
+      <div class="flex flex-wrap items-center gap-2 mb-3" data-nosnap>
         <div class="mk-seg" id="mkPosPeriod">
           <button type="button" data-v="day" onclick="mkPosSet('period','day')">기준일</button>
           <button type="button" data-v="7d" onclick="mkPosSet('period','7d')">최근 7일</button>
@@ -771,10 +806,10 @@ html.panel-lock { overflow: hidden; }
   </section>
 
   <!-- 비교 요약: 기간 선택이 바꾸는 첫 대상이라 기간은 여기 머리에 -->
-  <section class="card rounded-xl p-5">
+  <section class="card rounded-xl p-5" data-snap>
     <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
       <div class="flex items-center gap-2"><h3 class="font-semibold text-sm">비교 요약</h3><span id="searchRangeLabel" class="text-[11px] muted">-</span></div>
-      <div class="flex flex-wrap items-center gap-2">
+      <div class="flex flex-wrap items-center gap-2"><button type="button" class="snap-btn" data-nosnap onclick="snapEl(this, '순위비교요약')" title="이미지로 저장" aria-label="이미지로 저장"><i class="fa-solid fa-camera"></i></button><div class="contents" data-nosnap>
       <div class="mk-seg" id="searchPeriodSel">
         <button type="button" data-d="7" onclick="searchSetDays(7)">7일</button>
         <button type="button" data-d="15" onclick="searchSetDays(15)">15일</button>
@@ -787,16 +822,16 @@ html.panel-lock { overflow: hidden; }
         <input type="date" id="searchFrom" class="mk-sel" onchange="searchSetCustom()" aria-label="시작일"> ~
         <input type="date" id="searchTo" class="mk-sel" onchange="searchSetCustom()" aria-label="종료일">
       </div>
-      </div>
+      </div></div>
     </div>
     <div id="searchSummary"></div>
   </section>
 
   <!-- 순위 추이: 보기 방식·평점은 차트 머리에 -->
-  <section class="card rounded-xl p-5" id="searchChartsCard">
+  <section class="card rounded-xl p-5" id="searchChartsCard" data-snap>
     <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
       <h3 class="font-semibold text-sm">순위 추이 <span class="text-[11px] font-normal muted ml-1">매출 실선 · 인기 점선 · 로그 눈금</span></h3>
-      <div class="flex flex-wrap items-center gap-2">
+      <div class="flex flex-wrap items-center gap-2"><button type="button" class="snap-btn" data-nosnap onclick="snapEl(this, '순위추이')" title="이미지로 저장" aria-label="이미지로 저장"><i class="fa-solid fa-camera"></i></button><div class="contents" data-nosnap>
       <div class="mk-seg" id="searchLayoutSel">
         <button type="button" data-l="combined" onclick="searchSetLayout('combined')">통합</button>
         <button type="button" data-l="split" onclick="searchSetLayout('split')">따로</button>
@@ -804,7 +839,7 @@ html.panel-lock { overflow: hidden; }
         <button type="button" data-l="popular" onclick="searchSetLayout('popular')">인기만</button>
       </div>
       <label class="cal-toggle"><input type="checkbox" id="searchRatingToggle" onchange="searchState.rating = this.checked; renderSearchCharts()"><span class="knob"></span>평점 추이</label>
-      </div>
+      </div></div>
     </div>
     <div id="searchEmptyChart" class="hidden py-14 text-center text-xs muted">게임을 선택하면 순위 추이가 나타납니다.</div>
     <div id="searchCombinedWrap">
@@ -1723,6 +1758,7 @@ function renderToday(){
   renderGenreBars('popularGenreBars', p.popularGenre);
   renderGenreBars('salesGenreBars', p.salesGenre);
   renderWatchlist();
+  renderUpcoming();
 }
 
 /* 휴대폰 대시보드 '오늘의 순위 변동': 세 목록 중 하나만 (넓은 화면은 모두 표시) */
@@ -1750,6 +1786,38 @@ function switchView(view){
   history.replaceState(null, '', view === 'dashboard' ? location.pathname + location.search : `#${view}`);
 }
 
+/* 이미지로 저장: 버튼이 속한 [data-snap] 영역을 PNG로 (라이브러리는 처음 누를 때만 불러옴) */
+let h2cPromise = null;
+function loadHtml2Canvas(){
+  if(!h2cPromise) h2cPromise = new Promise((resolve, reject) => {
+    const sc = document.createElement('script');
+    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    sc.onload = () => resolve(window.html2canvas);
+    sc.onerror = () => { h2cPromise = null; reject(new Error('html2canvas load failed')); };
+    document.head.appendChild(sc);
+  });
+  return h2cPromise;
+}
+async function snapEl(btn, name){
+  const el = btn.closest('[data-snap]');
+  if(!el || btn.disabled) return;
+  const icon = btn.innerHTML;
+  btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+  try{
+    const h2c = await loadHtml2Canvas();
+    /* html2canvas는 이 글꼴에서 글자를 몇 px 아래로 그려, 말줄임(overflow:hidden) 칸 안 글자가 잘린다 → 사본에서만 잘림 영역을 아래로 넓힘 */
+    const canvas = await h2c(el, { backgroundColor: '#0e1626', scale: 2, useCORS: true, logging: false, ignoreElements: e => e.hasAttribute?.('data-nosnap'),
+      onclone: doc => { const st = doc.createElement('style'); st.textContent = '.truncate,[class*="line-clamp"],.nm{padding-bottom:5px!important;margin-bottom:-5px!important}'; doc.head.appendChild(st); } });
+    const a = document.createElement('a');
+    a.download = `${name}_${kstTodayStr()}.png`;
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+  }catch(e){
+    console.error('이미지 저장 실패', e);
+    alert('이미지를 만들지 못했습니다. 잠시 후 다시 시도해 주세요.');
+  }finally{ btn.disabled = false; btn.innerHTML = icon; }
+}
+
 function navFadeSync(){
   const nav = document.getElementById('topNav');
   if(nav) nav.classList.toggle('fade-r', nav.scrollLeft + nav.clientWidth < nav.scrollWidth - 4);
@@ -1771,6 +1839,32 @@ function expectedLatestDateStr(){
   const [y, m, d] = today.split('-').map(Number);
   return dateMinusDaysStr(y, m, d, 1);
 }
+/* 대시보드 '다가오는 신작': 오늘부터 7일 안의 모바일 포함 신작, 날짜순 최대 8개 */
+const UPCOMING_DAYS = 7, UPCOMING_MAX = 8;
+function renderUpcoming(){
+  const box = document.getElementById('upcomingList');
+  if(!box) return;
+  const rows = rawStore.newReleases?.rows;
+  if(!rows){ box.innerHTML = '<div class="text-xs muted py-2">신작 정보를 불러오지 못했습니다.</div>'; return; }
+  const today = kstTodayStr(), end = mkAddDays(today, UPCOMING_DAYS);
+  const list = rows.filter(r => { const d = String(r[0] || '').trim(); return d >= today && d <= end && String(r[2] || '').replace(/\s+/g, '').includes('모바일'); })
+    .sort((a, b) => String(a[0]).localeCompare(String(b[0])) || String(a[1]).localeCompare(String(b[1]), 'ko'));
+  setText('upcomingSub', list.length ? `앞으로 ${UPCOMING_DAYS}일 · ${list.length}개` : '');
+  if(!list.length){ box.innerHTML = `<div class="text-xs muted py-2">앞으로 ${UPCOMING_DAYS}일 동안 예정된 신작이 없습니다.</div>`; return; }
+  const shown = list.slice(0, UPCOMING_MAX);
+  box.innerHTML = `<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2">${shown.map(r => {
+    const d = String(r[0]).trim(), diff = daysBetween(today, d), dow = CAL_DOW[mkToDate(d).getDay()];
+    const type = resolveCalType(r[4]), raw = String(r[4] || '').trim(), pub = String(r[3] || '').trim();
+    let icon = String(r[6] || '').trim(); if(icon.startsWith("'")) icon = icon.slice(1);
+    const tag = type !== 'OPEN' || (raw && raw.replace(/\s+/g, '') !== '정식출시') ? `<span class="cal-tag shrink-0" style="color:${CAL_TYPE_COLOR[type]};background:${CAL_TYPE_COLOR[type]}22">${escapeHtml(raw || CAL_TYPE_LABEL[type])}</span>` : '';
+    return `<div class="up-item" style="--tc:${CAL_TYPE_COLOR[type]}" role="button" tabindex="0" onclick="openReleaseDetail('${escapeAttr(releaseKeyOf(r)).replace(/&#039;/g, "\\'")}')">
+      ${icon.startsWith('http') ? `<img src="${escapeAttr(icon)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">` : '<span class="ph"></span>'}
+      <div class="flex-1 min-w-0"><div class="text-[13px] font-medium text-slate-100 truncate">${escapeHtml(String(r[1] || '-'))}</div><div class="text-[11px] muted truncate mt-0.5">${mkShort(d)} (${dow})${pub && pub !== '-' ? ' · ' + escapeHtml(pub) : ''}</div></div>
+      <div class="flex flex-col items-end gap-1 shrink-0"><span class="up-d${diff === 0 ? ' today' : ''}">${diff === 0 ? '오늘' : `D-${diff}`}</span>${tag}</div>
+    </div>`;
+  }).join('')}</div>${list.length > shown.length ? `<button type="button" data-nosnap onclick="switchView('calendar')" class="mt-2 text-[12px] text-slate-400 hover:text-slate-200">외 ${list.length - shown.length}개 · 신작 달력에서 전체 보기</button>` : ''}`;
+}
+
 function daysBetween(a, b){ return Math.round((dateValue(b) - dateValue(a)) / 86400000); }
 
 async function openSearchView(){
@@ -3515,7 +3609,8 @@ let mkSection = 'change';
 const mkPosExpand = {};
 /* 탭 단위 매출/인기 전환: 한 번에 그 탭의 카드들을 같이 바꿈 */
 const MK_TAB_GROUPS = { secChange: ['dMovers', 'dEntries', 'wMovers', 'wEntries'], secStructure: ['wGenre', 'wPub'] };
-const mkTabs = { secChange: 'sales', secStructure: 'sales', dMovers: 'sales', dEntries: 'sales', dEntryType: 'in', wEntryType: 'list', wGenre: 'sales', wPub: 'sales', wMovers: 'sales', wEntries: 'sales', wCohort: 'sales', debut: 'sales' };
+const mkMonthly = { ym: '', all: false };
+const mkTabs = { monthly: 'sales', secChange: 'sales', secStructure: 'sales', dMovers: 'sales', dEntries: 'sales', dEntryType: 'in', wEntryType: 'list', wGenre: 'sales', wPub: 'sales', wMovers: 'sales', wEntries: 'sales', wCohort: 'sales', debut: 'sales' };
 /* 탭 버튼 선택지: 기본은 매출/인기 */
 const MK_TAB_OPTIONS = {};
 const mkIndexCache = { sales: null, popular: null };
@@ -4381,6 +4476,45 @@ function mkRenderStructureSkeleton(){
   ['mkPosition', 'mkPosRails', 'mkWGenre', 'mkWPub'].forEach(id => { document.getElementById(id).innerHTML = skBlocks(6); });
 }
 
+/* ---------- 월간 순위표: 월 평균 순위로 이번 달 vs 지난달 ---------- */
+function mkRenderMonthly(){
+  const store = mkTabs.monthly, label = MK_STORE_LABEL[store], idx = mkGetIndex(store);
+  const months = [...new Set(idx.dates.map(d => d.slice(0, 7)))];
+  if(!months.length){ setText('mkAsOf', '데이터 없음'); return; }
+  if(!months.includes(mkMonthly.ym)) mkMonthly.ym = months.at(-1);
+  const ym = mkMonthly.ym, pym = months[months.indexOf(ym) - 1] || null, base = idx.dates.at(-1);
+  const mLabel = k => `${Number(k.slice(5))}월`;
+  document.getElementById('mkMonthlySel').innerHTML = months.slice().reverse().map(k => `<option value="${k}" ${k === ym ? 'selected' : ''}>${k.slice(0, 4)}년 ${mLabel(k)}${k === base.slice(0, 7) ? ` (${mkShort(base)}까지)` : ''}</option>`).join('');
+  const cur = idx.dates.filter(d => d.startsWith(ym)), prev = pym ? idx.dates.filter(d => d.startsWith(pym)) : [];
+  const ca = mkPosAgg(idx, cur), pa = prev.length ? mkPosAgg(idx, prev) : new Map();
+  const order = m => [...m].sort((a, b) => a[1].rank - b[1].rank);
+  const curList = order(ca), prevPos = new Map(order(pa).map(([k], i) => [k, i + 1]));
+  setText('mkAsOf', `${label} 월간 순위 · ${mLabel(ym)}${pym ? ` vs ${mLabel(pym)}` : ''} · 기준일 ${base}`);
+  setText('mkMonthlyDesc', `${mLabel(ym)} 관측 ${cur.length}일${pym ? ` · ${mLabel(pym)} 관측 ${prev.length}일` : ' · 비교할 지난달 데이터 없음'} · ${curList.length}개 · 행을 누르면 게임 상세`);
+  const fmt = v => v >= 100 ? '100+' : v.toFixed(1);
+  const shown = mkMonthly.all ? curList : curList.slice(0, 30);
+  document.getElementById('mkMonthlyTable').innerHTML = curList.length ? `<table class="w-full min-w-[560px] text-left text-xs">
+    <thead><tr class="border-b border-slate-800 text-[10px] muted">
+      <th class="py-2 pl-1 w-9">#</th><th class="py-2 px-1 w-14">추세</th><th class="py-2 px-2">게임</th>
+      <th class="py-2 px-2 text-right w-24">${pym ? mLabel(pym) + ' 평균' : '-'}</th><th class="py-2 px-2 text-right w-24">${mLabel(ym)} 평균</th><th class="py-2 pl-2 pr-1 text-right w-24">TOP100 일수</th>
+    </tr></thead><tbody>${shown.map(([k, g], i) => {
+      const pos = i + 1, pp = prevPos.get(k), pg = pa.get(k);
+      const trend = !pym ? '<span class="muted">-</span>' : pp == null ? '<span class="t-new font-semibold">NEW</span>' : pp > pos ? `<span class="rank-up font-semibold">▲${pp - pos}</span>` : pp < pos ? `<span class="rank-down font-semibold">▼${pos - pp}</span>` : '<span class="muted">-</span>';
+      const better = pg && g.rank < pg.rank - 0.5, worse = pg && g.rank > pg.rank + 0.5;
+      const tint = better ? 'background:rgba(248,113,113,.12);color:#fecaca' : worse ? 'background:rgba(96,165,250,.12);color:#bfdbfe' : '';
+      return `<tr class="border-b border-slate-900 hover:bg-slate-800/60 cursor-pointer" data-game="${escapeAttr(g.name)}">
+        <td class="py-2 pl-1 font-semibold ${pos <= 3 ? 'text-slate-50' : 'text-slate-400'}">${pos}</td>
+        <td class="py-2 px-1">${trend}</td>
+        <td class="py-2 px-2 max-w-[260px]">${mkGameCell(g.name, [g.genre, g.publisher].filter(v => v && v !== '미분류' && v !== '미상').join(' · '))}</td>
+        <td class="py-2 px-2 text-right muted">${pg ? fmt(pg.rank) + '위' : '-'}</td>
+        <td class="py-2 px-2 text-right font-semibold" style="${tint}">${fmt(g.rank)}위</td>
+        <td class="py-2 pl-2 pr-1 text-right muted">${g.days}<span class="text-[10px]"> / ${cur.length}일</span></td>
+      </tr>`;
+    }).join('')}</tbody></table>
+    ${curList.length > 30 ? `<button type="button" data-nosnap onclick="mkMonthly.all = !mkMonthly.all; mkRender()" class="mt-2 text-[12px] text-slate-400 hover:text-slate-200">${mkMonthly.all ? '30위까지만 보기' : `전체 ${curList.length}개 보기`}</button>` : ''}
+    <p class="text-[10px] muted mt-3">순위 칸 색은 지난달 평균보다 좋아졌으면 빨강, 나빠졌으면 파랑입니다. 추세는 월간 순위표 안에서의 자리 변화이며, NEW는 지난달 표에 없던 게임입니다.</p>` : mkEmpty('이 달에 집계할 게임이 없습니다.');
+}
+
 /* ---------- 첫 차트인 (순위 데이터만 사용) ---------- */
 const MK_DEBUT_WEEKS = 8;
 const mkFirstSeenCache = { sales: null, popular: null };
@@ -4644,7 +4778,7 @@ function renderWatchlist(){
 }
 
 /* ---------- 모드 / 탭 / 진입 ---------- */
-const MK_SECTION_EL = { change: 'mkSecChange', structure: 'mkSecStructure', debut: 'mkSecDebut', releases: 'mkSecReleases' };
+const MK_SECTION_EL = { monthly: 'mkSecMonthly', change: 'mkSecChange', structure: 'mkSecStructure', debut: 'mkSecDebut', releases: 'mkSecReleases' };
 function mkSyncModeButtons(){
   document.querySelectorAll('#view-business .mk-mode').forEach(b => b.classList.toggle('on', b.dataset.mode === mkMode));
   document.querySelectorAll('#view-business .mk-sec').forEach(b => b.classList.toggle('on', b.dataset.section === mkSection));
@@ -4668,6 +4802,8 @@ function mkRender(){
       else if(mkMonthsReady) mkRenderWeekly();
       else mkRenderWeeklySkeleton();
       mkRenderRating();
+    }else if(mkSection === 'monthly'){
+      if(mkMonthsReady) mkRenderMonthly(); else { setText('mkAsOf', '지난 기간 데이터를 불러오는 중...'); document.getElementById('mkMonthlyTable').innerHTML = skBlocks(8); }
     }else if(mkSection === 'structure'){
       if(mkMonthsReady) mkRenderStructure(); else mkRenderStructureSkeleton();
     }else if(mkSection === 'debut'){
@@ -4703,7 +4839,7 @@ async function mkEnsureHistory(){
   const latest = latestDate(rawStore.sales) || latestDate(rawStore.popular);
   if(!latest) return;
   const loading = document.getElementById('mkLoading');
-  if(mkMode === 'weekly' || mkSection === 'structure' || mkSection === 'debut') loading?.classList.remove('hidden');
+  if(mkMode === 'weekly' || mkSection === 'structure' || mkSection === 'debut' || mkSection === 'monthly') loading?.classList.remove('hidden');
   try{
     const d = mkToDate(latest), jobs = [];
     for(let i = 0; i <= 3; i++){
