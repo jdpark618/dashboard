@@ -609,7 +609,7 @@ html.panel-lock { overflow: hidden; }
     <section id="mkWeeklyKpis" class="grid grid-cols-2 lg:grid-cols-4 gap-3"></section>
     <section class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
       <div class="card rounded-xl p-5">
-        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">급상승 / 급하락 TOP5</h3><p class="text-[10px] muted mt-1">주 평균 순위 · 전주 대비 · 양주 모두 3일 이상 TOP100</p></div><span class="mk-store" data-storeof="wMovers"></span></div>
+        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">급상승 / 급하락 TOP5</h3><p class="text-[10px] muted mt-1">주 평균 순위(반올림) · 전주 대비 · 양주 모두 3일 이상 TOP100</p></div><span class="mk-store" data-storeof="wMovers"></span></div>
         <div id="mkWMovers"></div>
       </div>
       <div class="card rounded-xl p-5 flex flex-col">
@@ -3777,14 +3777,17 @@ function mkMoverRows(list, fmt){
     <div class="flex items-center gap-3 py-1.5 px-2 -mx-2 rounded-lg hover:bg-slate-800/50 cursor-pointer" data-game="${escapeAttr(x.name)}">
       <div class="flex-1 min-w-0 text-xs">${mkGameCell(x.name)}</div>
       <span class="text-[10px] muted whitespace-nowrap">${fmt(x.from)} → ${fmt(x.to)}</span>
-      <span class="w-14 text-right text-xs whitespace-nowrap">${mkDelta(x.delta, fmt === mkFmt1 ? 1 : 0)}</span>
+      <span class="w-14 text-right text-xs whitespace-nowrap">${mkDelta(x.delta)}</span>
     </div>`).join('');
 }
-function mkFmt1(v){ return v.toFixed(1); }
+/* 기간 평균 순위 표시: 반올림 정수 (정렬·비교는 소수점 값으로) */
+function mkFmtAvg(v){ return String(Math.round(v)); }
+/* 기간 평균 순위 줄 세우기: 소수점 평균 → TOP100 일수 많은 순 → 최고 순위 → 이름 */
+function mkAvgOrder(a, b){ return a.rank - b.rank || b.days - a.days || (a.best ?? 999) - (b.best ?? 999) || String(a.name).localeCompare(String(b.name), 'ko'); }
 function mkFmtRank(v){ return String(v); }
 function mkMoversHtml(pairs, fmt){
-  const up = pairs.filter(x => x.delta > 0).sort((a, b) => b.delta - a.delta).slice(0, 5);
-  const down = pairs.filter(x => x.delta < 0).sort((a, b) => a.delta - b.delta).slice(0, 5);
+  const up = pairs.filter(x => x.delta > 0).sort((a, b) => (b.raw ?? b.delta) - (a.raw ?? a.delta)).slice(0, 5);
+  const down = pairs.filter(x => x.delta < 0).sort((a, b) => (a.raw ?? a.delta) - (b.raw ?? b.delta)).slice(0, 5);
   return `<div class="text-[10px] font-semibold rank-up mb-1">급상승</div>${mkMoverRows(up, fmt)}
     <div class="text-[10px] font-semibold rank-down mt-3 mb-1 pt-2 border-t border-slate-800">급하락</div>${mkMoverRows(down, fmt)}`;
 }
@@ -4056,8 +4059,8 @@ function mkRenderWeekly(){
 
   /* 급상승/급하락 (주 평균) */
   const mIdx = I[mkTabs.wMovers], wa = mkWeekAgg(mIdx, mon), wb = mkWeekAgg(mIdx, prevMon), pairs = [];
-  wa.games.forEach((g, k) => { const p = wb.games.get(k); if(p && g.days >= 3 && p.days >= 3) pairs.push({ name: g.name, from: p.avg, to: g.avg, delta: p.avg - g.avg }); });
-  document.getElementById('mkWMovers').innerHTML = wb.dates.length ? mkMoversHtml(pairs, mkFmt1) : mkEmpty('전주 데이터가 없습니다.');
+  wa.games.forEach((g, k) => { const p = wb.games.get(k); if(p && g.days >= 3 && p.days >= 3) pairs.push({ name: g.name, from: p.avg, to: g.avg, delta: Math.round(p.avg) - Math.round(g.avg), raw: p.avg - g.avg }); });
+  document.getElementById('mkWMovers').innerHTML = wb.dates.length ? mkMoversHtml(pairs, mkFmtAvg) : mkEmpty('전주 데이터가 없습니다.');
 
   /* 주간 차트인 · 탭: 차트인 게임 / 이후 추적 */
   const we = ent[mkTabs.wEntries];
@@ -4157,8 +4160,8 @@ function mkPosWindows(){
 function mkPosAgg(idx, dates){
   const n = dates.length, need = Math.ceil(n / 2), m = new Map(), out = new Map();
   dates.forEach(d => (idx.byDate.get(d) || new Map()).forEach((v, k) => {
-    const g = m.get(k) || { sum: 0, days: 0 };
-    g.sum += v.rank; g.days++; g.name = v.name; g.genre = v.genre; g.publisher = v.publisher;
+    const g = m.get(k) || { sum: 0, days: 0, best: 999 };
+    g.sum += v.rank; g.days++; g.best = Math.min(g.best, v.rank); g.name = v.name; g.genre = v.genre; g.publisher = v.publisher;
     m.set(k, g);
   }));
   m.forEach((g, k) => { if(n && g.days >= need) out.set(k, { ...g, rank: Math.min(100, (g.sum + (n - g.days) * 101) / n) }); });
@@ -4548,20 +4551,21 @@ function mkRenderMonthly(){
   setText('mkRankTitle', `${P.unit} 순위표`);
   document.getElementById('mkMonthlySel').innerHTML = P.keys.slice().reverse().map(k => `<option value="${k}" ${k === ym ? 'selected' : ''}>${P.option(k)}</option>`).join('');
   const ca = mkPosAgg(idx, cur), pa = prev.length ? mkPosAgg(idx, prev) : new Map();
-  const order = m => [...m].sort((a, b) => a[1].rank - b[1].rank);
+  const order = m => [...m].sort((a, b) => mkAvgOrder(a[1], b[1]));
   const curList = order(ca), prevPos = new Map(order(pa).map(([k], i) => [k, i + 1]));
   setText('mkAsOf', `${label} ${P.unit} 순위 · ${mLabel(ym)}${pym ? ` vs ${mLabel(pym)}` : ''} · 기준일 ${base}`);
   setText('mkMonthlyDesc', `${mLabel(ym)} 관측 ${cur.length}일${pym ? ` · ${mLabel(pym)} 관측 ${prev.length}일` : ` · 비교할 ${P.prevWord} 데이터 없음`} · ${curList.length}개 · 행을 누르면 게임 상세`);
-  const fmt = v => v >= 100 ? '100+' : v.toFixed(1);
+  const fmt = v => v >= 100 ? '100+' : mkFmtAvg(v);
   const shown = mkMonthly.all ? curList : curList.slice(0, 30);
   document.getElementById('mkMonthlyTable').innerHTML = curList.length ? `<table class="w-full min-w-[560px] text-left text-xs">
     <thead><tr class="border-b border-slate-800 text-[10px] muted">
       <th class="py-2 pl-1 w-9">#</th><th class="py-2 px-1 w-14">추세</th><th class="py-2 px-2">게임</th>
-      <th class="py-2 px-2 text-right w-24">${pym ? mLabel(pym) + ' 평균' : '-'}</th><th class="py-2 px-2 text-right w-24">${mLabel(ym)} 평균</th><th class="py-2 pl-2 pr-1 text-right w-24">TOP100 일수</th>
+      <th class="py-2 px-2 text-right w-24">${pym ? mLabel(pym) + ' 평균 순위' : '-'}</th><th class="py-2 px-2 text-right w-24">${mLabel(ym)} 평균 순위</th><th class="py-2 pl-2 pr-1 text-right w-24">TOP100 일수</th>
     </tr></thead><tbody>${shown.map(([k, g], i) => {
       const pos = i + 1, pp = prevPos.get(k), pg = pa.get(k);
       const trend = !pym ? '<span class="muted">-</span>' : pp == null ? '<span class="t-new font-semibold">NEW</span>' : pp > pos ? `<span class="rank-up font-semibold">▲${pp - pos}</span>` : pp < pos ? `<span class="rank-down font-semibold">▼${pos - pp}</span>` : '<span class="muted">-</span>';
-      const better = pg && g.rank < pg.rank - 0.5, worse = pg && g.rank > pg.rank + 0.5;
+      /* 보이는 정수 기준으로 색: 5위 → 5위면 칠하지 않음 */
+      const better = pg && Math.round(g.rank) < Math.round(pg.rank), worse = pg && Math.round(g.rank) > Math.round(pg.rank);
       const tint = better ? 'background:rgba(248,113,113,.12);color:#fecaca' : worse ? 'background:rgba(96,165,250,.12);color:#bfdbfe' : '';
       return `<tr class="border-b border-slate-900 hover:bg-slate-800/60 cursor-pointer" data-game="${escapeAttr(g.name)}">
         <td class="py-2 pl-1 font-semibold ${pos <= 3 ? 'text-slate-50' : 'text-slate-400'}">${pos}</td>
@@ -4573,7 +4577,7 @@ function mkRenderMonthly(){
       </tr>`;
     }).join('')}</tbody></table>
     ${curList.length > 30 ? `<button type="button" data-nosnap onclick="mkMonthly.all = !mkMonthly.all; mkRender()" class="mt-2 text-[12px] text-slate-400 hover:text-slate-200">${mkMonthly.all ? '30위까지만 보기' : `전체 ${curList.length}개 보기`}</button>` : ''}
-    <p class="text-[10px] muted mt-3">순위 칸 색은 ${P.prevWord} 평균보다 좋아졌으면 빨강, 나빠졌으면 파랑입니다. 추세는 ${P.unit} 순위표 안에서의 자리 변화이며, NEW는 ${P.prevWord} 표에 없던 게임입니다.</p>` : mkEmpty('이 기간에 집계할 게임이 없습니다.');
+    <p class="text-[10px] muted mt-3">순위 칸 색은 ${P.prevWord} 평균보다 좋아졌으면 빨강, 나빠졌으면 파랑입니다. 추세는 ${P.unit} 순위표 안에서의 자리 변화이며, NEW는 ${P.prevWord} 표에 없던 게임입니다. 평균 순위는 반올림해 표시하고, #은 소수점까지 비교해 줄 세운 자리입니다(같으면 TOP100 일수 → 최고 순위 → 이름순).</p>` : mkEmpty('이 기간에 집계할 게임이 없습니다.');
 }
 
 /* ---------- 첫 차트인 (순위 데이터만 사용) ---------- */
@@ -4656,7 +4660,7 @@ function mkRenderDebut(){
       `${label} 순위 데이터에 처음 등장한 게임 수. 수집 초기에는 원래 있던 게임이 섞여 많게 잡힐 수 있고, 데이터가 쌓일수록 정확해집니다.`) +
     mkKpiCard('기준일 TOP100', list.length ? `${kept}개 <span class="text-sm muted font-normal">(${Math.round(kept / list.length * 100)}%)</span>` : '-', `첫 차트인 ${list.length}개 중 · ${mkShort(base)} 기준`, 'muted', '첫 차트인 게임 중 기준일에도 TOP100에 있는 게임 수와 비율.') +
     mkKpiCard('TOP10 도달', `${top10}개`, '첫 차트인 후 한 번이라도 10위 이내', 'muted', '첫 차트인 이후 기준일까지 최고 순위가 10위 이내였던 게임 수.') +
-    mkKpiCard('평균 최고 순위', avgBest != null ? `${avgBest.toFixed(1)}위` : '-', '첫 차트인 게임들의 최고 순위 평균', 'muted', '각 첫 차트인 게임이 기준일까지 기록한 가장 높은 순위의 평균. 낮을수록(숫자가 작을수록) 성과가 좋음.');
+    mkKpiCard('평균 최고 순위', avgBest != null ? `${Math.round(avgBest)}위` : '-', '첫 차트인 게임들의 최고 순위 평균', 'muted', '각 첫 차트인 게임이 기준일까지 기록한 가장 높은 순위의 평균. 낮을수록(숫자가 작을수록) 성과가 좋음.');
   document.getElementById('mkDebutTable').innerHTML = list.length ? `<table class="w-full min-w-[720px] text-left text-xs">
     <thead><tr class="border-b border-slate-800 text-[10px] muted">
       <th class="py-2 pl-1 pr-2">게임</th><th class="py-2 px-2 text-center">첫 차트인일</th><th class="py-2 px-2 text-right">첫 차트인 순위</th><th class="py-2 px-2 text-right">최고 순위</th><th class="py-2 px-2 text-right">현재</th><th class="py-2 px-2 text-right">TOP100 일수 / 경과일</th><th class="py-2 pl-3 pr-1">추이</th>
