@@ -3739,7 +3739,8 @@ function mkRenderPositionMap(elId, sMap, pMap, opt){
       ${list.length > 5 ? `<button type="button" data-posexpand="${stateKey}" class="mt-1 text-[10px] text-slate-400 hover:text-slate-200 text-left">${expanded ? '접기' : `외 ${list.length - 5}개 더 보기`}</button>` : ''}
     </div>`;
   };
-  document.getElementById(elId).innerHTML = `<div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+  document.getElementById(elId).innerHTML = `<div class="flex items-center gap-1.5 mb-2 text-[11px]"><i class="fa-solid fa-circle-info text-slate-500"></i><span class="muted">아래 목록은 <b class="text-slate-200">${opt.unit}50위 기준</b>으로 나눕니다 · 위 맵의 구역은 10위 기준</span></div>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
     ${col('sales', '매출형', `매출 ${opt.unit}50위 이내 · 인기 50위 밖`, 't-sales', 'bg-sales')}
     ${col('popular', '인기형', `인기 ${opt.unit}50위 이내 · 매출 50위 밖`, 't-pop', 'bg-pop')}
     ${col('both', '양쪽 상위', `매출·인기 모두 ${opt.unit}50위 이내`, 'text-slate-100', 'bg-slate-100')}
@@ -4005,7 +4006,7 @@ function mkRenderPosScatter(D){
       const zones = [
         { l: cx, t: a.top, r: a.right, b: cy, fill: 'rgba(99,102,241,.10)', fg: '#c7d2fe', bg: 'rgba(67,56,202,.55)', bd: '#818cf8', text: '양쪽 10위권', align: 'right', at: 'top' },
         { l: a.left, t: a.top, r: cx, b: cy, fill: 'rgba(45,212,191,.06)', fg: '#99f6e4', bg: 'rgba(13,148,136,.35)', bd: '#2dd4bf', text: '인기 강세', align: 'left', at: 'top' },
-        { l: cx, t: cy, r: a.right, b: a.bottom, fill: 'rgba(251,191,36,.06)', fg: '#fde68a', bg: 'rgba(180,83,9,.4)', bd: '#fbbf24', text: '매출 강세', align: 'right', at: 'bottom' }
+        { l: cx, t: cy, r: a.right, b: a.bottom, fill: 'rgba(251,191,36,.13)', fg: '#fde68a', bg: 'rgba(180,83,9,.4)', bd: '#fbbf24', text: '매출 강세', align: 'right', at: 'bottom' }
       ];
       ctx.font = font(700); ctx.textBaseline = 'middle';
       zones.forEach(z => {
