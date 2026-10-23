@@ -109,7 +109,7 @@ select option { background-color: #0f172a; color: #f1f5f9; }
 .cal-weeknav button b { color:#e2e8f0; margin-left:4px; }
 .cal-weeknav button:hover:not(:disabled) { border-color:rgba(99,102,241,.5); }
 .cal-weeknav button:disabled { opacity:.4; cursor:default; }
-.cal-day { scroll-margin-top:12px; }
+.cal-day { scroll-margin-top:64px; }
 .cal-day-h { display:flex; align-items:center; gap:8px; font-size:13px; font-weight:700; color:#e2e8f0; padding:12px 4px 6px; border-bottom:1px solid rgba(51,65,85,.6); }
 .cal-day.past .cal-day-h { color:#94a3b8; }
 .cal-day.past .cal-row { opacity:.6; }
@@ -145,7 +145,11 @@ select option { background-color: #0f172a; color: #f1f5f9; }
 .gs-bd.old { background:rgba(51,65,85,.5); color:#94a3b8; font-weight:500; }
 .gs-empty { font-size:12px; color:#64748b; padding:10px 12px; }
 .mk-card-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:12px; }
-.mk-tabs { display:flex; gap:4px; flex-shrink:0; }
+.mk-tabs { display:inline-flex; gap:2px; padding:2px; background:#0b1222; border:1px solid var(--line); border-radius:8px; flex-shrink:0; }
+.mk-tabs button { font-size:12px; font-weight:600; padding:0 10px; border-radius:6px; color:#94a3b8; white-space:nowrap; }
+.mk-tabs button:hover { color:#e2e8f0; }
+.mk-tabs button.on { background:#4338ca; color:#e0e7ff; }
+.mk-store { font-size:11px; font-weight:600; padding:1px 7px; border-radius:999px; background:rgba(51,65,85,.5); white-space:nowrap; }
 /* 같은 줄 옆 카드 높이에 맞추고 넘치면 내부 스크롤 (데스크톱). 모바일은 최대 높이 스크롤 */
 .mk-fill { position:relative; min-height:160px; }
 .mk-fill-inner { overflow-y:auto; max-height:340px; }
@@ -212,6 +216,19 @@ html.panel-lock { overflow: hidden; }
 .thin-scroll::-webkit-scrollbar-thumb { background: rgba(100,116,139,.35); border-radius: 6px; }
 .thin-scroll:hover::-webkit-scrollbar-thumb { background: rgba(148,163,184,.7); }
 .thin-scroll::-webkit-scrollbar-track { background: transparent; }
+/* 페이지 머리 (DB 화면 제외 공통): 카드 밖 한 줄, 왼쪽 제목·설명 / 오른쪽 페이지 조작 */
+.page-head { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 16px; }
+.page-head h2 { font-size:18px; font-weight:700; display:flex; align-items:center; gap:8px; }
+.page-head .sub { font-size:12px; color:#94a3b8; margin-top:3px; }
+/* 상단 메뉴: 스크롤해도 위에 고정, 넘치는 메뉴가 있으면 오른쪽 끝을 흐리게 */
+.top-nav { position:sticky; top:0; z-index:30; background:rgba(14,22,38,.94); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
+.top-nav.fade-r { -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 40px),transparent); mask-image:linear-gradient(90deg,#000 calc(100% - 40px),transparent); }
+/* 조작 높이 2단계: 페이지 조작 32px, 카드 안 28px */
+.mk-seg button, .mk-tabs button { height:26px; display:inline-flex; align-items:center; }
+.mk-seg.sm button { height:22px; font-size:11px; padding:0 9px; }
+.mk-sel { height:32px; }
+.cal-today-btn, .cal-toggle { height:32px; display:inline-flex; align-items:center; }
+#view-calendar .cal-chip { height:32px; }
 .tap-tip { position:fixed; z-index:200; max-width:280px; background:#0f172a; color:#e2e8f0; border:1px solid rgba(99,102,241,.5); border-radius:8px; padding:8px 10px; font-size:12px; line-height:1.55; box-shadow:0 10px 25px -3px rgba(0,0,0,.7); }
 </style>
 </head>
@@ -219,13 +236,13 @@ html.panel-lock { overflow: hidden; }
 <body class="text-slate-100 min-h-screen relative overflow-x-hidden">
 <div class="max-w-[1500px] mx-auto px-4 md:px-6 py-5">
 
-<header class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4">
+<header class="flex flex-col lg:flex-row lg:items-center justify-between gap-2 lg:gap-4 mb-3 lg:mb-4">
   <div>
     <div class="flex items-center gap-2">
       <i class="fa-solid fa-chart-line text-indigo-400"></i>
-      <h1 class="text-2xl font-bold">Game Market Intelligence</h1>
+      <h1 class="text-xl lg:text-2xl font-bold">Game Market Intelligence</h1>
     </div>
-    <p class="text-xs muted mt-1">Google Play 시장 모니터링</p>
+    <p class="text-xs muted mt-1 hidden sm:block">Google Play 시장 모니터링</p>
   </div>
   <div class="flex flex-wrap items-center gap-2.5 [&>*]:whitespace-nowrap">
     <span id="todayLabel" class="text-xs muted font-medium"></span>
@@ -237,7 +254,7 @@ html.panel-lock { overflow: hidden; }
 </header>
 
 <!-- TOP NAV -->
-<nav class="card rounded-xl mb-5 px-3 overflow-x-auto">
+<nav id="topNav" class="card top-nav rounded-xl mb-5 px-3 overflow-x-auto">
   <div class="flex items-center gap-1 whitespace-nowrap">
     <button class="tab active" data-view="dashboard" onclick="switchView('dashboard')">
       <i class="fa-solid fa-gauge-high mr-1.5"></i> Dashboard
@@ -266,13 +283,15 @@ html.panel-lock { overflow: hidden; }
 <main>
 <!-- DASHBOARD VIEW -->
 <div id="view-dashboard" class="space-y-6">
+  <div class="page-head">
+    <div><h2><i class="fa-solid fa-gauge-high text-indigo-400"></i>Dashboard</h2><p class="sub">오늘의 매출·인기 순위 요약 · 카드나 게임을 누르면 상세</p></div>
+  </div>
   <!-- 섹션 1: 마켓 서머리 -->
   <section>
     <div class="flex items-center justify-between mb-3 px-0.5">
       <h2 class="text-base font-bold text-slate-200 flex items-center gap-2">
         <i class="fa-solid fa-chart-simple text-indigo-400"></i>오늘의 시장 요약
       </h2>
-      <span class="text-[11px] muted">카드를 누르면 게임 상세</span>
     </div>
 
     <div id="freezeWarning" class="hidden mb-4 flex items-center gap-2 px-4 py-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-400 text-sm font-medium">
@@ -377,7 +396,7 @@ html.panel-lock { overflow: hidden; }
       <h2 class="text-base font-bold text-slate-200 flex items-center gap-2"><i class="fa-solid fa-star text-amber-400"></i>관심 게임 <span id="watchCount" class="text-xs muted font-normal"></span></h2>
       <span class="flex items-center gap-2"><span class="text-[11px] muted hidden sm:inline">이 브라우저에만 저장</span><button type="button" class="cal-today-btn" onclick="searchLoadWatch()"><i class="fa-solid fa-chart-line mr-1"></i>순위 비교</button></span>
     </div>
-    <div id="watchList" class="card rounded-xl p-3"></div>
+    <div id="watchList" class="card rounded-xl p-5"></div>
   </section>
 
   <!-- 섹션 2: 일간 TOP 10 -->
@@ -415,6 +434,7 @@ html.panel-lock { overflow: hidden; }
       <h2 class="text-base font-bold text-slate-200 flex items-center gap-2">
         <i class="fa-solid fa-arrow-trend-up text-indigo-400"></i>오늘의 순위 변동
       </h2>
+      <button type="button" onclick="mkSection = 'change'; mkMode = 'daily'; switchView('business')" class="text-[12px] font-semibold text-indigo-300 hover:text-indigo-200 whitespace-nowrap">시장 분석에서 더 보기<i class="fa-solid fa-chevron-right ml-1 text-[10px]"></i></button>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
       <div class="card rounded-xl p-5">
@@ -474,13 +494,10 @@ html.panel-lock { overflow: hidden; }
 
 <!-- BUSINESS ANALYSIS VIEW -->
 <div id="view-business" class="hidden space-y-4">
-  <section class="flex flex-col lg:flex-row lg:items-end justify-between gap-3">
-    <div>
-      <h2 class="text-xl font-bold"><i class="fa-solid fa-chart-pie text-indigo-400 mr-2"></i>시장 분석</h2>
-      <p class="text-xs muted mt-1">Google Play <b>매출·인기 순위 DB</b>를 기반으로 시장 변화·차트인/아웃·구조를 한눈에 확인합니다.</p>
-      <div id="mkAsOf" class="text-[11px] text-indigo-300/90 mt-1.5">-</div>
-    </div>
-  </section>
+  <div class="page-head">
+    <h2><i class="fa-solid fa-chart-pie text-indigo-400"></i>시장 분석<i class="fa-regular fa-circle-question mk-info" title="Google Play 매출·인기 순위 DB를 기반으로 시장 변화·차트인/아웃·구조를 한눈에 확인합니다."></i></h2>
+    <div id="mkAsOf" class="text-[12px] text-indigo-300/90">-</div>
+  </div>
 
   <!-- 질문 단위 탭 -->
   <nav class="flex gap-1 overflow-x-auto overflow-y-hidden border-b border-slate-800" id="mkSectionTabs">
@@ -495,9 +512,12 @@ html.panel-lock { overflow: hidden; }
   <div id="mkSecChange" class="space-y-4">
   <div class="flex flex-wrap items-center justify-between gap-2">
     <p class="text-[11px] muted">TOP100에 누가 들어오고 나갔는지, 누가 크게 오르내렸는지</p>
-    <div class="flex items-center gap-1 p-1 rounded-lg border border-slate-700 bg-slate-900/70">
-      <button type="button" data-mode="daily" onclick="mkSetMode('daily')" class="mk-mode px-3 py-1.5 rounded-md text-xs font-semibold">전일 대비</button>
-      <button type="button" data-mode="weekly" onclick="mkSetMode('weekly')" class="mk-mode px-3 py-1.5 rounded-md text-xs font-semibold">전주 대비</button>
+    <div class="flex flex-wrap items-center gap-2">
+      <div class="mk-tabs" data-tab="secChange"></div>
+      <div class="mk-seg">
+        <button type="button" data-mode="daily" onclick="mkSetMode('daily')" class="mk-mode">전일 대비</button>
+        <button type="button" data-mode="weekly" onclick="mkSetMode('weekly')" class="mk-mode">전주 대비</button>
+      </div>
     </div>
   </div>
 
@@ -507,11 +527,11 @@ html.panel-lock { overflow: hidden; }
 
     <section class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
       <div class="card rounded-xl p-5">
-        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">급상승 / 급하락 TOP5</h3><p class="text-[10px] muted mt-1">전일 대비 순위 변화 · 양일 모두 TOP100인 게임</p></div><div class="mk-tabs" data-tab="dMovers"></div></div>
+        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">급상승 / 급하락 TOP5</h3><p class="text-[10px] muted mt-1">전일 대비 순위 변화 · 양일 모두 TOP100인 게임</p></div><span class="mk-store" data-storeof="dMovers"></span></div>
         <div id="mkDMovers"></div>
       </div>
       <div class="card rounded-xl p-5 flex flex-col">
-        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">차트인 / 차트아웃</h3><p id="mkDEntriesDesc" class="text-[10px] muted mt-1">전일 대비 TOP100 차트인·차트아웃 게임</p></div><div class="mk-tabs" data-tab="dEntries"></div></div>
+        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">차트인 / 차트아웃</h3><p id="mkDEntriesDesc" class="text-[10px] muted mt-1">전일 대비 TOP100 차트인·차트아웃 게임</p></div><span class="mk-store" data-storeof="dEntries"></span></div>
         <div id="mkDEntryType" class="flex flex-wrap items-center gap-1 mb-2"></div>
         <div class="mk-fill"><div id="mkDEntries" class="mk-fill-inner scrollbar pr-1"></div></div>
       </div>
@@ -523,11 +543,11 @@ html.panel-lock { overflow: hidden; }
     <section id="mkWeeklyKpis" class="grid grid-cols-2 lg:grid-cols-4 gap-3"></section>
     <section class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
       <div class="card rounded-xl p-5">
-        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">급상승 / 급하락 TOP5</h3><p class="text-[10px] muted mt-1">주 평균 순위 · 전주 대비 · 양주 모두 3일 이상 TOP100</p></div><div class="mk-tabs" data-tab="wMovers"></div></div>
+        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">급상승 / 급하락 TOP5</h3><p class="text-[10px] muted mt-1">주 평균 순위 · 전주 대비 · 양주 모두 3일 이상 TOP100</p></div><span class="mk-store" data-storeof="wMovers"></span></div>
         <div id="mkWMovers"></div>
       </div>
       <div class="card rounded-xl p-5 flex flex-col">
-        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">주간 차트인</h3><p id="mkWEntriesDesc" class="text-[10px] muted mt-1">전주 TOP100 기록이 없다가 지난주에 차트인한 게임</p></div><div class="mk-tabs" data-tab="wEntries"></div></div>
+        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">주간 차트인</h3><p id="mkWEntriesDesc" class="text-[10px] muted mt-1">전주 TOP100 기록이 없다가 지난주에 차트인한 게임</p></div><span class="mk-store" data-storeof="wEntries"></span></div>
         <div id="mkWEntryType" class="flex flex-wrap items-center gap-1 mb-2"></div>
         <div class="mk-fill"><div id="mkWEntries" class="mk-fill-inner scrollbar pr-1"></div></div>
       </div>
@@ -541,7 +561,10 @@ html.panel-lock { overflow: hidden; }
 
   <!-- ② 시장 구조 -->
   <div id="mkSecStructure" class="hidden space-y-4">
-    <p class="text-[11px] muted">어떤 게임이 매출 강세·인기 강세인지, 어떤 장르와 퍼블리셔가 TOP100을 차지하는지</p>
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <p class="text-[11px] muted">어떤 게임이 매출 강세·인기 강세인지, 어떤 장르와 퍼블리셔가 TOP100을 차지하는지</p>
+      <div class="flex items-center gap-2"><span class="text-[11px] muted">장르·퍼블리셔 기준</span><div class="mk-tabs" data-tab="secStructure"></div></div>
+    </div>
     <section class="card rounded-xl p-5">
       <div class="mk-card-head">
         <div><h3 class="font-semibold text-sm">시장 포지션 맵<i class="fa-regular fa-circle-question mk-info" title="매출·인기 둘 다 TOP100인 게임만 평면에 아이콘으로 놓습니다. 가로는 매출 순위(오른쪽이 1위), 세로는 인기 순위(위쪽이 1위)이고, 상위권이 잘 보이도록 로그 눈금을 씁니다. 한쪽에만 TOP100인 게임은 아래 두 줄에 순위순으로 모았습니다. 기간 평균은 기간의 절반 이상 TOP100이었던 게임만 포함하며, 빠진 날은 100+로 계산합니다. 아이콘을 누르면 게임 상세가 열립니다."></i></h3><p id="mkPosDesc" class="text-[10px] muted mt-1">-</p></div>
@@ -572,11 +595,11 @@ html.panel-lock { overflow: hidden; }
     </section>
     <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <div class="card rounded-xl p-5">
-        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">장르 비중 추이</h3><p class="text-[10px] muted mt-1">최근 8주 · 주간 TOP100 구성 비중</p></div><div class="mk-tabs" data-tab="wGenre"></div></div>
+        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">장르 비중 추이</h3><p class="text-[10px] muted mt-1">최근 8주 · 주간 TOP100 구성 비중</p></div><span class="mk-store" data-storeof="wGenre"></span></div>
         <div id="mkWGenre"></div>
       </div>
       <div class="card rounded-xl p-5">
-        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">퍼블리셔 순위 점유율 (가중)<i class="fa-regular fa-circle-question mk-info" title="지난주 매일 순위마다 (101 − 순위) 점수를 주고 퍼블리셔별로 합산한 값의 비중. 1위 게임은 하루 100점, 100위는 1점이라 TOP100 게임 수보다 상위권 장악력을 반영합니다."></i></h3><p class="text-[10px] muted mt-1">지난주 · 상위 순위일수록 큰 점수로 합산</p></div><div class="mk-tabs" data-tab="wPub"></div></div>
+        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">퍼블리셔 순위 점유율 (가중)<i class="fa-regular fa-circle-question mk-info" title="지난주 매일 순위마다 (101 − 순위) 점수를 주고 퍼블리셔별로 합산한 값의 비중. 1위 게임은 하루 100점, 100위는 1점이라 TOP100 게임 수보다 상위권 장악력을 반영합니다."></i></h3><p class="text-[10px] muted mt-1">지난주 · 상위 순위일수록 큰 점수로 합산</p></div><span class="mk-store" data-storeof="wPub"></span></div>
         <div id="mkWPub"></div>
       </div>
     </section>
@@ -621,21 +644,14 @@ html.panel-lock { overflow: hidden; }
 
 <!-- CALENDAR VIEW -->
 <div id="view-calendar" class="hidden space-y-3">
-  <!-- 월 이동 · 요약 · 보기 전환 (한 줄) -->
-  <div class="card rounded-xl px-3 py-2.5 flex flex-wrap items-center gap-x-4 gap-y-2">
+  <div class="page-head">
+    <div><h2><i class="fa-regular fa-calendar-days text-indigo-400"></i>신작 달력</h2><p class="sub">신작 정보 기준 출시 일정 · 일정을 누르면 신작 상세</p></div>
     <div class="flex items-center gap-2">
-      <button onclick="changeCalMonth(-1)" class="cal-navbtn" aria-label="이전 달"><i class="fa-solid fa-chevron-left"></i></button>
-      <h2 id="calMonthTitle" class="text-lg font-bold min-w-[120px] text-center whitespace-nowrap">-</h2>
-      <button onclick="changeCalMonth(1)" class="cal-navbtn" aria-label="다음 달"><i class="fa-solid fa-chevron-right"></i></button>
-      <button onclick="resetCalMonth()" class="cal-today-btn">오늘</button>
-    </div>
-    <div id="calSummary" class="text-xs text-slate-400">-</div>
-    <div class="ml-auto flex items-center gap-2">
       <div class="mk-seg" id="calViewSel">
         <button type="button" data-v="grid" onclick="setCalView('grid')"><i class="fa-regular fa-calendar mr-1"></i>달력</button>
         <button type="button" data-v="list" onclick="setCalView('list')"><i class="fa-solid fa-list mr-1"></i>목록</button>
       </div>
-      <div class="cal-capsel" id="calCapSel" title="칸당 표시 개수">
+      <div class="mk-seg" id="calCapSel" title="칸당 표시 개수">
         <button type="button" data-c="3" onclick="setCalCap(3)">3</button>
         <button type="button" data-c="4" onclick="setCalCap(4)" class="on">4</button>
         <button type="button" data-c="5" onclick="setCalCap(5)">5</button>
@@ -644,22 +660,31 @@ html.panel-lock { overflow: hidden; }
     </div>
   </div>
 
-  <!-- 필터: 출시유형 칩(범례 겸용) · 모바일 · 퍼블리셔 · 검색 -->
-  <div class="flex flex-wrap items-center gap-2">
+  <!-- 툴바 한 덩어리: 월 이동·요약 | 출시유형 칩(범례 겸용) · 모바일 · 퍼블리셔 · 검색 -->
+  <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+    <div class="flex items-center gap-2">
+      <button onclick="changeCalMonth(-1)" class="cal-navbtn" aria-label="이전 달"><i class="fa-solid fa-chevron-left"></i></button>
+      <h3 id="calMonthTitle" class="text-lg font-bold min-w-[120px] text-center whitespace-nowrap">-</h3>
+      <button onclick="changeCalMonth(1)" class="cal-navbtn" aria-label="다음 달"><i class="fa-solid fa-chevron-right"></i></button>
+      <button onclick="resetCalMonth()" class="cal-today-btn">오늘</button>
+      <span id="calSummary" class="text-xs text-slate-400 ml-1">-</span>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
     <div id="calTypeChips" class="flex flex-wrap gap-1.5"></div>
     <label class="cal-toggle"><input type="checkbox" id="calMobileOnly" checked onchange="renderCalendar()"><span class="knob"></span>모바일(멀티 플랫폼)만 보기</label>
     <select id="calPub" class="mk-sel max-w-[210px]" onchange="calState.pub = this.value; renderCalendar()" aria-label="퍼블리셔 필터"><option value="">전체 퍼블리셔</option></select>
     <div class="relative"><input id="calSearch" class="mk-sel w-48 pr-7" placeholder="이 달에서 게임 검색" autocomplete="off" oninput="calSearchInput(this.value)"><button type="button" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-200 text-xs" onclick="document.getElementById('calSearch').value=''; calSearchInput('')" aria-label="검색 지우기"><i class="fa-solid fa-xmark"></i></button></div>
+    </div>
   </div>
 
-  <div id="calGridWrap" class="card rounded-xl p-3">
+  <div id="calGridWrap" class="card rounded-xl p-4">
     <div class="cal-hdr">
       <div class="sun">일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div class="sat">토</div>
     </div>
     <div id="calGridBody" class="cal-board"></div>
   </div>
 
-  <div id="calListWrap" class="card rounded-xl p-3 hidden">
+  <div id="calListWrap" class="card rounded-xl p-4 hidden">
     <div id="calWeekNav" class="cal-weeknav"></div>
     <div id="calListBody"></div>
   </div>
@@ -680,27 +705,37 @@ html.panel-lock { overflow: hidden; }
 
 <!-- SEARCH VIEW -->
 <div id="view-search" class="hidden space-y-4">
-  <!-- 검색·선택·조건 -->
-  <section class="card rounded-xl p-4 space-y-3">
+  <div class="page-head">
+    <div>
+      <h2><i class="fa-solid fa-magnifying-glass text-indigo-400"></i>순위 검색
+        <span id="searchLoadingIndicator" class="hidden text-[11px] font-normal text-indigo-300"><i class="fa-solid fa-spinner fa-spin mr-1"></i>지난 기간 데이터 불러오는 중...</span>
+      </h2>
+      <p class="sub">최대 5개 게임의 매출·인기 순위를 나란히 비교합니다.</p>
+    </div>
     <div class="flex flex-wrap items-center gap-2">
-      <div class="mr-auto">
-        <h2 class="font-semibold flex items-center gap-2">타이틀 순위 검색
-          <span id="searchLoadingIndicator" class="hidden text-[11px] font-normal text-indigo-300"><i class="fa-solid fa-spinner fa-spin mr-1"></i>지난 기간 데이터 불러오는 중...</span>
-        </h2>
-        <p class="text-xs muted mt-0.5">최대 5개 게임의 매출·인기 순위를 나란히 비교합니다.</p>
-      </div>
       <button type="button" class="cal-today-btn" onclick="searchLoadWatch()" title="대시보드 관심 게임을 불러와 비교"><i class="fa-solid fa-star text-amber-400 mr-1"></i>관심 게임</button>
       <select id="searchPub" class="mk-sel max-w-[190px]" onchange="searchAddPublisher(this.value)" aria-label="퍼블리셔 게임 한 번에 추가"><option value="">퍼블리셔 게임 추가</option></select>
       <button type="button" class="cal-today-btn" onclick="searchExportCsv()" title="날짜별 순위표를 CSV로 받기"><i class="fa-solid fa-file-arrow-down mr-1"></i>CSV</button>
       <button type="button" class="cal-today-btn" onclick="searchCopyLink()" title="선택한 게임과 기간이 담긴 링크 복사"><i class="fa-solid fa-link mr-1"></i>링크 복사</button>
     </div>
+  </div>
+  <!-- 게임 고르기 -->
+  <section class="card rounded-xl p-5 space-y-3">
     <div class="gs-wrap">
       <input id="searchQuery" placeholder="게임 검색 또는 눌러서 TOP 10에서 선택" autocomplete="off"
         class="w-full bg-slate-900 border border-slate-700 rounded-lg pl-3 pr-8 py-2 text-[13px] focus:outline-none focus:border-indigo-500">
       <span class="gs-clear hidden" data-for="searchQuery" title="검색어 지우기"><i class="fa-solid fa-xmark"></i></span>
     </div>
     <div id="searchChips" class="gs-chips"></div>
-    <div class="flex flex-wrap items-center gap-2 pt-1">
+    <span id="searchMsg" class="block text-[11px] text-indigo-300 transition-opacity empty:hidden"></span>
+    <div id="searchAnchorNote" class="hidden text-[11px] text-amber-300/90"></div>
+  </section>
+
+  <!-- 비교 요약: 기간 선택이 바꾸는 첫 대상이라 기간은 여기 머리에 -->
+  <section class="card rounded-xl p-5">
+    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+      <div class="flex items-center gap-2"><h3 class="font-semibold text-sm">비교 요약</h3><span id="searchRangeLabel" class="text-[11px] muted">-</span></div>
+      <div class="flex flex-wrap items-center gap-2">
       <div class="mk-seg" id="searchPeriodSel">
         <button type="button" data-d="7" onclick="searchSetDays(7)">7일</button>
         <button type="button" data-d="15" onclick="searchSetDays(15)">15일</button>
@@ -713,6 +748,16 @@ html.panel-lock { overflow: hidden; }
         <input type="date" id="searchFrom" class="mk-sel" onchange="searchSetCustom()" aria-label="시작일"> ~
         <input type="date" id="searchTo" class="mk-sel" onchange="searchSetCustom()" aria-label="종료일">
       </div>
+      </div>
+    </div>
+    <div id="searchSummary"></div>
+  </section>
+
+  <!-- 순위 추이: 보기 방식·평점은 차트 머리에 -->
+  <section class="card rounded-xl p-5" id="searchChartsCard">
+    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+      <h3 class="font-semibold text-sm">순위 추이 <span class="text-[11px] font-normal muted ml-1">매출 실선 · 인기 점선 · 로그 눈금</span></h3>
+      <div class="flex flex-wrap items-center gap-2">
       <div class="mk-seg" id="searchLayoutSel">
         <button type="button" data-l="combined" onclick="searchSetLayout('combined')">통합</button>
         <button type="button" data-l="split" onclick="searchSetLayout('split')">따로</button>
@@ -720,22 +765,10 @@ html.panel-lock { overflow: hidden; }
         <button type="button" data-l="popular" onclick="searchSetLayout('popular')">인기만</button>
       </div>
       <label class="cal-toggle"><input type="checkbox" id="searchRatingToggle" onchange="searchState.rating = this.checked; renderSearchCharts()"><span class="knob"></span>평점 추이</label>
-      <span id="searchMsg" class="text-[11px] text-indigo-300 transition-opacity"></span>
+      </div>
     </div>
-    <div id="searchAnchorNote" class="hidden text-[11px] text-amber-300/90"></div>
-  </section>
-
-  <!-- 비교 요약 -->
-  <section class="card rounded-xl p-4">
-    <div class="flex items-center justify-between mb-2"><h3 class="font-semibold text-sm">비교 요약</h3><span id="searchRangeLabel" class="text-[11px] muted">-</span></div>
-    <div id="searchSummary"></div>
-  </section>
-
-  <!-- 순위 추이 -->
-  <section class="card rounded-xl p-4" id="searchChartsCard">
     <div id="searchEmptyChart" class="hidden py-14 text-center text-xs muted">게임을 선택하면 순위 추이가 나타납니다.</div>
     <div id="searchCombinedWrap">
-      <div class="text-xs font-semibold text-slate-300 mb-2 flex flex-wrap items-center gap-x-3">매출·인기 순위 추이<span class="font-normal muted">매출 실선 · 인기 점선 · 로그 눈금</span></div>
       <div class="h-[340px] md:h-[400px]"><canvas id="searchCombinedChart"></canvas></div>
     </div>
     <div id="searchSalesWrap" class="hidden">
@@ -748,7 +781,7 @@ html.panel-lock { overflow: hidden; }
     </div>
   </section>
 
-  <section class="card rounded-xl p-4 hidden" id="searchRatingWrap">
+  <section class="card rounded-xl p-5 hidden" id="searchRatingWrap">
     <div class="text-xs font-semibold text-slate-300 mb-2"><i class="fa-solid fa-star text-amber-400/80 mr-1"></i>평점 추이 <span class="font-normal muted ml-1">9/8부터 수집</span></div>
     <div class="h-[220px]"><canvas id="searchRatingChart"></canvas></div>
   </section>
@@ -1643,9 +1676,10 @@ function renderToday(){
   /* 리스트 렌더링: 정보량(showMeta: true) 통일 & 오독 방지 라벨링 적용 */
   renderRankList('popularTop10List', p.popularTop10, {showMeta:true, listType:'top10'});
   renderRankList('salesTop10List', p.salesTop10, {showMeta:true, listType:'top10'});
-  renderRankList('newEntriesList', p.newEntries.slice(0, 10), {showMeta:true, listType:'newPop'});
-  renderRankList('salesRisingList', p.salesRising, {showMeta:true, listType:'risingSales'});
-  renderRankList('salesFallingList', p.salesFalling, {showMeta:true, listType:'fallingSales'});
+  /* 대시보드는 요약만: 목록마다 5개, 나머지는 시장 분석 '순위 변동'에서 */
+  renderRankList('newEntriesList', p.newEntries.slice(0, 5), {showMeta:true, listType:'newPop'});
+  renderRankList('salesRisingList', p.salesRising.slice(0, 5), {showMeta:true, listType:'risingSales'});
+  renderRankList('salesFallingList', p.salesFalling.slice(0, 5), {showMeta:true, listType:'fallingSales'});
 
   renderGenreBars('popularGenreBars', p.popularGenre);
   renderGenreBars('salesGenreBars', p.salesGenre);
@@ -1655,6 +1689,11 @@ function renderToday(){
 function switchView(view){
   currentView=view;
   document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.view===view));
+  /* 고정 메뉴 아래에서 새 화면이 시작되게, 휴대폰은 현재 메뉴가 보이도록 가로 스크롤 */
+  const nav = document.getElementById('topNav'), act = nav.querySelector('.tab.active');
+  if(window.scrollY > nav.offsetTop) window.scrollTo({ top: nav.offsetTop });
+  if(act && (act.offsetLeft < nav.scrollLeft || act.offsetLeft + act.offsetWidth > nav.scrollLeft + nav.clientWidth)) nav.scrollLeft = act.offsetLeft - 12;
+  navFadeSync();
   ['dashboard','business','search','calendar','database'].forEach(v => {
     const el = document.getElementById(`view-${v}`);
     if(el) el.classList.toggle('hidden', v==='database' ? !(view==='sales'||view==='popular'||view==='newReleases') : view!==v);
@@ -1666,6 +1705,13 @@ function switchView(view){
   /* 현재 탭을 URL 해시에 기록: 새로고침·링크 공유 시 같은 탭으로 열림 */
   history.replaceState(null, '', view === 'dashboard' ? location.pathname + location.search : `#${view}`);
 }
+
+function navFadeSync(){
+  const nav = document.getElementById('topNav');
+  if(nav) nav.classList.toggle('fade-r', nav.scrollLeft + nav.clientWidth < nav.scrollWidth - 4);
+}
+document.getElementById('topNav')?.addEventListener('scroll', navFadeSync, { passive: true });
+window.addEventListener('resize', navFadeSync);
 
 const VALID_VIEWS = ['dashboard','business','calendar','sales','popular','newReleases','search'];
 function viewFromHash(){ const v = decodeURIComponent(location.hash.slice(1)).split('?')[0]; return VALID_VIEWS.includes(v) ? v : 'dashboard'; }
@@ -3416,7 +3462,9 @@ const MK_STORE_LABEL = { sales: '매출', popular: '인기' };
 let mkMode = 'daily';
 let mkSection = 'change';
 const mkPosExpand = {};
-const mkTabs = { dMovers: 'sales', dEntries: 'sales', dEntryType: 'in', wEntryType: 'list', wGenre: 'sales', wPub: 'sales', wMovers: 'sales', wEntries: 'sales', wCohort: 'sales', debut: 'sales' };
+/* 탭 단위 매출/인기 전환: 한 번에 그 탭의 카드들을 같이 바꿈 */
+const MK_TAB_GROUPS = { secChange: ['dMovers', 'dEntries', 'wMovers', 'wEntries'], secStructure: ['wGenre', 'wPub'] };
+const mkTabs = { secChange: 'sales', secStructure: 'sales', dMovers: 'sales', dEntries: 'sales', dEntryType: 'in', wEntryType: 'list', wGenre: 'sales', wPub: 'sales', wMovers: 'sales', wEntries: 'sales', wCohort: 'sales', debut: 'sales' };
 /* 탭 버튼 선택지: 기본은 매출/인기 */
 const MK_TAB_OPTIONS = {};
 const mkIndexCache = { sales: null, popular: null };
@@ -3505,7 +3553,7 @@ function mkTabsHtml(tabKey){
   const opts = MK_TAB_OPTIONS[tabKey] || [['sales', MK_STORE_LABEL.sales], ['popular', MK_STORE_LABEL.popular]];
   return opts.map(([s, label]) => {
     const on = mkTabs[tabKey] === s;
-    return `<button type="button" data-tabkey="${tabKey}" data-store="${s}" class="px-2 py-1 rounded-md text-[10px] font-medium transition-colors ${on ? 'bg-indigo-500/20 text-indigo-300' : 'text-slate-400 hover:text-slate-200'}">${label}</button>`;
+    return `<button type="button" data-tabkey="${tabKey}" data-store="${s}" class="${on ? 'on' : ''}" aria-pressed="${on}">${label}</button>`;
   }).join('');
 }
 function mkIcon(name){
@@ -4545,11 +4593,7 @@ function renderWatchlist(){
 /* ---------- 모드 / 탭 / 진입 ---------- */
 const MK_SECTION_EL = { change: 'mkSecChange', structure: 'mkSecStructure', debut: 'mkSecDebut', releases: 'mkSecReleases' };
 function mkSyncModeButtons(){
-  document.querySelectorAll('#view-business .mk-mode').forEach(b => {
-    const on = b.dataset.mode === mkMode;
-    b.classList.toggle('bg-indigo-500', on); b.classList.toggle('text-white', on);
-    b.classList.toggle('text-slate-400', !on); b.classList.toggle('hover:text-slate-200', !on);
-  });
+  document.querySelectorAll('#view-business .mk-mode').forEach(b => b.classList.toggle('on', b.dataset.mode === mkMode));
   document.querySelectorAll('#view-business .mk-sec').forEach(b => b.classList.toggle('on', b.dataset.section === mkSection));
   Object.entries(MK_SECTION_EL).forEach(([k, id]) => document.getElementById(id)?.classList.toggle('hidden', k !== mkSection));
   document.getElementById('mkDaily')?.classList.toggle('hidden', mkMode !== 'daily');
@@ -4557,6 +4601,11 @@ function mkSyncModeButtons(){
 }
 function mkRenderTabs(){
   document.querySelectorAll('#view-business .mk-tabs').forEach(el => { el.innerHTML = mkTabsHtml(el.dataset.tab); });
+  /* 카드 제목 옆에 지금 보고 있는 스토어 표시 */
+  document.querySelectorAll('#view-business .mk-store').forEach(el => {
+    const s = mkTabs[el.dataset.storeof];
+    el.textContent = MK_STORE_LABEL[s]; el.className = `mk-store ${s === 'sales' ? 't-sales' : 't-pop'}`;
+  });
 }
 function mkRender(){
   mkRenderTabs();
@@ -4625,7 +4674,7 @@ function mkInitEvents(){
     const rail = e.target.closest('button[data-railtoggle]');
     if(rail){ const s = rail.dataset.railtoggle; mkPos.railOpen[s] = !mkPos.railOpen[s]; mkRenderPosition(); return; }
     const tab = e.target.closest('button[data-tabkey]');
-    if(tab){ mkTabs[tab.dataset.tabkey] = tab.dataset.store; mkRender(); return; }
+    if(tab){ const k = tab.dataset.tabkey; mkTabs[k] = tab.dataset.store; (MK_TAB_GROUPS[k] || []).forEach(m => { mkTabs[m] = tab.dataset.store; }); mkRender(); return; }
     const game = e.target.closest('[data-game]');
     if(game) openGameDetail(game.dataset.game);
   });
