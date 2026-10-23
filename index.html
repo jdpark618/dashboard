@@ -57,13 +57,15 @@ select option { background-color: #0f172a; color: #f1f5f9; }
 .cal-chip.on { color:#e2e8f0; border-color:rgba(148,163,184,.45); background:rgba(30,41,59,.85); }
 .cal-chip.on i { opacity:1; }
 
-/* 달력형: 7일 + 주 합계 칸, 주마다 높이 따로 */
-.cal-hdr, .cal-grid { display:grid; grid-template-columns:repeat(7, minmax(0,1fr)) 60px; }
-.cal-hdr { text-align:center; font-size:12px; font-weight:600; color:#94a3b8; padding-bottom:8px; }
+/* 달력형: 왼쪽 주차 칸 + 3px 틈 + 7일, 두 칸이 행 높이를 함께 씀(subgrid) */
+.cal-hdr, .cal-grid { display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); }
+.cal-board { display:grid; grid-template-columns:56px minmax(0,1fr); column-gap:3px; row-gap:1px; }
+.cal-wkcol, .cal-grid { grid-row:1 / -1; display:grid; grid-template-rows:subgrid; }
+.cal-wkcol { background:rgba(51,65,85,.45); border:1px solid rgba(51,65,85,.45); border-radius:10px; overflow:hidden; }
+.cal-hdr { margin-left:59px; text-align:center; font-size:12px; font-weight:600; color:#94a3b8; padding-bottom:8px; }
 .cal-hdr .sun { color:#f87171; }
 .cal-hdr .sat { color:#60a5fa; }
-.cal-hdr .wk { color:#64748b; font-size:11px; }
-.cal-grid { gap:1px; background:rgba(51,65,85,.45); border:1px solid rgba(51,65,85,.45); border-radius:10px; overflow:hidden; }
+.cal-grid { column-gap:1px; background:rgba(51,65,85,.45); border:1px solid rgba(51,65,85,.45); border-radius:10px; overflow:hidden; }
 .cal-cell { background:#0c1322; min-height:96px; padding:6px; display:flex; flex-direction:column; gap:3px; min-width:0; }
 .cal-cell.wkend { background:#0e1628; }
 .cal-cell.out { background:#090f1a; }
@@ -652,9 +654,9 @@ html.panel-lock { overflow: hidden; }
 
   <div id="calGridWrap" class="card rounded-xl p-3">
     <div class="cal-hdr">
-      <div class="sun">일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div class="sat">토</div><div class="wk">주 합계</div>
+      <div class="sun">일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div class="sat">토</div>
     </div>
-    <div id="calGridBody" class="cal-grid"></div>
+    <div id="calGridBody" class="cal-board"></div>
   </div>
 
   <div id="calListWrap" class="card rounded-xl p-3 hidden">
@@ -1700,7 +1702,7 @@ async function resetCalMonth() {
 
 async function ensureCalendarMonthLoaded(){
   const gridBody = document.getElementById('calGridBody');
-  if(gridBody) gridBody.innerHTML = '<div class="col-span-8 p-10 text-center muted"><i class="fa-solid fa-spinner fa-spin mr-1"></i> 데이터 불러오는 중...</div>';
+  if(gridBody) { gridBody.style.gridTemplateRows = ''; gridBody.innerHTML = '<div class="col-span-full p-10 text-center muted"><i class="fa-solid fa-spinner fa-spin mr-1"></i> 데이터 불러오는 중...</div>'; }
   await ensureMonthLoaded('newReleases', currentCalYear, currentCalMonth);
   renderCalendar();
 }
@@ -1772,7 +1774,7 @@ function calWeeks(firstDay, dim){
 function renderCalendar() {
   const data = rawStore.newReleases, gridBody = document.getElementById('calGridBody');
   setText('calMonthTitle', `${currentCalYear}년 ${currentCalMonth}월`);
-  if(!data || !data.rows){ gridBody.innerHTML = '<div class="col-span-8 p-10 text-center muted">데이터를 불러오는 중입니다.</div>'; return; }
+  if(!data || !data.rows){ gridBody.style.gridTemplateRows = ''; gridBody.innerHTML = '<div class="col-span-full p-10 text-center muted">데이터를 불러오는 중입니다.</div>'; return; }
 
   const targetYM = `${currentCalYear}-${pad2(currentCalMonth)}`;
   const isMobileOnly = document.getElementById('calMobileOnly').checked;
@@ -1829,7 +1831,7 @@ function renderCalGrid(){
   calMonthGames.forEach(g => { (byDay[g.day] = byDay[g.day] || []).push(g); });
   Object.values(byDay).forEach(l => l.sort((a, b) => b.hit - a.hit)); /* 검색에 걸린 일정을 칸 위쪽으로 */
   const weeks = calWeeks(firstDay, dim), maxW = Math.max(1, ...weeks.map(w => w.games.length));
-  let html = '';
+  let html = '', wkHtml = '';
   weeks.forEach(wk => {
     for(let c = 0; c < 7; c++){
       const d = wk.w * 7 + c - firstDay + 1, wkend = c === 0 || c === 6 ? ' wkend' : '';
@@ -1848,9 +1850,11 @@ function renderCalGrid(){
       </div>`;
     }
     const t = wk.games.length;
-    html += `<div class="cal-wkcell${t === maxW && t > 0 ? ' peak' : ''}" title="${wk.w + 1}주차 (${m}/${wk.start}~${m}/${wk.end}) ${t}개"><span>${wk.w + 1}주</span><b>${t}</b><div class="bar"><i style="width:${Math.round(t / maxW * 100)}%"></i></div></div>`;
+    wkHtml += `<div class="cal-wkcell${t === maxW && t > 0 ? ' peak' : ''}" title="${wk.w + 1}주차 (${m}/${wk.start}~${m}/${wk.end}) ${t}개"><span>${wk.w + 1}주</span><b>${t}</b><div class="bar"><i style="width:${Math.round(t / maxW * 100)}%"></i></div></div>`;
   });
-  document.getElementById('calGridBody').innerHTML = html;
+  const board = document.getElementById('calGridBody');
+  board.style.gridTemplateRows = `repeat(${weeks.length}, auto)`;
+  board.innerHTML = `<div class="cal-wkcol">${wkHtml}</div><div class="cal-grid">${html}</div>`;
 }
 
 /* 목록형: 날짜별 묶음 + 주차 이동 칩 */
