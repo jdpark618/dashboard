@@ -202,6 +202,12 @@ select option { background-color: #0f172a; color: #f1f5f9; }
 .gs-main::placeholder { color:#94a3b8; }
 .gs-icon { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#818cf8; font-size:13px; pointer-events:none; }
 /* 스켈레톤 로딩 */
+/* 주간 리포트 로딩: 단계 목록 + 경과 시간 + A4 자리 표시 */
+.rp-load { max-width:800px; margin:0 auto; }
+.rp-load .st { display:flex; align-items:center; gap:8px; font-size:12px; color:#64748b; padding:3px 0; }
+.rp-load .st i { width:14px; text-align:center; }
+.rp-load .st.on { color:#e2e8f0; } .rp-load .st.on i { color:#818cf8; }
+.rp-load .st.ok { color:#94a3b8; } .rp-load .st.ok i { color:#34d399; }
 .sk { display:inline-block; vertical-align:middle; border-radius:6px; background:linear-gradient(90deg, rgba(51,65,85,.45) 25%, rgba(71,85,105,.7) 37%, rgba(51,65,85,.45) 63%); background-size:400% 100%; animation:sk-shimmer 1.4s ease infinite; }
 @keyframes sk-shimmer { 0% { background-position:100% 50%; } 100% { background-position:0 50%; } }
 @media (prefers-reduced-motion: reduce) { .sk { animation:none; } }
@@ -5173,17 +5179,56 @@ function rpWeeks(){
   for(let i = 0; latest && i < 12; i++){ const m = mkAddDays(latest, -7 * i); if(mkAddDays(m, -7) < first) break; out.push(m); }
   return out;
 }
+/* 로딩 화면: 처음 열 때 지난 기간 기록을 받느라 시간이 걸리므로 단계와 경과 시간을 보여 줌 */
+const RP_LOAD_STEPS = ['오늘 순위 데이터', '지난 기간 순위 기록', '첫 차트인 기록', '리포트 그리기'];
+let rpLoadTimer = null;
+function rpLoadingShow(){
+  const pages = document.getElementById('reportPages');
+  if(pages.querySelector('.rp-load')) return;
+  clearInterval(rpLoadTimer);
+  const t0 = Date.now();
+  pages.innerHTML = `<div class="rp-load card rounded-xl p-6">
+    <div class="flex items-center gap-3 mb-3"><i class="fa-solid fa-circle-notch fa-spin text-indigo-400 text-xl"></i>
+      <div><div class="text-sm font-semibold text-slate-200">주간 리포트를 만드는 중입니다</div>
+      <div class="text-[11px] muted"><span id="rpLoadSec">0</span>초 지남 · 처음 열 때만 조금 걸립니다</div></div></div>
+    <div id="rpLoadSteps" class="mb-5 pl-1">${RP_LOAD_STEPS.map((t, i) => `<div class="st" data-i="${i}"><i class="fa-regular fa-circle"></i>${t}</div>`).join('')}</div>
+    <div class="space-y-2.5">${skBar('w-1/3', 'h-5')}${skBar('w-full', 'h-16')}<div class="grid grid-cols-2 gap-3">${skBar('w-full', 'h-24')}${skBar('w-full', 'h-24')}</div>${skBlocks(4)}</div>
+  </div>`;
+  rpLoadTimer = setInterval(() => { const el = document.getElementById('rpLoadSec'); if(!el){ clearInterval(rpLoadTimer); return; } el.textContent = Math.floor((Date.now() - t0) / 1000); }, 1000);
+}
+function rpLoadingStep(i, state){
+  const el = document.querySelector(`#rpLoadSteps .st[data-i="${i}"]`);
+  if(!el) return;
+  el.className = `st ${state}`;
+  el.querySelector('i').className = state === 'ok' ? 'fa-solid fa-circle-check' : state === 'on' ? 'fa-solid fa-circle-notch fa-spin' : 'fa-regular fa-circle';
+}
 async function openReportView(){
   const pages = document.getElementById('reportPages'), msg = document.getElementById('rpMsg');
-  if(!rawStore.sales) return;
   const hw = new URLSearchParams(location.hash.split('?')[1] || '').get('w');
   if(!rpState.week && hw) rpState.week = hw;
-  if(!mkMonthsReady || !mkFirstSeenCache.sales || !mkFirstSeenCache.popular){
-    pages.innerHTML = ''; msg.textContent = '지난 기간 순위 데이터를 불러오는 중...'; msg.classList.remove('hidden');
-    try{ await Promise.all([mkMonthsReady ? null : mkEnsureHistory(), mkLoadFirstSeen('sales'), mkLoadFirstSeen('popular')]); }
-    catch(e){ console.error('리포트 데이터 로드 실패', e); msg.textContent = '리포트 데이터를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.'; return; }
+  const needHist = !mkMonthsReady || !mkFirstSeenCache.sales || !mkFirstSeenCache.popular;
+  if(!rawStore.sales || needHist){
+    msg.classList.add('hidden');
+    rpLoadingShow();
+    /* 오늘 순위가 아직 오는 중이면 (헤더 버튼을 일찍 누른 경우) 도착할 때까지 기다림 */
+    rpLoadingStep(0, rawStore.sales ? 'ok' : 'on');
+    for(let w = 0; !rawStore.sales && w < 120; w++){ await new Promise(r => setTimeout(r, 500)); if(currentView !== 'report') return; }
+    if(!rawStore.sales){ msg.textContent = '순위 데이터를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.'; msg.classList.remove('hidden'); return; }
+    rpLoadingStep(0, 'ok');
+    rpLoadingStep(1, mkMonthsReady ? 'ok' : 'on'); rpLoadingStep(2, 'on');
+    try{
+      await Promise.all([
+        (mkMonthsReady ? Promise.resolve() : mkEnsureHistory()).then(() => rpLoadingStep(1, 'ok')),
+        Promise.all([mkLoadFirstSeen('sales'), mkLoadFirstSeen('popular')]).then(() => rpLoadingStep(2, 'ok'))
+      ]);
+    }catch(e){ console.error('리포트 데이터 로드 실패', e); clearInterval(rpLoadTimer); msg.textContent = '리포트 데이터를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.'; msg.classList.remove('hidden'); return; }
+    if(currentView !== 'report') return;
+    /* 리포트 계산은 한 번에 돌므로, 그 전에 '그리기' 단계가 화면에 보이도록 한 프레임 양보 */
+    rpLoadingStep(3, 'on');
+    await new Promise(r => setTimeout(r, 30));
     if(currentView !== 'report') return;
   }
+  clearInterval(rpLoadTimer);
   msg.classList.add('hidden');
   const weeks = rpWeeks();
   if(!weeks.length){ pages.innerHTML = mkEmpty('리포트를 만들 주간 데이터가 아직 없습니다.'); return; }
