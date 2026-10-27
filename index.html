@@ -48,7 +48,7 @@ body { background:var(--bg); font-family:'Pretendard Variable',Pretendard,-apple
 .summary-card-hover { cursor:pointer; transition: all 0.2s ease; }
 .summary-card-hover:hover { background:rgba(30,41,59,.9); transform: translateY(-2px); border-color: rgba(99, 102, 241, 0.4); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
 select option { background-color: #0f172a; color: #f1f5f9; }
-.rank-chip { font-size:10px; font-weight:700; color:#cbd5e1; background:rgba(51,65,85,.5); border:1px solid rgba(71,85,105,.5); border-radius:4px; padding:1px 5px; flex-shrink:0; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.rank-chip { font-size:11px; font-weight:700; color:#cbd5e1; background:rgba(51,65,85,.5); border:1px solid rgba(71,85,105,.5); border-radius:4px; padding:1px 5px; flex-shrink:0; font-variant-numeric:tabular-nums; white-space:nowrap; }
 .rank-chip:empty { display:none; }
 
 /* 신작 달력 */
@@ -66,12 +66,12 @@ select option { background-color: #0f172a; color: #f1f5f9; }
 .cal-toggle input:checked + .knob::after { background:#e0e7ff; transform:translateX(9px); }
 
 .cal-capsel { display:inline-flex; gap:2px; padding:2px; background:rgba(15,23,42,.86); border:1px solid rgba(71,85,105,.5); border-radius:8px; }
-.cal-capsel button { appearance:none; border:0; background:transparent; color:#64748b; font-size:11px; font-weight:600; padding:4px 10px; border-radius:6px; cursor:pointer; transition:all .15s; }
+.cal-capsel button { appearance:none; border:0; background:transparent; color:#94a3b8; font-size:11px; font-weight:600; padding:4px 10px; border-radius:6px; cursor:pointer; transition:all .15s; }
 .cal-capsel button:hover { color:#cbd5e1; }
 .cal-capsel button.on { background:#4338ca; color:#e0e7ff; }
 
 /* 출시유형 칩: 범례 겸 필터 */
-.cal-chip { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; padding:5px 11px; border-radius:999px; border:1px solid var(--line); background:#0b1222; color:#64748b; cursor:pointer; transition:all .15s; }
+.cal-chip { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; padding:5px 11px; border-radius:999px; border:1px solid var(--line); background:#0b1222; color:#94a3b8; cursor:pointer; transition:all .15s; }
 .cal-chip i { width:8px; height:8px; border-radius:2px; background:var(--tc); opacity:.35; }
 .cal-chip b { font-weight:600; opacity:.75; }
 .cal-chip.on { color:#e2e8f0; border-color:rgba(148,163,184,.45); background:rgba(30,41,59,.85); }
@@ -98,14 +98,14 @@ select option { background-color: #0f172a; color: #f1f5f9; }
 .cal-cell.sat .cal-date { color:#60a5fa; }
 .cal-cell.past .cal-date { opacity:.6; }
 .cal-cell.out .cal-date { color:#334155; }
-.cal-now { font-size:10px; font-weight:700; color:#e0e7ff; background:#4338ca; border-radius:4px; padding:0 5px; margin-left:5px; }
-.cal-cnt { font-size:10px; font-weight:600; color:#94a3b8; background:rgba(30,41,59,.9); border-radius:999px; padding:0 6px; white-space:nowrap; }
+.cal-now { font-size:11px; font-weight:700; color:#e0e7ff; background:#4338ca; border-radius:4px; padding:0 5px; margin-left:5px; }
+.cal-cnt { font-size:11px; font-weight:600; color:#94a3b8; background:rgba(30,41,59,.9); border-radius:999px; padding:0 6px; white-space:nowrap; }
 .cal-items { display:flex; flex-direction:column; gap:2px; min-width:0; }
 .cal-item { display:flex; align-items:center; gap:5px; min-width:0; padding:2px 4px 2px 5px; border-left:2px solid var(--tc, #475569); border-radius:0 5px 5px 0; cursor:pointer; transition:background .12s, opacity .12s; }
 .cal-item:hover, .cal-item:focus-visible { background:rgba(51,65,85,.6); }
 .cal-item img, .cal-item .ph { width:18px; height:18px; border-radius:5px; object-fit:cover; flex-shrink:0; background:#1e293b; }
 .cal-item .nm { flex:1; min-width:0; font-size:12px; color:#e2e8f0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.cal-tag { font-size:10px; font-weight:600; line-height:16px; border-radius:3px; padding:0 4px; flex-shrink:0; white-space:nowrap; color:#94a3b8; background:rgba(51,65,85,.6); }
+.cal-tag { font-size:11px; font-weight:600; line-height:16px; border-radius:3px; padding:0 4px; flex-shrink:0; white-space:nowrap; color:#94a3b8; background:rgba(51,65,85,.6); }
 .cal-tag.t-test { color:#fbbf24; background:rgba(245,158,11,.15); }
 .cal-tag.t-early { color:#7dd3fc; background:rgba(56,189,248,.15); }
 /* 1280px 미만 달력 칸은 이름이 우선: 부가 태그(원문 유형·플랫폼)는 미리보기 카드와 목록형에서 확인 */
@@ -115,7 +115,7 @@ select option { background-color: #0f172a; color: #f1f5f9; }
 .cal-more { align-self:flex-start; margin-top:2px; font-size:11px; font-weight:600; color:#c7d2fe; background:rgba(99,102,241,.12); border:1px solid rgba(99,102,241,.3); border-radius:5px; padding:1px 7px; cursor:pointer; }
 .cal-more:hover { background:rgba(99,102,241,.24); }
 .cal-wkcell { background:#090f1a; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:6px 4px; }
-.cal-wkcell span { font-size:10px; color:#64748b; }
+.cal-wkcell span { font-size:11px; color:#94a3b8; }
 .cal-wkcell b { font-size:16px; color:#e2e8f0; }
 .cal-wkcell.peak b { color:#a5b4fc; }
 .cal-wkcell .bar { width:28px; height:4px; border-radius:999px; background:rgba(51,65,85,.6); overflow:hidden; }
@@ -153,23 +153,23 @@ select option { background-color: #0f172a; color: #f1f5f9; }
 /* 순위 검색 자동완성 */
 .gs-wrap { position:relative; }
 .gs-dd { position:absolute; left:0; right:0; top:calc(100% + 4px); z-index:60; background:#0f172a; border:1px solid rgba(71,85,105,.7); border-radius:10px; box-shadow:0 12px 28px rgba(0,0,0,.45); max-height:440px; overflow-y:auto; padding:4px 0; }
-.gs-sec { font-size:10px; font-weight:600; color:#64748b; padding:8px 12px 4px; display:flex; align-items:center; gap:6px; }
+.gs-sec { font-size:11px; font-weight:600; color:#94a3b8; padding:8px 12px 4px; display:flex; align-items:center; gap:6px; }
 .gs-it { display:flex; align-items:center; gap:10px; padding:6px 12px; cursor:pointer; }
 .gs-it.on { background:rgba(99,102,241,.18); }
 .gs-ic { width:24px; height:24px; flex:0 0 24px; border-radius:6px; object-fit:cover; background:#1e293b; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:#94a3b8; }
 .gs-nm { flex:1; min-width:0; font-size:12px; color:#e2e8f0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .gs-nm mark { background:rgba(250,204,21,.22); color:#fde68a; border-radius:2px; }
-.gs-bd { font-size:10px; font-weight:600; padding:2px 6px; border-radius:4px; white-space:nowrap; }
+.gs-bd { font-size:11px; font-weight:600; padding:2px 6px; border-radius:4px; white-space:nowrap; }
 .gs-bd.s { background:rgba(251,191,36,.15); color:#fde68a; }
 .gs-bd.p { background:rgba(45,212,191,.15); color:#99f6e4; }
 .gs-bd.old { background:rgba(51,65,85,.5); color:#94a3b8; font-weight:500; }
-.gs-empty { font-size:12px; color:#64748b; padding:10px 12px; }
+.gs-empty { font-size:12px; color:#94a3b8; padding:10px 12px; }
 .mk-card-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:12px; }
 .mk-tabs { display:inline-flex; gap:2px; padding:2px; background:#0b1222; border:1px solid var(--line); border-radius:8px; flex-shrink:0; }
 .mk-tabs button { font-size:12px; font-weight:600; padding:0 10px; border-radius:6px; color:#94a3b8; white-space:nowrap; }
 .mk-tabs button:hover { color:#e2e8f0; }
 .mk-tabs button.on { background:#4338ca; color:#e0e7ff; }
-.mk-lbl { display:inline-block; font-size:10px; font-weight:700; line-height:16px; padding:0 5px; border-radius:4px; white-space:nowrap; }
+.mk-lbl { display:inline-block; font-size:11px; font-weight:700; line-height:16px; padding:0 5px; border-radius:4px; white-space:nowrap; }
 .mk-lbl.first { background:rgba(167,139,250,.16); color:#c4b5fd; } .mk-lbl.re { background:rgba(245,158,11,.14); color:#fcd34d; } .mk-lbl.part { background:rgba(100,116,139,.22); color:#94a3b8; }
 .mk-store { font-size:11px; font-weight:600; padding:1px 7px; border-radius:999px; background:rgba(51,65,85,.5); white-space:nowrap; }
 /* 같은 줄 옆 카드 높이에 맞추고 넘치면 내부 스크롤 (데스크톱). 모바일은 최대 높이 스크롤 */
@@ -178,12 +178,12 @@ select option { background-color: #0f172a; color: #f1f5f9; }
 @media (min-width:1024px){ .mk-fill { flex:1 1 auto; } .mk-fill-inner { position:absolute; inset:0; max-height:none; } }
 .gs-head { position:sticky; top:-4px; background:#0f172a; z-index:1; border-bottom:1px solid rgba(71,85,105,.45); margin-top:-4px; padding-top:4px; }
 .gs-tabs { display:flex; gap:4px; padding:4px 8px 2px; }
-.gs-tab { font-size:11px; font-weight:600; padding:4px 10px; border-radius:6px; color:#64748b; cursor:pointer; }
+.gs-tab { font-size:11px; font-weight:600; padding:4px 10px; border-radius:6px; color:#94a3b8; cursor:pointer; }
 .gs-tab:hover { color:#cbd5e1; }
 .gs-tab.on { background:rgba(99,102,241,.2); color:#e0e7ff; }
 .gs-ck { width:15px; height:15px; flex:0 0 15px; border-radius:4px; border:1px solid #475569; display:flex; align-items:center; justify-content:center; font-size:9px; color:#0f172a; }
-.gs-rk { width:16px; flex:0 0 16px; text-align:right; font-size:10px; font-weight:600; color:#64748b; }
-.gs-hint { font-size:10px; color:#64748b; padding:4px 12px 6px; }
+.gs-rk { width:16px; flex:0 0 16px; text-align:right; font-size:11px; font-weight:600; color:#94a3b8; }
+.gs-hint { font-size:11px; color:#94a3b8; padding:4px 12px 6px; }
 .gs-hint.warn { color:#fbbf24; }
 .gs-head .gs-sec { padding:6px 12px 2px; }
 .gs-chips { display:flex; flex-wrap:wrap; align-items:center; gap:6px; min-height:26px; }
@@ -192,7 +192,7 @@ select option { background-color: #0f172a; color: #f1f5f9; }
 .gs-chip .dot { width:8px; height:8px; flex:0 0 8px; border-radius:50%; }
 .gs-chip button { color:#64748b; padding:0 4px; font-size:11px; line-height:1; }
 .gs-chip button:hover { color:#e2e8f0; }
-.gs-chipnote { font-size:11px; color:#64748b; }
+.gs-chipnote { font-size:11px; color:#94a3b8; }
 .gs-clear { position:absolute; right:8px; top:50%; transform:translateY(-50%); color:#64748b; font-size:12px; cursor:pointer; padding:2px 4px; }
 .gs-clear:hover { color:#cbd5e1; }
 /* 순위검색 메인 검색칸: 페이지의 시작점이라 평소에도 인디고 테두리 + 돋보기 */
@@ -213,7 +213,7 @@ select option { background-color: #0f172a; color: #f1f5f9; }
 @media (prefers-reduced-motion: reduce) { .sk { animation:none; } }
 .mk-info { color:#64748b; font-size:10px; margin-left:4px; cursor:help; }
 .mk-info:hover { color:#cbd5e1; }
-.mk-sec { font-size:13px; font-weight:600; color:#64748b; padding:9px 14px; border-bottom:2px solid transparent; margin-bottom:-1px; white-space:nowrap; transition:color .15s; }
+.mk-sec { font-size:13px; font-weight:600; color:#94a3b8; padding:9px 14px; border-bottom:2px solid transparent; margin-bottom:-1px; white-space:nowrap; transition:color .15s; }
 .mk-sec:hover { color:#cbd5e1; }
 .mk-sec.on { color:#e0e7ff; border-color:#6366f1; }
 /* 의미색 유틸리티 */
@@ -295,6 +295,9 @@ html.panel-lock { overflow: hidden; }
 /* 카드 머리의 '더 보기' 버튼 (전체순위보기 · 신작 달력에서 보기 공통) */
 .more-btn { display:inline-flex; align-items:center; font-size:12px; font-weight:600; color:#cbd5e1; background:rgba(30,41,59,.8); border:1px solid #334155; border-radius:8px; padding:4px 10px; white-space:nowrap; transition:background .15s, color .15s; }
 .more-btn:hover { color:#fff; background:#334155; }
+/* 대시보드 카드 공통: 머리(제목 + 오른쪽 버튼/설명)는 높이 28px 기준 가운데, 아래 구분선 */
+.card-p { padding:14px 20px 20px; }
+.card-hd { display:flex; align-items:center; justify-content:space-between; gap:8px; min-height:41px; padding-bottom:12px; margin-bottom:12px; border-bottom:1px solid rgba(30,41,59,.8); }
 .hd-btn { height:32px; display:inline-flex; align-items:center; gap:6px; padding:0 11px; border-radius:10px; font-size:12px; font-weight:600; border:1px solid #334155; background:#0e1626; color:#cbd5e1; transition:background .15s, border-color .15s, color .15s; }
 .hd-btn:hover { border-color:rgba(129,140,248,.6); color:#fff; }
 .hd-icon { width:32px; padding:0; justify-content:center; color:#94a3b8; }
@@ -580,7 +583,7 @@ html.panel-lock { overflow: hidden; }
     <div class="card rounded-xl px-5 pb-5 pt-4">
       <div class="flex items-center justify-between gap-2 mb-4">
         <h2 class="text-base font-bold text-slate-200 flex items-center gap-2"><i class="fa-regular fa-calendar-plus t-new"></i>다가오는 신작 <span id="upcomingSub" class="text-xs muted font-normal"></span></h2>
-        <span class="flex items-center gap-2"><button type="button" onclick="switchView('calendar')" class="more-btn">신작 달력에서 보기<i class="fa-solid fa-chevron-right ml-1 text-[10px] t-new"></i></button></span>
+        <span class="flex items-center gap-2"><button type="button" onclick="switchView('calendar')" class="more-btn">신작 달력에서 보기<i class="fa-solid fa-chevron-right ml-1 text-[11px] t-new"></i></button></span>
       </div>
       <div id="upcomingList"><div class="text-xs muted py-2">불러오는 중...</div></div>
     </div>
@@ -594,21 +597,21 @@ html.panel-lock { overflow: hidden; }
       </h2>
     </div>
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <div class="card rounded-xl px-5 pb-5 pt-3.5">
-        <div class="flex items-center justify-between mb-3 pb-3 border-b border-slate-800/80">
+      <div class="card rounded-xl card-p">
+        <div class="card-hd">
           <h3 class="font-semibold text-sm flex items-center gap-1.5 t-pop">
             <i class="fa-solid fa-fire"></i> 인기순위 TOP 10
           </h3>
-          <span class="flex items-center gap-2"><button type="button" onclick="openRankPanel('popular')" class="more-btn">전체순위보기<i class="fa-solid fa-chevron-right ml-1 text-[10px] t-pop"></i></button></span>
+          <span class="flex items-center gap-2"><button type="button" onclick="openRankPanel('popular')" class="more-btn">전체순위보기<i class="fa-solid fa-chevron-right ml-1 text-[11px] t-pop"></i></button></span>
         </div>
         <ol id="popularTop10List" class="divide-y divide-slate-900/70"></ol>
       </div>
-      <div class="card rounded-xl px-5 pb-5 pt-3.5">
-        <div class="flex items-center justify-between mb-3 pb-3 border-b border-slate-800/80">
+      <div class="card rounded-xl card-p">
+        <div class="card-hd">
           <h3 class="font-semibold text-sm flex items-center gap-1.5 t-sales">
             <i class="fa-solid fa-coins"></i> 매출순위 TOP 10
           </h3>
-          <span class="flex items-center gap-2"><button type="button" onclick="openRankPanel('sales')" class="more-btn">전체순위보기<i class="fa-solid fa-chevron-right ml-1 text-[10px] t-sales"></i></button></span>
+          <span class="flex items-center gap-2"><button type="button" onclick="openRankPanel('sales')" class="more-btn">전체순위보기<i class="fa-solid fa-chevron-right ml-1 text-[11px] t-sales"></i></button></span>
         </div>
         <ol id="salesTop10List" class="divide-y divide-slate-900/70"></ol>
       </div>
@@ -621,7 +624,7 @@ html.panel-lock { overflow: hidden; }
       <h2 class="text-base font-bold text-slate-200 flex items-center gap-2">
         <i class="fa-solid fa-arrow-trend-up text-indigo-400"></i>오늘의 순위 변동
       </h2>
-      <button type="button" id="dashMoreLink" onclick="mkSection = 'change'; mkMode = 'daily'; switchView('business')" class="inline-flex items-center text-[12px] font-semibold text-indigo-300 hover:text-indigo-200 whitespace-nowrap">시장 분석에서 더 보기<i class="fa-solid fa-chevron-right ml-1 text-[10px]"></i></button>
+      <button type="button" id="dashMoreLink" onclick="mkSection = 'change'; mkMode = 'daily'; switchView('business')" class="inline-flex items-center text-[12px] font-semibold text-indigo-300 hover:text-indigo-200 whitespace-nowrap">시장 분석에서 더 보기<i class="fa-solid fa-chevron-right ml-1 text-[11px]"></i></button>
     </div>
     <div class="mk-seg md:hidden" id="dashChgSel">
       <button type="button" data-chg="new" class="on" onclick="dashChgSet('new')">신규 진입</button>
@@ -629,24 +632,24 @@ html.panel-lock { overflow: hidden; }
       <button type="button" data-chg="down" onclick="dashChgSet('down')">급하락</button>
     </div>
     <div id="dashChg" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-      <div class="card rounded-xl px-5 pb-5 pt-3.5 on" data-chg="new">
-        <div class="text-xs font-semibold mb-3 flex items-center justify-between t-new pb-3 border-b border-slate-800">
+      <div class="card rounded-xl card-p on" data-chg="new">
+        <div class="card-hd text-sm font-semibold t-new">
           <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-new"></span>인기순위 신규 진입</span>
-          <span class="text-[10px] muted font-normal">인기 순위 기준</span>
+          <span class="text-[11px] muted font-normal">인기 순위 기준</span>
         </div>
         <ul id="newEntriesList" class="divide-y divide-slate-900/70"></ul>
       </div>
-      <div class="card rounded-xl px-5 pb-5 pt-3.5" data-chg="up">
-        <div class="text-xs font-semibold mb-3 flex items-center justify-between t-up pb-3 border-b border-slate-800">
+      <div class="card rounded-xl card-p" data-chg="up">
+        <div class="card-hd text-sm font-semibold t-up">
           <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-up"></span>매출 급상승</span>
-          <span class="text-[10px] muted font-normal">전일 대비 매출</span>
+          <span class="text-[11px] muted font-normal">전일 대비 매출</span>
         </div>
         <ul id="salesRisingList" class="divide-y divide-slate-900/70"></ul>
       </div>
-      <div class="card rounded-xl px-5 pb-5 pt-3.5" data-chg="down">
-        <div class="text-xs font-semibold mb-3 flex items-center justify-between t-down pb-3 border-b border-slate-800">
+      <div class="card rounded-xl card-p" data-chg="down">
+        <div class="card-hd text-sm font-semibold t-down">
           <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-down"></span>매출 급하락</span>
-          <span class="text-[10px] muted font-normal">전일 대비 매출</span>
+          <span class="text-[11px] muted font-normal">전일 대비 매출</span>
         </div>
         <ul id="salesFallingList" class="divide-y divide-slate-900/70"></ul>
       </div>
@@ -662,20 +665,20 @@ html.panel-lock { overflow: hidden; }
       <span class="text-[11px] muted hidden sm:inline">전체 100% 기준 비례 막대 (동일 장르 고정 색상)</span>
     </div>
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <div class="card rounded-xl px-5 pb-5 pt-3.5">
+      <div class="card rounded-xl card-p">
         <div>
-          <div class="flex items-center justify-between mb-3 pb-3 border-b border-slate-800/80">
+          <div class="card-hd">
             <h3 class="font-semibold text-sm text-slate-200">인기순위 TOP 100 장르 비중</h3>
-            <span class="text-[10px] t-pop font-semibold">인기 기준</span>
+            <span class="text-[11px] t-pop font-semibold">인기 기준</span>
           </div>
           <div id="popularGenreBars"></div>
         </div>
       </div>
-      <div class="card rounded-xl px-5 pb-5 pt-3.5">
+      <div class="card rounded-xl card-p">
         <div>
-          <div class="flex items-center justify-between mb-3 pb-3 border-b border-slate-800/80">
+          <div class="card-hd">
             <h3 class="font-semibold text-sm text-slate-200">매출순위 TOP 100 장르 비중</h3>
-            <span class="text-[10px] t-sales font-semibold">매출 기준</span>
+            <span class="text-[11px] t-sales font-semibold">매출 기준</span>
           </div>
           <div id="salesGenreBars"></div>
         </div>
@@ -720,11 +723,11 @@ html.panel-lock { overflow: hidden; }
 
     <section class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
       <div class="card rounded-xl p-5">
-        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">급상승 / 급하락 TOP5</h3><p class="text-[10px] muted mt-1">전일 대비 순위 변화 · 양일 모두 TOP100인 게임</p></div><span class="mk-store" data-storeof="dMovers"></span></div>
+        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">급상승 / 급하락 TOP5</h3><p class="text-[11px] muted mt-1">전일 대비 순위 변화 · 양일 모두 TOP100인 게임</p></div><span class="mk-store" data-storeof="dMovers"></span></div>
         <div id="mkDMovers"></div>
       </div>
       <div class="card rounded-xl p-5 flex flex-col">
-        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">차트인 / 차트아웃</h3><p id="mkDEntriesDesc" class="text-[10px] muted mt-1">전일 대비 TOP100 차트인·차트아웃 게임</p></div><span class="mk-store" data-storeof="dEntries"></span></div>
+        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">차트인 / 차트아웃</h3><p id="mkDEntriesDesc" class="text-[11px] muted mt-1">전일 대비 TOP100 차트인·차트아웃 게임</p></div><span class="mk-store" data-storeof="dEntries"></span></div>
         <div id="mkDEntryType" class="flex flex-wrap items-center gap-1 mb-2"></div>
         <div class="mk-fill"><div id="mkDEntries" class="mk-fill-inner scrollbar pr-1"></div></div>
       </div>
@@ -736,18 +739,18 @@ html.panel-lock { overflow: hidden; }
     <section id="mkWeeklyKpis" class="grid grid-cols-2 lg:grid-cols-4 gap-3"></section>
     <section class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
       <div class="card rounded-xl p-5">
-        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">급상승 / 급하락 TOP5</h3><p class="text-[10px] muted mt-1">주 평균 순위(반올림) · 전주 대비 · 양주 모두 3일 이상 TOP100</p></div><span class="mk-store" data-storeof="wMovers"></span></div>
+        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">급상승 / 급하락 TOP5</h3><p class="text-[11px] muted mt-1">주 평균 순위(반올림) · 전주 대비 · 양주 모두 3일 이상 TOP100</p></div><span class="mk-store" data-storeof="wMovers"></span></div>
         <div id="mkWMovers"></div>
       </div>
       <div class="card rounded-xl p-5 flex flex-col">
-        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">주간 차트인</h3><p id="mkWEntriesDesc" class="text-[10px] muted mt-1">전주 TOP100 기록이 없다가 지난주에 차트인한 게임</p></div><span class="mk-store" data-storeof="wEntries"></span></div>
+        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">주간 차트인</h3><p id="mkWEntriesDesc" class="text-[11px] muted mt-1">전주 TOP100 기록이 없다가 지난주에 차트인한 게임</p></div><span class="mk-store" data-storeof="wEntries"></span></div>
         <div id="mkWEntryType" class="flex flex-wrap items-center gap-1 mb-2"></div>
         <div class="mk-fill"><div id="mkWEntries" class="mk-fill-inner scrollbar pr-1"></div></div>
       </div>
     </section>
   </div>
   <section class="card rounded-xl p-5">
-    <div class="mk-card-head"><div><h3 class="font-semibold text-sm">평점 변화<i class="fa-regular fa-circle-question mk-info" title="기준일에 매출 또는 인기 TOP100에 있는 게임의 Google Play 평점을 7일 전(7일 전 또는 그 직전 수집일)과 비교합니다. 0.1 이상 변한 게임을 하락·상승 순으로 최대 6개씩 보여줍니다."></i></h3><p id="mkRatingDesc" class="text-[10px] muted mt-1">-</p></div></div>
+    <div class="mk-card-head"><div><h3 class="font-semibold text-sm">평점 변화<i class="fa-regular fa-circle-question mk-info" title="기준일에 매출 또는 인기 TOP100에 있는 게임의 Google Play 평점을 7일 전(7일 전 또는 그 직전 수집일)과 비교합니다. 0.1 이상 변한 게임을 하락·상승 순으로 최대 6개씩 보여줍니다."></i></h3><p id="mkRatingDesc" class="text-[11px] muted mt-1">-</p></div></div>
     <div id="mkRating"></div>
   </section>
   </div>
@@ -766,7 +769,7 @@ html.panel-lock { overflow: hidden; }
       </div>
     </div>
     <section class="card rounded-xl p-5" data-snap>
-      <div class="mk-card-head"><div><h3 class="font-semibold text-sm flex items-center gap-2"><span id="mkRankTitle">월간 순위표</span> <span class="mk-store" data-storeof="monthly"></span></h3><p id="mkMonthlyDesc" class="text-[10px] muted mt-1">-</p></div><button type="button" class="snap-btn" data-nosnap onclick="snapEl(this, mkMonthly.period === 'week' ? '주간순위표' : '월간순위표')" title="이미지로 저장" aria-label="이미지로 저장"><i class="fa-solid fa-camera"></i></button></div>
+      <div class="mk-card-head"><div><h3 class="font-semibold text-sm flex items-center gap-2"><span id="mkRankTitle">월간 순위표</span> <span class="mk-store" data-storeof="monthly"></span></h3><p id="mkMonthlyDesc" class="text-[11px] muted mt-1">-</p></div><button type="button" class="snap-btn" data-nosnap onclick="snapEl(this, mkMonthly.period === 'week' ? '주간순위표' : '월간순위표')" title="이미지로 저장" aria-label="이미지로 저장"><i class="fa-solid fa-camera"></i></button></div>
       <div id="mkMonthlyTable" class="overflow-x-auto scrollbar"></div>
     </section>
   </div>
@@ -779,7 +782,7 @@ html.panel-lock { overflow: hidden; }
     </div>
     <section class="card rounded-xl p-5" data-snap>
       <div class="mk-card-head">
-        <div><h3 class="font-semibold text-sm">시장 포지션 맵<i class="fa-regular fa-circle-question mk-info" title="매출·인기 둘 다 TOP100인 게임만 평면에 아이콘으로 놓습니다. 가로는 매출 순위(오른쪽이 1위), 세로는 인기 순위(위쪽이 1위)이고, 상위권이 잘 보이도록 로그 눈금을 씁니다. 한쪽에만 TOP100인 게임은 아래 두 줄에 순위순으로 모았습니다. 기간 평균은 기간의 절반 이상 TOP100이었던 게임만 포함하며, 빠진 날은 100+로 계산합니다. 아이콘을 누르면 게임 상세가 열립니다."></i></h3><p id="mkPosDesc" class="text-[10px] muted mt-1">-</p></div>
+        <div><h3 class="font-semibold text-sm">시장 포지션 맵<i class="fa-regular fa-circle-question mk-info" title="매출·인기 둘 다 TOP100인 게임만 평면에 아이콘으로 놓습니다. 가로는 매출 순위(오른쪽이 1위), 세로는 인기 순위(위쪽이 1위)이고, 상위권이 잘 보이도록 로그 눈금을 씁니다. 한쪽에만 TOP100인 게임은 아래 두 줄에 순위순으로 모았습니다. 기간 평균은 기간의 절반 이상 TOP100이었던 게임만 포함하며, 빠진 날은 100+로 계산합니다. 아이콘을 누르면 게임 상세가 열립니다."></i></h3><p id="mkPosDesc" class="text-[11px] muted mt-1">-</p></div>
         <button type="button" class="snap-btn" data-nosnap onclick="snapEl(this, '포지션맵')" title="이미지로 저장" aria-label="이미지로 저장"><i class="fa-solid fa-camera"></i></button>
       </div>
       <div class="flex flex-wrap items-center gap-2 mb-3" data-nosnap>
@@ -808,11 +811,11 @@ html.panel-lock { overflow: hidden; }
     </section>
     <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <div class="card rounded-xl p-5">
-        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">장르 비중 추이</h3><p class="text-[10px] muted mt-1">최근 8주 · 주간 TOP100 구성 비중</p></div><span class="mk-store" data-storeof="wGenre"></span></div>
+        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">장르 비중 추이</h3><p class="text-[11px] muted mt-1">최근 8주 · 주간 TOP100 구성 비중</p></div><span class="mk-store" data-storeof="wGenre"></span></div>
         <div id="mkWGenre"></div>
       </div>
       <div class="card rounded-xl p-5">
-        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">퍼블리셔 순위 점유율 (가중)<i class="fa-regular fa-circle-question mk-info" title="지난주 매일 순위마다 (101 − 순위) 점수를 주고 퍼블리셔별로 합산한 값의 비중. 1위 게임은 하루 100점, 100위는 1점이라 TOP100 게임 수보다 상위권 장악력을 반영합니다."></i></h3><p class="text-[10px] muted mt-1">지난주 · 상위 순위일수록 큰 점수로 합산</p></div><span class="mk-store" data-storeof="wPub"></span></div>
+        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">퍼블리셔 순위 점유율 (가중)<i class="fa-regular fa-circle-question mk-info" title="지난주 매일 순위마다 (101 − 순위) 점수를 주고 퍼블리셔별로 합산한 값의 비중. 1위 게임은 하루 100점, 100위는 1점이라 TOP100 게임 수보다 상위권 장악력을 반영합니다."></i></h3><p class="text-[11px] muted mt-1">지난주 · 상위 순위일수록 큰 점수로 합산</p></div><span class="mk-store" data-storeof="wPub"></span></div>
         <div id="mkWPub"></div>
       </div>
     </section>
@@ -826,7 +829,7 @@ html.panel-lock { overflow: hidden; }
     </div>
     <section id="mkDebutKpis" class="grid grid-cols-2 lg:grid-cols-4 gap-3"></section>
     <section class="card rounded-xl p-5">
-      <div class="mk-card-head"><div><h3 class="font-semibold text-sm">첫 차트인 게임 추적<i class="fa-regular fa-circle-question mk-info" title="패키지명 기준으로 순위 데이터에 처음 나타난 날을 첫 차트인일로 봅니다. 패키지 수집이 시작된 첫날(그 전부터 TOP100에 있던 게임)과, 같은 이름으로 그 전에 TOP100에 있던 게임은 제외합니다. 추이 그래프는 첫 차트인일부터 기준일까지의 순위이며 빈 구간은 TOP100 밖입니다."></i></h3><p id="mkDebutDesc" class="text-[10px] muted mt-1">-</p></div></div>
+      <div class="mk-card-head"><div><h3 class="font-semibold text-sm">첫 차트인 게임 추적<i class="fa-regular fa-circle-question mk-info" title="패키지명 기준으로 순위 데이터에 처음 나타난 날을 첫 차트인일로 봅니다. 패키지 수집이 시작된 첫날(그 전부터 TOP100에 있던 게임)과, 같은 이름으로 그 전에 TOP100에 있던 게임은 제외합니다. 추이 그래프는 첫 차트인일부터 기준일까지의 순위이며 빈 구간은 TOP100 밖입니다."></i></h3><p id="mkDebutDesc" class="text-[11px] muted mt-1">-</p></div></div>
       <div id="mkDebutTable" class="overflow-x-auto scrollbar"></div>
     </section>
   </div>
@@ -839,16 +842,16 @@ html.panel-lock { overflow: hidden; }
     </div>
     <section id="mkRelKpis" class="grid grid-cols-2 lg:grid-cols-4 gap-3"></section>
     <section class="card rounded-xl p-5">
-      <div class="mk-card-head"><div><h3 class="font-semibold text-sm">주차별 출시 수</h3><p class="text-[10px] muted mt-1">출시유형별 · 오늘 이후는 예정</p></div></div>
+      <div class="mk-card-head"><div><h3 class="font-semibold text-sm">주차별 출시 수</h3><p class="text-[11px] muted mt-1">출시유형별 · 오늘 이후는 예정</p></div></div>
       <div class="relative h-[260px]"><canvas id="mkRelWeekChart"></canvas></div>
     </section>
     <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <div class="card rounded-xl p-5">
-        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">퍼블리셔별 출시</h3><p class="text-[10px] muted mt-1">이번 달 · 지난달 비교 (예정 포함)</p></div></div>
+        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">퍼블리셔별 출시</h3><p class="text-[11px] muted mt-1">이번 달 · 지난달 비교 (예정 포함)</p></div></div>
         <div id="mkRelPub"></div>
       </div>
       <div class="card rounded-xl p-5">
-        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">출시 요일</h3><p class="text-[10px] muted mt-1">전체 기간 · 어느 요일에 많이 출시되나</p></div></div>
+        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">출시 요일</h3><p class="text-[11px] muted mt-1">전체 기간 · 어느 요일에 많이 출시되나</p></div></div>
         <div id="mkRelDow"></div>
       </div>
     </section>
@@ -1194,7 +1197,7 @@ html.panel-lock { overflow: hidden; }
       <div id="releaseSamePub" class="space-y-1"></div>
     </div>
 
-    <div id="releaseCheckedAt" class="text-[11px] text-slate-500 pt-2 border-t border-slate-800"></div>
+    <div id="releaseCheckedAt" class="text-[11px] text-slate-400 pt-2 border-t border-slate-800"></div>
 
     <!--
     <a id="releaseDetailWameLink" href="#" target="_blank" class="hidden items-center justify-center gap-2 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sm font-semibold transition-colors">
@@ -1780,9 +1783,9 @@ function renderGenreBars(elId, arr) {
 
     let trendBadge = '';
     if (a.trendDiff > 0) {
-      trendBadge = `<span class="text-[10px] rank-up ml-1 font-semibold" title="전일 대비 +${a.trendDiff}개">▲${a.trendDiff}</span>`;
+      trendBadge = `<span class="text-[11px] rank-up ml-1 font-semibold" title="전일 대비 +${a.trendDiff}개">▲${a.trendDiff}</span>`;
     } else if (a.trendDiff < 0) {
-      trendBadge = `<span class="text-[10px] rank-down ml-1 font-semibold" title="전일 대비 ${a.trendDiff}개">▼${Math.abs(a.trendDiff)}</span>`;
+      trendBadge = `<span class="text-[11px] rank-down ml-1 font-semibold" title="전일 대비 ${a.trendDiff}개">▼${Math.abs(a.trendDiff)}</span>`;
     }
 
     return `
@@ -1872,12 +1875,12 @@ function renderToday(){
   /* 신규 진입 게임 중복 방지 (인기 1위와 같을 경우 2순위 후보 폴백) */
   const pop1Name = p.popularTop10[0]?.name;
   let newCandidate = p.newEntries.find(x => x.name !== pop1Name) || p.newEntries[0];
-  const newRankBadge = newCandidate ? `<span class="text-[10px] px-1.5 py-0.5 rounded chip-new font-semibold whitespace-nowrap">인기 ${newCandidate.rank}위</span>` : null;
+  const newRankBadge = newCandidate ? `<span class="text-[11px] px-1.5 py-0.5 rounded chip-new font-semibold whitespace-nowrap">인기 ${newCandidate.rank}위</span>` : null;
   bindTopCard(newCandidate, 'New', newRankBadge);
 
   /* 최고 상승 카드: 구체적 랭크 표기 */
   const risingItem = p.salesRising[0];
-  const risingBadge = risingItem ? `<span class="text-[10px] px-1.5 py-0.5 rounded chip-up font-semibold whitespace-nowrap">▲${risingItem.diff}</span>` : null;
+  const risingBadge = risingItem ? `<span class="text-[11px] px-1.5 py-0.5 rounded chip-up font-semibold whitespace-nowrap">▲${risingItem.diff}</span>` : null;
   bindTopCard(risingItem, 'Rising', risingBadge);
 
   /* 장르 점유: 1위 장르만 보여주면 나머지 분포가 안 보여서, 상위 3개 + 그 외로 100% 스택 바를 그린다 */
@@ -2221,7 +2224,7 @@ function renderCalList(){
     + (byDay.size ? [...byDay].filter(([d]) => !fold || !past.includes(d)).map(([d, list]) => {
     const ds = `${ym}-${pad2(d)}`, dow = new Date(y, m - 1, d).getDay(), st = ds === today ? 'today' : ds < today ? 'past' : '';
     return `<section class="cal-day ${st}" id="calList-${d}">
-      <div class="cal-day-h"><span class="${dow === 0 ? 'text-rose-300' : dow === 6 ? 'text-sky-300' : ''}">${m}월 ${d}일 (${CAL_DOW[dow]})</span><span class="cal-cnt">${list.length}개</span>${st === 'today' ? '<span class="cal-now">오늘</span>' : ''}${st === 'past' ? '<span class="text-[10px] muted font-normal">출시됨</span>' : ''}</div>
+      <div class="cal-day-h"><span class="${dow === 0 ? 'text-rose-300' : dow === 6 ? 'text-sky-300' : ''}">${m}월 ${d}일 (${CAL_DOW[dow]})</span><span class="cal-cnt">${list.length}개</span>${st === 'today' ? '<span class="cal-now">오늘</span>' : ''}${st === 'past' ? '<span class="text-[11px] muted font-normal">출시됨</span>' : ''}</div>
       ${list.map(calRowHtml).join('')}
     </section>`;
   }).join('') : mkEmpty('조건에 맞는 신작 일정이 없습니다.'));
@@ -2262,7 +2265,7 @@ function calShowHover(el){
       <div class="min-w-0"><div class="text-[13px] font-semibold text-slate-100 leading-snug">${escapeHtml(g.name)}</div><div class="text-[11px] muted mt-0.5">${currentCalMonth}월 ${g.day}일 (${CAL_DOW[dow]}) · ${escapeHtml(calPlatformShort(g.platform) || '-')}</div></div></div>
     <div class="flex flex-wrap items-center gap-1 mt-2"><span class="cal-tag" style="color:${CAL_TYPE_COLOR[g.type]};background:${CAL_TYPE_COLOR[g.type]}22">${escapeHtml(g.typeRaw || CAL_TYPE_LABEL[g.type])}</span><span class="text-[11px] text-slate-300 ml-1">${escapeHtml(g.publisher)}</span></div>
     ${g.desc ? `<div class="text-[11px] text-slate-400 mt-1.5 leading-relaxed line-clamp-3">${escapeHtml(g.desc)}</div>` : ''}
-    <div class="text-[10px] text-slate-500 mt-2">눌러서 신작 상세 보기</div>`;
+    <div class="text-[11px] text-slate-400 mt-2">눌러서 신작 상세 보기</div>`;
   box.classList.remove('hidden');
   const r = el.getBoundingClientRect(), w = box.offsetWidth, h = box.offsetHeight;
   const left = r.right + 8 + w < innerWidth ? r.right + 8 : Math.max(8, r.left - w - 8);
@@ -2492,7 +2495,7 @@ function gsRenderChips(){
     const s = gsCurrentRank(n, 'sales'), p = gsCurrentRank(n, 'popular'), url = getIconUrlForGame(n);
     return `<span class="gs-chip" title="${escapeAttr(n)}"><span class="dot" style="background:${searchColorOf[getGameKey(n)]}"></span>`
       + (url ? `<img src="${escapeAttr(url)}" alt="" class="w-5 h-5 rounded-md object-cover shrink-0" loading="lazy" onerror="this.style.display='none'">` : '')
-      + `<span class="nm">${escapeHtml(n)}</span><span class="text-[10px] whitespace-nowrap"><span class="t-sales">매출 ${s ? s + '위' : '-'}</span><span class="text-slate-600"> · </span><span class="t-pop">인기 ${p ? p + '위' : '-'}</span></span>`
+      + `<span class="nm">${escapeHtml(n)}</span><span class="text-[11px] whitespace-nowrap"><span class="t-sales">매출 ${s ? s + '위' : '-'}</span><span class="text-slate-600"> · </span><span class="t-pop">인기 ${p ? p + '위' : '-'}</span></span>`
       + `<button type="button" data-i="${i}" aria-label="${escapeAttr(n)} 제거"><i class="fa-solid fa-xmark"></i></button></span>`;
   }).join('') + `<span class="gs-chipnote">${searchSelected.length}/${SEARCH_MAX_GAMES}</span>`;
 }
@@ -2735,14 +2738,14 @@ function renderSearchSummary(stats, dates){
   const list = stats.slice().sort((a, b) => dir * sorters[key](a, b));
   const dot = s => `<span class="inline-block w-2.5 h-2.5 rounded-full shrink-0" style="background:${s.color}"></span>`;
   const scoreHtml = s => s.score != null ? `<span class="text-slate-200">★ ${s.score.toFixed(1)}</span>${s.scoreChange ? ` <span class="text-[11px] ${s.scoreChange > 0 ? 'rank-up' : 'rank-down'}">${s.scoreChange > 0 ? '▲' : '▼'}${Math.abs(s.scoreChange).toFixed(1)}</span>` : ''}` : '<span class="muted">-</span>';
-  const best = x => x.best != null ? `${x.best}위<div class="text-[10px] muted">${mkShort(x.bestDate)}</div>` : '<span class="muted">-</span>';
+  const best = x => x.best != null ? `${x.best}위<div class="text-[11px] muted">${mkShort(x.bestDate)}</div>` : '<span class="muted">-</span>';
   if(innerWidth < 640){
     box.innerHTML = `<div class="space-y-2">${list.map(s => `
       <div class="rounded-lg border border-slate-800 bg-slate-900/50 p-3 cursor-pointer" data-game="${escapeAttr(s.name)}">
         <div class="flex items-center gap-2 mb-2">${dot(s)}<span class="text-[13px] font-semibold text-slate-100 truncate">${escapeHtml(s.name)}</span><span class="ml-auto text-xs">${scoreHtml(s)}</span></div>
         <div class="grid grid-cols-2 gap-2 text-xs">
-          <div><div class="text-[10px] muted">매출</div>${searchRankCell(s.sales, 't-sales')}<div class="text-[10px] muted mt-0.5">최고 ${s.sales.best ?? '-'}${s.sales.best ? '위' : ''} · TOP100 ${s.sales.days}/${dates.length}일${s.sales.top10 ? ` · TOP10 ${s.sales.top10}일` : ''}</div></div>
-          <div><div class="text-[10px] muted">인기</div>${searchRankCell(s.popular, 't-pop')}<div class="text-[10px] muted mt-0.5">최고 ${s.popular.best ?? '-'}${s.popular.best ? '위' : ''} · TOP100 ${s.popular.days}/${dates.length}일${s.popular.top10 ? ` · TOP10 ${s.popular.top10}일` : ''}</div></div>
+          <div><div class="text-[11px] muted">매출</div>${searchRankCell(s.sales, 't-sales')}<div class="text-[11px] muted mt-0.5">최고 ${s.sales.best ?? '-'}${s.sales.best ? '위' : ''} · TOP100 ${s.sales.days}/${dates.length}일${s.sales.top10 ? ` · TOP10 ${s.sales.top10}일` : ''}</div></div>
+          <div><div class="text-[11px] muted">인기</div>${searchRankCell(s.popular, 't-pop')}<div class="text-[11px] muted mt-0.5">최고 ${s.popular.best ?? '-'}${s.popular.best ? '위' : ''} · TOP100 ${s.popular.days}/${dates.length}일${s.popular.top10 ? ` · TOP10 ${s.popular.top10}일` : ''}</div></div>
         </div>
       </div>`).join('')}</div>`;
     return;
@@ -2760,7 +2763,7 @@ function renderSearchSummary(stats, dates){
       <td class="py-2.5 px-2 text-right whitespace-nowrap">${s.sales.top10 || s.popular.top10 ? `${s.sales.top10} · ${s.popular.top10}<span class="muted">일</span>` : '<span class="muted">-</span>'}</td>
       <td class="py-2.5 pr-1 pl-2 text-right whitespace-nowrap">${scoreHtml(s)}</td>
     </tr>`).join('')}</tbody></table></div>
-    <p class="text-[10px] muted mt-2">기간 변화는 조회 시작일 대비 마지막 날 순위입니다. 행을 누르면 게임 상세가 열립니다.</p>`;
+    <p class="text-[11px] muted mt-2">기간 변화는 조회 시작일 대비 마지막 날 순위입니다. 행을 누르면 게임 상세가 열립니다.</p>`;
 }
 
 /* ---------- 순위 차트 (로그 눈금 · 범위 자동 · 100위 밖 띠) ---------- */
@@ -2809,7 +2812,7 @@ function drawSearchRankChart(canvasId, lines, dates, store = searchCharts, opts 
       if(!hasOut) return;
       const { ctx, chartArea: a, scales: { y } } = chart, top = y.getPixelForValue(112);
       ctx.save(); ctx.fillStyle = 'rgba(30,41,59,.55)'; ctx.fillRect(a.left, top, a.right - a.left, a.bottom - top);
-      ctx.fillStyle = '#64748b'; ctx.font = '600 11px "Pretendard Variable", sans-serif'; ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+      ctx.fillStyle = '#94a3b8'; ctx.font = '600 11px "Pretendard Variable", sans-serif'; ctx.textAlign = 'right'; ctx.textBaseline = 'top';
       ctx.fillText('100위 밖', a.right - 6, top + 4); ctx.restore();
     }
   };
@@ -3196,7 +3199,7 @@ function dbHeaderCell(label, key, sort){
   const icon = active ? (sort.dir === 'desc' ? 'fa-sort-down' : 'fa-sort-up') : 'fa-sort';
   const hint = key === 'name' ? (active && sort.dir === 'asc' ? '가나다 역순으로 정렬' : '가나다순으로 정렬') : (active && sort.dir === 'desc' ? '오래된 순으로 정렬' : '최신순으로 정렬');
   return `<th class="${base} select-none cursor-pointer transition-colors ${active ? 'text-indigo-300' : 'text-slate-300 hover:text-white'}" onclick="setDbSort('${key}')" title="${hint}" aria-sort="${active ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none'}">
-    <span class="inline-flex items-center gap-1.5">${label}<i class="fa-solid ${icon} text-[10px] ${active ? '' : 'opacity-40'}"></i></span></th>`;
+    <span class="inline-flex items-center gap-1.5">${label}<i class="fa-solid ${icon} text-[11px] ${active ? '' : 'opacity-40'}"></i></span></th>`;
 }
 
 function filterCurrentTable(){
@@ -3241,7 +3244,7 @@ function filterCurrentTable(){
         <td class="px-4 py-2.5 whitespace-nowrap">${escapeHtml(rDate)}</td>
         <td class="px-4 py-2.5 whitespace-nowrap">${escapeHtml(rRank)}</td>
         <td class="px-4 py-2.5 whitespace-nowrap">${escapeHtml(rChange)}</td>
-        <td class="px-4 py-2.5 whitespace-nowrap">${rScore !== '-' ? `<span class="text-amber-400 font-semibold"><i class="fa-solid fa-star text-[10px] mr-1"></i>${escapeHtml(rScore)}</span>` : '-'}</td>
+        <td class="px-4 py-2.5 whitespace-nowrap">${rScore !== '-' ? `<span class="text-amber-400 font-semibold"><i class="fa-solid fa-star text-[11px] mr-1"></i>${escapeHtml(rScore)}</span>` : '-'}</td>
         <td class="px-4 py-2.5 whitespace-nowrap">${escapeHtml(gName)}</td>
         <td class="px-4 py-2.5 whitespace-nowrap">${escapeHtml(String(isNew ? (r[5]||'') : (r[4]||'')))}</td>
         <td class="px-4 py-2.5 whitespace-nowrap">${escapeHtml(String(isNew ? (r[6]||'') : (r[5]||'')))}</td>
@@ -3398,7 +3401,7 @@ function renderGameDetail(){
 
   /* 기간 분석: 매출·인기 각각 (TOP100인 날 평균은 TOP100이었던 날만으로 계산) */
   const sS = detailStatsOf(sales, dates), sP = detailStatsOf(pop, dates);
-  const bestTxt = s => s.best != null ? `${s.best}위 <span class="text-[10px] muted">${mkShort(s.bestDate)}</span>` : '<span class="muted">-</span>';
+  const bestTxt = s => s.best != null ? `${s.best}위 <span class="text-[11px] muted">${mkShort(s.bestDate)}</span>` : '<span class="muted">-</span>';
   document.getElementById('detailStats').innerHTML = `<div class="card rounded-xl border-slate-700/50 overflow-hidden"><table class="w-full text-xs">
     <thead><tr class="text-[11px] muted border-b border-slate-800"><th class="text-left py-2 px-3 font-medium whitespace-nowrap">구분</th><th class="text-right py-2 px-2 font-medium whitespace-nowrap">최고</th><th class="text-right py-2 px-2 font-medium whitespace-nowrap" title="기간 중 TOP100에 든 날 수">TOP100 일수</th><th class="text-right py-2 px-2 font-medium whitespace-nowrap" title="기간 중 TOP10에 든 날 수">TOP10 일수</th><th class="text-right py-2 px-3 font-medium whitespace-nowrap" title="TOP100이었던 날만으로 낸 평균 순위">평균 순위</th></tr></thead>
     <tbody>
@@ -3892,10 +3895,10 @@ function mkIcon(name){
   const url = getIconUrlForGame(name);
   return url
     ? `<img src="${escapeAttr(url)}" alt="" loading="lazy" class="w-6 h-6 rounded-md object-cover shrink-0 bg-slate-800" onerror="this.style.visibility='hidden'">`
-    : `<span class="w-6 h-6 rounded-md shrink-0 bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-400">${escapeHtml(name.slice(0, 1))}</span>`;
+    : `<span class="w-6 h-6 rounded-md shrink-0 bg-slate-800 flex items-center justify-center text-[11px] font-bold text-slate-400">${escapeHtml(name.slice(0, 1))}</span>`;
 }
 function mkGameCell(name, sub){
-  return `<div class="flex items-center gap-2 min-w-0">${mkIcon(name)}<div class="min-w-0"><div class="font-medium text-slate-200 truncate">${escapeHtml(name)}</div>${sub ? `<div class="text-[9px] muted truncate">${escapeHtml(sub)}</div>` : ''}</div></div>`;
+  return `<div class="flex items-center gap-2 min-w-0">${mkIcon(name)}<div class="min-w-0"><div class="font-medium text-slate-200 truncate">${escapeHtml(name)}</div>${sub ? `<div class="text-[11px] muted truncate">${escapeHtml(sub)}</div>` : ''}</div></div>`;
 }
 function mkEmpty(text){ return `<div class="muted text-xs py-6 text-center">${text}</div>`; }
 /* 용어 설명 아이콘 (마우스를 올리면 설명) */
@@ -3905,7 +3908,7 @@ function mkPair(salesVal, popVal){
   return `<span class="text-[11px] font-semibold t-sales">매출</span> ${salesVal} <span class="muted font-normal">·</span> <span class="text-[11px] font-semibold t-pop">인기</span> ${popVal}`;
 }
 function mkKpiCard(label, value, sub, subCls = 'muted', tip = ''){
-  return `<div class="card rounded-xl p-4"><div class="text-[11px] muted">${label}${mkInfo(tip)}</div><div class="text-xl font-bold mt-2 truncate">${value}</div><div class="text-[10px] mt-1 ${subCls} truncate">${sub}</div></div>`;
+  return `<div class="card rounded-xl p-4"><div class="text-[11px] muted">${label}${mkInfo(tip)}</div><div class="text-xl font-bold mt-2 truncate">${value}</div><div class="text-[11px] mt-1 ${subCls} truncate">${sub}</div></div>`;
 }
 function mkDelta(n, digits = 0){
   if(n == null || isNaN(n)) return '<span class="text-slate-400">-</span>';
@@ -3919,7 +3922,7 @@ function mkMoverRows(list, fmt){
   return list.map(x => `
     <div class="flex items-center gap-3 py-1.5 px-2 -mx-2 rounded-lg hover:bg-slate-800/50 cursor-pointer" data-game="${escapeAttr(x.name)}">
       <div class="flex-1 min-w-0 text-xs">${mkGameCell(x.name)}</div>
-      <span class="text-[10px] muted whitespace-nowrap">${fmt(x.from)} → ${fmt(x.to)}</span>
+      <span class="text-[11px] muted whitespace-nowrap">${fmt(x.from)} → ${fmt(x.to)}</span>
       <span class="w-14 text-right text-xs whitespace-nowrap">${mkDelta(x.delta)}</span>
     </div>`).join('');
 }
@@ -3931,19 +3934,19 @@ function mkFmtRank(v){ return String(v); }
 function mkMoversHtml(pairs, fmt){
   const up = pairs.filter(x => x.delta > 0).sort((a, b) => (b.raw ?? b.delta) - (a.raw ?? a.delta)).slice(0, 5);
   const down = pairs.filter(x => x.delta < 0).sort((a, b) => (a.raw ?? a.delta) - (b.raw ?? b.delta)).slice(0, 5);
-  return `<div class="text-[10px] font-semibold rank-up mb-1">급상승</div>${mkMoverRows(up, fmt)}
-    <div class="text-[10px] font-semibold rank-down mt-3 mb-1 pt-2 border-t border-slate-800">급하락</div>${mkMoverRows(down, fmt)}`;
+  return `<div class="text-[11px] font-semibold rank-up mb-1">급상승</div>${mkMoverRows(up, fmt)}
+    <div class="text-[11px] font-semibold rank-down mt-3 mb-1 pt-2 border-t border-slate-800">급하락</div>${mkMoverRows(down, fmt)}`;
 }
 function mkEntryTable(list, cols){
   if(!list.length) return mkEmpty('차트인한 게임이 없습니다.');
   return `<table class="w-full table-fixed text-left text-xs">
-    <thead class="sticky top-0 bg-slate-900 z-10"><tr class="border-b border-slate-800 text-[10px] muted">
+    <thead class="sticky top-0 bg-slate-900 z-10"><tr class="border-b border-slate-800 text-[11px] muted">
       <th class="py-2 pl-1 pr-2">게임</th><th class="py-2 px-1 text-center w-[64px]">구분</th>
       ${cols.map(c => `<th class="py-2 px-1 text-right whitespace-nowrap ${c.w}">${c.label}</th>`).join('')}
     </tr></thead><tbody>
     ${list.map(x => `<tr class="border-b border-slate-900 hover:bg-slate-800/60 cursor-pointer" data-game="${escapeAttr(x.name)}">
       <td class="py-2 pl-1 pr-2">${mkGameCell(x.name, x.publisher)}</td>
-      <td class="py-2 px-1 text-center"><span class="text-[10px] px-1.5 py-0.5 rounded whitespace-nowrap ${x.reentry ? 'bg-amber-500/15 text-amber-300' : 'bg-sky-500/15 text-sky-300'}">${x.reentry ? '재진입' : '첫 차트인'}</span></td>
+      <td class="py-2 px-1 text-center"><span class="text-[11px] px-1.5 py-0.5 rounded whitespace-nowrap ${x.reentry ? 'bg-amber-500/15 text-amber-300' : 'bg-sky-500/15 text-sky-300'}">${x.reentry ? '재진입' : '첫 차트인'}</span></td>
       ${cols.map(c => `<td class="py-2 px-1 text-right whitespace-nowrap ${c.cls || ''}">${c.val(x)}</td>`).join('')}
     </tr>`).join('')}</tbody></table>`;
 }
@@ -3981,9 +3984,9 @@ function mkDailySeries(idx){
 function mkLevelTag(today, avg){
   if(avg == null) return '';
   const tip = `기준일 ${today}개 · 직전 6일 평균 ${avg.toFixed(1)}개 (평균의 1.5배 이상이면 많음, 절반 이하면 적음)`;
-  if(today > avg * 1.5 && today - avg >= 2) return `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 shrink-0" title="${tip}">평균보다 많음</span>`;
-  if(today < avg * 0.5 && avg - today >= 2) return `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 shrink-0" title="${tip}">평균보다 적음</span>`;
-  return `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-slate-700/50 text-slate-400 shrink-0" title="${tip}">평균 수준</span>`;
+  if(today > avg * 1.5 && today - avg >= 2) return `<span class="text-[11px] font-semibold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 shrink-0" title="${tip}">평균보다 많음</span>`;
+  if(today < avg * 0.5 && avg - today >= 2) return `<span class="text-[11px] font-semibold px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 shrink-0" title="${tip}">평균보다 적음</span>`;
+  return `<span class="text-[11px] font-semibold px-1.5 py-0.5 rounded bg-slate-700/50 text-slate-400 shrink-0" title="${tip}">평균 수준</span>`;
 }
 function mkAvgPast(arr, fn){ const p = arr.slice(0, -1); return p.length ? p.reduce((t, x) => t + fn(x), 0) / p.length : null; }
 /* 미니 막대: 단일 시리즈 */
@@ -4003,7 +4006,7 @@ function mkKpiSparkCard(label, valueHtml, tagHtml, sparkHtml, sub, tip = ''){
     <div class="flex items-center justify-between gap-2"><span class="text-[11px] muted truncate">${label}${mkInfo(tip)}</span>${tagHtml}</div>
     <div class="text-xl font-bold mt-1.5 truncate">${valueHtml}</div>
     <div class="mt-auto pt-2">${sparkHtml}</div>
-    <div class="text-[10px] muted mt-1.5 truncate">${sub}</div>
+    <div class="text-[11px] muted mt-1.5 truncate">${sub}</div>
   </div>`;
 }
 function mkTypeButtons(elId, tabKey, items){
@@ -4067,14 +4070,14 @@ function mkRenderDaily(){
       const list = c.ins.map(k => { const v = De.baseMap.get(k), last = mkLastSeenBefore(De.idx, k, De.prev); return { ...v, reentry: !!last, lastSeen: last }; }).sort((a, b) => a.rank - b.rank);
       box.innerHTML = mkEntryTable(list, [
         { label: '차트인<br>순위', w: 'w-[52px]', cls: 'text-indigo-300 font-semibold', val: x => `${x.rank}위` },
-        { label: '직전 차트<br>마지막 날', w: 'w-[76px]', cls: 'muted text-[10px]', val: x => x.lastSeen ? mkShort(x.lastSeen) : '-' }
+        { label: '직전 차트<br>마지막 날', w: 'w-[76px]', cls: 'muted text-[11px]', val: x => x.lastSeen ? mkShort(x.lastSeen) : '-' }
       ]);
     }else if(mkTabs.dEntryType === 'out'){
       setText('mkDEntriesDesc', '전일 TOP100에 있다가 기준일에 빠진 게임');
       const prevPos = De.idx.dates.indexOf(De.prev);
       const list = c.outs.map(k => { const v = De.prevMap.get(k), streak = mkStreakUntil(De.idx, k, De.prev); return { ...v, streak, capped: streak === prevPos + 1 }; }).sort((a, b) => a.rank - b.rank);
       box.innerHTML = list.length ? `<table class="w-full table-fixed text-left text-xs">
-        <thead class="sticky top-0 bg-slate-900 z-10"><tr class="border-b border-slate-800 text-[10px] muted">
+        <thead class="sticky top-0 bg-slate-900 z-10"><tr class="border-b border-slate-800 text-[11px] muted">
           <th class="py-2 pl-1 pr-2">게임</th><th class="py-2 px-1 text-right w-[60px]">전일 순위</th><th class="py-2 px-1 text-right w-[84px]">연속 TOP100</th>
         </tr></thead><tbody>${list.map(x => `<tr class="border-b border-slate-900 hover:bg-slate-800/60 cursor-pointer" data-game="${escapeAttr(x.name)}">
           <td class="py-2 pl-1 pr-2">${mkGameCell(x.name, x.publisher)}</td>
@@ -4091,13 +4094,13 @@ function mkRenderDaily(){
       box.innerHTML = list.length ? `
         <div class="text-[11px] text-slate-300 mb-2">차트인 <b>${list.length}</b>개 중 <b class="rank-up">${kept}</b>개 지금도 TOP100 · <b class="rank-down">${list.length - kept}</b>개 차트아웃</div>
         <table class="w-full table-fixed text-left text-xs">
-        <thead class="sticky top-0 bg-slate-900 z-10"><tr class="border-b border-slate-800 text-[10px] muted">
+        <thead class="sticky top-0 bg-slate-900 z-10"><tr class="border-b border-slate-800 text-[11px] muted">
           <th class="py-2 pl-1 pr-2">게임</th><th class="py-2 px-1 text-center w-[56px]">차트인일</th><th class="py-2 px-1 text-right w-[56px]">차트인</th><th class="py-2 px-1 text-right w-[64px]">현재</th><th class="py-2 px-1 text-right w-[44px]">변화</th>
         </tr></thead><tbody>${list.map(x => `<tr class="border-b border-slate-900 hover:bg-slate-800/60 cursor-pointer ${x.nowRank == null ? 'opacity-60' : ''}" data-game="${escapeAttr(x.name)}">
           <td class="py-2 pl-1 pr-2">${mkGameCell(x.name, x.publisher)}</td>
-          <td class="py-2 px-1 text-center text-[10px] muted">${mkShort(x.entryDate)}</td>
+          <td class="py-2 px-1 text-center text-[11px] muted">${mkShort(x.entryDate)}</td>
           <td class="py-2 px-1 text-right">${x.entryRank}위</td>
-          <td class="py-2 px-1 text-right">${x.nowRank != null ? `<span class="text-indigo-300 font-semibold">${x.nowRank}위</span>` : `<span class="text-[10px] rank-down">차트아웃</span><div class="text-[9px] muted">${x.lastSeen ? mkShort(x.lastSeen) + '까지' : ''}</div>`}</td>
+          <td class="py-2 px-1 text-right">${x.nowRank != null ? `<span class="text-indigo-300 font-semibold">${x.nowRank}위</span>` : `<span class="text-[11px] rank-down">차트아웃</span><div class="text-[11px] muted">${x.lastSeen ? mkShort(x.lastSeen) + '까지' : ''}</div>`}</td>
           <td class="py-2 px-1 text-right text-[11px]">${x.nowRank != null ? mkDelta(x.entryRank - x.nowRank) : '<span class="muted">-</span>'}</td>
         </tr>`).join('')}</tbody></table>` : mkEmpty('최근 7일 차트인 게임이 없습니다.');
     }
@@ -4122,13 +4125,13 @@ function mkRenderPositionMap(elId, sMap, pMap, opt){
   const col = (key, title, desc, cls, dotCls) => {
     const list = Q[key], stateKey = `${elId}:${key}`, expanded = !!mkPosExpand[stateKey], shown = expanded ? list : list.slice(0, 5);
     return `<div class="rounded-xl border border-slate-800 bg-slate-900/50 p-3 flex flex-col min-w-0">
-      <div class="flex items-start justify-between gap-2 mb-2"><div class="min-w-0"><div class="text-xs font-semibold ${cls} flex items-center gap-1.5"><span class="w-2 h-2 rounded-full ${dotCls}"></span>${title}</div><div class="text-[10px] muted mt-0.5">${desc}</div></div><span class="text-[11px] font-bold text-slate-300 shrink-0">${list.length}개</span></div>
+      <div class="flex items-start justify-between gap-2 mb-2"><div class="min-w-0"><div class="text-xs font-semibold ${cls} flex items-center gap-1.5"><span class="w-2 h-2 rounded-full ${dotCls}"></span>${title}</div><div class="text-[11px] muted mt-0.5">${desc}</div></div><span class="text-[11px] font-bold text-slate-300 shrink-0">${list.length}개</span></div>
       <div class="${expanded ? 'max-h-[260px] overflow-y-auto scrollbar pr-1' : ''}">${shown.length ? shown.map(x => `
         <div class="flex items-center gap-2 py-1.5 px-1.5 -mx-1.5 rounded-lg hover:bg-slate-800/60 cursor-pointer" data-game="${escapeAttr(x.name)}">
           <div class="flex-1 min-w-0 text-xs">${mkGameCell(x.name)}</div>
-          <span class="text-[10px] whitespace-nowrap"><span class="t-sales">매출 ${rk(x.sr)}</span> <span class="muted">·</span> <span class="t-pop">인기 ${rk(x.pr)}</span></span>
+          <span class="text-[11px] whitespace-nowrap"><span class="t-sales">매출 ${rk(x.sr)}</span> <span class="muted">·</span> <span class="t-pop">인기 ${rk(x.pr)}</span></span>
         </div>`).join('') : '<div class="muted text-[11px] py-3 text-center">해당 게임 없음</div>'}</div>
-      ${list.length > 5 ? `<button type="button" data-posexpand="${stateKey}" class="mt-1 text-[10px] text-slate-400 hover:text-slate-200 text-left">${expanded ? '접기' : `외 ${list.length - 5}개 더 보기`}</button>` : ''}
+      ${list.length > 5 ? `<button type="button" data-posexpand="${stateKey}" class="mt-1 text-[11px] text-slate-400 hover:text-slate-200 text-left">${expanded ? '접기' : `외 ${list.length - 5}개 더 보기`}</button>` : ''}
     </div>`;
   };
   document.getElementById(elId).innerHTML = `<div class="flex items-center gap-1.5 mb-2 text-[11px]"><i class="fa-solid fa-circle-info text-slate-500"></i><span class="muted">아래 목록은 <b class="text-slate-200">${opt.unit}50위 기준</b>으로 나눕니다 · 위 맵의 구역은 10위 기준</span></div>
@@ -4137,7 +4140,7 @@ function mkRenderPositionMap(elId, sMap, pMap, opt){
     ${col('popular', '인기 강세', `인기 ${opt.unit}50위 이내 · 매출 50위 밖`, 't-pop', 'bg-pop')}
     ${col('both', '양쪽 상위', `매출·인기 모두 ${opt.unit}50위 이내`, 'text-slate-100', 'bg-slate-100')}
   </div>
-  <p class="text-[10px] muted mt-3">매출 강세는 소수 유저 과금 비중이 큰 구조, 인기 강세는 유입 대비 수익화가 약한 구조일 가능성이 높습니다. 정렬은 두 순위 차이가 큰 순입니다.${opt.note ? ' ' + opt.note : ''}</p>`;
+  <p class="text-[11px] muted mt-3">매출 강세는 소수 유저 과금 비중이 큰 구조, 인기 강세는 유입 대비 수익화가 약한 구조일 가능성이 높습니다. 정렬은 두 순위 차이가 큰 순입니다.${opt.note ? ' ' + opt.note : ''}</p>`;
 }
 
 /* ---------- 주간 ---------- */
@@ -4236,7 +4239,7 @@ function mkRenderWeekly(){
     });
     const pctCell = v => v == null ? '<span class="muted">-</span>' : `<span class="${v >= 60 ? 'text-emerald-300' : v >= 30 ? 'text-amber-300' : 'text-rose-300'} font-semibold">${v}%</span>`;
     document.getElementById('mkWEntries').innerHTML = `<table class="w-full text-left text-xs">
-      <thead><tr class="border-b border-slate-800 text-[10px] muted">
+      <thead><tr class="border-b border-slate-800 text-[11px] muted">
         <th class="py-2 pl-1">차트인 주차${mkInfo('해당 주에 TOP100에 새로 들어온 게임들이 1·2·4주 뒤 마지막 날에도 TOP100에 남아 있는 비율. 60% 이상 초록, 30% 미만 빨강.')}</th><th class="py-2 px-2 text-right">차트인 수</th><th class="py-2 px-2 text-right">1주 후</th><th class="py-2 px-2 text-right">2주 후</th><th class="py-2 pl-2 pr-1 text-right">4주 후</th>
       </tr></thead><tbody>
       ${rows.map(r => `<tr class="border-b border-slate-900">
@@ -4244,7 +4247,7 @@ function mkRenderWeekly(){
         <td class="py-2 px-2 text-right">${r.n == null ? '<span class="muted">-</span>' : r.n + '개'}</td>
         <td class="py-2 px-2 text-right">${pctCell(r.c1)}</td><td class="py-2 px-2 text-right">${pctCell(r.c2)}</td><td class="py-2 pl-2 pr-1 text-right">${pctCell(r.c4)}</td>
       </tr>`).join('')}</tbody></table>
-      <p class="text-[10px] muted mt-2">"-"는 아직 해당 기간이 지나지 않았거나 비교할 데이터가 없는 경우입니다.</p>`;
+      <p class="text-[11px] muted mt-2">"-"는 아직 해당 기간이 지나지 않았거나 비교할 데이터가 없는 경우입니다.</p>`;
   }
 }
 
@@ -4631,18 +4634,18 @@ function mkRenderStructure(){
   document.getElementById('mkWGenre').innerHTML = lastShare.total ? `
     <div class="space-y-1.5">${weekShares.slice(Math.max(0, weekShares.findIndex(ws => ws.total > 0))).map(ws => {
       const sg = segs(ws);
-      return `<div class="flex items-center gap-2"><span class="w-[74px] shrink-0 text-[10px] ${ws.wm === mon ? 'text-indigo-300 font-semibold' : 'muted'}">${mkShort(ws.wm)} 주${ws.wm === mon ? ' ●' : ''}</span>
-        <div class="flex-1 h-4 rounded overflow-hidden flex bg-slate-800/60">${sg.map(x => `<span title="${escapeAttr(x.g)} ${x.pct.toFixed(1)}%" style="width:${x.pct}%;background:${x.color}"></span>`).join('') || '<span class="text-[9px] muted px-2">데이터 없음</span>'}</div></div>`;
+      return `<div class="flex items-center gap-2"><span class="w-[74px] shrink-0 text-[11px] ${ws.wm === mon ? 'text-indigo-300 font-semibold' : 'muted'}">${mkShort(ws.wm)} 주${ws.wm === mon ? ' ●' : ''}</span>
+        <div class="flex-1 h-4 rounded overflow-hidden flex bg-slate-800/60">${sg.map(x => `<span title="${escapeAttr(x.g)} ${x.pct.toFixed(1)}%" style="width:${x.pct}%;background:${x.color}"></span>`).join('') || '<span class="text-[11px] muted px-2">데이터 없음</span>'}</div></div>`;
     }).join('')}</div>
-    <div class="flex flex-wrap gap-x-3 gap-y-1 mt-3 text-[10px] text-slate-400">${[...topGenres, '기타'].map(g => `<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm" style="background:${g === '기타' ? '#475569' : bizGenreColor(g)}"></span>${escapeHtml(g)}</span>`).join('')}</div>
+    <div class="flex flex-wrap gap-x-3 gap-y-1 mt-3 text-[11px] text-slate-400">${[...topGenres, '기타'].map(g => `<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm" style="background:${g === '기타' ? '#475569' : bizGenreColor(g)}"></span>${escapeHtml(g)}</span>`).join('')}</div>
     <div class="mt-3 pt-3 border-t border-slate-800">
-      <div class="text-[10px] muted mb-1.5">지난주 비중 · 전주 대비 게임 수 변화</div>
+      <div class="text-[11px] muted mb-1.5">지난주 비중 · 전주 대비 게임 수 변화</div>
       <div class="grid grid-cols-2 gap-x-4 gap-y-1">${topGenres.map(g => {
         const pct = (lastShare.counts.get(g) || 0) / lastShare.total * 100;
         const diff = prevShare.total ? (lastShare.uniq.get(g) || 0) - (prevShare.uniq.get(g) || 0) : null;
-        return `<div class="flex items-center justify-between text-xs"><span class="truncate text-slate-300">${escapeHtml(g)} <span class="muted text-[10px]">${pct.toFixed(0)}%</span></span><span class="text-[11px]">${mkDelta(diff)}</span></div>`;
+        return `<div class="flex items-center justify-between text-xs"><span class="truncate text-slate-300">${escapeHtml(g)} <span class="muted text-[11px]">${pct.toFixed(0)}%</span></span><span class="text-[11px]">${mkDelta(diff)}</span></div>`;
       }).join('')}</div>
-      <p class="text-[10px] muted mt-2">※ '기타'에는 세부 장르가 불명확하거나 미분류된 게임이 포함됩니다.</p>
+      <p class="text-[11px] muted mt-2">※ '기타'에는 세부 장르가 불명확하거나 미분류된 게임이 포함됩니다.</p>
     </div>` : mkEmpty('지난주 데이터가 없습니다.');
 
   /* 퍼블리셔 점유 */
@@ -4650,13 +4653,13 @@ function mkRenderStructure(){
   const pubTop = pub.arr.slice(0, 5), maxScore = pubTop[0]?.score || 1;
   document.getElementById('mkWPub').innerHTML = pubTop.length ? `<div class="space-y-2">${pubTop.map((x, i) => `
     <div class="flex items-center gap-2 text-xs">
-      <span class="w-4 text-right text-[10px] muted">${i + 1}</span>
+      <span class="w-4 text-right text-[11px] muted">${i + 1}</span>
       <span class="w-[120px] shrink-0 truncate text-slate-200" title="${escapeAttr(x.publisher)}">${escapeHtml(x.publisher)}</span>
       <div class="flex-1 h-2 rounded bg-slate-800"><div class="h-2 rounded bg-indigo-400/80" style="width:${Math.round(x.score / maxScore * 100)}%"></div></div>
-      <span class="w-9 text-right text-[10px] text-indigo-300 font-semibold">${Math.round(x.score / pub.total * 100)}%</span>
-      <span class="w-[72px] text-right text-[10px] muted whitespace-nowrap">TOP100 ${x.games.size}개</span>
+      <span class="w-9 text-right text-[11px] text-indigo-300 font-semibold">${Math.round(x.score / pub.total * 100)}%</span>
+      <span class="w-[72px] text-right text-[11px] muted whitespace-nowrap">TOP100 ${x.games.size}개</span>
     </div>`).join('')}</div>
-    <p class="text-[10px] muted mt-3 pt-3 border-t border-slate-800">점유 % = 퍼블리셔 점수 ÷ 전체 점수. 상위권 게임일수록 점수가 커서, 게임 수보다 실제 상위권 점유에 가깝습니다.</p>` : mkEmpty('지난주 데이터가 없습니다.');
+    <p class="text-[11px] muted mt-3 pt-3 border-t border-slate-800">점유 % = 퍼블리셔 점수 ÷ 전체 점수. 상위권 게임일수록 점수가 커서, 게임 수보다 실제 상위권 점유에 가깝습니다.</p>` : mkEmpty('지난주 데이터가 없습니다.');
 }
 function mkRenderStructureSkeleton(){
   setText('mkAsOf', '지난 기간 데이터를 불러오는 중...');
@@ -4734,7 +4737,7 @@ function mkRankTable(store, P, head){
   if(!curList.length) return { html: mkEmpty('이 기간에 집계할 게임이 없습니다.'), n: 0 };
   const html = `<table class="w-full min-w-[520px] table-fixed text-left text-xs">
     <colgroup><col style="width:30px"><col style="width:76px"><col><col style="width:104px"><col style="width:56px"><col style="width:60px"></colgroup>
-    <thead class="text-[10px] muted">
+    <thead class="text-[11px] muted">
       <tr><th colspan="3" class="pb-1 pl-1 text-left font-normal">${head ? head(curList.length) : ''}</th><th></th><th colspan="2" class="pt-1 px-2 text-center font-medium border-b border-slate-800/80">평균 순위</th></tr>
       <tr class="border-b border-slate-800"><th class="py-2 pl-1 font-medium">#</th><th class="py-2 px-1 font-medium">추세</th><th class="py-2 px-2 font-medium">게임</th><th class="py-2 px-2 text-center font-medium">흐름 <span class="font-normal">(${weeks.length}주)</span></th><th class="py-2 px-2 text-right font-medium">이전</th><th class="py-2 px-2 text-right font-medium">지금</th></tr>
     </thead><tbody>${shown.map(([k, g], i) => {
@@ -4754,7 +4757,7 @@ function mkRankTable(store, P, head){
         <td class="py-2 px-1">${trend}</td>
         <td class="py-2 px-2">${mkGameCell(g.name, [g.genre, g.publisher].filter(v => v && v !== '미분류' && v !== '미상').join(' · '))}</td>
         <td class="py-2 px-2">${mkFlowSvg(idx, k, weeks)}</td>
-        <td class="py-2 px-2 text-right muted whitespace-nowrap">${pg ? fmt(pg.rank) + '위' : pym && pd ? `<span class="text-[10px]">${pd}일만</span>` : '-'}</td>
+        <td class="py-2 px-2 text-right muted whitespace-nowrap">${pg ? fmt(pg.rank) + '위' : pym && pd ? `<span class="text-[11px]">${pd}일만</span>` : '-'}</td>
         <td class="py-2 px-2 text-right font-semibold whitespace-nowrap">${tint ? `<span class="inline-block -mr-1.5 px-1.5 rounded" style="${tint}">${fmt(g.rank)}위</span>` : fmt(g.rank) + '위'}</td>
       </tr>`;
     }).join('')}</tbody></table>`;
@@ -4778,8 +4781,8 @@ function mkRenderMonthly(){
   const T = stores.map(s => ({ s, ...mkRankTable(s, s === 'sales' ? P : mkRankPeriods(mkGetIndex(s)), wide ? n => `<span class="inline-flex items-center gap-2">${tag(s)}<span class="text-[11px] muted">${n}개</span></span>` : null) }));
   const more = Math.max(...T.map(t => t.n)) > 30;
   document.getElementById('mkMonthlyTable').innerHTML = `<div class="grid ${wide ? 'grid-cols-2' : 'grid-cols-1 max-w-[760px]'}">${T.map((t, i) => `<div class="min-w-0 ${wide ? (i ? 'pl-7 border-l border-slate-700/70' : 'pr-7') : ''}">${t.html}</div>`).join('')}</div>
-    ${more ? `<button type="button" id="mkRankMore" data-nosnap onclick="mkRankToggleAll()" class="mt-3 w-full flex items-center justify-center gap-2 py-2 rounded-lg border border-slate-700 bg-slate-800/40 hover:bg-slate-800 hover:border-slate-600 text-[12px] font-medium text-slate-300">${mkMonthly.all ? '30위까지만 보기 <i class="fa-solid fa-chevron-up text-[10px]"></i>' : `전체 보기 (${T.map(t => (wide ? MK_STORE_LABEL[t.s] + ' ' : '') + t.n + '개').join(' · ')}) <i class="fa-solid fa-chevron-down text-[10px]"></i>`}</button>` : ''}
-    <p class="text-[10px] muted mt-3">순위 칸 색은 ${P.prevWord} 평균보다 좋아졌으면 빨강, 나빠졌으면 파랑입니다. 추세는 ${P.unit} 순위표 안에서의 자리 변화이고, 흐름은 최근 8주의 주간 평균 순위입니다(위로 갈수록 상위 · 빨강 상승, 파랑 하락 · 끊긴 곳은 그 주 TOP100 밖 · 선에 마우스를 올리면 주별 순위). <span class="mk-lbl first">첫 차트인</span> 수집 기록상 ${P.prevWord}부터 처음 TOP100에 든 게임 · <span class="mk-lbl re">재진입</span> 예전에 TOP100에 있다가 빠진 뒤 다시 들어온 게임 · <span class="mk-lbl part">비교 제외</span> ${P.prevWord}에 80% 미만의 날만 TOP100이라 평균 비교가 맞지 않는 게임(이전 칸에 일수 표시). 신규 출시 여부는 판단하지 않습니다. 평균 순위는 반올림해 표시하고, #은 소수점까지 비교해 줄 세운 자리입니다(같으면 TOP100 일수 → 최고 순위 → 이름순).</p>`;
+    ${more ? `<button type="button" id="mkRankMore" data-nosnap onclick="mkRankToggleAll()" class="mt-3 w-full flex items-center justify-center gap-2 py-2 rounded-lg border border-slate-700 bg-slate-800/40 hover:bg-slate-800 hover:border-slate-600 text-[12px] font-medium text-slate-300">${mkMonthly.all ? '30위까지만 보기 <i class="fa-solid fa-chevron-up text-[11px]"></i>' : `전체 보기 (${T.map(t => (wide ? MK_STORE_LABEL[t.s] + ' ' : '') + t.n + '개').join(' · ')}) <i class="fa-solid fa-chevron-down text-[11px]"></i>`}</button>` : ''}
+    <p class="text-[11px] muted mt-3">순위 칸 색은 ${P.prevWord} 평균보다 좋아졌으면 빨강, 나빠졌으면 파랑입니다. 추세는 ${P.unit} 순위표 안에서의 자리 변화이고, 흐름은 최근 8주의 주간 평균 순위입니다(위로 갈수록 상위 · 빨강 상승, 파랑 하락 · 끊긴 곳은 그 주 TOP100 밖 · 선에 마우스를 올리면 주별 순위). <span class="mk-lbl first">첫 차트인</span> 수집 기록상 ${P.prevWord}부터 처음 TOP100에 든 게임 · <span class="mk-lbl re">재진입</span> 예전에 TOP100에 있다가 빠진 뒤 다시 들어온 게임 · <span class="mk-lbl part">비교 제외</span> ${P.prevWord}에 80% 미만의 날만 TOP100이라 평균 비교가 맞지 않는 게임(이전 칸에 일수 표시). 신규 출시 여부는 판단하지 않습니다. 평균 순위는 반올림해 표시하고, #은 소수점까지 비교해 줄 세운 자리입니다(같으면 TOP100 일수 → 최고 순위 → 이름순).</p>`;
 }
 /* 전체 보기 펼침/접기: 접을 때 페이지가 짧아지므로 버튼이 화면에 보이도록 */
 function mkRankToggleAll(){
@@ -4873,18 +4876,18 @@ function mkRenderDebut(){
     mkKpiCard('TOP10 도달', `${top10}개`, '첫 차트인 후 한 번이라도 10위 이내', 'muted', '첫 차트인 이후 기준일까지 최고 순위가 10위 이내였던 게임 수.') +
     mkKpiCard('평균 최고 순위', avgBest != null ? `${Math.round(avgBest)}위` : '-', '첫 차트인 게임들의 최고 순위 평균', 'muted', '각 첫 차트인 게임이 기준일까지 기록한 가장 높은 순위의 평균. 낮을수록(숫자가 작을수록) 성과가 좋음.');
   document.getElementById('mkDebutTable').innerHTML = list.length ? `<table class="w-full min-w-[720px] text-left text-xs">
-    <thead><tr class="border-b border-slate-800 text-[10px] muted">
+    <thead><tr class="border-b border-slate-800 text-[11px] muted">
       <th class="py-2 pl-1 pr-2">게임</th><th class="py-2 px-2 text-center">첫 차트인일</th><th class="py-2 px-2 text-right">첫 차트인 순위</th><th class="py-2 px-2 text-right">최고 순위</th><th class="py-2 px-2 text-right">현재</th><th class="py-2 px-2 text-right">TOP100 일수 / 경과일</th><th class="py-2 pl-3 pr-1">추이</th>
     </tr></thead><tbody>${list.map(x => `<tr class="border-b border-slate-900 hover:bg-slate-800/60 cursor-pointer ${x.now == null ? 'opacity-70' : ''}" data-game="${escapeAttr(x.name)}">
       <td class="py-2 pl-1 pr-2 max-w-[240px]">${mkGameCell(x.name, [x.genre, x.publisher].filter(v => v && v !== '미분류' && v !== '미상').join(' · '))}</td>
       <td class="py-2 px-2 text-center text-[11px] muted">${mkShort(x.first)}</td>
       <td class="py-2 px-2 text-right">${x.debutRank}위</td>
-      <td class="py-2 px-2 text-right"><span class="${x.best <= 10 ? 'text-amber-300' : 'text-indigo-300'} font-semibold">${x.best}위</span>${x.best < x.debutRank ? `<div class="text-[9px] muted">${mkShort(x.bestDate)}</div>` : ''}</td>
-      <td class="py-2 px-2 text-right">${x.now != null ? `${x.now}위` : `<span class="rank-down text-[11px]">차트아웃</span><div class="text-[9px] muted">${mkShort(x.lastSeen)}까지</div>`}</td>
-      <td class="py-2 px-2 text-right muted">${x.days}<span class="text-[10px]"> / ${x.span}일</span></td>
+      <td class="py-2 px-2 text-right"><span class="${x.best <= 10 ? 'text-amber-300' : 'text-indigo-300'} font-semibold">${x.best}위</span>${x.best < x.debutRank ? `<div class="text-[11px] muted">${mkShort(x.bestDate)}</div>` : ''}</td>
+      <td class="py-2 px-2 text-right">${x.now != null ? `${x.now}위` : `<span class="rank-down text-[11px]">차트아웃</span><div class="text-[11px] muted">${mkShort(x.lastSeen)}까지</div>`}</td>
+      <td class="py-2 px-2 text-right muted">${x.days}<span class="text-[11px]"> / ${x.span}일</span></td>
       <td class="py-2 pl-3 pr-1">${mkRankSpark(x.series)}</td>
     </tr>`).join('')}</tbody></table>
-    <p class="text-[10px] muted mt-3">패키지 수집 시작일(${mkShort(R.pkgStart)})에 이미 TOP100에 있던 게임과, 같은 이름으로 그 전부터 TOP100에 있던 게임은 제외했습니다. 추이 그래프는 게임마다 자기 최고 순위~100위 범위로 그려 움직임을 보기 쉽게 했고(점선은 10위), 끊긴 구간은 TOP100 밖입니다.</p>` : mkEmpty(`최근 ${MK_DEBUT_WEEKS}주 동안 첫 차트인한 게임이 없습니다.`);
+    <p class="text-[11px] muted mt-3">패키지 수집 시작일(${mkShort(R.pkgStart)})에 이미 TOP100에 있던 게임과, 같은 이름으로 그 전부터 TOP100에 있던 게임은 제외했습니다. 추이 그래프는 게임마다 자기 최고 순위~100위 범위로 그려 움직임을 보기 쉽게 했고(점선은 10위), 끊긴 구간은 TOP100 밖입니다.</p>` : mkEmpty(`최근 ${MK_DEBUT_WEEKS}주 동안 첫 차트인한 게임이 없습니다.`);
 }
 function mkRenderDebutSkeleton(){
   setText('mkAsOf', '첫 차트인 판정 데이터를 불러오는 중...');
@@ -4950,7 +4953,7 @@ function mkRenderReleases(){
       <span class="w-[130px] shrink-0 truncate text-slate-200" title="${escapeAttr(p)}">${escapeHtml(p)}</span>
       <div class="flex-1 h-2 rounded bg-slate-800"><div class="h-2 rounded bg-emerald-400/80" style="width:${Math.round(c / pMax * 100)}%"></div></div>
       <span class="w-8 text-right font-semibold text-slate-100">${c}</span>
-      <span class="w-16 text-right text-[10px] muted">지난달 ${cP.get(p) || 0}</span>
+      <span class="w-16 text-right text-[11px] muted">지난달 ${cP.get(p) || 0}</span>
     </div>`).join('')}</div>` : mkEmpty(`${tm}월 신작이 없습니다.`);
 
   /* 출시 요일 (전체 기간) */
@@ -4959,11 +4962,11 @@ function mkRenderReleases(){
   const dMax = Math.max(1, ...dow), dTop = dow.indexOf(dMax);
   document.getElementById('mkRelDow').innerHTML = `<div class="flex items-end gap-2 h-36">${dow.map((c, i) => `
     <div class="flex-1 flex flex-col items-center justify-end h-full gap-1" title="${dowNames[i]}요일 ${c}개 (${Math.round(c / rows.length * 100)}%)">
-      <span class="text-[10px] ${i === dTop ? 'text-emerald-300 font-semibold' : 'muted'}">${c}</span>
+      <span class="text-[11px] ${i === dTop ? 'text-emerald-300 font-semibold' : 'muted'}">${c}</span>
       <div class="w-full rounded-t ${i === dTop ? 'bg-emerald-400' : 'bg-slate-600'}" style="height:${Math.max(3, Math.round(c / dMax * 100))}%"></div>
       <span class="text-[11px] ${i >= 5 ? 'text-rose-300/80' : 'text-slate-300'}">${dowNames[i]}</span>
     </div>`).join('')}</div>
-    <p class="text-[10px] muted mt-3">${dowNames[dTop]}요일 출시가 가장 많습니다 (${Math.round(dMax / rows.length * 100)}%). 예정 일정 포함.</p>`;
+    <p class="text-[11px] muted mt-3">${dowNames[dTop]}요일 출시가 가장 많습니다 (${Math.round(dMax / rows.length * 100)}%). 예정 일정 포함.</p>`;
 }
 
 /* ---------- 평점 변화 (기준일 vs 7일 전 수집일, 순위 데이터의 평점 컬럼) ---------- */
@@ -4997,10 +5000,10 @@ function mkRenderRating(){
       <span class="w-12 text-right text-xs font-bold ${x.delta > 0 ? 'rank-up' : 'rank-down'}">${x.delta > 0 ? '▲' : '▼'} ${Math.abs(x.delta).toFixed(1)}</span>
     </div>`).join('') : '<div class="muted text-[11px] py-2">해당 게임 없음</div>';
   box.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
-      <div><div class="text-[10px] font-semibold rank-down mb-1">평점 하락</div>${rows(down)}</div>
-      <div><div class="text-[10px] font-semibold rank-up mb-1">평점 상승</div>${rows(up)}</div>
+      <div><div class="text-[11px] font-semibold rank-down mb-1">평점 하락</div>${rows(down)}</div>
+      <div><div class="text-[11px] font-semibold rank-up mb-1">평점 상승</div>${rows(up)}</div>
     </div>
-    <p class="text-[10px] muted mt-3">Google Play에 표시되는 평점(소수점 한 자리) 기준이라 0.1 변화도 의미가 있습니다. 평점은 9/8부터 수집됐습니다.</p>`;
+    <p class="text-[11px] muted mt-3">Google Play에 표시되는 평점(소수점 한 자리) 기준이라 0.1 변화도 의미가 있습니다. 평점은 9/8부터 수집됐습니다.</p>`;
 }
 
 /* ---------- 관심 게임 (이 브라우저에만 저장) ---------- */
