@@ -959,9 +959,8 @@ html.panel-lock { overflow: hidden; }
       <div class="flex flex-wrap items-center gap-2"><button type="button" class="snap-btn" data-nosnap onclick="snapEl(this, '순위추이')" title="이미지로 저장" aria-label="이미지로 저장"><i class="fa-solid fa-camera"></i></button><div class="contents" data-nosnap>
       <div class="mk-seg" id="searchLayoutSel">
         <button type="button" data-l="combined" onclick="searchSetLayout('combined')">통합</button>
-        <button type="button" data-l="split" onclick="searchSetLayout('split')">따로</button>
-        <button type="button" data-l="sales" onclick="searchSetLayout('sales')">매출만</button>
-        <button type="button" data-l="popular" onclick="searchSetLayout('popular')">인기만</button>
+        <button type="button" data-l="sales" onclick="searchSetLayout('sales')">매출</button>
+        <button type="button" data-l="popular" onclick="searchSetLayout('popular')">인기</button>
       </div>
       <label class="cal-toggle"><input type="checkbox" id="searchRatingToggle" onchange="searchState.rating = this.checked; renderSearchCharts()"><span class="knob"></span>평점 추이</label>
       </div></div>
@@ -2877,9 +2876,8 @@ function renderSearchCharts(){
   const empty = !titles.length, L = searchState.layout;
   document.getElementById('searchEmptyChart').classList.toggle('hidden', !empty);
   document.getElementById('searchCombinedWrap').classList.toggle('hidden', empty || L !== 'combined');
-  document.getElementById('searchSalesWrap').classList.toggle('hidden', empty || !(L === 'split' || L === 'sales'));
-  document.getElementById('searchPopularWrap').classList.toggle('hidden', empty || !(L === 'split' || L === 'popular'));
-  document.getElementById('searchSplitGrid').classList.toggle('xl:grid-cols-2', L === 'split');
+  document.getElementById('searchSalesWrap').classList.toggle('hidden', empty || L !== 'sales');
+  document.getElementById('searchPopularWrap').classList.toggle('hidden', empty || L !== 'popular');
   setText('searchLegendNote', L === 'combined' ? '매출 실선 · 인기 점선 · 로그 눈금 · 선 끝에 게임 이름' : '로그 눈금 · 선 끝에 게임 이름');
   document.getElementById('searchRatingWrap').classList.toggle('hidden', empty || !searchState.rating);
   Object.keys(searchCharts).forEach(id => { searchCharts[id].destroy(); delete searchCharts[id]; });
@@ -2888,8 +2886,8 @@ function renderSearchCharts(){
 
   const line = (t, store, dash) => { const k = getGameKey(t); return { label: dash ? `${t} · 인기` : (L === 'combined' ? `${t} · 매출` : t), tag: L === 'combined' ? (dash ? '인기' : '매출') : '', name: t, color: searchColorOf[k], dash, values: R.dates.map(d => S[store].get(k).get(d) ?? null) }; };
   if(L === 'combined') drawSearchRankChart('searchCombinedChart', titles.flatMap(t => [line(t, 'sales'), line(t, 'popular', [5, 4])]), R.dates, searchCharts, { labels: true });
-  if(L === 'split' || L === 'sales') drawSearchRankChart('searchSalesChart', titles.map(t => line(t, 'sales')), R.dates, searchCharts, { labels: true });
-  if(L === 'split' || L === 'popular') drawSearchRankChart('searchPopularChart', titles.map(t => ({ ...line(t, 'popular'), label: t })), R.dates, searchCharts, { labels: true });
+  if(L === 'sales') drawSearchRankChart('searchSalesChart', titles.map(t => line(t, 'sales')), R.dates, searchCharts, { labels: true });
+  if(L === 'popular') drawSearchRankChart('searchPopularChart', titles.map(t => ({ ...line(t, 'popular'), label: t })), R.dates, searchCharts, { labels: true });
   if(searchState.rating) drawSearchRatingChart(titles, S, R.dates);
 }
 
@@ -3020,7 +3018,8 @@ function searchApplyHashOnce(){
   const per = p.get('p') || '';
   if(/^\d+$/.test(per) && SEARCH_PERIODS.includes(Number(per))) searchState.days = Number(per);
   else if(/^\d{4}-\d{2}-\d{2}~\d{4}-\d{2}-\d{2}$/.test(per)){ [searchState.from, searchState.to] = per.split('~'); searchState.days = 0; }
-  if(['combined', 'split', 'sales', 'popular'].includes(p.get('l'))) searchState.layout = p.get('l');
+  /* 예전 '따로'(split) 링크는 기본값 통합으로 */
+  if(['combined', 'sales', 'popular'].includes(p.get('l'))) searchState.layout = p.get('l');
   searchState.rating = p.get('r') === '1';
   const g = (p.get('g') || '').split('|').map(s => s.trim()).filter(Boolean);
   if(g.length) searchSetSelection(g);
