@@ -4376,6 +4376,8 @@ function mkPosImg(url){
     e = { img, ok: false };
     mkImgCache.set(url, e);
     img.onload = () => { e.ok = true; mkPosChartInst?.draw(); };
+    /* CORS로 받아야 캔버스가 '오염'되지 않아 이미지 저장(html2canvas)에 맵이 찍힘 (play-lh는 CORS 허용) */
+    img.crossOrigin = 'anonymous';
     img.src = url;
   }
   return e.ok ? e.img : null;
