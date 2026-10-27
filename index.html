@@ -359,12 +359,21 @@ html.panel-lock { overflow: hidden; }
 .rp-ent li { display:flex; gap:2mm; align-items:center; font-size:8.4pt; padding:1mm 0; border-bottom:1px solid var(--line); list-style:none; }
 .rp-ent .n { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600; }
 .rp-ent .m { color:var(--mute); font-size:7.4pt; white-space:nowrap; }
-.rp-rel { columns:2; column-gap:6mm; font-size:8.2pt; }
-.rp-rel .day { break-inside:avoid; margin-bottom:2mm; }
-.rp-rel .dh { font-size:7.6pt; font-weight:700; color:var(--sub); border-bottom:1px solid var(--line); padding-bottom:.6mm; margin-bottom:.8mm; }
-.rp-rel .it { display:flex; gap:1.5mm; align-items:baseline; padding:.35mm 0; }
-.rp-rel .it .n { font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:55mm; }
-.rp-rel .it .pb { color:var(--mute); font-size:7pt; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; }
+.rp-rel { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); column-gap:6mm; font-size:8.2pt; }
+.rp-rel .day { display:grid; grid-template-columns:13mm minmax(0,1fr); border-top:1.2px solid #cbd5e1; padding:1mm 0 1.4mm; }
+.rp-rel .dh { font-size:8pt; font-weight:800; color:#312e81; line-height:1.2; }
+.rp-rel .dh small { display:block; font-size:7pt; font-weight:500; color:var(--mute); }
+.rp-rel .it { display:grid; grid-template-columns:minmax(0,1fr) 28mm; gap:2mm; align-items:baseline; padding:.4mm 0; border-bottom:1px dotted #eef2f7; }
+.rp-rel .it:last-child { border-bottom:0; }
+.rp-rel .it .nw { display:flex; align-items:baseline; gap:1.2mm; min-width:0; }
+.rp-rel .it .n { font-weight:600; min-width:0; word-break:keep-all; overflow-wrap:anywhere; }
+.rp-rel .it .pb { color:var(--mute); font-size:7pt; text-align:right; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.rp-band { display:grid; grid-template-columns:repeat(7,1fr); gap:2mm; margin:0 0 3mm; }
+.rp-band > div { text-align:center; font-size:7pt; color:var(--sub); }
+.rp-band .bar { height:7mm; display:flex; align-items:flex-end; justify-content:center; margin-bottom:.6mm; }
+.rp-band .bar i { display:block; width:60%; background:#c7d2fe; border-radius:.8mm .8mm 0 0; }
+.rp-band b { display:block; font-size:8.5pt; color:var(--ink); }
+.rp-next { background:var(--soft); border-radius:2mm; padding:3mm 3.5mm 1.5mm; margin-top:4mm; }
 /* 인쇄: 리포트 페이지만 (인쇄 직전 body 바로 아래 사본을 만들고 나머지는 숨김) */
 @page { size:A4; margin:0; }
 @media print {
@@ -5345,12 +5354,20 @@ function rpRender(D){
     <div class="rp-cols"><div><h3><span class="rp-tag bg-sales">매출</span> ${S.sales.entrantsN}개</h3>${entList(S.sales)}</div><div><h3><span class="rp-tag bg-pop">인기</span> ${S.popular.entrantsN}개</h3>${entList(S.popular)}</div></div>
     ${foot}</section>`;
 
+  /* 신작 목록: 날짜는 왼쪽 칸에 한 번, 게임명·퍼블리셔는 고정 칸. 날짜 묶음을 쪼개지 않고 두 열 길이를 맞춤 */
   const relList = list => { if(!list.length) return '<div class="rp-empty">해당 일정 없음</div>'; const by = {}; list.forEach(r => (by[r.d] = by[r.d] || []).push(r));
-    return `<div class="rp-rel">${Object.entries(by).map(([d, rs]) => `<div class="day"><div class="dh">${rpSlash(d)} (${CAL_DOW[mkToDate(d).getDay()]}) · ${rs.length}개</div>${rs.map(r => `<div class="it"><span class="n">${esc(r.n)}</span>${/테스트/.test(r.t) ? '<span class="rp-mini test">테스트</span>' : /소프트/.test(r.t) ? '<span class="rp-mini soft">소프트런칭</span>' : ''}<span class="pb">${esc(r.p)}</span></div>`).join('')}</div>`).join('')}</div>`; };
+    const days = Object.entries(by), cost = rs => rs.length + 1.2, total = days.reduce((a, [, rs]) => a + cost(rs), 0);
+    let acc = 0, half = 0;
+    while(half < days.length && acc + cost(days[half][1]) / 2 <= total / 2){ acc += cost(days[half][1]); half++; }
+    const day = ([d, rs]) => `<div class="day"><div class="dh">${rpSlash(d)} ${CAL_DOW[mkToDate(d).getDay()]}<small>${rs.length}개</small></div><div>${rs.map(r => `<div class="it"><span class="nw"><span class="n">${esc(r.n)}</span>${/테스트/.test(r.t) ? '<span class="rp-mini test">테스트</span>' : /소프트/.test(r.t) ? '<span class="rp-mini soft">소프트런칭</span>' : ''}</span><span class="pb">${esc(r.p)}</span></div>`).join('')}</div></div>`;
+    return `<div class="rp-rel"><div>${days.slice(0, half).map(day).join('')}</div><div>${days.slice(half).map(day).join('')}</div></div>`; };
+  /* 요일별 출시 개수 띠 (월~일) */
+  const relBand = (list, mon) => { const c = [0, 1, 2, 3, 4, 5, 6].map(i => { const d = mkAddDays(mon, i); return [d, list.filter(r => r.d === d).length]; }), mx = Math.max(1, ...c.map(x => x[1]));
+    return `<div class="rp-band">${c.map(([d, n]) => `<div><div class="bar"><i style="height:${n ? Math.max(6, Math.round(n / mx * 100)) : 0}%"></i></div>${CAL_DOW[mkToDate(d).getDay()]} ${rpSlash(d)}<b>${n}</b></div>`).join('')}</div>`; };
   const p4 = `<section class="rp-page">${run(4)}
     <h2 class="first">신작 일정 <small>신작 정보 기준 · 모바일 포함 · 순위 데이터와 별개</small></h2>
-    <h3>이 주 출시 ${D.relLast.length}개</h3>${relList(D.relLast)}
-    <h3 style="margin-top:2mm">다음 주 예정 ${D.relNext.length}개 <span style="color:var(--mute);font-weight:500">(${rpDot(D.issue)} – ${rpDot(mkAddDays(D.issue, 6))})</span></h3>${relList(D.relNext)}
+    <h3>이 주 출시 ${D.relLast.length}개</h3>${D.relLast.length ? relBand(D.relLast, D.mon) : ''}${relList(D.relLast)}
+    <div class="rp-next"><h3>다음 주 예정 ${D.relNext.length}개 <span style="color:var(--mute);font-weight:500">(${rpDot(D.issue)} – ${rpDot(mkAddDays(D.issue, 6))})</span></h3>${relList(D.relNext)}</div>
     ${foot}</section>`;
   return p1 + p2 + p3 + p4;
 }
