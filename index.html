@@ -292,6 +292,9 @@ html.panel-lock { overflow: hidden; }
 .up-d { font-size:11px; font-weight:700; padding:2px 7px; border-radius:6px; white-space:nowrap; background:rgba(99,102,241,.18); color:#c7d2fe; }
 .up-d.today { background:rgba(34,197,94,.18); color:#86efac; }
 /* 헤더 버튼: 주간 리포트(평소 옅은 인디고, 안 본 새 리포트면 채움+NEW) · 새로고침 아이콘 */
+/* 카드 머리의 '더 보기' 버튼 (전체순위보기 · 신작 달력에서 보기 공통) */
+.more-btn { display:inline-flex; align-items:center; font-size:12px; font-weight:600; color:#cbd5e1; background:rgba(30,41,59,.8); border:1px solid #334155; border-radius:8px; padding:4px 10px; white-space:nowrap; transition:background .15s, color .15s; }
+.more-btn:hover { color:#fff; background:#334155; }
 .hd-btn { height:32px; display:inline-flex; align-items:center; gap:6px; padding:0 11px; border-radius:10px; font-size:12px; font-weight:600; border:1px solid #334155; background:#0e1626; color:#cbd5e1; transition:background .15s, border-color .15s, color .15s; }
 .hd-btn:hover { border-color:rgba(129,140,248,.6); color:#fff; }
 .hd-icon { width:32px; padding:0; justify-content:center; color:#94a3b8; }
@@ -577,7 +580,7 @@ html.panel-lock { overflow: hidden; }
     <div class="card rounded-xl p-5">
       <div class="flex items-center justify-between gap-2 mb-3">
         <h2 class="text-base font-bold text-slate-200 flex items-center gap-2"><i class="fa-regular fa-calendar-plus t-new"></i>다가오는 신작 <span id="upcomingSub" class="text-xs muted font-normal"></span></h2>
-        <span class="flex items-center gap-2"><button type="button" onclick="switchView('calendar')" class="text-[12px] font-semibold text-indigo-300 hover:text-indigo-200 whitespace-nowrap">신작 달력에서 보기<i class="fa-solid fa-chevron-right ml-1 text-[10px]"></i></button></span>
+        <span class="flex items-center gap-2"><button type="button" onclick="switchView('calendar')" class="more-btn">신작 달력에서 보기<i class="fa-solid fa-chevron-right ml-1 text-[10px] t-new"></i></button></span>
       </div>
       <div id="upcomingList"><div class="text-xs muted py-2">불러오는 중...</div></div>
     </div>
@@ -591,21 +594,21 @@ html.panel-lock { overflow: hidden; }
       </h2>
     </div>
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <div class="card rounded-xl p-5">
-        <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-800/80">
+      <div class="card rounded-xl px-5 pb-5 pt-3.5">
+        <div class="flex items-center justify-between mb-3 pb-3 border-b border-slate-800/80">
           <h3 class="font-semibold text-sm flex items-center gap-1.5 t-pop">
             <i class="fa-solid fa-fire"></i> 인기순위 TOP 10
           </h3>
-          <span class="flex items-center gap-2"><button type="button" onclick="openRankPanel('popular')" class="text-[12px] font-semibold text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700 border border-slate-700 rounded-lg px-2.5 py-1 whitespace-nowrap transition-colors">전체순위보기<i class="fa-solid fa-chevron-right ml-1 text-[10px] t-pop"></i></button></span>
+          <span class="flex items-center gap-2"><button type="button" onclick="openRankPanel('popular')" class="more-btn">전체순위보기<i class="fa-solid fa-chevron-right ml-1 text-[10px] t-pop"></i></button></span>
         </div>
         <ol id="popularTop10List" class="divide-y divide-slate-900/70"></ol>
       </div>
-      <div class="card rounded-xl p-5">
-        <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-800/80">
+      <div class="card rounded-xl px-5 pb-5 pt-3.5">
+        <div class="flex items-center justify-between mb-3 pb-3 border-b border-slate-800/80">
           <h3 class="font-semibold text-sm flex items-center gap-1.5 t-sales">
             <i class="fa-solid fa-coins"></i> 매출순위 TOP 10
           </h3>
-          <span class="flex items-center gap-2"><button type="button" onclick="openRankPanel('sales')" class="text-[12px] font-semibold text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700 border border-slate-700 rounded-lg px-2.5 py-1 whitespace-nowrap transition-colors">전체순위보기<i class="fa-solid fa-chevron-right ml-1 text-[10px] t-sales"></i></button></span>
+          <span class="flex items-center gap-2"><button type="button" onclick="openRankPanel('sales')" class="more-btn">전체순위보기<i class="fa-solid fa-chevron-right ml-1 text-[10px] t-sales"></i></button></span>
         </div>
         <ol id="salesTop10List" class="divide-y divide-slate-900/70"></ol>
       </div>
@@ -659,18 +662,18 @@ html.panel-lock { overflow: hidden; }
       <span class="text-[11px] muted hidden sm:inline">전체 100% 기준 비례 막대 (동일 장르 고정 색상)</span>
     </div>
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <div class="card rounded-xl p-5">
+      <div class="card rounded-xl px-5 pb-5 pt-3.5">
         <div>
-          <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-800/80">
+          <div class="flex items-center justify-between mb-3 pb-3 border-b border-slate-800/80">
             <h3 class="font-semibold text-sm text-slate-200">인기순위 TOP 100 장르 비중</h3>
             <span class="text-[10px] t-pop font-semibold">인기 기준</span>
           </div>
           <div id="popularGenreBars"></div>
         </div>
       </div>
-      <div class="card rounded-xl p-5">
+      <div class="card rounded-xl px-5 pb-5 pt-3.5">
         <div>
-          <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-800/80">
+          <div class="flex items-center justify-between mb-3 pb-3 border-b border-slate-800/80">
             <h3 class="font-semibold text-sm text-slate-200">매출순위 TOP 100 장르 비중</h3>
             <span class="text-[10px] t-sales font-semibold">매출 기준</span>
           </div>
