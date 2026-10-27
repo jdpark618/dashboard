@@ -366,7 +366,7 @@ html.panel-lock { overflow: hidden; }
 .rp-page .bg-sales { background:var(--sales-bg); color:var(--sales); } .rp-page .bg-pop { background:var(--pop-bg); color:var(--pop); }
 .rp-mini { display:inline-block; font-size:6.8pt; font-weight:700; padding:0 1.2mm; border-radius:.8mm; white-space:nowrap; line-height:1.6; }
 .rp-mini.first { background:var(--new-bg); color:var(--new); } .rp-mini.re { background:transparent; color:var(--new); outline:1px solid #a78bfa; outline-offset:-1px; } .rp-mini.part { background:#f1f5f9; color:#64748b; }
-.rp-mini.test { background:#fef3c7; color:#b45309; } .rp-mini.soft { background:#e0f2fe; color:#0369a1; }
+.rp-mini.test { background:#fef3c7; color:#b45309; } .rp-mini.soft { background:#e0f2fe; color:#0369a1; } .rp-mini.open { background:#dcfce7; color:#15803d; }
 .rp-mv { width:100%; border-collapse:collapse; font-size:8.6pt; }
 .rp-mv td { padding:1.3mm 1mm; border-bottom:1px solid var(--line); }
 .rp-mv .nm { max-width:48mm; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -423,7 +423,7 @@ html.panel-lock { overflow: hidden; }
 .rp-rel2 { width:100%; border-collapse:collapse; table-layout:fixed; font-size:8.6pt; }
 .rp-rel2 th { font-size:7.2pt; color:var(--mute); font-weight:600; text-align:left; padding:0 2mm 1mm; border-bottom:1.2px solid #cbd5e1; }
 .rp-rel2 td { height:7.6mm; padding:0 2mm; border-bottom:1px solid #f1f5f9; vertical-align:middle; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.rp-rel2 tr.g1 td { border-top:1.2px solid #e2e8f0; }
+.rp-rel2 tr.g1 td { border-top:1.3px solid #94a3b8; }  /* 날짜가 바뀌는 곳은 진한 선 */
 .rp-rel2 .d { font-weight:800; color:#312e81; } .rp-rel2 .d small { font-weight:500; color:var(--mute); margin-left:1.2mm; font-size:7.2pt; }
 .rp-rel2 .g { font-weight:600; }
 .rp-rel2 .ic { display:inline-block; width:5.2mm; height:5.2mm; border-radius:1.3mm; background:#e2e8f0; vertical-align:middle; margin-right:2.2mm; overflow:hidden; }
@@ -5694,9 +5694,9 @@ function rpRender(D){
   /* 4쪽(+이어지는 장) 신작 일정: 한 열 표. 넘치면 다음 A4 장에 머리·표 머리를 다시 붙임 */
   const relBand = (list, mon) => { const c = [0, 1, 2, 3, 4, 5, 6].map(i => { const d = mkAddDays(mon, i); return [d, list.filter(r => r.d === d).length]; }), mx = Math.max(1, ...c.map(x => x[1]));
     return `<div class="rp-band">${c.map(([d, n]) => `<div><div class="bar"><i style="height:${n ? Math.max(6, Math.round(n / mx * 100)) : 0}%"></i></div>${CAL_DOW[mkToDate(d).getDay()]} ${rpSlash(d)}<b>${n}</b></div>`).join('')}</div>`; };
-  const relTag = t => /테스트/.test(t) ? '<span class="rp-mini test">테스트</span>' : /소프트/.test(t) ? '<span class="rp-mini soft">소프트</span>' : /얼리/.test(t) ? '<span class="rp-mini test">얼리</span>' : '';
+  const relTag = t => /테스트/.test(t) ? '<span class="rp-mini test">테스트</span>' : /소프트/.test(t) ? '<span class="rp-mini soft">소프트</span>' : /얼리/.test(t) ? '<span class="rp-mini test">얼리</span>' : /정식/.test(t) ? '<span class="rp-mini open">정식 출시</span>' : '';
   const relRow = x => { const r = x.r, dow = CAL_DOW[mkToDate(r.d).getDay()];
-    return `<tr class="${x.first ? 'g1' : ''}"><td class="d">${x.first ? `${rpSlash(r.d)} ${dow}<small>${x.cont ? '이어서' : x.cnt + '개'}</small>` : ''}</td><td class="g"><span class="ic">${/^https?:/.test(r.ic) ? `<img src="${escapeAttr(r.ic)}" alt="" onerror="this.remove()">` : ''}</span>${esc(r.n)}</td><td>${relTag(r.t)}</td><td class="pb">${esc(rpPubClean(r.p))}</td></tr>`; };
+    return `<tr class="${x.first ? 'g1' : ''}"><td class="d">${x.first ? `${rpSlash(r.d)} ${dow}${x.cont ? '' : `<small>${x.cnt}개</small>`}` : ''}</td><td class="g"><span class="ic">${/^https?:/.test(r.ic) ? `<img src="${escapeAttr(r.ic)}" alt="" onerror="this.remove()">` : ''}</span>${esc(r.n)}</td><td>${relTag(r.t)}</td><td class="pb">${esc(rpPubClean(r.p))}</td></tr>`; };
   const relPart = pt => `<div class="rp-sec${pt.sec.box ? ' box' : ''}"><div class="rp-rel2-h">${pt.sec.title}${pt.cont ? ' <span>(이어서)</span>' : pt.sec.sub ? ` <span>${pt.sec.sub}</span>` : ''}</div>`
     + (pt.sec.list.length ? `<table class="rp-rel2"><colgroup><col style="width:22mm"><col><col style="width:17mm"><col style="width:42mm"></colgroup><tr><th>날짜</th><th>게임</th><th>유형</th><th>퍼블리셔</th></tr>${pt.rows.map(relRow).join('')}</table>` : '<div class="rp-empty">해당 일정 없음</div>') + '</div>';
   const p4 = relPages.map((pg, i) => `<section class="rp-page">${run(4 + i)}
