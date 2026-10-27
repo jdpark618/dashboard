@@ -352,7 +352,7 @@ html.panel-lock { overflow: hidden; }
 .rp-in .tg { display:inline-block; font-size:7pt; font-weight:700; border-radius:1mm; padding:0 1.3mm; margin-right:1.3mm; vertical-align:1px; }
 .rp-in .tg.s { background:var(--sales-bg); color:var(--sales); } .rp-in .tg.p { background:var(--pop-bg); color:var(--pop); } .rp-in .tg.b { background:#e0e7ff; color:#4338ca; }
 .rp-in .it { font-size:8pt; color:#334155; margin-top:1mm; }
-.rp-in .ck { font-size:7.4pt; color:var(--sub); margin-top:.8mm; }
+.rp-in .ck { font-size:7.4pt; color:var(--sub); margin-top:.8mm; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }  /* 근거 줄은 한 줄로 (주마다 카드 높이 고정) */
 .rp-in .up { color:var(--up); font-weight:700; } .rp-in .dn { color:var(--down); font-weight:700; }
 .rp-rel-line { font-size:8pt; color:var(--sub); margin-top:2mm; padding-top:1.5mm; border-top:1px dashed var(--line); }
 .rp-kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:3mm; margin-top:6mm; }
@@ -375,6 +375,15 @@ html.panel-lock { overflow: hidden; }
 .rp-mv .h td { font-size:7.5pt; color:var(--mute); font-weight:600; }
 .rp-empty { font-size:8.4pt; color:var(--mute); padding:2mm 0; }
 .rp-partial { margin-top:3mm; font-size:7.8pt; color:var(--sub); background:var(--soft); border:1px dashed #cbd5e1; border-radius:2mm; padding:2mm 3mm; line-height:1.6; }
+.rp-rk2 { width:100%; border-collapse:collapse; font-size:8.4pt; table-layout:fixed; }
+.rp-rk2 th { font-size:7.2pt; color:var(--mute); font-weight:600; text-align:left; padding:1mm; border-bottom:1.2px solid #cbd5e1; }
+.rp-rk2 td { height:7.55mm; padding:0 1mm; border-bottom:1px solid var(--line); vertical-align:middle; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.rp-rk2 .p { font-weight:700; color:var(--sub); }
+.rp-rk2 .g { font-weight:600; }
+.rp-rk2 .ic { display:inline-block; width:5mm; height:5mm; border-radius:1.2mm; background:#e2e8f0; vertical-align:middle; margin-right:1.8mm; overflow:hidden; }
+.rp-rk2 .ic img { width:100%; height:100%; object-fit:cover; display:block; }
+.rp-rk2 .v { text-align:right; font-weight:700; }
+.rp-rk2 .tr { font-weight:700; font-size:7.8pt; padding-left:2mm; }
 .rp-rk { width:100%; border-collapse:collapse; font-size:8.4pt; table-layout:fixed; }
 .rp-rk th { font-size:7.2pt; color:var(--mute); font-weight:600; text-align:left; padding:1mm; border-bottom:1.2px solid #cbd5e1; }
 .rp-rk td { padding:1.25mm 1mm; border-bottom:1px solid var(--line); vertical-align:middle; }
@@ -5439,6 +5448,7 @@ function reportCopyLink(){
 /* PDF로 저장: 페이지 사본만 남기고 브라우저 인쇄. 파일 이름은 문서 제목을 따르므로
    리포트 화면에 있는 동안은 제목을 '주간리포트_날짜'로 유지 (인쇄 창 열린 뒤 바뀌는 타이밍 문제 방지) */
 const RP_BASE_TITLE = document.title;
+const RP_TOP_N = 30;   /* 2쪽 순위표 행 수 */
 function rpPreparePrint(){
   if(document.getElementById('rpPrintRoot')) return;
   const root = document.createElement('div'); root.id = 'rpPrintRoot';
@@ -5446,7 +5456,13 @@ function rpPreparePrint(){
   document.body.appendChild(root); document.body.classList.add('rp-printing');
 }
 function rpCleanupPrint(){ document.body.classList.remove('rp-printing'); document.getElementById('rpPrintRoot')?.remove(); }
-function reportPrint(){ rpPreparePrint(); window.print(); }
+async function reportPrint(){
+  rpPreparePrint();
+  /* 2쪽 아이콘이 아직 받아지는 중이면 최대 5초 기다림 (못 받은 아이콘은 회색 네모로 남음) */
+  const imgs = [...document.querySelectorAll('#rpPrintRoot img')].filter(i => !i.complete);
+  if(imgs.length) await Promise.race([Promise.all(imgs.map(i => new Promise(r => { i.onload = i.onerror = r; }))), new Promise(r => setTimeout(r, 5000))]);
+  window.print();
+}
 /* Ctrl+P로 인쇄해도 리포트 페이지만 */
 window.addEventListener('beforeprint', () => { if(currentView === 'report' && document.querySelector('#reportPages .rp-page')) rpPreparePrint(); });
 window.addEventListener('afterprint', rpCleanupPrint);
@@ -5467,14 +5483,14 @@ function rpBuild(mon){
       if(g.days === cur.length && p.days === prev.length) pairs.push({ n: g.name, from: p.avg, to: g.avg, d: Math.round(p.avg) - Math.round(g.avg), raw: p.avg - g.avg });
       else if(g.avg <= 30 && p.days < prev.length * MK_CMP_MIN) partial.push({ n: g.name, cd: g.days, pd: p.days, to: g.avg }); });
     const up = pairs.filter(x => x.d > 0).sort((a, b) => b.raw - a.raw).slice(0, 5), down = pairs.filter(x => x.d < 0).sort((a, b) => a.raw - b.raw).slice(0, 5);
-    const top20 = curList.slice(0, 20).map(([k, g], i) => ({ key: k, pos: i + 1, n: g.name, g: g.genre, p: g.publisher, avg: g.rank, pavg: pa.get(k)?.rank ?? null, prevPos: prevPos.get(k) ?? null, pDays: wb.games.get(k)?.days || 0, first: firstOf(s, k, g.name) }));
+    const top = curList.slice(0, RP_TOP_N).map(([k, g], i) => ({ key: k, pos: i + 1, n: g.name, g: g.genre, p: g.publisher, avg: g.rank, pavg: pa.get(k)?.rank ?? null, prevPos: prevPos.get(k) ?? null, pDays: wb.games.get(k)?.days || 0, first: firstOf(s, k, g.name) }));
     const en = mkWeekEntrants(idx, mon), enPrev = mkWeekEntrants(idx, pmon);
     const entrants = en.list.slice().sort((a, b) => a.best - b.best).slice(0, 8).map(x => ({ n: x.name, best: x.best, days: x.days, g: x.genre, first: firstOf(s, x.key, x.name) }));
     const old = mkWeekAgg(idx, mkAddDays(mon, -28)), a = idx.byDate.get(old.lastDate), b = idx.byDate.get(wa.lastDate);
     let kept = 0; a?.forEach((_, k) => { if(b?.has(k)) kept++; });
     const gc = d => { const m = {}; idx.byDate.get(d)?.forEach(v => { m[v.genre] = (m[v.genre] || 0) + 1; }); return m; };
     const gNow = wa.lastDate ? gc(wa.lastDate) : {}, gPrev = wb.lastDate ? gc(wb.lastDate) : {};
-    S[s] = { cur, prev, ca, top20, up, down, cmpN: pairs.length, partial: partial.sort((x, y) => x.to - y.to).slice(0, 4), entrantsN: en.list.length, entrantsPrevN: enPrev.prevHasData ? enPrev.list.length : null, entrants,
+    S[s] = { cur, prev, ca, top, up, down, cmpN: pairs.length, partial: partial.sort((x, y) => x.to - y.to).slice(0, 4), entrantsN: en.list.length, entrantsPrevN: enPrev.prevHasData ? enPrev.list.length : null, entrants,
       retention: a?.size ? Math.round(kept / a.size * 100) : null,
       genres: Object.entries(gNow).sort((x, y) => y[1] - x[1]).slice(0, 6).map(([g, c]) => ({ g, c, d: c - (gPrev[g] || 0) })) };
   }
@@ -5500,7 +5516,7 @@ function rpRender(D){
   const isFirst = f => f && f >= D.pmon, PAGES = 4, period = rpWeekRange(D.mon);
   const run = n => `<div class="rp-run"><span><b>Game Market Intelligence</b> · 주간 리포트</span><span>${period} · ${n}/${PAGES}</span></div>`;
   const foot = `<div class="rp-foot"><span>Google Play 국내 매출·인기 순위(일별 TOP100) · 신작 정보는 순위 데이터와 연결하지 않음 · '첫 차트인'은 수집 기록 기준</span><span>발행 ${D.issue}</span></div>`;
-  const sTop = S.sales.top20[0], pTop = S.popular.top20[0];
+  const sTop = S.sales.top[0], pTop = S.popular.top[0];
   const kpiSub = t => !t ? '-' : isFirst(t.first) ? `7일 평균 순위 기준 · <span class="t-new">${rpSlash(t.first)} 첫 차트인</span>` : t.prevPos === 1 ? '7일 평균 순위 기준 · 전주에도 1위' : `7일 평균 순위 기준 · 전주 ${t.prevPos ? t.prevPos + '번째' : '순위표 밖'}`;
   /* 이번 주 핵심: 규칙으로 고른 변화 최대 4개를 '관찰 · 해석 · 확인할 곳'으로. 원인은 단정하지 않음 */
   const wkSet = (st, m) => { const idx = mkGetIndex(st), mp = new Map(); idx.dates.filter(d => d >= m && d <= mkAddDays(m, 6)).forEach(d => idx.byDate.get(d)?.forEach((v, k) => { if(!mp.has(k)) mp.set(k, { n: v.name, g: v.genre || '미분류' }); })); return mp; };
@@ -5517,11 +5533,11 @@ function rpRender(D){
   [['sales', sTop], ['popular', pTop]].forEach(([st, t]) => {
     if(t && t.prevPos !== 1) card(45, W[st].tg, W[st].label, 2, `주간 1위 교체 — <b>${esc(cut(t.n, 18))}</b>`,
       t.prevPos == null ? (isFirst(t.first) ? '수집 기록상 처음 차트인한 게임이 바로 1위에 올랐습니다.' : '전주 순위표 밖에서 1위로 올라섰습니다.') : `전주 ${t.prevPos}위에서 올라섰습니다.`,
-      S[st].top20.find(x => x.prevPos === 1) ? `전주 1위: ${esc(cut(S[st].top20.find(x => x.prevPos === 1).n, 18))} (이번 주 ${S[st].top20.find(x => x.prevPos === 1).pos}위)` : '');
+      S[st].top.find(x => x.prevPos === 1) ? `전주 1위: ${esc(cut(S[st].top.find(x => x.prevPos === 1).n, 18))} (이번 주 ${S[st].top.find(x => x.prevPos === 1).pos}위)` : '');
   });
   /* ② 매출·인기 교차: 인기 TOP10 중 매출 TOP100(양쪽 TOP100)에 든 게임 수 */
   const bothNames = new Set(['top', 'sales', 'pop', 'rest'].flatMap(q => D.quad[q].map(x => x.n)));
-  const pTen = S.popular.top20.filter(x => x.pos <= 10), crossed = pTen.filter(x => bothNames.has(x.n));
+  const pTen = S.popular.top.filter(x => x.pos <= 10), crossed = pTen.filter(x => bothNames.has(x.n));
   if(pTen.length >= 5){
     const k = crossed.length;
     card(80, 'b', '교차', 3, `인기 TOP10 중 매출 TOP100은 <b>${k}개</b>`,
@@ -5554,7 +5570,7 @@ function rpRender(D){
       [ni ? `진입: ${names(gm.i)}` : '', no ? `이탈: ${names(gm.o, 2)}` : ''].filter(Boolean).join(' · '));
   }
   /* ⑤ 상위권 고착: TOP10 교체 수 (교체가 많은 쪽, 없으면 매출) */
-  const t10 = ['sales', 'popular'].map(st => { const nw = S[st].top20.filter(x => x.pos <= 10 && (x.prevPos == null || x.prevPos > 10)); return { st, nw, out: S[st].top20.filter(x => x.prevPos != null && x.prevPos <= 10 && x.pos > 10) }; }).sort((a, b) => b.nw.length - a.nw.length);
+  const t10 = ['sales', 'popular'].map(st => { const nw = S[st].top.filter(x => x.pos <= 10 && (x.prevPos == null || x.prevPos > 10)); return { st, nw, out: S[st].top.filter(x => x.prevPos != null && x.prevPos <= 10 && x.pos > 10) }; }).sort((a, b) => b.nw.length - a.nw.length);
   const tt = t10[0].nw.length >= 3 ? t10[0] : t10.find(x => x.st === 'sales');
   if(tt){
     const n = tt.nw.length, rt = S[tt.st].retention;
@@ -5589,26 +5605,22 @@ function rpRender(D){
     ${partialAll.length ? `<div class="rp-partial"><b>비교에서 제외한 상위권 게임</b> · 전주에 일부 날만 TOP100이라 주 평균 비교가 맞지 않는 게임: ${partialAll.map(x => `${esc(x.n)}(${x.s} 전주 ${x.pd}일 → 이번 주 ${x.cd}일, 평균 ${R(x.to)}위)`).join(', ')}</div>` : ''}
     ${foot}</section>`;
 
-  const rkTable = (list, prevLen) => `<table class="rp-rk"><colgroup><col style="width:6mm"><col style="width:15mm"><col><col style="width:13mm"><col style="width:13mm"></colgroup><tr><th>#</th><th>추세</th><th>게임</th><th style="text-align:right">평균 순위</th><th style="text-align:right">전주</th></tr>${list.map(x => {
+  /* 2쪽 순위표: # · 게임(아이콘 + 이름 한 줄) · 순위(7일 평균) · 증감 */
+  const rkTable = (list, prevLen) => `<table class="rp-rk2"><colgroup><col style="width:6mm"><col><col style="width:12mm"><col style="width:17mm"></colgroup><tr><th>#</th><th>게임</th><th style="text-align:right">순위</th><th style="padding-left:2mm">증감</th></tr>${list.map(x => {
     const partial = x.prevPos != null && x.pDays < prevLen * MK_CMP_MIN;
     const tr = x.prevPos == null ? (isFirst(x.first) ? '<span class="rp-mini first">첫 차트인</span>' : '<span class="rp-mini re">재진입</span>')
       : partial ? '<span class="rp-mini part">비교 제외</span>'
       : x.prevPos > x.pos ? `<span class="t-up">▲${x.prevPos - x.pos}</span>` : x.prevPos < x.pos ? `<span class="t-down">▼${x.pos - x.prevPos}</span>` : '<span style="color:var(--mute)">-</span>';
-    const cls = x.pavg == null || partial ? '' : R(x.avg) < R(x.pavg) ? 'better' : R(x.avg) > R(x.pavg) ? 'worse' : '';
-    const pv = x.prevPos == null || partial ? (x.pDays ? `${x.pDays}일만` : '-') : `${R(x.pavg)}위`;
-    return `<tr><td class="p">${x.pos}</td><td class="tr">${tr}</td><td class="g"><div class="a">${esc(x.n)}</div><div class="b">${esc(x.g)} · ${esc(x.p)}</div></td><td class="v ${cls}">${R(x.avg)}위</td><td class="pv">${pv}</td></tr>`;
+    const icon = getIconUrlForGame(x.n);
+    return `<tr><td class="p">${x.pos}</td><td class="g"><span class="ic">${icon ? `<img src="${escapeAttr(icon)}" alt="" onerror="this.remove()">` : ''}</span>${esc(x.n)}</td><td class="v">${R(x.avg)}위</td><td class="tr">${tr}</td></tr>`;
   }).join('')}</table>`;
   const p2 = `<section class="rp-page">${run(2)}
-    <h2 class="first">주간 순위표 TOP 20 <small>주 평균 순위(반올림) · 그 주 절반 이상 TOP100인 게임, 빠진 날은 101위로 계산</small></h2>
+    <h2 class="first">주간 순위표 TOP ${RP_TOP_N} <small>7일 평균 순위 · 증감은 전주 순위표 대비</small></h2>
     <div class="rp-cols">
-      <div><h3><span class="rp-tag bg-sales">매출</span></h3>${rkTable(S.sales.top20, S.sales.prev.length)}</div>
-      <div><h3><span class="rp-tag bg-pop">인기</span></h3>${rkTable(S.popular.top20, S.popular.prev.length)}</div>
+      <div><h3><span class="rp-tag bg-sales">매출</span></h3>${rkTable(S.sales.top, S.sales.prev.length)}</div>
+      <div><h3><span class="rp-tag bg-pop">인기</span></h3>${rkTable(S.popular.top, S.popular.prev.length)}</div>
     </div>
-    <div class="rp-note">
-      · 순위 칸 색: 전주보다 좋아지면 빨강, 나빠지면 파랑. #은 소수점 평균까지 비교해 줄 세운 자리라 같은 평균 순위가 두 줄에 나올 수 있습니다(같으면 TOP100 일수 → 최고 순위순).<br>
-      · <span class="rp-mini first">첫 차트인</span> 수집 기록상 처음 TOP100에 든 지 2주 이내 · <span class="rp-mini re">재진입</span> 예전에 TOP100에 있다가 빠졌던 게임 · <span class="rp-mini part">비교 제외</span> 전주에 80% 미만의 날만 TOP100이라 순위 변화를 계산하지 않음(전주 칸에 일수 표시).<br>
-      · 신규 출시 여부는 판단하지 않습니다. 같은 게임이 차트아웃 후 다시 들어오면 재진입으로 표시됩니다.
-    </div>
+    <div class="rp-note">순위 = 그 주 7일 평균(빠진 날 101위) · <span class="rp-mini first">첫 차트인</span> 처음 TOP100 · <span class="rp-mini re">재진입</span> 다시 들어옴 · <span class="rp-mini part">비교 제외</span> 전주 기록이 적어 증감 없음</div>
     ${foot}</section>`;
 
   const Q = D.quad, qList = l => `<ul>${l.slice(0, 6).map(x => `<li><span class="n">${esc(cut(x.n, 22))}</span><span class="r">매출 ${R(x.sr)} · 인기 ${R(x.pr)}</span></li>`).join('')}</ul>`;
