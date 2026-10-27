@@ -35,9 +35,11 @@
 body { background:var(--bg); font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFont,system-ui,'Apple SD Gothic Neo','Malgun Gothic',sans-serif; font-variant-numeric:tabular-nums; letter-spacing:-0.01em; }
 .card { background:var(--surface); border:1px solid var(--line); }
 .muted { color:#94a3b8; }
-.tab { font-size:12px; font-weight:600; color:#64748b; padding:10px 15px; border-bottom:2px solid transparent; cursor:pointer; }
-.tab:hover { color:#cbd5e1; }
-.tab.active { color:#818cf8; border-color:#6366f1; }
+/* 상단 메뉴: 이름은 밝게, 아이콘은 한 단계 어둡게 (선택 메뉴는 인디고 밑줄) */
+.tab { font-size:12px; font-weight:600; color:#cbd5e1; padding:10px 15px; border-bottom:2px solid transparent; cursor:pointer; }
+.tab i { color:#64748b; }
+.tab:hover { color:#f1f5f9; } .tab:hover i { color:#94a3b8; }
+.tab.active { color:#c7d2fe; border-color:#6366f1; } .tab.active i { color:#818cf8; }
 .rank-up { color:var(--c-up); }
 .rank-down { color:var(--c-down); }
 .rank-flat { color:#94a3b8; }
