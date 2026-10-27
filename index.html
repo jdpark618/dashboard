@@ -4656,36 +4656,33 @@ function mkRankPeriods(idx){
   return { sel, prevKey, keys: months, cur: idx.dates.filter(d => d.startsWith(sel)), prev: prevKey ? idx.dates.filter(d => d.startsWith(prevKey)) : [], label: lab, unit: '월간', prevWord: '지난달',
     option: k => `${k.slice(0, 4)}년 ${lab(k)}${k === base.slice(0, 7) ? ` (${mkShort(base)}까지)` : ''}` };
 }
-function mkRenderMonthly(){
-  const store = mkTabs.monthly, label = MK_STORE_LABEL[store], idx = mkGetIndex(store);
-  document.querySelectorAll('#mkRankPeriod button').forEach(b => b.classList.toggle('on', b.dataset.v === mkMonthly.period));
-  if(!idx.dates.length){ setText('mkAsOf', '데이터 없음'); return; }
-  const P = mkRankPeriods(idx), base = idx.dates.at(-1);
-  const ym = P.sel, pym = P.prevKey, cur = P.cur, prev = P.prev, mLabel = P.label;
-  setText('mkRankTitle', `${P.unit} 순위표`);
-  document.getElementById('mkMonthlySel').innerHTML = P.keys.slice().reverse().map(k => `<option value="${k}" ${k === ym ? 'selected' : ''}>${P.option(k)}</option>`).join('');
+/* 넓은 화면(1280px 이상)은 매출·인기 표를 나란히, 좁으면 표 하나 + 매출/인기 전환 */
+const MK_RANK_WIDE = 1280;
+function mkRankWide(){ return innerWidth >= MK_RANK_WIDE; }
+/* 스토어 하나의 순위표 (표 HTML과 개수) */
+function mkRankTable(store, P){
+  const idx = mkGetIndex(store), cur = P.cur, prev = P.prev, pym = P.prevKey;
   const ca = mkPosAgg(idx, cur), pa = prev.length ? mkPosAgg(idx, prev) : new Map();
   const order = m => [...m].sort((a, b) => mkAvgOrder(a[1], b[1]));
   const curList = order(ca), prevPos = new Map(order(pa).map(([k], i) => [k, i + 1]));
   /* 직전 기간에 TOP100이었던 날 수: 80% 미만이면 빠진 날(101위)이 평균을 끌어내려 비교가 왜곡되므로 '비교 제외'
      (주간 7일 중 6일 이상, 월간 30일 중 24일 이상이면 비교) */
-
   const prevDays = new Map();
   prev.forEach(d => idx.byDate.get(d)?.forEach((_, k) => prevDays.set(k, (prevDays.get(k) || 0) + 1)));
   /* 첫 등장일: 수집 기록에서 처음 TOP100에 나타난 날 (없으면 불러온 뒤 다시 그림) */
   const fs = mkFirstSeenCache[store];
-  if(!fs) mkLoadFirstSeen(store).then(() => { if(currentView === 'business' && mkSection === 'monthly' && mkTabs.monthly === store) mkRender(); }).catch(() => {});
+  if(!fs) mkLoadFirstSeen(store).then(() => { if(currentView === 'business' && mkSection === 'monthly') mkRender(); }).catch(() => {});
   const firstOf = (k, name) => fs ? [k.startsWith('id:') ? fs.pkgFirst.get(k.slice(3)) : null, fs.nameFirst.get(getGameKey(name))].filter(Boolean).sort()[0] || null : null;
   const prevStart = prev[0] || cur[0];
-  setText('mkAsOf', `${label} ${P.unit} 순위 · ${mLabel(ym)}${pym ? ` vs ${mLabel(pym)}` : ''} · 기준일 ${base}`);
-  setText('mkMonthlyDesc', `${mLabel(ym)} 관측 ${cur.length}일${pym ? ` · ${mLabel(pym)} 관측 ${prev.length}일` : ` · 비교할 ${P.prevWord} 데이터 없음`} · ${curList.length}개 · 행을 누르면 게임 상세`);
   const fmt = v => v >= 100 ? '100+' : mkFmtAvg(v);
   const shown = mkMonthly.all ? curList : curList.slice(0, 30);
-  document.getElementById('mkMonthlyTable').innerHTML = curList.length ? `<table class="w-full min-w-[560px] text-left text-xs">
-    <thead><tr class="border-b border-slate-800 text-[10px] muted">
-      <th class="py-2 pl-1 w-9">#</th><th class="py-2 px-1 w-[76px]">추세</th><th class="py-2 px-2">게임</th>
-      <th class="py-2 px-2 text-right w-24">${pym ? mLabel(pym) + ' 평균 순위' : '-'}</th><th class="py-2 px-2 text-right w-24">${mLabel(ym)} 평균 순위</th><th class="py-2 pl-2 pr-1 text-right w-24">TOP100 일수</th>
-    </tr></thead><tbody>${shown.map(([k, g], i) => {
+  if(!curList.length) return { html: mkEmpty('이 기간에 집계할 게임이 없습니다.'), n: 0 };
+  const html = `<table class="w-full min-w-[480px] table-fixed text-left text-xs">
+    <colgroup><col style="width:30px"><col style="width:76px"><col><col style="width:56px"><col style="width:60px"><col style="width:52px"></colgroup>
+    <thead class="text-[10px] muted">
+      <tr><th></th><th></th><th></th><th colspan="2" class="pt-1 px-2 text-center font-medium border-b border-slate-800/80">평균 순위</th><th></th></tr>
+      <tr class="border-b border-slate-800"><th class="py-2 pl-1 font-medium">#</th><th class="py-2 px-1 font-medium">추세</th><th class="py-2 px-2 font-medium">게임</th><th class="py-2 px-2 text-right font-medium">이전</th><th class="py-2 px-2 text-right font-medium">지금</th><th class="py-2 pl-2 pr-1 text-right font-medium">일수</th></tr>
+    </thead><tbody>${shown.map(([k, g], i) => {
       const pos = i + 1, pp = prevPos.get(k), pd = prevDays.get(k) || 0;
       const partial = !!pym && pp != null && pd < prev.length * MK_CMP_MIN;
       const pg = partial ? null : pa.get(k), first = firstOf(k, g.name);
@@ -4700,15 +4697,38 @@ function mkRenderMonthly(){
       return `<tr class="border-b border-slate-900 hover:bg-slate-800/60 cursor-pointer" data-game="${escapeAttr(g.name)}">
         <td class="py-2 pl-1 font-semibold ${pos <= 3 ? 'text-slate-50' : 'text-slate-400'}">${pos}</td>
         <td class="py-2 px-1">${trend}</td>
-        <td class="py-2 px-2 max-w-[260px]">${mkGameCell(g.name, [g.genre, g.publisher].filter(v => v && v !== '미분류' && v !== '미상').join(' · '))}</td>
-        <td class="py-2 px-2 text-right muted">${pg ? fmt(pg.rank) + '위' : pym && pd ? `<span class="text-[10px]">${pd}일만</span>` : '-'}</td>
-        <td class="py-2 px-2 text-right font-semibold" style="${tint}">${fmt(g.rank)}위</td>
-        <td class="py-2 pl-2 pr-1 text-right muted">${g.days}<span class="text-[10px]"> / ${cur.length}일</span></td>
+        <td class="py-2 px-2">${mkGameCell(g.name, [g.genre, g.publisher].filter(v => v && v !== '미분류' && v !== '미상').join(' · '))}</td>
+        <td class="py-2 px-2 text-right muted whitespace-nowrap">${pg ? fmt(pg.rank) + '위' : pym && pd ? `<span class="text-[10px]">${pd}일만</span>` : '-'}</td>
+        <td class="py-2 px-2 text-right font-semibold whitespace-nowrap" style="${tint}">${fmt(g.rank)}위</td>
+        <td class="py-2 pl-2 pr-1 text-right muted whitespace-nowrap">${g.days}<span class="text-[10px]">/${cur.length}</span></td>
       </tr>`;
-    }).join('')}</tbody></table>
-    ${curList.length > 30 ? `<button type="button" data-nosnap onclick="mkMonthly.all = !mkMonthly.all; mkRender()" class="mt-2 text-[12px] text-slate-400 hover:text-slate-200">${mkMonthly.all ? '30위까지만 보기' : `전체 ${curList.length}개 보기`}</button>` : ''}
-    <p class="text-[10px] muted mt-3">순위 칸 색은 ${P.prevWord} 평균보다 좋아졌으면 빨강, 나빠졌으면 파랑입니다. 추세는 ${P.unit} 순위표 안에서의 자리 변화입니다. <span class="mk-lbl first">첫 차트인</span> 수집 기록상 ${P.prevWord}부터 처음 TOP100에 든 게임 · <span class="mk-lbl re">재진입</span> 예전에 TOP100에 있다가 빠진 뒤 다시 들어온 게임 · <span class="mk-lbl part">비교 제외</span> ${P.prevWord}에 80% 미만의 날만 TOP100이라 평균 비교가 맞지 않는 게임(이전 칸에 일수 표시). 신규 출시 여부는 판단하지 않습니다. 평균 순위는 반올림해 표시하고, #은 소수점까지 비교해 줄 세운 자리입니다(같으면 TOP100 일수 → 최고 순위 → 이름순).</p>` : mkEmpty('이 기간에 집계할 게임이 없습니다.');
+    }).join('')}</tbody></table>`;
+  return { html, n: curList.length };
 }
+function mkRenderMonthly(){
+  const wide = mkRankWide(), idx = mkGetIndex('sales');
+  mkRankWideLast = wide;
+  document.querySelectorAll('#mkRankPeriod button').forEach(b => b.classList.toggle('on', b.dataset.v === mkMonthly.period));
+  /* 넓은 화면은 두 표를 다 보이므로 매출/인기 전환·스토어 표시를 숨김 */
+  document.querySelector('#view-business [data-tab="monthly"]')?.classList.toggle('hidden', wide);
+  document.querySelector('#view-business [data-storeof="monthly"]')?.classList.toggle('hidden', wide);
+  if(!idx.dates.length){ setText('mkAsOf', '데이터 없음'); return; }
+  const P = mkRankPeriods(idx), base = idx.dates.at(-1), ym = P.sel, pym = P.prevKey, mLabel = P.label;
+  setText('mkRankTitle', `${P.unit} 순위표`);
+  document.getElementById('mkMonthlySel').innerHTML = P.keys.slice().reverse().map(k => `<option value="${k}" ${k === ym ? 'selected' : ''}>${P.option(k)}</option>`).join('');
+  const stores = wide ? ['sales', 'popular'] : [mkTabs.monthly];
+  const T = stores.map(s => ({ s, ...mkRankTable(s, s === 'sales' ? P : mkRankPeriods(mkGetIndex(s))) }));
+  setText('mkAsOf', `${wide ? '' : MK_STORE_LABEL[mkTabs.monthly] + ' '}${P.unit} 순위 · ${mLabel(ym)}${pym ? ` vs ${mLabel(pym)}` : ''} · 기준일 ${base}`);
+  setText('mkMonthlyDesc', `${mLabel(ym)}${pym ? ` vs ${mLabel(pym)}` : ` · 비교할 ${P.prevWord} 데이터 없음`} · 관측 ${P.cur.length}일 · 행을 누르면 게임 상세`);
+  const tag = s => `<span class="text-[11px] font-semibold px-2 py-0.5 rounded ${s === 'sales' ? 't-sales bg-amber-400/15' : 't-pop bg-teal-400/15'}">${MK_STORE_LABEL[s]}</span>`;
+  const more = Math.max(...T.map(t => t.n)) > 30;
+  document.getElementById('mkMonthlyTable').innerHTML = `<div class="grid gap-6 ${wide ? 'grid-cols-2' : 'grid-cols-1 max-w-[760px]'}">${T.map(t => `<div class="min-w-0">${wide ? `<div class="flex items-center gap-2 mb-1">${tag(t.s)}<span class="text-[11px] muted">${t.n}개</span></div>` : ''}${t.html}</div>`).join('')}</div>
+    ${more ? `<button type="button" data-nosnap onclick="mkMonthly.all = !mkMonthly.all; mkRender()" class="mt-2 text-[12px] text-slate-400 hover:text-slate-200">${mkMonthly.all ? '30위까지만 보기' : `전체 보기 (${T.map(t => (wide ? MK_STORE_LABEL[t.s] + ' ' : '') + t.n + '개').join(' · ')})`}</button>` : ''}
+    <p class="text-[10px] muted mt-3">순위 칸 색은 ${P.prevWord} 평균보다 좋아졌으면 빨강, 나빠졌으면 파랑입니다. 추세는 ${P.unit} 순위표 안에서의 자리 변화이고, 일수는 그 기간에 TOP100이었던 날 수입니다. <span class="mk-lbl first">첫 차트인</span> 수집 기록상 ${P.prevWord}부터 처음 TOP100에 든 게임 · <span class="mk-lbl re">재진입</span> 예전에 TOP100에 있다가 빠진 뒤 다시 들어온 게임 · <span class="mk-lbl part">비교 제외</span> ${P.prevWord}에 80% 미만의 날만 TOP100이라 평균 비교가 맞지 않는 게임(이전 칸에 일수 표시). 신규 출시 여부는 판단하지 않습니다. 평균 순위는 반올림해 표시하고, #은 소수점까지 비교해 줄 세운 자리입니다(같으면 TOP100 일수 → 최고 순위 → 이름순).</p>`;
+}
+/* 1280px 경계를 넘나들면 한 표/두 표 전환 */
+let mkRankWideLast = null;
+window.addEventListener('resize', () => { const w = mkRankWide(); if(w !== mkRankWideLast){ mkRankWideLast = w; if(currentView === 'business' && mkSection === 'monthly' && mkMonthsReady) mkRender(); } });
 
 /* ---------- 첫 차트인 (순위 데이터만 사용) ---------- */
 const MK_DEBUT_WEEKS = 8;
