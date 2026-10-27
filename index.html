@@ -193,6 +193,12 @@ select option { background-color: #0f172a; color: #f1f5f9; }
 .gs-chipnote { font-size:11px; color:#64748b; }
 .gs-clear { position:absolute; right:8px; top:50%; transform:translateY(-50%); color:#64748b; font-size:12px; cursor:pointer; padding:2px 4px; }
 .gs-clear:hover { color:#cbd5e1; }
+/* 순위검색 메인 검색칸: 페이지의 시작점이라 평소에도 인디고 테두리 + 돋보기 */
+.gs-main { background:#0b1222; border:1px solid rgba(99,102,241,.45); transition:border-color .15s, box-shadow .15s; }
+.gs-main:hover { border-color:rgba(129,140,248,.7); }
+.gs-main:focus { outline:none; border-color:#6366f1; box-shadow:0 0 0 3px rgba(99,102,241,.22); }
+.gs-main::placeholder { color:#94a3b8; }
+.gs-icon { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#818cf8; font-size:13px; pointer-events:none; }
 /* 스켈레톤 로딩 */
 .sk { display:inline-block; vertical-align:middle; border-radius:6px; background:linear-gradient(90deg, rgba(51,65,85,.45) 25%, rgba(71,85,105,.7) 37%, rgba(51,65,85,.45) 63%); background-size:400% 100%; animation:sk-shimmer 1.4s ease infinite; }
 @keyframes sk-shimmer { 0% { background-position:100% 50%; } 100% { background-position:0 50%; } }
@@ -914,8 +920,9 @@ html.panel-lock { overflow: hidden; }
   <!-- 게임 고르기 -->
   <section class="card rounded-xl p-5 space-y-3">
     <div class="gs-wrap">
+      <i class="fa-solid fa-magnifying-glass gs-icon" aria-hidden="true"></i>
       <input id="searchQuery" placeholder="게임 검색 또는 눌러서 TOP 10에서 선택" autocomplete="off"
-        class="w-full bg-slate-900 border border-slate-700 rounded-lg pl-3 pr-8 py-2 text-[13px] focus:outline-none focus:border-indigo-500">
+        class="gs-main w-full rounded-lg pl-9 pr-8 py-2.5 text-[14px]">
       <span class="gs-clear hidden" data-for="searchQuery" title="검색어 지우기"><i class="fa-solid fa-xmark"></i></span>
     </div>
     <div id="searchChips" class="gs-chips"></div>
