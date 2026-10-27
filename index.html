@@ -577,8 +577,8 @@ html.panel-lock { overflow: hidden; }
 
   <!-- 다가오는 신작 (신작 정보만 사용, 순위 데이터와 연결하지 않음) -->
   <section id="upcomingSection">
-    <div class="card rounded-xl p-5">
-      <div class="flex items-center justify-between gap-2 mb-3">
+    <div class="card rounded-xl px-5 pb-5 pt-4">
+      <div class="flex items-center justify-between gap-2 mb-4">
         <h2 class="text-base font-bold text-slate-200 flex items-center gap-2"><i class="fa-regular fa-calendar-plus t-new"></i>다가오는 신작 <span id="upcomingSub" class="text-xs muted font-normal"></span></h2>
         <span class="flex items-center gap-2"><button type="button" onclick="switchView('calendar')" class="more-btn">신작 달력에서 보기<i class="fa-solid fa-chevron-right ml-1 text-[10px] t-new"></i></button></span>
       </div>
@@ -629,22 +629,22 @@ html.panel-lock { overflow: hidden; }
       <button type="button" data-chg="down" onclick="dashChgSet('down')">급하락</button>
     </div>
     <div id="dashChg" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-      <div class="card rounded-xl p-5 on" data-chg="new">
-        <div class="text-xs font-semibold mb-3 flex items-center justify-between t-new pb-2 border-b border-slate-800">
+      <div class="card rounded-xl px-5 pb-5 pt-3.5 on" data-chg="new">
+        <div class="text-xs font-semibold mb-3 flex items-center justify-between t-new pb-3 border-b border-slate-800">
           <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-new"></span>인기순위 신규 진입</span>
           <span class="text-[10px] muted font-normal">인기 순위 기준</span>
         </div>
         <ul id="newEntriesList" class="divide-y divide-slate-900/70"></ul>
       </div>
-      <div class="card rounded-xl p-5" data-chg="up">
-        <div class="text-xs font-semibold mb-3 flex items-center justify-between t-up pb-2 border-b border-slate-800">
+      <div class="card rounded-xl px-5 pb-5 pt-3.5" data-chg="up">
+        <div class="text-xs font-semibold mb-3 flex items-center justify-between t-up pb-3 border-b border-slate-800">
           <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-up"></span>매출 급상승</span>
           <span class="text-[10px] muted font-normal">전일 대비 매출</span>
         </div>
         <ul id="salesRisingList" class="divide-y divide-slate-900/70"></ul>
       </div>
-      <div class="card rounded-xl p-5" data-chg="down">
-        <div class="text-xs font-semibold mb-3 flex items-center justify-between t-down pb-2 border-b border-slate-800">
+      <div class="card rounded-xl px-5 pb-5 pt-3.5" data-chg="down">
+        <div class="text-xs font-semibold mb-3 flex items-center justify-between t-down pb-3 border-b border-slate-800">
           <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-down"></span>매출 급하락</span>
           <span class="text-[10px] muted font-normal">전일 대비 매출</span>
         </div>
@@ -2016,7 +2016,7 @@ function renderUpcoming(){
       <div class="flex-1 min-w-0"><div class="text-[13px] font-medium text-slate-100 truncate">${escapeHtml(String(r[1] || '-'))}</div><div class="text-[11px] muted truncate mt-0.5">${mkShort(d)} (${dow})${pub && pub !== '-' ? ' · ' + escapeHtml(pub) : ''}</div></div>
       <div class="flex flex-col items-end gap-1 shrink-0"><span class="up-d${diff === 0 ? ' today' : ''}">${diff === 0 ? '오늘' : `D-${diff}`}</span>${tag}</div>
     </div>`;
-  }).join('')}</div>${list.length > shown.length ? `<button type="button" onclick="switchView('calendar')" class="mt-2 text-[12px] text-slate-400 hover:text-slate-200">외 ${list.length - shown.length}개 · 신작 달력에서 전체 보기</button>` : ''}`;
+  }).join('')}</div>`;
 }
 
 function daysBetween(a, b){ return Math.round((dateValue(b) - dateValue(a)) / 86400000); }
