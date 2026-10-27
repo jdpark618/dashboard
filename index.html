@@ -2092,8 +2092,11 @@ function calTagHtml(g){
   if(g.type === 'TEST') return '<span class="cal-tag t-test">테스트</span>';
   if(g.type === 'EARLY') return '<span class="cal-tag t-early">얼리</span>';
   /* 정식으로 분류되지만 원래 유형이 다른 경우(소프트런칭·데모 등)는 원문을 작게 표시 */
+  /* 달력 칸은 좁아서 '소프트런칭'은 '소프트'로 줄임 (마우스를 올리면 원문) */
   const raw = g.typeRaw.replace(/\s+/g, '');
-  return raw && raw !== '정식출시' ? `<span class="cal-tag minor">${escapeHtml(g.typeRaw)}</span>` : '';
+  if(!raw || raw === '정식출시') return '';
+  const label = raw.startsWith('소프트') ? '소프트' : g.typeRaw;
+  return `<span class="cal-tag minor" title="${escapeAttr(g.typeRaw)}">${escapeHtml(label)}</span>`;
 }
 function calPcTag(g){ return g.isMobile ? '' : `<span class="cal-tag minor">${escapeHtml(calPlatformShort(g.platform) || 'PC')}</span>`; }
 function calIconHtml(g){ return g.icon ? `<img src="${escapeAttr(g.icon)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">` : '<span class="ph"></span>'; }
