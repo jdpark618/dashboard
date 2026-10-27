@@ -2834,9 +2834,10 @@ function drawSearchRankChart(canvasId, lines, dates, store = searchCharts, opts 
         }
       },
       scales: {
-        x: { grid: { color: 'rgba(51,65,85,.3)' }, ticks: { color: '#94a3b8', maxTicksLimit: innerWidth < 640 ? 5 : 10, maxRotation: 0, callback: function(v){ const l = this.getLabelForValue(v); return l ? l.substring(5).replace('-', '/') : ''; } } },
+        x: { grid: { color: 'rgba(51,65,85,.3)' }, ticks: { color: '#94a3b8', padding: 6, maxTicksLimit: innerWidth < 640 ? 5 : 10, maxRotation: 0, callback: function(v){ const l = this.getLabelForValue(v); return l ? l.substring(5).replace('-', '/') : ''; } } },
         y: { type: 'logarithmic', reverse: true, min, max,
-          afterBuildTicks: ax => { ax.ticks = SEARCH_TICKS.filter(t => t >= min && t <= Math.max(max, 100)).map(value => ({ value })); },
+          /* 표시 범위 안의 눈금만 (범위 밖 눈금이 맨 아래에 붙어 날짜와 겹치지 않게) */
+          afterBuildTicks: ax => { ax.ticks = SEARCH_TICKS.filter(t => t >= min && t <= max).map(value => ({ value })); },
           grid: { color: c => c.tick?.value === 10 ? 'rgba(148,163,184,.35)' : 'rgba(51,65,85,.3)' },
           ticks: { color: '#94a3b8', callback: v => SEARCH_TICKS.includes(v) ? `${v}위` : '' } }
       }
@@ -3399,7 +3400,7 @@ function renderGameDetail(){
   const sS = detailStatsOf(sales, dates), sP = detailStatsOf(pop, dates);
   const bestTxt = s => s.best != null ? `${s.best}위 <span class="text-[10px] muted">${mkShort(s.bestDate)}</span>` : '<span class="muted">-</span>';
   document.getElementById('detailStats').innerHTML = `<div class="card rounded-xl border-slate-700/50 overflow-hidden"><table class="w-full text-xs">
-    <thead><tr class="text-[11px] muted border-b border-slate-800"><th class="text-left py-2 px-3 font-medium whitespace-nowrap">구분</th><th class="text-right py-2 px-2 font-medium">최고</th><th class="text-right py-2 px-2 font-medium whitespace-nowrap leading-tight">TOP100<br>일수</th><th class="text-right py-2 px-2 font-medium">TOP10</th><th class="text-right py-2 px-3 font-medium whitespace-nowrap leading-tight">TOP100인 날<br>평균</th></tr></thead>
+    <thead><tr class="text-[11px] muted border-b border-slate-800"><th class="text-left py-2 px-3 font-medium whitespace-nowrap">구분</th><th class="text-right py-2 px-2 font-medium whitespace-nowrap">최고</th><th class="text-right py-2 px-2 font-medium whitespace-nowrap" title="기간 중 TOP100에 든 날 수">TOP100 일수</th><th class="text-right py-2 px-2 font-medium whitespace-nowrap" title="기간 중 TOP10에 든 날 수">TOP10 일수</th><th class="text-right py-2 px-3 font-medium whitespace-nowrap" title="TOP100이었던 날만으로 낸 평균 순위">평균 순위</th></tr></thead>
     <tbody>
       <tr class="border-b border-slate-800/70"><td class="py-2.5 px-3 font-semibold t-sales whitespace-nowrap">매출</td><td class="text-right px-2">${bestTxt(sS)}</td><td class="text-right px-2">${sS.days}<span class="muted">/${dates.length}일</span></td><td class="text-right px-2">${sS.top10}일</td><td class="text-right px-3">${sS.avg != null ? `${sS.avg}위` : '<span class="muted">-</span>'}</td></tr>
       <tr><td class="py-2.5 px-3 font-semibold t-pop whitespace-nowrap">인기</td><td class="text-right px-2">${bestTxt(sP)}</td><td class="text-right px-2">${sP.days}<span class="muted">/${dates.length}일</span></td><td class="text-right px-2">${sP.top10}일</td><td class="text-right px-3">${sP.avg != null ? `${sP.avg}위` : '<span class="muted">-</span>'}</td></tr>
