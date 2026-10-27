@@ -343,14 +343,23 @@ html.panel-lock { overflow: hidden; }
 .rp-page h3 { font-size:9.5pt; font-weight:700; margin-bottom:2mm; }
 .rp-eyebrow { font-size:8pt; font-weight:700; letter-spacing:.12em; color:var(--brand); }
 .rp-lead { font-size:10pt; color:var(--sub); margin-top:1.5mm; font-weight:600; }
+/* 1쪽 이번 주 핵심: 관찰 · 해석 · 확인할 곳 카드 */
+.rp-ins { display:grid; grid-template-columns:1fr 1fr; gap:2.5mm; }
+.rp-in { border:1px solid var(--line); border-radius:2.5mm; padding:2.6mm 3mm; position:relative; }
+.rp-in .go { position:absolute; top:2.6mm; right:3mm; font-size:7pt; color:var(--mute); }
+.rp-in .ob { font-size:8.8pt; font-weight:700; padding-right:9mm; line-height:1.3; }
+.rp-in .ob small { font-weight:500; color:var(--mute); font-size:7.5pt; }
+.rp-in .tg { display:inline-block; font-size:7pt; font-weight:700; border-radius:1mm; padding:0 1.3mm; margin-right:1.3mm; vertical-align:1px; }
+.rp-in .tg.s { background:var(--sales-bg); color:var(--sales); } .rp-in .tg.p { background:var(--pop-bg); color:var(--pop); } .rp-in .tg.b { background:#e0e7ff; color:#4338ca; }
+.rp-in .it { font-size:8pt; color:#334155; margin-top:1mm; }
+.rp-in .ck { font-size:7.4pt; color:var(--sub); margin-top:.8mm; }
+.rp-in .up { color:var(--up); font-weight:700; } .rp-in .dn { color:var(--down); font-weight:700; }
+.rp-rel-line { font-size:8pt; color:var(--sub); margin-top:2mm; padding-top:1.5mm; border-top:1px dashed var(--line); }
 .rp-kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:3mm; margin-top:6mm; }
 .rp-kpi { border:1px solid var(--line); border-radius:3mm; padding:3.5mm; }
 .rp-kpi .l { font-size:8pt; color:var(--sub); font-weight:600; }
 .rp-kpi .v { font-size:13pt; font-weight:800; margin-top:1.5mm; line-height:1.25; }
 .rp-kpi .s { font-size:7.5pt; color:var(--mute); margin-top:1mm; }
-.rp-points { background:var(--soft); border:1px solid var(--line); border-radius:3mm; padding:4mm 5mm 4mm 9mm; list-style:disc; }
-.rp-points li { font-size:9.2pt; line-height:1.55; padding-left:1mm; }
-.rp-points li + li { margin-top:1.2mm; }
 .rp-cols { display:grid; grid-template-columns:1fr 1fr; gap:5mm; }
 .rp-tag { display:inline-block; font-size:7.5pt; font-weight:700; padding:.3mm 1.6mm; border-radius:1mm; }
 .rp-page .t-sales { color:var(--sales); } .rp-page .t-pop { color:var(--pop); } .rp-page .t-up { color:var(--up); } .rp-page .t-down { color:var(--down); } .rp-page .t-new { color:var(--new); }
@@ -5493,24 +5502,68 @@ function rpRender(D){
   const foot = `<div class="rp-foot"><span>Google Play 국내 매출·인기 순위(일별 TOP100) · 신작 정보는 순위 데이터와 연결하지 않음 · '첫 차트인'은 수집 기록 기준</span><span>발행 ${D.issue}</span></div>`;
   const sTop = S.sales.top20[0], pTop = S.popular.top20[0];
   const kpiSub = t => !t ? '-' : isFirst(t.first) ? `7일 평균 순위 기준 · <span class="t-new">${rpSlash(t.first)} 첫 차트인</span>` : t.prevPos === 1 ? '7일 평균 순위 기준 · 전주에도 1위' : `7일 평균 순위 기준 · 전주 ${t.prevPos ? t.prevPos + '번째' : '순위표 밖'}`;
-  /* 이번 주 핵심: 정해진 규칙으로 최대 5줄 */
-  const pts = [];
-  if(sTop && pTop && sTop.key === pTop.key) pts.push(`<b>${esc(sTop.n)}</b>${rpJosa(sTop.n)} 매출·인기 모두 주간 1위입니다.${isFirst(sTop.first) || isFirst(pTop.first) ? ` 수집 기록상 ${[sTop.first, pTop.first].filter(isFirst).sort().map(rpSlash)[0]}에 처음 차트인했습니다.` : ''}`);
-  else if(sTop && pTop) pts.push(`매출 1위는 <b>${esc(sTop.n)}</b>${sTop.prevPos === 1 ? '(전주에도 1위)' : ''}, 인기 1위는 <b>${esc(pTop.n)}</b>${pTop.prevPos === 1 ? '(전주에도 1위)' : ''}입니다.`);
-  /* 우선순위: 1위 → 인기 TOP10 새 진입 → 매출 큰 폭 하락 → 장르 변화 → 매출 TOP10 새 진입 (최대 4줄) + 신작 */
-  const top10New = (s, label) => {
-    const nw = S[s].top20.filter(x => x.pos <= 10 && x.key !== sTop?.key && x.key !== pTop?.key && (x.prevPos == null || x.prevPos > 10)).slice(0, 2);
-    if(nw.length) pts.push(`${label} TOP10 새 진입: ${nw.map(x => `<b>${esc(x.n)}</b>(평균 ${R(x.avg)}위, ${x.prevPos == null ? (isFirst(x.first) ? '첫 차트인' : '재진입') : x.pDays < S[s].prev.length * MK_CMP_MIN ? `전주 ${x.pDays}일만 TOP100` : `전주 ${R(x.pavg)}위`})`).join(', ')}.`);
-  };
-  top10New('popular', '인기');
-  const dn = S.sales.down.slice(0, 2);
-  if(dn.length) pts.push(`매출 큰 폭 하락: ${dn.map(x => `<b>${esc(x.n)}</b>(${R(x.from)}위 → ${R(x.to)}위)`).join(', ')}.`);
-  const gBig = s => S[s].genres.slice().sort((a, b) => Math.abs(b.d) - Math.abs(a.d))[0];
-  const gs = gBig('sales'), gp = gBig('popular'), gTxt = (x, label) => `${label} TOP100의 <b>${esc(x.g)}</b> 장르가 ${x.c}개로 ${Math.abs(x.d)}개 ${x.d > 0 ? '늘었' : '줄었'}`;
-  if((gs && gs.d) || (gp && gp.d)) pts.push(`장르 구성: ${[gs && gs.d ? gTxt(gs, '매출') : '', gp && gp.d ? gTxt(gp, '인기') : ''].filter(Boolean).join('고, ')}습니다.`);
-  top10New('sales', '매출');
-  const relPt = (`이 주에 모바일 신작이 <b>${D.relLast.length}개</b> 출시됐고, 다음 주(${rpDot(D.issue)} – ${rpDot(mkAddDays(D.issue, 6))})에는 <b>${D.relNext.length}개</b>가 예정돼 있습니다.`);
-  pts.splice(4); pts.push(relPt); /* 앞의 규칙은 최대 4줄, 신작 줄은 늘 마지막 */
+  /* 이번 주 핵심: 규칙으로 고른 변화 최대 4개를 '관찰 · 해석 · 확인할 곳'으로. 원인은 단정하지 않음 */
+  const wkSet = (st, m) => { const idx = mkGetIndex(st), mp = new Map(); idx.dates.filter(d => d >= m && d <= mkAddDays(m, 6)).forEach(d => idx.byDate.get(d)?.forEach((v, k) => { if(!mp.has(k)) mp.set(k, { n: v.name, g: v.genre || '미분류' }); })); return mp; };
+  const W = {};
+  ['sales', 'popular'].forEach(st => {
+    const a = wkSet(st, D.mon), b = wkSet(st, D.pmon), b2 = wkSet(st, mkAddDays(D.pmon, -7));
+    const ins = [...a].filter(([k]) => !b.has(k)).map(([, v]) => v), outs = [...b].filter(([k]) => !a.has(k)).map(([, v]) => v);
+    W[st] = { ins, outs, prevIns: b2.size ? [...b].filter(([k]) => !b2.has(k)).length : null, label: st === 'sales' ? '매출' : '인기', tg: st === 'sales' ? 's' : 'p' };
+  });
+  const names = (list, n = 3) => list.slice(0, n).map(v => esc(cut(v.n, 16))).join(', ') + (list.length > n ? ` 외 ${list.length - n}개` : '');
+  const cards = [];
+  const card = (pri, tg, tgLabel, go, ob, it, ck) => cards.push({ pri, html: `<div class="rp-in"><span class="go">→ ${go}쪽</span><div class="ob"><span class="tg ${tg}">${tgLabel}</span>${ob}</div><div class="it">${it}</div>${ck ? `<div class="ck">${ck}</div>` : ''}</div>` });
+  /* ① 1위 교체 (1위는 위 요약 칸에도 있으므로 자리가 남을 때만) */
+  [['sales', sTop], ['popular', pTop]].forEach(([st, t]) => {
+    if(t && t.prevPos !== 1) card(45, W[st].tg, W[st].label, 2, `주간 1위 교체 — <b>${esc(cut(t.n, 18))}</b>`,
+      t.prevPos == null ? (isFirst(t.first) ? '수집 기록상 처음 차트인한 게임이 바로 1위에 올랐습니다.' : '전주 순위표 밖에서 1위로 올라섰습니다.') : `전주 ${t.prevPos}위에서 올라섰습니다.`,
+      S[st].top20.find(x => x.prevPos === 1) ? `전주 1위: ${esc(cut(S[st].top20.find(x => x.prevPos === 1).n, 18))} (이번 주 ${S[st].top20.find(x => x.prevPos === 1).pos}위)` : '');
+  });
+  /* ② 매출·인기 교차: 인기 TOP10 중 매출 TOP100(양쪽 TOP100)에 든 게임 수 */
+  const bothNames = new Set(['top', 'sales', 'pop', 'rest'].flatMap(q => D.quad[q].map(x => x.n)));
+  const pTen = S.popular.top20.filter(x => x.pos <= 10), crossed = pTen.filter(x => bothNames.has(x.n));
+  if(pTen.length >= 5){
+    const k = crossed.length;
+    card(80, 'b', '교차', 3, `인기 TOP10 중 매출 TOP100은 <b>${k}개</b>`,
+      k <= 2 ? '인기 상위권과 매출 상위권이 거의 겹치지 않습니다.' : k >= 6 ? '인기 상위권 게임 대부분이 매출 TOP100에도 들었습니다.' : '인기 상위권 일부만 매출 TOP100에 들었습니다.',
+      D.quad.top.length ? `양쪽 10위권: ${D.quad.top.map(x => esc(cut(x.n, 14))).join(', ')}` : '양쪽 모두 10위 안인 게임은 없습니다.');
+  }
+  /* ③ 시장 회전: 차트인·이탈 수를 전주와 비교 (변화가 큰 쪽 하나) */
+  const turn = ['sales', 'popular'].map(st => ({ st, r: W[st].prevIns ? W[st].ins.length / W[st].prevIns : 1 })).sort((a, b) => Math.abs(b.r - 1) - Math.abs(a.r - 1))[0];
+  if(turn){
+    const w = W[turn.st], r = turn.r, gc = {};
+    w.ins.forEach(v => { if(!bizIsMiscGenre(v.g)) gc[v.g] = (gc[v.g] || 0) + 1; });
+    const gTop = Object.entries(gc).sort((a, b) => b[1] - a[1])[0];
+    card(r >= 1.2 || r <= 0.8 ? 70 : 40, w.tg, w.label, 3, `${w.ins.length}개 들어오고 ${w.outs.length}개 빠짐 <small>(전주 들어온 수 ${w.prevIns ?? '-'})</small>`,
+      r >= 1.2 ? '회전이 전주보다 <span class="up">빨라졌습니다</span>. 새 게임이 들어오기 쉬운 주였습니다.' : r <= 0.8 ? '회전이 전주보다 <span class="dn">느려졌습니다</span>. 기존 게임이 자리를 지킨 주였습니다.' : '회전 속도는 전주와 비슷합니다.',
+      gTop && gTop[1] >= 3 ? `들어온 ${w.ins.length}개 중 ${esc(gTop[0])} ${gTop[1]}개로 가장 많음` : '');
+  }
+  /* ④ 장르 변화를 들고 남으로 쪼개기: 순증감이 가장 큰 장르 하나 (2개 이상) */
+  const gMoves = [];
+  ['sales', 'popular'].forEach(st => {
+    const m = {};
+    W[st].ins.forEach(v => { (m[v.g] = m[v.g] || { i: [], o: [] }).i.push(v); });
+    W[st].outs.forEach(v => { (m[v.g] = m[v.g] || { i: [], o: [] }).o.push(v); });
+    Object.entries(m).forEach(([g, x]) => { if(!bizIsMiscGenre(g)) gMoves.push({ st, g, i: x.i, o: x.o, net: x.i.length - x.o.length }); });
+  });
+  const gm = gMoves.filter(x => Math.abs(x.net) >= 2).sort((a, b) => Math.abs(b.net) - Math.abs(a.net) || (b.i.length + b.o.length) - (a.i.length + a.o.length))[0];
+  if(gm){
+    const ni = gm.i.length, no = gm.o.length;
+    card(60, W[gm.st].tg, W[gm.st].label, 3, `${esc(gm.g)} <span class="${gm.net > 0 ? 'up' : 'dn'}">${gm.net > 0 ? '+' : '−'}${Math.abs(gm.net)}개</span> <small>(${ni}개 들어오고 ${no}개 빠짐)</small>`,
+      ni + no <= 2 ? '한두 게임의 들고 남 때문입니다.' : ni >= 2 && no >= 2 ? '한 게임이 아니라 <b>여러 게임이 교체된</b> 결과입니다.' : ni > no ? '여러 게임이 함께 들어온 결과입니다.' : '여러 게임이 함께 빠진 결과입니다.',
+      [ni ? `진입: ${names(gm.i)}` : '', no ? `이탈: ${names(gm.o, 2)}` : ''].filter(Boolean).join(' · '));
+  }
+  /* ⑤ 상위권 고착: TOP10 교체 수 (교체가 많은 쪽, 없으면 매출) */
+  const t10 = ['sales', 'popular'].map(st => { const nw = S[st].top20.filter(x => x.pos <= 10 && (x.prevPos == null || x.prevPos > 10)); return { st, nw, out: S[st].top20.filter(x => x.prevPos != null && x.prevPos <= 10 && x.pos > 10) }; }).sort((a, b) => b.nw.length - a.nw.length);
+  const tt = t10[0].nw.length >= 3 ? t10[0] : t10.find(x => x.st === 'sales');
+  if(tt){
+    const n = tt.nw.length, rt = S[tt.st].retention;
+    card(n >= 3 ? 65 : 50, W[tt.st].tg, W[tt.st].label, 2, `TOP10 교체 ${n}개${rt != null ? ` · 4주 잔존 ${rt}%` : ''}`,
+      n <= 1 ? '상위권은 거의 그대로입니다. <b>고정적인</b> 시장입니다.' : n >= 3 ? '상위권 <b>교체가 많았던</b> 주입니다.' : '상위권 일부가 바뀌었습니다.',
+      n ? `진입: ${names(tt.nw.map(x => ({ n: x.n })), 2)}${tt.out.length ? ` · 밀려남: ${names(tt.out.map(x => ({ n: x.n })), 2)}` : ''}` : '');
+  }
+  const pts = cards.sort((a, b) => b.pri - a.pri).slice(0, 4).map(c => c.html);
+  const relPt = `신작: 이 주 모바일 <b>${D.relLast.length}개</b> 출시 · 다음 주(${rpDot(D.issue)} – ${rpDot(mkAddDays(D.issue, 6))}) <b>${D.relNext.length}개</b> 예정 → 4쪽`;
 
   const mvTable = (list, cls) => list.length ? `<table class="rp-mv"><tr class="h"><td>게임</td><td class="num">평균 순위</td><td class="d">변화</td></tr>${list.map(x =>
     `<tr><td class="nm">${esc(x.n)}</td><td class="num">${R(x.from)}위 → <b style="color:var(--ink)">${R(x.to)}위</b></td><td class="d ${cls}">${x.d > 0 ? '▲' : '▼'}${Math.abs(x.d)}</td></tr>`).join('')}</table>` : '<div class="rp-empty">해당 게임 없음</div>';
@@ -5526,7 +5579,8 @@ function rpRender(D){
       <div class="rp-kpi"><div class="l">4주 뒤에도 TOP100</div><div class="v"><span class="t-sales">${S.sales.retention ?? '-'}%</span> · <span class="t-pop">${S.popular.retention ?? '-'}%</span></div><div class="s">매출 · 인기 / 높을수록 고정된 시장</div></div>
     </div>
     <h2>이번 주 핵심</h2>
-    <ul class="rp-points">${pts.map(t => `<li>${t}</li>`).join('')}</ul>
+    <div class="rp-ins">${pts.join('')}</div>
+    <div class="rp-rel-line">${relPt}</div>
     <h2>순위 변동 <small>주 평균 순위(반올림) · 두 주 모두 7일 내내 TOP100인 게임(매출 ${S.sales.cmpN}개 · 인기 ${S.popular.cmpN}개)만 비교</small></h2>
     <div class="rp-cols">
       <div><h3><span class="rp-tag bg-sales">매출</span> 급상승</h3>${mvTable(S.sales.up, 't-up')}<h3 style="margin-top:3.5mm"><span class="rp-tag bg-sales">매출</span> 급하락</h3>${mvTable(S.sales.down, 't-down')}</div>
