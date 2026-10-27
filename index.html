@@ -345,8 +345,8 @@ html.panel-lock { overflow: hidden; }
 .rp-lead { font-size:10pt; color:var(--sub); margin-top:1.5mm; font-weight:600; }
 /* 1쪽 이번 주 핵심: 관찰 · 해석 · 확인할 곳 카드 */
 .rp-ins { display:grid; grid-template-columns:1fr 1fr; gap:2.5mm; }
-.rp-in { border:1px solid var(--line); border-radius:2.5mm; padding:2.6mm 3mm; position:relative; }
-.rp-in .go { position:absolute; top:2.6mm; right:3mm; font-size:7pt; color:var(--mute); }
+.rp-in { border:1px solid var(--line); border-radius:2.5mm; padding:2mm 3mm; position:relative; }
+.rp-in .go { position:absolute; top:2mm; right:3mm; font-size:7pt; color:var(--mute); }
 .rp-in .ob { font-size:8.8pt; font-weight:700; padding-right:9mm; line-height:1.3; }
 .rp-in .ob small { font-weight:500; color:var(--mute); font-size:7.5pt; }
 .rp-in .tg { display:inline-block; font-size:7pt; font-weight:700; border-radius:1mm; padding:0 1.3mm; margin-right:1.3mm; vertical-align:1px; }
@@ -419,6 +419,19 @@ html.panel-lock { overflow: hidden; }
 .rp-ent li { display:flex; gap:2mm; align-items:center; font-size:8.4pt; padding:1mm 0; border-bottom:1px solid var(--line); list-style:none; }
 .rp-ent .n { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600; }
 .rp-ent .m { color:var(--mute); font-size:7.4pt; white-space:nowrap; }
+/* 4쪽 신작 일정: 한 열 표 (날짜 · 게임 · 유형 · 퍼블리셔), 넘치면 다음 A4 장으로 */
+.rp-rel2 { width:100%; border-collapse:collapse; table-layout:fixed; font-size:8.6pt; }
+.rp-rel2 th { font-size:7.2pt; color:var(--mute); font-weight:600; text-align:left; padding:0 2mm 1mm; border-bottom:1.2px solid #cbd5e1; }
+.rp-rel2 td { height:7.6mm; padding:0 2mm; border-bottom:1px solid #f1f5f9; vertical-align:middle; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.rp-rel2 tr.g1 td { border-top:1.2px solid #e2e8f0; }
+.rp-rel2 .d { font-weight:800; color:#312e81; } .rp-rel2 .d small { font-weight:500; color:var(--mute); margin-left:1.2mm; font-size:7.2pt; }
+.rp-rel2 .g { font-weight:600; }
+.rp-rel2 .ic { display:inline-block; width:5.2mm; height:5.2mm; border-radius:1.3mm; background:#e2e8f0; vertical-align:middle; margin-right:2.2mm; overflow:hidden; }
+.rp-rel2 .ic img { width:100%; height:100%; object-fit:cover; display:block; }
+.rp-rel2 .pb { color:var(--mute); font-size:7.6pt; }
+.rp-rel2-h { display:flex; align-items:baseline; gap:2mm; font-size:9.5pt; font-weight:700; margin:0 0 2mm; }
+.rp-rel2-h span { color:var(--mute); font-weight:500; font-size:8pt; }
+.rp-sec { margin-bottom:5mm; } .rp-sec.box { background:var(--soft); border-radius:2mm; padding:3mm 3.5mm 2mm; }
 .rp-rel { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); column-gap:6mm; font-size:8.2pt; }
 .rp-rel .day { display:grid; grid-template-columns:13mm minmax(0,1fr); border-top:1.2px solid #cbd5e1; padding:1mm 0 1.4mm; }
 .rp-rel .dh { font-size:8pt; font-weight:800; color:#312e81; line-height:1.2; }
@@ -5425,10 +5438,10 @@ async function openReportView(){
   if(!weeks.includes(rpState.week)) rpState.week = weeks[0];
   const mon = rpState.week;
   document.getElementById('rpWeekSel').innerHTML = weeks.map((w, i) => `<option value="${w}" ${w === mon ? 'selected' : ''}>${rpWeekName(w)} · ${rpWeekRange(w)}${i === 0 ? ' (최신)' : ''}</option>`).join('');
-  setText('rpSub', `${rpWeekName(mon)} · ${rpWeekRange(mon)} · 전주 대비 · A4 4쪽`);
+  setText('rpSub', `${rpWeekName(mon)} · ${rpWeekRange(mon)} · 전주 대비`);
   history.replaceState(null, '', `#report?w=${mon}`);
   document.title = `주간리포트_${mon}`;
-  try{ pages.innerHTML = rpRender(rpBuild(mon)); }
+  try{ pages.innerHTML = rpRender(rpBuild(mon)); setText('rpSub', `${rpWeekName(mon)} · ${rpWeekRange(mon)} · 전주 대비 · A4 ${pages.querySelectorAll('.rp-page').length}쪽`); }
   catch(e){ console.error('리포트 생성 실패', e); pages.innerHTML = mkEmpty('리포트를 만들지 못했습니다.'); return; }
   rpFit();
   if(mon === weeks[0]){ try{ localStorage.setItem(REPORT_SEEN_KEY, mon); }catch(e){} updateReportBadge(); }
@@ -5503,17 +5516,48 @@ function rpBuild(mon){
   const only = (A, B) => [...A].filter(([k]) => !B.has(k)).map(([, g]) => ({ n: g.name, r: g.rank })).sort((x, y) => x.r - y.r);
   /* 신작: 그 주 출시 + 다음 주 예정 (모바일 포함) */
   const rel = (rawStore.newReleases?.rows || []).filter(r => String(r[2] || '').replace(/\s+/g, '').includes('모바일'))
-    .map(r => ({ d: String(r[0] || '').trim(), n: String(r[1] || '').trim(), p: String(r[3] || '').trim(), t: String(r[4] || '').trim() })).filter(r => r.d && r.n)
+    .map(r => ({ d: String(r[0] || '').trim(), n: String(r[1] || '').trim(), p: String(r[3] || '').trim(), t: String(r[4] || '').trim(), ic: String(r[6] || '').trim().replace(/^'/, '') })).filter(r => r.d && r.n)
     .sort((x, y) => x.d.localeCompare(y.d) || x.n.localeCompare(y.n, 'ko'));
   const nmon = mkAddDays(mon, 7);
   return { mon, pmon, end, issue: nmon, S, quad, both: both.length, onlyS: only(cs, cp), onlyP: only(cp, cs),
     relLast: rel.filter(r => r.d >= mon && r.d <= end), relNext: rel.filter(r => r.d >= nmon && r.d <= mkAddDays(nmon, 6)) };
 }
 
+/* 신작 일정 장 나누기: 행 높이가 일정하므로 줄 수로 계산 (mm). 날짜 묶음이 장을 넘으면 다음 장 첫 줄에 날짜를 다시 적음 */
+const RP_REL = { body: 255, first: 30, row: 7.6, head: 13, box: 7, empty: 10 };
+function rpRelPaginate(D){
+  const secs = [
+    { key: 'last', title: `이 주 출시 ${D.relLast.length}개`, list: D.relLast, box: false },
+    { key: 'next', title: `다음 주 예정 ${D.relNext.length}개`, sub: `${rpDot(D.issue)} – ${rpDot(mkAddDays(D.issue, 6))}`, list: D.relNext, box: true }
+  ];
+  const pages = [{ used: RP_REL.first, parts: [] }];
+  const page = () => pages.at(-1), room = () => RP_REL.body - page().used;
+  secs.forEach(sec => {
+    const counts = {}; sec.list.forEach(r => { counts[r.d] = (counts[r.d] || 0) + 1; });
+    const rows = sec.list.map((r, i) => ({ r, cnt: counts[r.d], first: i === 0 || sec.list[i - 1].d !== r.d }));
+    const headCost = RP_REL.head + (sec.box ? RP_REL.box : 0);
+    if(room() < headCost + RP_REL.row * Math.min(2, Math.max(1, rows.length)) + (rows.length ? 0 : RP_REL.empty)) pages.push({ used: 0, parts: [] });
+    let part = { sec, cont: false, rows: [] }; page().parts.push(part); page().used += headCost + (rows.length ? 0 : RP_REL.empty);
+    rows.forEach(x => {
+      if(room() < RP_REL.row){ pages.push({ used: headCost, parts: [] }); part = { sec, cont: true, rows: [] }; page().parts.push(part); x = { ...x, first: true, cont: !x.first }; }
+      part.rows.push(x); page().used += RP_REL.row;
+    });
+    page().used += 5;
+  });
+  return pages;
+}
+/* 퍼블리셔: 정보가 없는 값은 비우고 'Co., Ltd.' 같은 꼬리는 뗌 */
+function rpPubClean(p){
+  let t = String(p || '').trim();
+  if(!t || t === '-' || /^game$/i.test(t) || /游戏|介紹/.test(t)) return '';
+  for(let i = 0; i < 2; i++) t = t.replace(/[,.\s]*(co\.?,?\s*ltd\.?|ltd\.?|inc\.?|corp\.?|corporation|llc|pte\.?\s*ltd\.?|s\.l\.?|gmbh|limited)\s*$/i, '').trim();
+  return t;
+}
+
 /* ---- 리포트 그리기 ---- */
 function rpRender(D){
   const S = D.S, R = v => Math.round(v), esc = escapeHtml, cut = (t, n) => t.length > n ? t.slice(0, n) + '…' : t;
-  const isFirst = f => f && f >= D.pmon, PAGES = 4, period = rpWeekRange(D.mon);
+  const relPages = rpRelPaginate(D), isFirst = f => f && f >= D.pmon, PAGES = 3 + relPages.length, period = rpWeekRange(D.mon);
   const run = n => `<div class="rp-run"><span><b>Game Market Intelligence</b> · 주간 리포트</span><span>${period} · ${n}/${PAGES}</span></div>`;
   const foot = `<div class="rp-foot"><span>Google Play 국내 매출·인기 순위(일별 TOP100) · 신작 정보는 순위 데이터와 연결하지 않음 · '첫 차트인'은 수집 기록 기준</span><span>발행 ${D.issue}</span></div>`;
   const sTop = S.sales.top[0], pTop = S.popular.top[0];
@@ -5647,21 +5691,18 @@ function rpRender(D){
     <div class="rp-cols"><div><h3><span class="rp-tag bg-sales">매출</span> ${S.sales.entrantsN}개</h3>${entList(S.sales)}</div><div><h3><span class="rp-tag bg-pop">인기</span> ${S.popular.entrantsN}개</h3>${entList(S.popular)}</div></div>
     ${foot}</section>`;
 
-  /* 신작 목록: 날짜는 왼쪽 칸에 한 번, 게임명·퍼블리셔는 고정 칸. 날짜 묶음을 쪼개지 않고 두 열 길이를 맞춤 */
-  const relList = list => { if(!list.length) return '<div class="rp-empty">해당 일정 없음</div>'; const by = {}; list.forEach(r => (by[r.d] = by[r.d] || []).push(r));
-    const days = Object.entries(by), cost = rs => rs.length + 1.2, total = days.reduce((a, [, rs]) => a + cost(rs), 0);
-    let acc = 0, half = 0;
-    while(half < days.length && acc + cost(days[half][1]) / 2 <= total / 2){ acc += cost(days[half][1]); half++; }
-    const day = ([d, rs]) => `<div class="day"><div class="dh">${rpSlash(d)} ${CAL_DOW[mkToDate(d).getDay()]}<small>${rs.length}개</small></div><div>${rs.map(r => `<div class="it"><span class="nw"><span class="n">${esc(r.n)}</span>${/테스트/.test(r.t) ? '<span class="rp-mini test">테스트</span>' : /소프트/.test(r.t) ? '<span class="rp-mini soft">소프트런칭</span>' : ''}</span><span class="pb">${esc(r.p)}</span></div>`).join('')}</div></div>`;
-    return `<div class="rp-rel"><div>${days.slice(0, half).map(day).join('')}</div><div>${days.slice(half).map(day).join('')}</div></div>`; };
-  /* 요일별 출시 개수 띠 (월~일) */
+  /* 4쪽(+이어지는 장) 신작 일정: 한 열 표. 넘치면 다음 A4 장에 머리·표 머리를 다시 붙임 */
   const relBand = (list, mon) => { const c = [0, 1, 2, 3, 4, 5, 6].map(i => { const d = mkAddDays(mon, i); return [d, list.filter(r => r.d === d).length]; }), mx = Math.max(1, ...c.map(x => x[1]));
     return `<div class="rp-band">${c.map(([d, n]) => `<div><div class="bar"><i style="height:${n ? Math.max(6, Math.round(n / mx * 100)) : 0}%"></i></div>${CAL_DOW[mkToDate(d).getDay()]} ${rpSlash(d)}<b>${n}</b></div>`).join('')}</div>`; };
-  const p4 = `<section class="rp-page">${run(4)}
-    <h2 class="first">신작 일정 <small>신작 정보 기준 · 모바일 포함 · 순위 데이터와 별개</small></h2>
-    <h3>이 주 출시 ${D.relLast.length}개</h3>${D.relLast.length ? relBand(D.relLast, D.mon) : ''}${relList(D.relLast)}
-    <div class="rp-next"><h3>다음 주 예정 ${D.relNext.length}개 <span style="color:var(--mute);font-weight:500">(${rpDot(D.issue)} – ${rpDot(mkAddDays(D.issue, 6))})</span></h3>${relList(D.relNext)}</div>
-    ${foot}</section>`;
+  const relTag = t => /테스트/.test(t) ? '<span class="rp-mini test">테스트</span>' : /소프트/.test(t) ? '<span class="rp-mini soft">소프트</span>' : /얼리/.test(t) ? '<span class="rp-mini test">얼리</span>' : '';
+  const relRow = x => { const r = x.r, dow = CAL_DOW[mkToDate(r.d).getDay()];
+    return `<tr class="${x.first ? 'g1' : ''}"><td class="d">${x.first ? `${rpSlash(r.d)} ${dow}<small>${x.cont ? '이어서' : x.cnt + '개'}</small>` : ''}</td><td class="g"><span class="ic">${/^https?:/.test(r.ic) ? `<img src="${escapeAttr(r.ic)}" alt="" onerror="this.remove()">` : ''}</span>${esc(r.n)}</td><td>${relTag(r.t)}</td><td class="pb">${esc(rpPubClean(r.p))}</td></tr>`; };
+  const relPart = pt => `<div class="rp-sec${pt.sec.box ? ' box' : ''}"><div class="rp-rel2-h">${pt.sec.title}${pt.cont ? ' <span>(이어서)</span>' : pt.sec.sub ? ` <span>${pt.sec.sub}</span>` : ''}</div>`
+    + (pt.sec.list.length ? `<table class="rp-rel2"><colgroup><col style="width:22mm"><col><col style="width:17mm"><col style="width:42mm"></colgroup><tr><th>날짜</th><th>게임</th><th>유형</th><th>퍼블리셔</th></tr>${pt.rows.map(relRow).join('')}</table>` : '<div class="rp-empty">해당 일정 없음</div>') + '</div>';
+  const p4 = relPages.map((pg, i) => `<section class="rp-page">${run(4 + i)}
+    ${i === 0 ? `<h2 class="first">신작 일정 <small>신작 정보 기준 · 모바일 포함 · 순위 데이터와 별개</small></h2>${D.relLast.length ? relBand(D.relLast, D.mon) : ''}` : ''}
+    ${pg.parts.map(relPart).join('')}
+    ${foot}</section>`).join('');
   return p1 + p2 + p3 + p4;
 }
 
