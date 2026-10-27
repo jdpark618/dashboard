@@ -290,6 +290,9 @@ html.panel-lock { overflow: hidden; }
 .hd-btn:hover { border-color:rgba(129,140,248,.6); color:#fff; }
 .hd-icon { width:32px; padding:0; justify-content:center; color:#94a3b8; }
 .hd-icon.fail { color:#fca5a5; border-color:rgba(248,113,113,.5); }
+/* 전체 순위: 어느 화면에서든 1~100위 패널을 여는 입구 (주간 리포트보다 차분하게) */
+.hd-rank { border-color:#475569; color:#e2e8f0; } .hd-rank i { color:#a5b4fc; }
+@media (max-width:639px){ .hd-rank { width:36px; padding:0; justify-content:center; } }
 .hd-report { background:rgba(99,102,241,.1); border-color:rgba(129,140,248,.55); color:#c7d2fe; }
 .hd-report.fresh { background:#4338ca; border-color:#6366f1; color:#e0e7ff; }
 .hd-new { font-size:10px; font-weight:700; color:#fff; background:#ef4444; border-radius:5px; padding:0 5px; line-height:16px; }
@@ -406,8 +409,9 @@ html.panel-lock { overflow: hidden; }
     </div>
     <p class="text-xs muted mt-1 hidden sm:block">Google Play 시장 모니터링</p>
   </div>
-  <div class="flex flex-wrap items-center gap-2 [&>*]:whitespace-nowrap">
-    <span class="text-xs muted font-medium inline-flex items-center gap-2 mr-1"><span id="todayLabel"></span><span class="text-slate-700">|</span><span id="syncStatus" class="text-slate-400">● 확인 중</span></span>
+  <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 [&>*]:whitespace-nowrap">
+    <span class="text-xs muted font-medium inline-flex items-center gap-2 sm:mr-1"><span id="todayLabel"></span><span class="text-slate-700">|</span><span id="syncStatus" class="text-slate-400">● 확인 중</span></span>
+    <button id="rankHdBtn" type="button" onclick="openRankPanel('popular')" class="hd-btn hd-rank" title="전체 순위 (인기·매출 1~100위)" aria-label="전체 순위"><i class="fa-solid fa-list-ol"></i><span class="hidden sm:inline">전체 순위</span></button>
     <button id="reportBtn" type="button" onclick="openReport()" class="hd-btn hd-report" title="주간 리포트"><i class="fa-regular fa-file-lines"></i>주간 리포트<span id="reportNew" class="hd-new hidden">NEW</span></button>
     <button id="refreshBtn" type="button" onclick="fetchAllData()" class="hd-btn hd-icon" title="새로고침" aria-label="새로고침"><i class="fa-solid fa-rotate"></i></button>
   </div>
