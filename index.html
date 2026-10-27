@@ -796,10 +796,7 @@ html.panel-lock { overflow: hidden; }
 
   <!-- ② 시장 구조 -->
   <div id="mkSecStructure" class="hidden space-y-4">
-    <div class="flex flex-wrap items-center justify-between gap-2">
-      <p class="text-[11px] muted">어떤 게임이 매출 강세·인기 강세인지, 어떤 장르와 퍼블리셔가 TOP100을 차지하는지</p>
-      <div class="flex items-center gap-2"><span class="text-[11px] muted">장르·퍼블리셔 기준</span><div class="mk-tabs" data-tab="secStructure"></div></div>
-    </div>
+    <p class="text-[11px] muted">어떤 게임이 매출 강세·인기 강세인지, 어떤 장르와 퍼블리셔가 TOP100을 차지하는지</p>
     <section class="card rounded-xl p-5" data-snap>
       <div class="mk-card-head">
         <div><h3 class="font-semibold text-sm">시장 포지션 맵<i class="fa-regular fa-circle-question mk-info" title="매출·인기 둘 다 TOP100인 게임만 평면에 아이콘으로 놓습니다. 가로는 매출 순위(오른쪽이 1위), 세로는 인기 순위(위쪽이 1위)이고, 상위권이 잘 보이도록 로그 눈금을 씁니다. 한쪽에만 TOP100인 게임은 아래 두 줄에 순위순으로 모았습니다. 기간 평균은 기간의 절반 이상 TOP100이었던 게임만 포함하며, 빠진 날은 100+로 계산합니다. 아이콘을 누르면 게임 상세가 열립니다."></i></h3><p id="mkPosDesc" class="text-[11px] muted mt-1">-</p></div>
@@ -831,11 +828,11 @@ html.panel-lock { overflow: hidden; }
     </section>
     <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <div class="card rounded-xl p-5">
-        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">장르 비중 추이</h3><p class="text-[11px] muted mt-1">최근 8주 · 주간 TOP100 구성 비중</p></div><span class="mk-store" data-storeof="wGenre"></span></div>
+        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">장르 비중 추이</h3><p class="text-[11px] muted mt-1">최근 8주 · 주간 TOP100 구성 비중</p></div><div class="mk-tabs shrink-0" data-tab="wGenre" aria-label="장르 비중 기준"></div></div>
         <div id="mkWGenre"></div>
       </div>
       <div class="card rounded-xl p-5">
-        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">퍼블리셔 순위 점유율 (가중)<i class="fa-regular fa-circle-question mk-info" title="지난주 매일 순위마다 (101 − 순위) 점수를 주고 퍼블리셔별로 합산한 값의 비중. 1위 게임은 하루 100점, 100위는 1점이라 TOP100 게임 수보다 상위권 장악력을 반영합니다."></i></h3><p class="text-[11px] muted mt-1">지난주 · 상위 순위일수록 큰 점수로 합산</p></div><span class="mk-store" data-storeof="wPub"></span></div>
+        <div class="mk-card-head"><div><h3 class="font-semibold text-sm">퍼블리셔 순위 점유율 (가중)<i class="fa-regular fa-circle-question mk-info" title="지난주 매일 순위마다 (101 − 순위) 점수를 주고 퍼블리셔별로 합산한 값의 비중. 1위 게임은 하루 100점, 100위는 1점이라 TOP100 게임 수보다 상위권 장악력을 반영합니다."></i></h3><p class="text-[11px] muted mt-1">지난주 · 상위 순위일수록 큰 점수로 합산</p></div><div class="mk-tabs shrink-0" data-tab="wPub" aria-label="퍼블리셔 점유율 기준"></div></div>
         <div id="mkWPub"></div>
       </div>
     </section>
@@ -3821,11 +3818,11 @@ let mkMode = 'daily';
 let mkSection = 'change';
 const mkPosExpand = {};
 /* 탭 단위 매출/인기 전환: 한 번에 그 탭의 카드들을 같이 바꿈 */
-const MK_TAB_GROUPS = { secChange: ['dMovers', 'dEntries', 'wMovers', 'wEntries'], secStructure: ['wGenre', 'wPub'] };
+const MK_TAB_GROUPS = { secChange: ['dMovers', 'dEntries', 'wMovers', 'wEntries'] };  /* 시장 구조의 장르·퍼블리셔는 카드마다 따로 전환 */
 const MK_CMP_MIN = 0.8; /* 직전 기간 TOP100 일수가 이 비율 미만이면 '비교 제외' */
 const mkMonthly = { period: 'month', ym: '', wk: '', all: false };
 function mkRankPeriodSet(v){ mkMonthly.period = v; mkMonthly.all = false; mkRender(); }
-const mkTabs = { monthly: 'sales', secChange: 'sales', secStructure: 'sales', dMovers: 'sales', dEntries: 'sales', dEntryType: 'in', wEntryType: 'list', wGenre: 'sales', wPub: 'sales', wMovers: 'sales', wEntries: 'sales', wCohort: 'sales', debut: 'sales' };
+const mkTabs = { monthly: 'sales', secChange: 'sales', dMovers: 'sales', dEntries: 'sales', dEntryType: 'in', wEntryType: 'list', wGenre: 'sales', wPub: 'sales', wMovers: 'sales', wEntries: 'sales', wCohort: 'sales', debut: 'sales' };
 /* 탭 버튼 선택지: 기본은 매출/인기 */
 const MK_TAB_OPTIONS = {};
 const mkIndexCache = { sales: null, popular: null };
