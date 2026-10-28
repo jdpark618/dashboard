@@ -344,7 +344,7 @@ html.panel-lock { overflow: hidden; }
 .rp-eyebrow { font-size:8pt; font-weight:700; letter-spacing:.12em; color:var(--brand); }
 .rp-lead { font-size:10pt; color:var(--sub); margin-top:1.5mm; font-weight:600; }
 /* 1쪽 이번 주 핵심: 관찰 · 해석 · 확인할 곳 카드 */
-.rp-ins { display:grid; grid-template-columns:1fr 1fr; gap:2.5mm; }
+.rp-ins { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:2.5mm; }  /* 한 줄 근거 글자가 길어도 열이 페이지 밖으로 늘어나지 않게 */
 .rp-in { border:1px solid var(--line); border-radius:2.5mm; padding:2mm 3mm; position:relative; }
 .rp-in .go { position:absolute; top:2mm; right:3mm; font-size:7pt; color:var(--mute); }
 .rp-in .ob { font-size:8.8pt; font-weight:700; padding-right:9mm; line-height:1.3; }
