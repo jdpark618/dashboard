@@ -374,7 +374,7 @@ html.panel-lock { overflow: hidden; }
 .rp-mv .d { text-align:right; font-weight:700; white-space:nowrap; width:13mm; }
 .rp-mv .h td { font-size:7.5pt; color:var(--mute); font-weight:600; }
 .rp-empty { font-size:8.4pt; color:var(--mute); padding:2mm 0; }
-.rp-partial { margin-top:3mm; font-size:7.8pt; color:var(--sub); background:var(--soft); border:1px dashed #cbd5e1; border-radius:2mm; padding:2mm 3mm; line-height:1.6; }
+.rp-partial { margin-top:2.5mm; font-size:7.6pt; color:var(--mute); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }  /* 게임명 없이 한 줄 안내 */
 .rp-rk2 { width:100%; border-collapse:collapse; font-size:8.4pt; table-layout:fixed; }
 .rp-rk2 th { font-size:7.2pt; color:var(--mute); font-weight:600; text-align:left; padding:1mm; border-bottom:1.2px solid #cbd5e1; }
 .rp-rk2 td { height:7.55mm; padding:0 1mm; border-bottom:1px solid var(--line); vertical-align:middle; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -5670,7 +5670,7 @@ function rpRender(D){
       <div><h3><span class="rp-tag bg-sales">매출</span> 급상승</h3>${mvTable(S.sales.up, 't-up')}<h3 style="margin-top:3.5mm"><span class="rp-tag bg-sales">매출</span> 급하락</h3>${mvTable(S.sales.down, 't-down')}</div>
       <div><h3><span class="rp-tag bg-pop">인기</span> 급상승</h3>${mvTable(S.popular.up, 't-up')}<h3 style="margin-top:3.5mm"><span class="rp-tag bg-pop">인기</span> 급하락</h3>${mvTable(S.popular.down, 't-down')}</div>
     </div>
-    ${partialAll.length ? `<div class="rp-partial"><b>비교에서 제외한 상위권 게임</b> · 전주에 일부 날만 TOP100이라 주 평균 비교가 맞지 않는 게임: ${partialAll.map(x => `${esc(x.n)}(${x.s} 전주 ${x.pd}일 → 이번 주 ${x.cd}일, 평균 ${R(x.to)}위)`).join(', ')}</div>` : ''}
+    ${partialAll.length ? `<div class="rp-partial">※ 두 주 모두 TOP100을 7일 내내 유지하지 못한 게임은 상위권이라도 비교에서 제외했습니다.</div>` : ''}
     ${foot}</section>`;
 
   /* 2쪽 순위표: # · 게임(아이콘 + 이름 한 줄) · 순위(7일 평균) · 증감 */
