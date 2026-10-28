@@ -410,8 +410,11 @@ html.panel-lock { overflow: hidden; }
 .rp-q.pop { background:#f0fdfa; border-color:#99f6e4; } .rp-q.pop .qt { color:var(--pop); }
 .rp-q.rest { background:#f8fafc; } .rp-q.rest .qt { color:var(--sub); }
 .rp-axis { display:flex; justify-content:space-between; font-size:7.4pt; color:var(--mute); margin:1.5mm 1mm 0; }
-.rp-only { display:grid; grid-template-columns:1fr 1fr; gap:2.5mm; margin-top:2.5mm; }
-.rp-only .ob { border:1px solid var(--line); border-radius:3mm; padding:2.5mm 3.5mm; font-size:8.2pt; }
+.rp-posx { margin-top:2.5mm; border:1px solid var(--line); border-radius:3mm; padding:2.5mm 3.5mm; }
+.rp-posx .hd { font-size:8.6pt; font-weight:800; margin-bottom:1mm; } .rp-posx .hd span { font-size:7pt; font-weight:500; color:var(--mute); margin-left:1.5mm; }
+.rp-posx .it { padding:.4mm 0 .4mm 2.5mm; border-left:.6mm solid #c7d2fe; margin-top:1.3mm; }
+.rp-posx .c { font-size:8.2pt; color:#334155; } .rp-posx .c b { color:var(--ink); }
+.rp-posx .e { font-size:7.2pt; color:var(--mute); margin-top:.4mm; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .rp-bars .row { display:grid; grid-template-columns:20mm 1fr 15mm; align-items:center; gap:2mm; font-size:8.4pt; padding:.9mm 0; }
 .rp-bars .track { height:2.6mm; background:#f1f5f9; border-radius:1mm; overflow:hidden; }
 .rp-bars .fill { height:100%; border-radius:1mm; }
@@ -5500,7 +5503,7 @@ function rpBuild(mon){
     const up = pairs.filter(x => x.d > 0).sort((a, b) => b.raw - a.raw).slice(0, 5), down = pairs.filter(x => x.d < 0).sort((a, b) => a.raw - b.raw).slice(0, 5);
     const top = curList.slice(0, RP_TOP_N).map(([k, g], i) => ({ key: k, pos: i + 1, n: g.name, g: g.genre, p: g.publisher, avg: g.rank, pavg: pa.get(k)?.rank ?? null, prevPos: prevPos.get(k) ?? null, pDays: wb.games.get(k)?.days || 0, first: firstOf(s, k, g.name) }));
     const en = mkWeekEntrants(idx, mon), enPrev = mkWeekEntrants(idx, pmon);
-    const entrants = en.list.slice().sort((a, b) => a.best - b.best).slice(0, 8).map(x => ({ n: x.name, best: x.best, days: x.days, g: x.genre, first: firstOf(s, x.key, x.name) }));
+    const entrants = en.list.slice().sort((a, b) => a.best - b.best).slice(0, 6).map(x => ({ n: x.name, best: x.best, days: x.days, g: x.genre, first: firstOf(s, x.key, x.name) }));
     const old = mkWeekAgg(idx, mkAddDays(mon, -28)), a = idx.byDate.get(old.lastDate), b = idx.byDate.get(wa.lastDate);
     let kept = 0; a?.forEach((_, k) => { if(b?.has(k)) kept++; });
     const gc = d => { const m = {}; idx.byDate.get(d)?.forEach(v => { m[v.genre] = (m[v.genre] || 0) + 1; }); return m; };
@@ -5513,7 +5516,7 @@ function rpBuild(mon){
       const lead = [...mkPosAgg(idx, ds)].sort((a, b) => mkAvgOrder(a[1], b[1]))[0]?.[0];
       if(lead !== leadKey) break; leadWeeks++;
     }
-    S[s] = { cur, prev, ca, top, up, down, leadWeeks, cmpN: pairs.length, partial: partial.sort((x, y) => x.to - y.to).slice(0, 4), entrantsN: en.list.length, entrantsPrevN: enPrev.prevHasData ? enPrev.list.length : null, entrants,
+    S[s] = { cur, prev, ca, pa, top, up, down, leadWeeks, cmpN: pairs.length, partial: partial.sort((x, y) => x.to - y.to).slice(0, 4), entrantsN: en.list.length, entrantsPrevN: enPrev.prevHasData ? enPrev.list.length : null, entrants,
       retention: a?.size ? Math.round(kept / a.size * 100) : null,
       genres: Object.entries(gNow).sort((x, y) => y[1] - x[1]).slice(0, 6).map(([g, c]) => ({ g, c, d: c - (gPrev[g] || 0) })) };
   }
@@ -5523,7 +5526,8 @@ function rpBuild(mon){
   const quad = { top: [], sales: [], pop: [], rest: [] };
   both.forEach(x => (x.sr <= 10 && x.pr <= 10 ? quad.top : x.sr <= 10 ? quad.sales : x.pr <= 10 ? quad.pop : quad.rest).push(x));
   Object.values(quad).forEach(l => l.sort((x, y) => (x.sr + x.pr) - (y.sr + y.pr)));
-  const only = (A, B) => [...A].filter(([k]) => !B.has(k)).map(([, g]) => ({ n: g.name, r: g.rank })).sort((x, y) => x.r - y.r);
+  const only = (A, B) => [...A].filter(([k]) => !B.has(k)).map(([, g]) => ({ n: g.name, r: g.rank, g: g.genre || '미분류' })).sort((x, y) => x.r - y.r);
+  let prevBoth = null; if(S.sales.pa.size && S.popular.pa.size){ prevBoth = 0; S.sales.pa.forEach((_, k) => { if(S.popular.pa.has(k)) prevBoth++; }); }
   /* 신작: 그 주 출시 + 다음 주 예정. 플랫폼에 모바일 또는 PC가 있는 게임 (콘솔 전용은 제외)
      같은 날 안에서는 모바일 전용 → 모바일 포함 멀티 → PC 순 */
   const pfRank = pf => { const t = pf.replace(/\s+/g, ''); return t.includes('모바일') ? (t === '모바일' ? 0 : 1) : 2; };
@@ -5531,7 +5535,7 @@ function rpBuild(mon){
     .filter(r => r.d && r.n && /모바일|pc/i.test(r.pf.replace(/\s+/g, '')))
     .sort((x, y) => x.d.localeCompare(y.d) || pfRank(x.pf) - pfRank(y.pf) || x.n.localeCompare(y.n, 'ko'));
   const nmon = mkAddDays(mon, 7);
-  return { mon, pmon, end, issue: nmon, S, quad, both: both.length, onlyS: only(cs, cp), onlyP: only(cp, cs),
+  return { mon, pmon, end, issue: nmon, S, quad, both: both.length, prevBoth, onlyS: only(cs, cp), onlyP: only(cp, cs),
     relLast: rel.filter(r => r.d >= mon && r.d <= end), relNext: rel.filter(r => r.d >= nmon && r.d <= mkAddDays(nmon, 6)) };
 }
 
@@ -5595,7 +5599,7 @@ function rpRender(D){
   const card = (pri, tg, tgLabel, go, ob, it, ck) => cards.push({ pri, html: `<div class="rp-in"><span class="go">→ ${go}쪽</span><div class="ob"><span class="tg ${tg}">${tgLabel}</span>${ob}</div><div class="it">${it}</div>${ck ? `<div class="ck">${ck}</div>` : ''}</div>` });
   /* ① 1위 교체 (1위는 위 요약 칸에도 있으므로 자리가 남을 때만) */
   [['sales', sTop], ['popular', pTop]].forEach(([st, t]) => {
-    if(t && t.prevPos !== 1) card(45, W[st].tg, W[st].label, 2, `주간 1위 교체 — <b>${esc(cut(t.n, 18))}</b>`,
+    if(t && t.prevPos !== 1) card(45, W[st].tg, W[st].label, 3, `주간 1위 교체 — <b>${esc(cut(t.n, 18))}</b>`,
       t.prevPos == null ? (isFirst(t.first) ? '수집 기록상 처음 차트인한 게임이 바로 1위에 올랐습니다.' : '전주 순위표 밖에서 1위로 올라섰습니다.') : `전주 ${t.prevPos}위에서 올라섰습니다.`,
       S[st].top.find(x => x.prevPos === 1) ? `전주 1위: ${esc(cut(S[st].top.find(x => x.prevPos === 1).n, 18))} (이번 주 ${S[st].top.find(x => x.prevPos === 1).pos}위)` : '');
   });
@@ -5604,7 +5608,7 @@ function rpRender(D){
   const pTen = S.popular.top.filter(x => x.pos <= 10), crossed = pTen.filter(x => bothNames.has(x.n));
   if(pTen.length >= 5){
     const k = crossed.length;
-    card(80, 'b', '교차', 3, `인기 TOP10 중 매출 TOP100은 <b>${k}개</b>`,
+    card(80, 'b', '교차', 2, `인기 TOP10 중 매출 TOP100은 <b>${k}개</b>`,
       k <= 2 ? '인기 상위권과 매출 상위권이 거의 겹치지 않습니다.' : k >= 6 ? '인기 상위권 게임 대부분이 매출 TOP100에도 들었습니다.' : '인기 상위권 일부만 매출 TOP100에 들었습니다.',
       D.quad.top.length ? `양쪽 10위권: ${D.quad.top.map(x => esc(cut(x.n, 14))).join(', ')}` : '양쪽 모두 10위 안인 게임은 없습니다.');
   }
@@ -5614,7 +5618,7 @@ function rpRender(D){
     const w = W[turn.st], r = turn.r, gc = {};
     w.ins.forEach(v => { if(!bizIsMiscGenre(v.g)) gc[v.g] = (gc[v.g] || 0) + 1; });
     const gTop = Object.entries(gc).sort((a, b) => b[1] - a[1])[0];
-    card(r >= 1.2 || r <= 0.8 ? 70 : 40, w.tg, w.label, 3, `${w.ins.length}개 들어오고 ${w.outs.length}개 빠짐 <small>(전주 들어온 수 ${w.prevIns ?? '-'})</small>`,
+    card(r >= 1.2 || r <= 0.8 ? 70 : 40, w.tg, w.label, 2, `${w.ins.length}개 들어오고 ${w.outs.length}개 빠짐 <small>(전주 들어온 수 ${w.prevIns ?? '-'})</small>`,
       r >= 1.2 ? '회전이 전주보다 <span class="up">빨라졌습니다</span>. 새 게임이 들어오기 쉬운 주였습니다.' : r <= 0.8 ? '회전이 전주보다 <span class="dn">느려졌습니다</span>. 기존 게임이 자리를 지킨 주였습니다.' : '회전 속도는 전주와 비슷합니다.',
       gTop && gTop[1] >= 3 ? `들어온 ${w.ins.length}개 중 ${esc(gTop[0])} ${gTop[1]}개로 가장 많음` : '');
   }
@@ -5629,7 +5633,7 @@ function rpRender(D){
   const gm = gMoves.filter(x => Math.abs(x.net) >= 2).sort((a, b) => Math.abs(b.net) - Math.abs(a.net) || (b.i.length + b.o.length) - (a.i.length + a.o.length))[0];
   if(gm){
     const ni = gm.i.length, no = gm.o.length;
-    card(60, W[gm.st].tg, W[gm.st].label, 3, `${esc(gm.g)} <span class="${gm.net > 0 ? 'up' : 'dn'}">${gm.net > 0 ? '+' : '−'}${Math.abs(gm.net)}개</span> <small>(${ni}개 들어오고 ${no}개 빠짐)</small>`,
+    card(60, W[gm.st].tg, W[gm.st].label, 2, `${esc(gm.g)} <span class="${gm.net > 0 ? 'up' : 'dn'}">${gm.net > 0 ? '+' : '−'}${Math.abs(gm.net)}개</span> <small>(${ni}개 들어오고 ${no}개 빠짐)</small>`,
       ni + no <= 2 ? '한두 게임의 들고 남 때문입니다.' : ni >= 2 && no >= 2 ? '한 게임이 아니라 <b>여러 게임이 교체된</b> 결과입니다.' : ni > no ? '여러 게임이 함께 들어온 결과입니다.' : '여러 게임이 함께 빠진 결과입니다.',
       (() => { /* 결과: 그 주 차트에 든 이 장르 게임 수 (게임명 대신) */
         const w = W[gm.st], cnt = m => [...m.values()].filter(v => v.g === gm.g).length;
@@ -5640,7 +5644,7 @@ function rpRender(D){
   const tt = t10[0].nw.length >= 3 ? t10[0] : t10.find(x => x.st === 'sales');
   if(tt){
     const n = tt.nw.length, rt = S[tt.st].retention;
-    card(n >= 3 ? 65 : 50, W[tt.st].tg, W[tt.st].label, 2, `TOP10 교체 ${n}개${rt != null ? ` · 4주 잔존 ${rt}%` : ''}`,
+    card(n >= 3 ? 65 : 50, W[tt.st].tg, W[tt.st].label, 3, `TOP10 교체 ${n}개${rt != null ? ` · 4주 잔존 ${rt}%` : ''}`,
       n <= 1 ? '상위권은 거의 그대로입니다. <b>고정적인</b> 시장입니다.' : n >= 3 ? '상위권 <b>교체가 많았던</b> 주입니다.' : '상위권 일부가 바뀌었습니다.',
       (() => { /* 결과: TOP10 유지 수 + 1위 연속 주 수 (1위만 이름을 씀) */
         const lead = S[tt.st].top[0], lw = S[tt.st].leadWeeks;
@@ -5673,7 +5677,7 @@ function rpRender(D){
     ${partialAll.length ? `<div class="rp-partial">※ 두 주 모두 TOP100을 7일 내내 유지하지 못한 게임은 상위권이라도 비교에서 제외했습니다.</div>` : ''}
     ${foot}</section>`;
 
-  /* 2쪽 순위표: # · 게임(아이콘 + 이름 한 줄) · 순위(7일 평균) · 증감 */
+  /* 3쪽 순위표: # · 게임(아이콘 + 이름 한 줄) · 순위(7일 평균) · 증감 */
   const rkTable = (list, prevLen) => `<table class="rp-rk2"><colgroup><col style="width:6mm"><col><col style="width:12mm"><col style="width:17mm"></colgroup><tr><th>#</th><th>게임</th><th style="text-align:right">순위</th><th style="padding-left:2mm">증감</th></tr>${list.map(x => {
     const partial = x.prevPos != null && x.pDays < prevLen * MK_CMP_MIN;
     const tr = x.prevPos == null ? (isFirst(x.first) ? '<span class="rp-mini first">첫 차트인</span>' : '<span class="rp-mini re">재진입</span>')
@@ -5682,7 +5686,7 @@ function rpRender(D){
     const icon = getIconUrlForGame(x.n);
     return `<tr><td class="p">${x.pos}</td><td class="g"><span class="ic">${icon ? `<img src="${escapeAttr(icon)}" alt="" onerror="this.remove()">` : ''}</span>${esc(x.n)}</td><td class="v">${R(x.avg)}위</td><td class="tr">${tr}</td></tr>`;
   }).join('')}</table>`;
-  const p2 = `<section class="rp-page">${run(2)}
+  const p3 = `<section class="rp-page">${run(3)}
     <h2 class="first">주간 순위표 TOP ${RP_TOP_N} <small>7일 평균 순위 · 증감은 전주 순위표 대비</small></h2>
     <div class="rp-cols">
       <div><h3><span class="rp-tag bg-sales">매출</span></h3>${rkTable(S.sales.top, S.sales.prev.length)}</div>
@@ -5691,27 +5695,48 @@ function rpRender(D){
     <div class="rp-note">순위 = 그 주 7일 평균(빠진 날 101위) · <span class="rp-mini first">첫 차트인</span> 처음 TOP100 · <span class="rp-mini re">재진입</span> 다시 들어옴 · <span class="rp-mini part">비교 제외</span> 전주 기록이 적어 증감 없음</div>
     ${foot}</section>`;
 
-  const Q = D.quad, qList = l => `<ul>${l.slice(0, 6).map(x => `<li><span class="n">${esc(cut(x.n, 22))}</span><span class="r">매출 ${R(x.sr)} · 인기 ${R(x.pr)}</span></li>`).join('')}</ul>`;
+  const Q = D.quad, qList = l => `<ul>${l.slice(0, 3).map(x => `<li><span class="n">${esc(cut(x.n, 22))}</span><span class="r">매출 ${R(x.sr)} · 인기 ${R(x.pr)}</span></li>`).join('')}</ul>`;
   const qBox = (cls, t, d, list, n = list.length) => `<div class="rp-q ${cls}"><div class="qh"><span class="qt">${t}</span><span class="qn">${n}</span></div><div class="qd">${d}</div>${qList(list)}</div>`;
   const bars = (list, color) => `<div class="rp-bars">${list.map(x => `<div class="row"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(x.g)}</span><div class="track"><div class="fill" style="width:${Math.min(100, x.c / 40 * 100)}%;background:${color}"></div></div><span class="val">${x.c}개 ${x.d ? `<b class="${x.d > 0 ? 't-up' : 't-down'}">${x.d > 0 ? '▲' : '▼'}${Math.abs(x.d)}</b>` : ''}</span></div>`).join('')}</div>`;
   const entList = x => x.entrants.length ? `<ul class="rp-ent">${x.entrants.map(e => `<li><span class="n">${esc(e.n)}</span><span class="m">${esc(e.g)} · 최고 ${e.best}위 · ${e.days}일</span>${isFirst(e.first) ? `<span class="rp-mini first">첫 차트인 ${rpSlash(e.first)}</span>` : '<span class="rp-mini re">재진입</span>'}</li>`).join('')}</ul>` : '<div class="rp-empty">해당 게임 없음</div>';
-  const onlyTxt = l => l.slice(0, 5).map(x => `${esc(cut(x.n, 14))} ${R(x.r)}위`).join(' · ');
-  const p3 = `<section class="rp-page">${run(3)}
+  /* 포지션 해석: 게임명 없이 겹침 정도·상위권 구성·인기 쪽 장르로 사업적 해석. 데이터로 못 가리는 원인은 '추정'으로 표기 */
+  const posNotes = (() => {
+    const pct = (a, b) => b ? Math.round(a / b * 100) : 0, out = [];
+    const ov = pct(D.both, D.both + D.onlyS.length);
+    out.push([ov < 30 ? '다운로드와 매출이 <b>따로 움직이는</b> 시장. 매출은 신규 유입보다 기존 유저 과금이 떠받치는 구조로 추정됩니다.'
+      : ov >= 50 ? '다운로드 상위권이 매출로 <b>함께 이어지는</b> 시장. 신규 유입이 매출에 기여하는 구조로 추정됩니다.'
+      : '다운로드와 매출이 <b>일부만 겹치는</b> 시장. 유입형 게임과 과금형 게임이 나뉘어 있습니다.',
+      `매출 TOP100 중 인기 TOP100에도 든 게임 ${D.both}개(${ov}%)${D.prevBoth != null ? ` · 전주 ${D.prevBoth}개` : ''}`]);
+    const s10 = S.sales.top.slice(0, 10), inPop = s10.filter(x => S.popular.ca.has(x.key)).length, k = D.quad.top.length;
+    out.push([k <= 1 ? '매출 상위권은 새 유입 없이 <b>기존 유저 과금으로 유지</b>되는 타이틀 중심입니다.'
+      : k >= 3 ? '매출 상위권 일부가 <b>다운로드도 함께</b> 끌어오는 중. 업데이트·마케팅 등으로 유입이 늘어난 것으로 추정됩니다.'
+      : '매출 상위권 대부분은 유입보다 <b>기존 유저 과금</b>으로 유지되는 것으로 추정됩니다.',
+      `매출 TOP10 중 인기 10위 안 ${k}개 · 인기 TOP100 안 ${inPop}개 · 인기 TOP100 밖 ${10 - inPop}개`]);
+    const gc = {}; D.onlyP.forEach(x => { if(!bizIsMiscGenre(x.g)) gc[x.g] = (gc[x.g] || 0) + 1; });
+    const g2 = Object.entries(gc).sort((a, b) => b[1] - a[1]).slice(0, 2), gp = pct(g2.reduce((a, x) => a + x[1], 0), D.onlyP.length);
+    const casual = /퍼즐|캐주얼|아케이드|보드|카드|단어|시뮬/;
+    if(g2.length) out.push([gp >= 40 && casual.test(g2[0][0]) ? `다운로드는 <b>${esc(g2[0][0])} 등 캐주얼</b>이 차지하지만 매출로는 거의 이어지지 않음. 광고·저과금 수익 모델로 추정됩니다.`
+      : `인기에만 든 게임은 <b>${g2.map(x => esc(x[0])).join('·')}</b> 위주. 매출 전환 여부는 다음 주 확인이 필요합니다.`,
+      `인기에만 TOP100 ${D.onlyP.length}개 중 ${g2.map(x => `${esc(x[0])} ${x[1]}개`).join(' · ')} (${gp}%)`]);
+    const nw = S.popular.top.slice(0, 10).filter(x => x.first && x.first >= mkAddDays(D.mon, -42)), nwS = nw.filter(x => S.sales.ca.has(x.key)).length;
+    if(nw.length >= 2) out.push([nwS === 0 ? `인기 TOP10의 신작 ${nw.length}개는 아직 <b>매출 TOP100 밖</b>. 출시 초기 유입 단계로, 수익화는 지켜볼 필요가 있습니다.`
+      : `인기 TOP10의 신작 ${nw.length}개 중 ${nwS}개는 <b>매출 TOP100에도 진입</b>. 유입이 과금으로 이어지기 시작한 것으로 추정됩니다.`,
+      `인기 TOP10 중 최근 6주 안에 첫 차트인한 게임 ${nw.length}개 · 그중 매출 TOP100 ${nwS}개`]);
+    return out;
+  })();
+  const p2 = `<section class="rp-page">${run(2)}
     <h2 class="first">매출·인기 포지션 <small>주 평균 순위(반올림) · 매출·인기 둘 다 TOP100인 ${D.both}개를 10위 기준으로 나눔</small></h2>
     <div class="rp-quad">
       ${qBox('pop', '인기 강세', '인기 10위 안 · 매출 10위 밖 — 유입은 많지만 수익화는 약한 구조', Q.pop)}
       ${qBox('top', '양쪽 10위권', '매출·인기 모두 10위 안 — 시장 주도 게임', Q.top)}
-      ${qBox('rest', '양쪽 11~100위', '둘 다 TOP100이지만 10위 밖 — 상위 6개', Q.rest)}
+      ${qBox('rest', '양쪽 11~100위', '둘 다 TOP100이지만 10위 밖 — 상위 3개', Q.rest)}
       ${qBox('sales', '매출 강세', '매출 10위 안 · 인기 10위 밖 — 소수 유저 과금 비중이 큰 구조', Q.sales)}
     </div>
     <div class="rp-axis"><span>← 매출 순위 낮음</span><span>위쪽 = 인기 상위 · 오른쪽 = 매출 상위</span><span>매출 순위 높음 →</span></div>
-    <div class="rp-only">
-      <div class="ob"><b class="t-sales">매출에만 TOP100 ${D.onlyS.length}개</b> <span style="color:var(--mute)">· 인기 순위 밖</span><div style="margin-top:1mm;color:var(--sub)">${onlyTxt(D.onlyS)}</div></div>
-      <div class="ob"><b class="t-pop">인기에만 TOP100 ${D.onlyP.length}개</b> <span style="color:var(--mute)">· 매출 순위 밖</span><div style="margin-top:1mm;color:var(--sub)">${onlyTxt(D.onlyP)}</div></div>
-    </div>
+    <div class="rp-posx"><div class="hd">포지션 해석 <span>순위 데이터 기준 · 원인은 추정</span></div>${posNotes.map(([h, ev]) => `<div class="it"><div class="c">${h}</div><div class="e">${ev}</div></div>`).join('')}</div>
     <h2>장르 구성 <small>그 주 마지막 날 TOP100 · 전주 대비</small></h2>
     <div class="rp-cols"><div><h3><span class="rp-tag bg-sales">매출</span></h3>${bars(S.sales.genres, '#d97706')}</div><div><h3><span class="rp-tag bg-pop">인기</span></h3>${bars(S.popular.genres, '#0d9488')}</div></div>
-    <h2>주간 차트인 <small>전주 TOP100 기록이 없다가 이 주에 차트인 · 최고 순위순 상위 8개</small></h2>
+    <h2>주간 차트인 <small>전주 TOP100 기록이 없다가 이 주에 차트인 · 최고 순위순 상위 6개</small></h2>
     <div class="rp-cols"><div><h3><span class="rp-tag bg-sales">매출</span> ${S.sales.entrantsN}개</h3>${entList(S.sales)}</div><div><h3><span class="rp-tag bg-pop">인기</span> ${S.popular.entrantsN}개</h3>${entList(S.popular)}</div></div>
     ${foot}</section>`;
 
@@ -5727,7 +5752,7 @@ function rpRender(D){
     ${i === 0 ? `<h2 class="first">신작 일정 <small>신작 정보 기준 · 모바일·PC (같은 날은 모바일 → 멀티 → PC 순) · 순위 데이터와 별개</small></h2>${D.relLast.length ? relBand(D.relLast, D.mon) : ''}` : ''}
     ${pg.parts.map(relPart).join('')}
     ${foot}</section>`).join('');
-  return p1 + p2 + p3 + p4;
+  return p1 + p2 + p3 + p4;  /* 1 요약 → 2 포지션·장르·차트인 → 3 순위표 → 4~ 신작 */
 }
 
 async function fetchAllData(){
