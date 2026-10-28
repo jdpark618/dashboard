@@ -428,7 +428,7 @@ html.panel-lock { overflow: hidden; }
 .rp-rel2 .g { font-weight:600; }
 .rp-rel2 .ic { display:inline-block; width:5.2mm; height:5.2mm; border-radius:1.3mm; background:#e2e8f0; vertical-align:middle; margin-right:2.2mm; overflow:hidden; }
 .rp-rel2 .ic img { width:100%; height:100%; object-fit:cover; display:block; }
-.rp-rel2 .pb { color:var(--mute); font-size:7.6pt; }
+.rp-rel2 .pb { color:var(--mute); font-size:7.6pt; } .rp-rel2 .pf { color:var(--sub); font-size:7.6pt; }
 .rp-rel2-h { display:flex; align-items:baseline; gap:2mm; font-size:9.5pt; font-weight:700; margin:0 0 2mm; }
 .rp-rel2-h span { color:var(--mute); font-weight:500; font-size:8pt; }
 .rp-sec { margin-bottom:5mm; } .rp-sec.box { background:var(--soft); border-radius:2mm; padding:3mm 3.5mm 2mm; }
@@ -5516,10 +5516,12 @@ function rpBuild(mon){
   both.forEach(x => (x.sr <= 10 && x.pr <= 10 ? quad.top : x.sr <= 10 ? quad.sales : x.pr <= 10 ? quad.pop : quad.rest).push(x));
   Object.values(quad).forEach(l => l.sort((x, y) => (x.sr + x.pr) - (y.sr + y.pr)));
   const only = (A, B) => [...A].filter(([k]) => !B.has(k)).map(([, g]) => ({ n: g.name, r: g.rank })).sort((x, y) => x.r - y.r);
-  /* 신작: 그 주 출시 + 다음 주 예정 (모바일 포함) */
-  const rel = (rawStore.newReleases?.rows || []).filter(r => String(r[2] || '').replace(/\s+/g, '').includes('모바일'))
-    .map(r => ({ d: String(r[0] || '').trim(), n: String(r[1] || '').trim(), p: String(r[3] || '').trim(), t: String(r[4] || '').trim(), ic: String(r[6] || '').trim().replace(/^'/, '') })).filter(r => r.d && r.n)
-    .sort((x, y) => x.d.localeCompare(y.d) || x.n.localeCompare(y.n, 'ko'));
+  /* 신작: 그 주 출시 + 다음 주 예정. 플랫폼에 모바일 또는 PC가 있는 게임 (콘솔 전용은 제외)
+     같은 날 안에서는 모바일 전용 → 모바일 포함 멀티 → PC 순 */
+  const pfRank = pf => { const t = pf.replace(/\s+/g, ''); return t.includes('모바일') ? (t === '모바일' ? 0 : 1) : 2; };
+  const rel = (rawStore.newReleases?.rows || []).map(r => ({ d: String(r[0] || '').trim(), n: String(r[1] || '').trim(), pf: String(r[2] || '').trim(), p: String(r[3] || '').trim(), t: String(r[4] || '').trim(), ic: String(r[6] || '').trim().replace(/^'/, '') }))
+    .filter(r => r.d && r.n && /모바일|pc/i.test(r.pf.replace(/\s+/g, '')))
+    .sort((x, y) => x.d.localeCompare(y.d) || pfRank(x.pf) - pfRank(y.pf) || x.n.localeCompare(y.n, 'ko'));
   const nmon = mkAddDays(mon, 7);
   return { mon, pmon, end, issue: nmon, S, quad, both: both.length, onlyS: only(cs, cp), onlyP: only(cp, cs),
     relLast: rel.filter(r => r.d >= mon && r.d <= end), relNext: rel.filter(r => r.d >= nmon && r.d <= mkAddDays(nmon, 6)) };
@@ -5634,7 +5636,7 @@ function rpRender(D){
       n ? `진입: ${names(tt.nw.map(x => ({ n: x.n })), 2)}${tt.out.length ? ` · 밀려남: ${names(tt.out.map(x => ({ n: x.n })), 2)}` : ''}` : '');
   }
   const pts = cards.sort((a, b) => b.pri - a.pri).slice(0, 4).map(c => c.html);
-  const relPt = `신작: 이 주 모바일 <b>${D.relLast.length}개</b> 출시 · 다음 주(${rpDot(D.issue)} – ${rpDot(mkAddDays(D.issue, 6))}) <b>${D.relNext.length}개</b> 예정 → 4쪽`;
+  const relPt = `신작(모바일·PC): 이 주 <b>${D.relLast.length}개</b> 출시 · 다음 주(${rpDot(D.issue)} – ${rpDot(mkAddDays(D.issue, 6))}) <b>${D.relNext.length}개</b> 예정 → 4쪽`;
 
   const mvTable = (list, cls) => list.length ? `<table class="rp-mv"><tr class="h"><td>게임</td><td class="num">평균 순위</td><td class="d">변화</td></tr>${list.map(x =>
     `<tr><td class="nm">${esc(x.n)}</td><td class="num">${R(x.from)}위 → <b style="color:var(--ink)">${R(x.to)}위</b></td><td class="d ${cls}">${x.d > 0 ? '▲' : '▼'}${Math.abs(x.d)}</td></tr>`).join('')}</table>` : '<div class="rp-empty">해당 게임 없음</div>';
@@ -5707,11 +5709,11 @@ function rpRender(D){
     return `<div class="rp-band">${c.map(([d, n]) => `<div><div class="bar"><i style="height:${n ? Math.max(6, Math.round(n / mx * 100)) : 0}%"></i></div>${CAL_DOW[mkToDate(d).getDay()]} ${rpSlash(d)}<b>${n}개</b></div>`).join('')}</div>`; };
   const relTag = t => /테스트/.test(t) ? '<span class="rp-mini test">테스트</span>' : /소프트/.test(t) ? '<span class="rp-mini soft">소프트</span>' : /얼리/.test(t) ? '<span class="rp-mini test">얼리</span>' : /정식/.test(t) ? '<span class="rp-mini open">정식 출시</span>' : '';
   const relRow = x => { const r = x.r, dow = CAL_DOW[mkToDate(r.d).getDay()];
-    return `<tr class="${x.first ? 'g1' : ''}"><td class="d">${x.first ? `${rpSlash(r.d)} ${dow}` : ''}</td><td class="g"><span class="ic">${/^https?:/.test(r.ic) ? `<img src="${escapeAttr(r.ic)}" alt="" onerror="this.remove()">` : ''}</span>${esc(r.n)}</td><td>${relTag(r.t)}</td><td class="pb">${esc(rpPubClean(r.p))}</td></tr>`; };
+    return `<tr class="${x.first ? 'g1' : ''}"><td class="d">${x.first ? `${rpSlash(r.d)} ${dow}` : ''}</td><td class="g"><span class="ic">${/^https?:/.test(r.ic) ? `<img src="${escapeAttr(r.ic)}" alt="" onerror="this.remove()">` : ''}</span>${esc(r.n)}</td><td class="pf">${esc(calPlatformShort(r.pf))}</td><td>${relTag(r.t)}</td><td class="pb">${esc(rpPubClean(r.p))}</td></tr>`; };
   const relPart = pt => `<div class="rp-sec${pt.sec.box ? ' box' : ''}"><div class="rp-rel2-h">${pt.sec.title}${pt.cont ? ' <span>(이어서)</span>' : pt.sec.sub ? ` <span>${pt.sec.sub}</span>` : ''}</div>`
-    + (pt.sec.list.length ? `<table class="rp-rel2"><colgroup><col style="width:22mm"><col><col style="width:17mm"><col style="width:42mm"></colgroup><tr><th>날짜</th><th>게임</th><th>유형</th><th>퍼블리셔</th></tr>${pt.rows.map(relRow).join('')}</table>` : '<div class="rp-empty">해당 일정 없음</div>') + '</div>';
+    + (pt.sec.list.length ? `<table class="rp-rel2"><colgroup><col style="width:20mm"><col><col style="width:22mm"><col style="width:17mm"><col style="width:36mm"></colgroup><tr><th>날짜</th><th>게임</th><th>플랫폼</th><th>유형</th><th>퍼블리셔</th></tr>${pt.rows.map(relRow).join('')}</table>` : '<div class="rp-empty">해당 일정 없음</div>') + '</div>';
   const p4 = relPages.map((pg, i) => `<section class="rp-page">${run(4 + i)}
-    ${i === 0 ? `<h2 class="first">신작 일정 <small>신작 정보 기준 · 모바일 포함 · 순위 데이터와 별개</small></h2>${D.relLast.length ? relBand(D.relLast, D.mon) : ''}` : ''}
+    ${i === 0 ? `<h2 class="first">신작 일정 <small>신작 정보 기준 · 모바일·PC (같은 날은 모바일 → 멀티 → PC 순) · 순위 데이터와 별개</small></h2>${D.relLast.length ? relBand(D.relLast, D.mon) : ''}` : ''}
     ${pg.parts.map(relPart).join('')}
     ${foot}</section>`).join('');
   return p1 + p2 + p3 + p4;
