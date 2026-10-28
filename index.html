@@ -5505,7 +5505,15 @@ function rpBuild(mon){
     let kept = 0; a?.forEach((_, k) => { if(b?.has(k)) kept++; });
     const gc = d => { const m = {}; idx.byDate.get(d)?.forEach(v => { m[v.genre] = (m[v.genre] || 0) + 1; }); return m; };
     const gNow = wa.lastDate ? gc(wa.lastDate) : {}, gPrev = wb.lastDate ? gc(wb.lastDate) : {};
-    S[s] = { cur, prev, ca, top, up, down, cmpN: pairs.length, partial: partial.sort((x, y) => x.to - y.to).slice(0, 4), entrantsN: en.list.length, entrantsPrevN: enPrev.prevHasData ? enPrev.list.length : null, entrants,
+    /* 1위 연속 주 수: 이번 주 1위가 몇 주째 같은지 (최대 52주) */
+    const leadKey = curList[0]?.[0];
+    let leadWeeks = 0;
+    for(let w = mon; leadKey && leadWeeks < 52; w = mkAddDays(w, -7)){
+      const ds = mkWeekAgg(idx, w).dates; if(!ds.length) break;
+      const lead = [...mkPosAgg(idx, ds)].sort((a, b) => mkAvgOrder(a[1], b[1]))[0]?.[0];
+      if(lead !== leadKey) break; leadWeeks++;
+    }
+    S[s] = { cur, prev, ca, top, up, down, leadWeeks, cmpN: pairs.length, partial: partial.sort((x, y) => x.to - y.to).slice(0, 4), entrantsN: en.list.length, entrantsPrevN: enPrev.prevHasData ? enPrev.list.length : null, entrants,
       retention: a?.size ? Math.round(kept / a.size * 100) : null,
       genres: Object.entries(gNow).sort((x, y) => y[1] - x[1]).slice(0, 6).map(([g, c]) => ({ g, c, d: c - (gPrev[g] || 0) })) };
   }
@@ -5581,9 +5589,8 @@ function rpRender(D){
   ['sales', 'popular'].forEach(st => {
     const a = wkSet(st, D.mon), b = wkSet(st, D.pmon), b2 = wkSet(st, mkAddDays(D.pmon, -7));
     const ins = [...a].filter(([k]) => !b.has(k)).map(([, v]) => v), outs = [...b].filter(([k]) => !a.has(k)).map(([, v]) => v);
-    W[st] = { ins, outs, prevIns: b2.size ? [...b].filter(([k]) => !b2.has(k)).length : null, label: st === 'sales' ? '매출' : '인기', tg: st === 'sales' ? 's' : 'p' };
+    W[st] = { a, b, ins, outs, prevIns: b2.size ? [...b].filter(([k]) => !b2.has(k)).length : null, label: st === 'sales' ? '매출' : '인기', tg: st === 'sales' ? 's' : 'p' };
   });
-  const names = (list, n = 3) => list.slice(0, n).map(v => esc(cut(v.n, 16))).join(', ') + (list.length > n ? ` 외 ${list.length - n}개` : '');
   const cards = [];
   const card = (pri, tg, tgLabel, go, ob, it, ck) => cards.push({ pri, html: `<div class="rp-in"><span class="go">→ ${go}쪽</span><div class="ob"><span class="tg ${tg}">${tgLabel}</span>${ob}</div><div class="it">${it}</div>${ck ? `<div class="ck">${ck}</div>` : ''}</div>` });
   /* ① 1위 교체 (1위는 위 요약 칸에도 있으므로 자리가 남을 때만) */
@@ -5624,7 +5631,9 @@ function rpRender(D){
     const ni = gm.i.length, no = gm.o.length;
     card(60, W[gm.st].tg, W[gm.st].label, 3, `${esc(gm.g)} <span class="${gm.net > 0 ? 'up' : 'dn'}">${gm.net > 0 ? '+' : '−'}${Math.abs(gm.net)}개</span> <small>(${ni}개 들어오고 ${no}개 빠짐)</small>`,
       ni + no <= 2 ? '한두 게임의 들고 남 때문입니다.' : ni >= 2 && no >= 2 ? '한 게임이 아니라 <b>여러 게임이 교체된</b> 결과입니다.' : ni > no ? '여러 게임이 함께 들어온 결과입니다.' : '여러 게임이 함께 빠진 결과입니다.',
-      [ni ? `진입: ${names(gm.i)}` : '', no ? `이탈: ${names(gm.o, 2)}` : ''].filter(Boolean).join(' · '));
+      (() => { /* 결과: 그 주 차트에 든 이 장르 게임 수 (게임명 대신) */
+        const w = W[gm.st], cnt = m => [...m.values()].filter(v => v.g === gm.g).length;
+        return `${w.label} 차트에 든 ${esc(gm.g)} 게임 ${cnt(w.b)}개 → <b>${cnt(w.a)}개</b>`; })());
   }
   /* ⑤ 상위권 고착: TOP10 교체 수 (교체가 많은 쪽, 없으면 매출) */
   const t10 = ['sales', 'popular'].map(st => { const nw = S[st].top.filter(x => x.pos <= 10 && (x.prevPos == null || x.prevPos > 10)); return { st, nw, out: S[st].top.filter(x => x.prevPos != null && x.prevPos <= 10 && x.pos > 10) }; }).sort((a, b) => b.nw.length - a.nw.length);
@@ -5633,7 +5642,9 @@ function rpRender(D){
     const n = tt.nw.length, rt = S[tt.st].retention;
     card(n >= 3 ? 65 : 50, W[tt.st].tg, W[tt.st].label, 2, `TOP10 교체 ${n}개${rt != null ? ` · 4주 잔존 ${rt}%` : ''}`,
       n <= 1 ? '상위권은 거의 그대로입니다. <b>고정적인</b> 시장입니다.' : n >= 3 ? '상위권 <b>교체가 많았던</b> 주입니다.' : '상위권 일부가 바뀌었습니다.',
-      n ? `진입: ${names(tt.nw.map(x => ({ n: x.n })), 2)}${tt.out.length ? ` · 밀려남: ${names(tt.out.map(x => ({ n: x.n })), 2)}` : ''}` : '');
+      (() => { /* 결과: TOP10 유지 수 + 1위 연속 주 수 (1위만 이름을 씀) */
+        const lead = S[tt.st].top[0], lw = S[tt.st].leadWeeks;
+        return `전주 TOP10 중 ${10 - n}개 유지${lead ? ` · 1위 ${esc(cut(lead.n, 16))} ${lw >= 2 ? `<b>${lw}주 연속</b>` : '(새 1위)'}` : ''}`; })());
   }
   const pts = cards.sort((a, b) => b.pri - a.pri).slice(0, 4).map(c => c.html);
   const relPt = `신작(모바일·PC): 이 주 <b>${D.relLast.length}개</b> 출시 · 다음 주(${rpDot(D.issue)} – ${rpDot(mkAddDays(D.issue, 6))}) <b>${D.relNext.length}개</b> 예정 → 4쪽`;
