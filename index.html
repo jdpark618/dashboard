@@ -5542,8 +5542,15 @@ function rpRelPaginate(D){
     /* 제목만 남고 표가 다음 장으로 가는 일이 없게: 제목 + 첫 두 줄(또는 '해당 일정 없음')이 들어가야 이 장에서 시작 */
     if(room() < headCost + (rows.length ? RP_REL.row * Math.min(2, rows.length) : RP_REL.empty)) pages.push({ y: RP_REL.startCont, parts: [] });
     let part = { sec, cont: false, rows: [] }; page().parts.push(part); page().y += headCost + (rows.length ? 0 : RP_REL.empty);
-    rows.forEach(x => {
-      if(room() < RP_REL.row){ pages.push({ y: RP_REL.startCont + headCost, parts: [] }); part = { sec, cont: true, rows: [] }; page().parts.push(part); x = { ...x, first: true }; }
+    rows.forEach((x, i) => {
+      if(room() < RP_REL.row){
+        /* 다음 장에 한 줄만 남지 않게: 마지막 한 줄이 넘어갈 때는 앞 장의 한 줄을 함께 데려감 */
+        const carry = rows.length - i === 1 && part.rows.length >= 3 ? [part.rows.pop()] : [];
+        if(carry.length) page().y -= RP_REL.row;
+        pages.push({ y: RP_REL.startCont + headCost, parts: [] }); part = { sec, cont: true, rows: [] }; page().parts.push(part);
+        carry.forEach(c => { part.rows.push({ ...c, first: true }); page().y += RP_REL.row; });
+        x = carry.length ? { ...x, first: x.first } : { ...x, first: true };
+      }
       part.rows.push(x); page().y += RP_REL.row;
     });
     page().y += RP_REL.gap;
