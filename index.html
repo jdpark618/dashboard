@@ -441,6 +441,7 @@ html.panel-lock { overflow: hidden; }
 .rp-tynote { font-size:7.4pt; color:var(--mute); margin-top:1.4mm; }
 /* 2쪽: 포지션(형태·신작·해석)은 한 덩어리, 남는 공간은 장르 구성 앞에 (글자 크기는 다른 쪽과 같게 유지) */
 .rp-fill { flex:1; display:flex; flex-direction:column; padding-bottom:3mm; }
+.rp-page h2.rp-gap2 { margin-top:11mm; }
 .rp-mv { display:flex; flex-wrap:wrap; align-items:center; gap:1.5mm; margin-top:2mm; font-size:7.8pt; }
 .rp-mv .l { color:var(--mute); margin-right:1mm; } .rp-mv .c { background:#f1f5f9; border-radius:1.2mm; padding:.6mm 2mm; color:var(--sub); } .rp-mv .c b { color:var(--ink); margin-left:.8mm; } .rp-mv .mu { color:var(--mute); }
 .rp-ent2 { width:100%; border-collapse:collapse; table-layout:fixed; font-size:8.2pt; }
@@ -5799,7 +5800,7 @@ function rpRender(D){
     <h3 class="rp-sub">해석</h3>
     <div class="rp-posx">${posNotes.map(([h, ev]) => `<div class="it"><span class="c">${h}</span><span class="e">${ev}</span></div>`).join('')}</div>
     </div><div>
-    <h2>장르 구성 <small>그 주 마지막 날 TOP100 · 전주 대비</small></h2>
+    <h2 class="rp-gap2">장르 구성 <small>그 주 마지막 날 TOP100 · 전주 대비</small></h2>
     <div class="rp-cols"><div><h3><span class="rp-tag bg-sales">매출</span></h3>${bars(S.sales.genres, '#d97706')}</div><div><h3><span class="rp-tag bg-pop">인기</span></h3>${bars(S.popular.genres, '#0d9488')}</div></div>
     </div></div>
     ${foot}</section>`;
