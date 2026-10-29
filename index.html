@@ -898,6 +898,7 @@ html.panel-lock { overflow: hidden; }
         <div class="relative"><input id="mkPosSearch" list="mkPosNames" class="mk-sel w-44 pr-7" placeholder="게임 검색해 강조" autocomplete="off" oninput="mkPosSet('q', this.value)"><datalist id="mkPosNames"></datalist><button type="button" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-200 text-xs" onclick="document.getElementById('mkPosSearch').value=''; mkPosSet('q','')" aria-label="검색 지우기"><i class="fa-solid fa-xmark"></i></button></div>
       </div>
       <div class="flex flex-wrap items-center gap-x-4 gap-y-1.5 mb-2 text-[12px]" aria-label="포지션 맵 범례">
+        <span class="text-slate-400 font-semibold">분류</span>
         <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="border:2px solid #fb7185"></span><b class="text-slate-200">새로 진입</b><span class="muted">최근 30일 안에 첫 차트인</span></span>
         <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="border:2px solid #a78bfa"></span><b class="text-slate-200">장기</b><span class="muted">수집 기간 매출 TOP100 90% 이상 유지</span></span>
         <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="border:2px solid #64748b"></span><b class="text-slate-200">기존</b><span class="muted">그 외</span></span>
@@ -907,7 +908,6 @@ html.panel-lock { overflow: hidden; }
       <p class="text-[12px] text-slate-300 mb-2">※ 기준일에 매출·인기 모두 TOP100인 게임을 찍습니다. 매출형·인기형 아래 표에는 한쪽이 100위 밖인 상위 게임(매출 40위·인기 30위 안)도 함께 나옵니다. 화살표는 전일·7일·30일 전 위치 → 지금이고, 아이콘이나 아래 표에 마우스를 올리면 그 게임의 날짜별 경로가 보입니다.</p>
       <div class="relative h-[420px] md:h-[500px]"><canvas id="mkPosChart"></canvas></div>
       <div id="mkPosViewTable" class="mt-4 hidden"></div>
-      <div id="mkPosition" class="mt-5"></div>
     </section>
     <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <div class="card rounded-xl p-5">
@@ -3901,7 +3901,6 @@ function lightboxKeyHandler(e){
 const MK_STORE_LABEL = { sales: '매출', popular: '인기' };
 let mkMode = 'daily';
 let mkSection = 'structure';  /* 시장 분석 첫 화면 (대시보드 '더보기'는 순위 변동으로 바로 감) */
-const mkPosExpand = {};
 /* 탭 단위 매출/인기 전환: 한 번에 그 탭의 카드들을 같이 바꿈 */
 const MK_TAB_GROUPS = { secChange: ['dMovers', 'dEntries', 'wMovers', 'wEntries'] };  /* 시장 구조의 장르·퍼블리셔는 카드마다 따로 전환 */
 const MK_CMP_MIN = 0.8; /* 직전 기간 TOP100 일수가 이 비율 미만이면 '비교 제외' */
@@ -4214,42 +4213,6 @@ function mkRenderDaily(){
         </tr>`).join('')}</tbody></table>` : mkEmpty('최근 7일 차트인 게임이 없습니다.');
     }
   }
-}
-
-/* 시장 포지션 맵 (일간·주간 공용): sMap/pMap = Map<key, {name, rank}>, rank 101 이상 = 100위 밖 */
-function mkRenderPositionMap(elId, sMap, pMap, opt){
-  const cut = 50, keys = new Set([...sMap.keys(), ...pMap.keys()]);
-  const Q = { sales: [], popular: [], both: [] };
-  keys.forEach(k => {
-    const s = sMap.get(k), p = pMap.get(k), sr = s?.rank ?? 101, pr = p?.rank ?? 101;
-    const x = { name: (s || p).name, sr, pr, gap: pr - sr };
-    if(sr <= cut && pr <= cut) Q.both.push(x);
-    else if(sr <= cut) Q.sales.push(x);
-    else if(pr <= cut) Q.popular.push(x);
-  });
-  Q.sales.sort((a, b) => b.gap - a.gap || a.sr - b.sr);
-  Q.popular.sort((a, b) => a.gap - b.gap || a.pr - b.pr);
-  Q.both.sort((a, b) => (a.sr + a.pr) - (b.sr + b.pr));
-  const rk = v => v > 100 ? '100+' : String(Math.round(v));
-  const col = (key, title, desc, cls, dotCls) => {
-    const list = Q[key], stateKey = `${elId}:${key}`, expanded = !!mkPosExpand[stateKey], shown = expanded ? list : list.slice(0, 5);
-    return `<div class="rounded-xl border border-slate-800 bg-slate-900/50 p-3 flex flex-col min-w-0">
-      <div class="flex items-start justify-between gap-2 mb-2"><div class="min-w-0"><div class="text-xs font-semibold ${cls} flex items-center gap-1.5"><span class="w-2 h-2 rounded-full ${dotCls}"></span>${title}</div><div class="text-[11px] muted mt-0.5">${desc}</div></div><span class="text-[11px] font-bold text-slate-300 shrink-0">${list.length}개</span></div>
-      <div class="${expanded ? 'max-h-[260px] overflow-y-auto scrollbar pr-1' : ''}">${shown.length ? shown.map(x => `
-        <div class="flex items-center gap-2 py-1.5 px-1.5 -mx-1.5 rounded-lg hover:bg-slate-800/60 cursor-pointer" data-game="${escapeAttr(x.name)}">
-          <div class="flex-1 min-w-0 text-xs">${mkGameCell(x.name)}</div>
-          <span class="text-[11px] whitespace-nowrap"><span class="t-sales">매출 ${rk(x.sr)}</span> <span class="muted">·</span> <span class="t-pop">인기 ${rk(x.pr)}</span></span>
-        </div>`).join('') : '<div class="muted text-[11px] py-3 text-center">해당 게임 없음</div>'}</div>
-      ${list.length > 5 ? `<button type="button" data-posexpand="${stateKey}" class="mt-1 text-[11px] text-slate-400 hover:text-slate-200 text-left">${expanded ? '접기' : `외 ${list.length - 5}개 더 보기`}</button>` : ''}
-    </div>`;
-  };
-  document.getElementById(elId).innerHTML = `<div class="flex items-center gap-1.5 mb-2 text-[11px]"><i class="fa-solid fa-circle-info text-slate-500"></i><span class="muted">아래 목록은 <b class="text-slate-200">${opt.unit}50위 기준</b>으로 나눕니다 · 위 맵의 구역은 10위 기준</span></div>
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-    ${col('sales', '매출 강세', `매출 ${opt.unit}50위 이내 · 인기 50위 밖`, 't-sales', 'bg-sales')}
-    ${col('popular', '인기 강세', `인기 ${opt.unit}50위 이내 · 매출 50위 밖`, 't-pop', 'bg-pop')}
-    ${col('both', '양쪽 상위', `매출·인기 모두 ${opt.unit}50위 이내`, 'text-slate-100', 'bg-slate-100')}
-  </div>
-  <p class="text-[11px] muted mt-3">매출 강세는 소수 유저 과금 비중이 큰 구조, 인기 강세는 유입 대비 수익화가 약한 구조일 가능성이 높습니다. 정렬은 두 순위 차이가 큰 순입니다.${opt.note ? ' ' + opt.note : ''}</p>`;
 }
 
 /* ---------- 주간 ---------- */
@@ -4711,13 +4674,16 @@ function mkRenderPosViewTable(D){
   box.classList.toggle('hidden', !view);
   if(!view) return;
   const list = mkPosShown(D).filter(it => view.f(it) && mkPosMatch(it)).sort((a, b) => (a.sr ?? 101) - (b.sr ?? 101) || a.pr - b.pr);
-  const dv = (now, before) => now == null ? '<span class="text-slate-500">-</span>' : before == null ? '<span class="text-slate-400">신규</span>' : before === now ? '<span class="text-slate-500">-</span>' : mkDelta(before - now);
-  const cells = (it, i) => { const n = it.snap.now[i]; return `<td class="px-2 py-1.5 text-right ${i ? 't-pop' : 't-sales'} font-semibold">${n ?? '<span class="text-slate-500 font-normal">100+</span>'}</td>` + ['d1', 'd7', 'd30'].map(k => `<td class="px-2 py-1.5 text-right whitespace-nowrap">${dv(n, it.snap[k][i])}</td>`).join(''); };
+  /* 변동은 기간 버튼(전일·7일·30일)과 같은 기간 하나만: 순위 옆에 붙여 표시 */
+  const pk = { d1: 'd1', '7d': 'd7', '30d': 'd30' }[mkPos.period], span = D.W.span;
+  const dv = (now, before) => now == null ? '' : before == null ? '<span class="text-slate-400 font-normal">신규</span>' : before === now ? '<span class="text-slate-500 font-normal">-</span>' : mkDelta(before - now);
+  const cell = (it, i) => { const n = it.snap.now[i]; return `<td class="px-2 py-1.5 text-right whitespace-nowrap"><b class="${i ? 't-pop' : 't-sales'}">${n ?? '<span class="text-slate-500 font-normal">100+</span>'}</b><span class="inline-block w-14 text-right">${dv(n, it.snap[pk][i])}</span></td>`; };
+  const cls = it => it.entry ? ['#fb7185', it.entry === 'first' ? '첫 진입' : '재진입'] : [MK_POS_TEN[it.ten]?.c || '#94a3b8', MK_POS_TEN[it.ten]?.t || '-'];
   const th = 'px-2 py-1.5 font-medium text-right';
-  box.innerHTML = !list.length ? mkEmpty('조건에 맞는 게임이 없습니다.') : `<div class="overflow-x-auto scrollbar"><table class="w-full text-xs min-w-[720px]">
-    <thead class="muted"><tr class="border-b border-slate-800"><th class="px-2 py-1.5 font-medium text-left">게임</th><th class="${th}">경력</th><th class="${th}">형태</th><th class="${th} t-sales">매출</th><th class="${th}">전일</th><th class="${th}">7일</th><th class="${th}">30일</th><th class="${th} t-pop">인기</th><th class="${th}">전일</th><th class="${th}">7일</th><th class="${th}">30일</th></tr></thead>
-    <tbody>${list.map(it => `<tr class="border-b border-slate-800/60 hover:bg-slate-800/40 cursor-pointer" data-game="${escapeAttr(it.name)}" data-key="${escapeAttr(it.key)}"><td class="px-2 py-1.5 max-w-[220px]">${mkGameCell(it.name)}</td><td class="px-2 py-1.5 text-right whitespace-nowrap" style="color:${it.entry ? '#fb7185' : MK_POS_TEN[it.ten]?.c || '#94a3b8'}">${it.entry ? (it.entry === 'first' ? '첫 진입' : '재진입') : MK_POS_TEN[it.ten]?.t || '-'}</td><td class="px-2 py-1.5 text-right whitespace-nowrap">${MK_POS_TYPE[it.type]}</td>${cells(it, 0)}${cells(it, 1)}</tr>`).join('')}</tbody></table></div>
-    <p class="text-[11px] muted mt-1.5">기준일(${mkShort(D.snapD.now)}) 일간 순위를 전일·7일 전·30일 전과 비교 · '신규'는 그때 TOP100 밖 · 행에 마우스를 올리면 맵에 경로, 누르면 게임 상세</p>`;
+  box.innerHTML = !list.length ? mkEmpty('조건에 맞는 게임이 없습니다.') : `<div class="overflow-x-auto scrollbar"><table class="w-full text-xs min-w-[520px]">
+    <thead class="muted"><tr class="border-b border-slate-800"><th class="px-2 py-1.5 font-medium text-left">게임</th><th class="${th}">분류</th><th class="${th}">형태</th><th class="${th} t-sales">매출 <span class="muted font-normal">(${span} 변동)</span></th><th class="${th} t-pop">인기 <span class="muted font-normal">(${span} 변동)</span></th></tr></thead>
+    <tbody>${list.map(it => { const [c, t] = cls(it); return `<tr class="border-b border-slate-800/60 hover:bg-slate-800/40 cursor-pointer" data-game="${escapeAttr(it.name)}" data-key="${escapeAttr(it.key)}"><td class="px-2 py-1.5 max-w-[260px]">${mkGameCell(it.name)}</td><td class="px-2 py-1.5 text-right whitespace-nowrap" style="color:${c}">${t}</td><td class="px-2 py-1.5 text-right whitespace-nowrap">${MK_POS_TYPE[it.type]}</td>${cell(it, 0)}${cell(it, 1)}</tr>`; }).join('')}</tbody></table></div>
+    <p class="text-[11px] muted mt-1.5">기준일(${mkShort(D.snapD.now)}) 일간 순위와 ${{ d1: '전일', '7d': '7일 전', '30d': '30일 전' }[mkPos.period]} 대비 변동 · 기간 버튼으로 바꿈 · '신규'는 그때 TOP100 밖 · 행에 마우스를 올리면 맵에 경로, 누르면 게임 상세</p>`;
   /* 행에 마우스를 올리면 맵에서 그 게임의 전체 경로 */
   box.querySelectorAll('tr[data-key]').forEach(tr => {
     tr.onmouseenter = () => { mkPosHoverKey = tr.dataset.key; mkPosChartInst?.draw(); };
@@ -4727,7 +4693,7 @@ function mkRenderPosViewTable(D){
 
 function mkRenderPosition(){
   const D = mkPosData();
-  if(!D){ document.getElementById('mkPosition').innerHTML = mkEmpty('데이터가 없습니다.'); return null; }
+  if(!D){ setText('mkPosDesc', '데이터가 없습니다.'); document.getElementById('mkPosViewTable').classList.add('hidden'); return null; }
   /* 컨트롤 상태 */
   document.querySelectorAll('#mkPosPeriod button').forEach(b => b.classList.toggle('on', b.dataset.v === mkPos.period));
   document.getElementById('mkPosTrail').checked = mkPos.trail;
@@ -4753,9 +4719,6 @@ function mkRenderPosition(){
     + (D.plane.some(it => !it.ten) ? ' · 차트 경력 불러오는 중' : ''));
   mkRenderPosScatter(D);
   mkRenderPosViewTable(D);
-  /* 구역별 목록 (50위 기준) */
-  const toMap = m => new Map([...m].map(([k, v]) => [k, { name: v.name, rank: v.rank }]));
-  mkRenderPositionMap('mkPosition', toMap(D.cs), toMap(D.cp), { unit: '' });
   return D;
 }
 
@@ -4867,7 +4830,7 @@ function mkRenderStructureSkeleton(){
   setText('mkAsOf', '지난 기간 데이터를 불러오는 중...');
   setText('mkPosDesc', '-');
   if(mkPosChartInst){ mkPosChartInst.destroy(); mkPosChartInst = null; }
-  ['mkPosition', 'mkWGenre', 'mkWPub'].forEach(id => { document.getElementById(id).innerHTML = skBlocks(6); });
+  ['mkWGenre', 'mkWPub'].forEach(id => { document.getElementById(id).innerHTML = skBlocks(6); });
 }
 
 /* ---------- 월간/주간 순위표: 기간 평균 순위로 선택 기간 vs 직전 기간 ---------- */
@@ -5411,8 +5374,6 @@ function mkInitEvents(){
   if(!root || root.dataset.mkBound) return;
   root.dataset.mkBound = '1';
   root.addEventListener('click', e => {
-    const exp = e.target.closest('button[data-posexpand]');
-    if(exp){ const k = exp.dataset.posexpand; mkPosExpand[k] = !mkPosExpand[k]; mkRender(); return; }
     const tab = e.target.closest('button[data-tabkey]');
     if(tab){ const k = tab.dataset.tabkey; mkTabs[k] = tab.dataset.store; (MK_TAB_GROUPS[k] || []).forEach(m => { mkTabs[m] = tab.dataset.store; }); mkRender(); return; }
     const game = e.target.closest('[data-game]');
