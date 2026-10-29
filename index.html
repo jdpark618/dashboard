@@ -429,7 +429,7 @@ html.panel-lock { overflow: hidden; }
 .rp-rk .pv { text-align:right; color:var(--mute); white-space:nowrap; width:13mm; font-size:7.8pt; }
 .rp-page .better { background:var(--up-bg); color:#991b1b; } .rp-page .worse { background:var(--down-bg); color:#1e40af; }
 .rp-note { font-size:7.5pt; color:var(--mute); margin-top:2mm; line-height:1.55; }
-.rp-sub { font-size:9.6pt; font-weight:800; margin:4mm 0 1.8mm; padding-left:2mm; border-left:.9mm solid #6366f1; line-height:1.1; } .rp-sub small { font-size:7.4pt; font-weight:500; color:var(--mute); margin-left:1.5mm; }
+.rp-sub { font-size:9.6pt; font-weight:800; margin:5mm 0 1.8mm; padding-left:2mm; border-left:.9mm solid #6366f1; line-height:1.1; } .rp-sub small { font-size:7.4pt; font-weight:500; color:var(--mute); margin-left:1.5mm; }
 .rp-ty { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:2.5mm; }
 .rp-ty-c { border:1px solid var(--line); border-radius:3mm; padding:2.5mm 3mm; }
 .rp-ty-c .h { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:1mm; }
@@ -439,7 +439,7 @@ html.panel-lock { overflow: hidden; }
 .rp-ty-c li { display:flex; justify-content:space-between; gap:2mm; font-size:8pt; padding:.7mm 0; border-top:1px solid rgba(15,23,42,.06); }
 .rp-ty-c li b { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:700; } .rp-ty-c li span { white-space:nowrap; color:var(--sub); }
 .rp-tynote { font-size:7.4pt; color:var(--mute); margin-top:1.4mm; }
-/* 2쪽: 섹션 블록 사이로 남는 공간을 고르게 (글자 크기는 다른 쪽과 같게 유지) */
+/* 2쪽: 포지션(형태·신작·해석)은 한 덩어리, 남는 공간은 장르 구성 앞에 (글자 크기는 다른 쪽과 같게 유지) */
 .rp-fill { flex:1; display:flex; flex-direction:column; justify-content:space-between; padding-bottom:3mm; }
 .rp-mv { display:flex; flex-wrap:wrap; align-items:center; gap:1.5mm; margin-top:2mm; font-size:7.8pt; }
 .rp-mv .l { color:var(--mute); margin-right:1mm; } .rp-mv .c { background:#f1f5f9; border-radius:1.2mm; padding:.6mm 2mm; color:var(--sub); } .rp-mv .c b { color:var(--ink); margin-left:.8mm; } .rp-mv .mu { color:var(--mute); }
@@ -5792,12 +5792,10 @@ function rpRender(D){
     <div class="rp-ty">${tyCard('sales', '매출형')}${tyCard('bal', '균형형')}${tyCard('pop', '인기형')}</div>
     ${PS.prevTypes ? `<div class="rp-mv"><span class="l">형태 이동</span>${PS.moves.length ? PS.moves.map(([k, n]) => { const [a, b] = k.split('>'); return `<span class="c">${MK_POS_TYPE[a]} → ${MK_POS_TYPE[b]} <b>${n}</b></span>`; }).join('') : '<span class="mu">없음</span>'}</div>` : ''}
     <div class="rp-tynote">순위는 매출 · 인기 / 한쪽만 상위권: 매출 ${PS.onlyS}개 · 인기 ${PS.onlyP}개</div>
-    </div><div>
     <h3 class="rp-sub">신작(재진입) <small>${ent ? `4주 전 대비 · 첫 진입 ${nF} · 재진입 ${nR}` : '4주 전 기록 없음'}</small></h3>
     ${ent && ent.length ? `<table class="rp-ent2"><colgroup><col><col style="width:18mm"><col style="width:16mm"><col style="width:24mm"><col style="width:24mm"></colgroup>
       <tr><th>게임</th><th>분류</th><th>형태</th><th>매출</th><th>인기</th></tr>
       ${ent.slice(0, 6).map(x => `<tr><td><b>${esc(x.name)}</b></td><td class="tg">${x.entry === 'first' ? '첫 진입' : '재진입'}</td><td>${MK_POS_TYPE[x.type]}</td><td><b class="t-sales">${R(x.sr)}</b> ${dl(x.ps, x.sr)}</td><td><b class="t-pop">${R(x.pr)}</b> ${dl(x.pp, x.pr)}</td></tr>`).join('')}</table>` : '<div class="rp-empty">해당 게임 없음</div>'}
-    </div><div>
     <h3 class="rp-sub">해석</h3>
     <div class="rp-posx">${posNotes.map(([h, ev]) => `<div class="it"><span class="c">${h}</span><span class="e">${ev}</span></div>`).join('')}</div>
     </div><div>
