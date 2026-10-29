@@ -4677,14 +4677,15 @@ function mkRenderPosViewTable(D){
   /* 변동은 기간 버튼(전일·7일·30일)과 같은 기간 하나만: 순위 옆에 붙여 표시 */
   const pk = { d1: 'd1', '7d': 'd7', '30d': 'd30' }[mkPos.period], span = D.W.span;
   const dv = (now, before) => now == null ? '' : before == null ? '<span class="text-slate-400 font-normal">신규</span>' : before === now ? '<span class="text-slate-500 font-normal">-</span>' : mkDelta(before - now);
-  const cell = (it, i) => { const n = it.snap.now[i]; return `<td class="px-2 py-1.5 text-right whitespace-nowrap"><b class="${i ? 't-pop' : 't-sales'}">${n ?? '<span class="text-slate-500 font-normal">100+</span>'}</b><span class="inline-block w-14 text-right">${dv(n, it.snap[pk][i])}</span></td>`; };
+  const cell = (it, i) => { const n = it.snap.now[i]; return `<td class="px-2 py-1.5 text-center whitespace-nowrap"><b class="inline-block w-8 text-right ${i ? 't-pop' : 't-sales'}">${n ?? '<span class="text-slate-500 font-normal">100+</span>'}</b><span class="inline-block w-14 text-left pl-2">${dv(n, it.snap[pk][i])}</span></td>`; };
   const cls = it => it.entry ? ['#fb7185', it.entry === 'first' ? '첫 진입' : '재진입'] : [MK_POS_TEN[it.ten]?.c || '#94a3b8', MK_POS_TEN[it.ten]?.t || '-'];
-  const th = 'px-2 py-1.5 font-medium text-right';
+  const th = 'px-2 py-1.5 font-medium text-center';
   const cmp = { d1: '전일', '7d': '7일 전', '30d': '30일 전' }[mkPos.period];
   box.innerHTML = !list.length ? mkEmpty('조건에 맞는 게임이 없습니다.') : `<div class="text-[11px] muted mb-1">기준일 ${mkShort(D.snapD.now)} · ${cmp} 대비${mkInfo("'신규'는 그때 TOP100 밖이었다는 뜻입니다. 행에 마우스를 올리면 맵에 그 게임의 날짜별 경로가 보이고, 누르면 게임 상세가 열립니다.")}</div>
-    <div class="overflow-x-auto scrollbar"><table class="w-full text-xs min-w-[520px]">
+    <div class="overflow-x-auto scrollbar"><table class="w-full text-xs min-w-[560px] table-fixed">
+    <colgroup><col style="width:32%"><col style="width:13%"><col style="width:13%"><col style="width:21%"><col style="width:21%"></colgroup>
     <thead class="muted"><tr class="border-b border-slate-800"><th class="px-2 py-1.5 font-medium text-center">게임</th><th class="${th}">분류</th><th class="${th}">형태</th><th class="${th} t-sales">매출 <span class="muted font-normal">(${span} 변동)</span></th><th class="${th} t-pop">인기 <span class="muted font-normal">(${span} 변동)</span></th></tr></thead>
-    <tbody>${list.map(it => { const [c, t] = cls(it); return `<tr class="border-b border-slate-800/60 hover:bg-slate-800/40 cursor-pointer" data-game="${escapeAttr(it.name)}" data-key="${escapeAttr(it.key)}"><td class="px-2 py-1.5"><div class="mx-auto max-w-[280px]">${mkGameCell(it.name)}</div></td><td class="px-2 py-1.5 text-right whitespace-nowrap" style="color:${c}">${t}</td><td class="px-2 py-1.5 text-right whitespace-nowrap">${MK_POS_TYPE[it.type]}</td>${cell(it, 0)}${cell(it, 1)}</tr>`; }).join('')}</tbody></table></div>`;
+    <tbody>${list.map(it => { const [c, t] = cls(it); return `<tr class="border-b border-slate-800/60 hover:bg-slate-800/40 cursor-pointer" data-game="${escapeAttr(it.name)}" data-key="${escapeAttr(it.key)}"><td class="px-2 py-1.5 min-w-0"><div class="mx-auto max-w-[280px]">${mkGameCell(it.name)}</div></td><td class="px-2 py-1.5 text-center whitespace-nowrap" style="color:${c}">${t}</td><td class="px-2 py-1.5 text-center whitespace-nowrap">${MK_POS_TYPE[it.type]}</td>${cell(it, 0)}${cell(it, 1)}</tr>`; }).join('')}</tbody></table></div>`;
   /* 행에 마우스를 올리면 맵에서 그 게임의 전체 경로 */
   box.querySelectorAll('tr[data-key]').forEach(tr => {
     tr.onmouseenter = () => { mkPosHoverKey = tr.dataset.key; mkPosChartInst?.draw(); };
