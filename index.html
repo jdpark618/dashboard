@@ -184,7 +184,7 @@ select option { background-color: #0f172a; color: #f1f5f9; }
   font-size: 11px; line-height: 1.5; white-space: nowrap; opacity: 0; transition: opacity 0.15s ease; pointer-events: none;
 }
 .custom-tooltip-wrap:hover .custom-tooltip-content { visibility: visible; opacity: 1; }
-/* 순위 검색 자동완성 */
+/* 순위 추이 자동완성 */
 .gs-wrap { position:relative; }
 .gs-dd { position:absolute; left:0; right:0; top:calc(100% + 4px); z-index:60; background:#0f172a; border:1px solid rgba(71,85,105,.7); border-radius:10px; box-shadow:0 12px 28px rgba(0,0,0,.45); max-height:440px; overflow-y:auto; padding:4px 0; }
 .gs-sec { font-size:11px; font-weight:600; color:#94a3b8; padding:8px 12px 4px; display:flex; align-items:center; gap:6px; }
@@ -313,7 +313,7 @@ html.panel-lock { overflow: hidden; }
 @media (max-width:639px){ #upcomingList .up-item:nth-child(n+5) { display:none; } }
 .cal-pastbtn { width:100%; margin:4px 0 6px; padding:10px; border-radius:8px; border:1px dashed rgba(71,85,105,.7); color:#94a3b8; font-size:12px; font-weight:600; }
 .cal-pastbtn:hover { color:#e2e8f0; border-color:rgba(99,102,241,.5); }
-/* 읽는 글씨 최소 11px: 순위 검색·슬라이드 패널·달력 목록 (달력 칸 안 배지는 촘촘해서 10px 유지) */
+/* 읽는 글씨 최소 11px: 순위 추이·슬라이드 패널·달력 목록 (달력 칸 안 배지는 촘촘해서 10px 유지) */
 #view-search .text-\[10px\], #detailPanel .text-\[10px\], #releaseDetailPanel .text-\[10px\], #rankPanel .text-\[10px\], #calDayPanel .text-\[10px\] { font-size:11px; }
 #view-search .gs-chip .gs-bd, #calListBody .cal-cnt, #calListBody .cal-tag, #calListBody .cal-now, #calListBody .text-\[10px\], #calDayBody .cal-tag { font-size:11px; }
 /* 휴대폰: 누르는 조작은 34~36px */
@@ -540,7 +540,7 @@ html.panel-lock { overflow: hidden; }
       <i class="fa-solid fa-table-list mr-1.5"></i> 신작 정보 DB
     </button>
     <button class="tab" data-view="search" onclick="switchView('search')">
-      <i class="fa-solid fa-magnifying-glass mr-1.5"></i> 순위 검색
+      <i class="fa-solid fa-chart-line mr-1.5"></i> 순위 추이
     </button>
   </div>
 </nav>
@@ -1022,7 +1022,7 @@ html.panel-lock { overflow: hidden; }
 <div id="view-search" class="hidden space-y-4">
   <div class="page-head">
     <div>
-      <h2><i class="fa-solid fa-magnifying-glass text-indigo-400"></i>순위 검색
+      <h2><i class="fa-solid fa-chart-line text-indigo-400"></i>순위 추이
         <span id="searchLoadingIndicator" class="hidden text-[11px] font-normal text-indigo-300"><i class="fa-solid fa-spinner fa-spin mr-1"></i>지난 기간 데이터 불러오는 중...</span>
       </h2>
       <p class="sub">최대 5개 게임의 매출·인기 순위를 나란히 비교합니다.</p>
@@ -2409,7 +2409,7 @@ function calHideHover(){ document.getElementById('calHover')?.classList.add('hid
 function getTopTitlesSafe(data, n=3) {
   if (!data || !data.rows) return ['데이터 없음'];
   /* [성능] latestDate()는 전체 행 순회+정렬을 하므로 filter 안에서 행마다 호출하면 O(N²)이 된다.
-     루프 밖에서 1회만 계산한다. (순위 검색 최초 진입 시 멈춤 현상의 원인) */
+     루프 밖에서 1회만 계산한다. (순위 추이 최초 진입 시 멈춤 현상의 원인) */
   const latest = latestDate(data);
   const filtered = data.rows.filter(r => rowDate(r) === latest).sort((a, b) => (rankOf(a) || 9999) - (rankOf(b) || 9999));
   const names = [];
@@ -2422,7 +2422,7 @@ function getTopTitlesSafe(data, n=3) {
 }
 
 /* =====================================================================
-   순위 검색 자동완성
+   순위 추이 자동완성
    - 입력 전 클릭: 현재 인기 TOP 10 / 매출 TOP 10
    - 입력 시: 매출·인기 DB 전체 기간에서 한 번이라도 100위권에 들었던 게임 검색
    - 선택(또는 지우기) 시점에만 차트 갱신
@@ -2714,7 +2714,7 @@ function initSearchAutocomplete(){
 }
 
 /* 선택한 게임이 모두 현재 조회 기간 이전에만 기록이 있으면, 마지막 100위권 기록일을 기준으로 기간을 잡는다. */
-/* ---------- 순위 검색: 상태 · 기간 ---------- */
+/* ---------- 순위 추이: 상태 · 기간 ---------- */
 const searchState = { days: 15, from: '', to: '', layout: 'combined', rating: false, sort: { key: 'sales', dir: 1 } };
 const SEARCH_PERIODS = [7, 15, 30, 60, 90];
 const SEARCH_TICKS = [1, 2, 3, 5, 10, 20, 30, 50, 100];
@@ -2870,7 +2870,7 @@ function renderSearchSummary(stats, dates){
 }
 
 /* ---------- 순위 차트 (로그 눈금 · 범위 자동 · 100위 밖 띠) ---------- */
-/* opts.labels: 선 끝 게임 이름 + 100위 밖 게임 이름 (순위 검색 전용, 게임 상세 차트는 끔) */
+/* opts.labels: 선 끝 게임 이름 + 100위 밖 게임 이름 (순위 추이 전용, 게임 상세 차트는 끔) */
 function drawSearchRankChart(canvasId, lines, dates, store = searchCharts, opts = {}){
   if(store[canvasId]){ store[canvasId].destroy(); delete store[canvasId]; }
   const canvas = document.getElementById(canvasId); if(!canvas) return;
@@ -3035,7 +3035,7 @@ async function ensureSearchRangeLoaded(){
   try{
     await Promise.all(months.flatMap(({ y, m }) => [ensureMonthLoaded('sales', y, m), ensureMonthLoaded('popular', y, m)]));
   }catch(e){
-    console.error('순위 검색 기간 데이터 로드 중 일부 실패', e);
+    console.error('순위 추이 기간 데이터 로드 중 일부 실패', e);
   }finally{
     indicator?.classList.add('hidden'); card?.classList.remove('opacity-60');
     renderSearchCharts();
