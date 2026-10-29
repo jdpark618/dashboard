@@ -876,19 +876,16 @@ html.panel-lock { overflow: hidden; }
     <p class="text-[11px] muted">어떤 게임이 매출 강세·인기 강세인지, 어떤 장르와 퍼블리셔가 TOP100을 차지하는지</p>
     <section class="card rounded-xl p-5" data-snap>
       <div class="mk-card-head">
-        <div><h3 class="font-semibold text-sm">시장 포지션 맵<i class="fa-regular fa-circle-question mk-info" title="매출·인기 둘 다 TOP100인 게임만 평면에 아이콘으로 놓습니다. 가로는 매출 순위(오른쪽이 1위), 세로는 인기 순위(위쪽이 1위)이고, 상위권이 잘 보이도록 로그 눈금을 씁니다. 한쪽에만 TOP100인 게임은 아래 두 줄에 순위순으로 모았습니다. 기간 평균은 기간의 절반 이상 TOP100이었던 게임만 포함하며, 빠진 날은 100+로 계산합니다. 아이콘을 누르면 게임 상세가 열립니다."></i></h3><p id="mkPosDesc" class="text-[11px] muted mt-1">-</p></div>
+        <div><h3 class="font-semibold text-sm">시장 포지션 맵<i class="fa-regular fa-circle-question mk-info" title="매출·인기 둘 다 TOP100인 게임만 평면에 아이콘으로 놓습니다. 가로는 매출 순위(오른쪽이 1위), 세로는 인기 순위(위쪽이 1위)이고, 상위권이 잘 보이도록 로그 눈금을 씁니다. 아이콘은 기준일 순위에 놓고, 전일·7일·30일 버튼은 그 기간의 이동 궤적을 그립니다. 아이콘을 누르면 게임 상세가 열립니다."></i></h3><p id="mkPosDesc" class="text-[11px] muted mt-1">-</p></div>
         <button type="button" class="snap-btn" data-nosnap onclick="snapEl(this, '포지션맵')" title="이미지로 저장" aria-label="이미지로 저장"><i class="fa-solid fa-camera"></i></button>
       </div>
       <div class="flex flex-wrap items-center gap-2 mb-3" data-nosnap>
         <div class="mk-seg" id="mkPosPeriod">
-          <button type="button" data-v="day" onclick="mkPosSet('period','day')">기준일</button>
-          <button type="button" data-v="7d" onclick="mkPosSet('period','7d')">최근 7일</button>
-          <button type="button" data-v="30d" onclick="mkPosSet('period','30d')">최근 30일</button>
-          <button type="button" data-v="month" onclick="mkPosSet('period','month')">월별</button>
+          <button type="button" data-v="d1" onclick="mkPosSet('period','d1')">전일</button>
+          <button type="button" data-v="7d" onclick="mkPosSet('period','7d')">7일</button>
+          <button type="button" data-v="30d" onclick="mkPosSet('period','30d')">30일</button>
         </div>
-        <select id="mkPosMonth" class="mk-sel hidden" onchange="mkPosSet('month', this.value)" aria-label="월 선택"></select>
         <div class="mk-seg" id="mkPosView" aria-label="보기">
-          <button type="button" data-v="" onclick="mkPosSet('view','')">전체</button>
           <button type="button" data-v="new" onclick="mkPosSet('view','new')">신규 진입 추적</button>
           <button type="button" data-v="long" onclick="mkPosSet('view','long')">장기 흥행</button>
           <button type="button" data-v="sales" onclick="mkPosSet('view','sales')">매출형</button>
@@ -903,15 +900,14 @@ html.panel-lock { overflow: hidden; }
       </div>
       <div class="flex flex-wrap items-center gap-x-4 gap-y-1.5 mb-2 text-[12px]" aria-label="포지션 맵 범례">
         <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="border:2px solid #fb7185"></span><b class="text-slate-200">새로 진입</b><span class="muted">최근 30일 안에 첫 차트인</span></span>
-        <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="border:2px solid #a78bfa"></span><b class="text-slate-200">안착</b><span class="muted">그 전에 첫 차트인</span></span>
-        <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="border:2px solid #64748b"></span><b class="text-slate-200">장기</b><span class="muted">수집 시작부터 차트에 있음</span></span>
-        <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm" style="background:rgba(96,165,250,.25);border:1px dashed #60a5fa"></span><b class="text-sky-300">균형형 띠</b><span class="muted">매출·인기 순위 차이 3배 이내 · 띠 아래 오른쪽 매출형, 위 왼쪽 인기형</span></span>
+        <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="border:2px solid #a78bfa"></span><b class="text-slate-200">장기</b><span class="muted">수집 기간 매출 TOP100 90% 이상 유지</span></span>
+        <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="border:2px solid #64748b"></span><b class="text-slate-200">기존</b><span class="muted">그 외</span></span>
+        <span class="inline-flex items-center gap-1.5"><span class="w-4 h-0 border-t-2 border-sky-400"></span><b class="text-sky-300">매출 = 인기</b><span class="muted">대각선 · 점선 사이(순위 차 3배 이내)가 균형형, 아래 오른쪽 매출형, 위 왼쪽 인기형</span></span>
         <span class="muted md:ml-auto"><span class="t-sales font-semibold">가로 → 매출 순위</span> · <span class="t-pop font-semibold">세로 ↑ 인기 순위</span> · 로그 눈금</span>
       </div>
-      <p class="text-[12px] text-slate-300 mb-2">※ 매출·인기 모두 TOP100인 게임만 찍힙니다. 한쪽만 TOP100인 게임은 아래 목록에 있고, 꾸준히 자리를 지키는 게임은 '최근 30일'로 보면 됩니다.</p>
+      <p class="text-[12px] text-slate-300 mb-2">※ 기준일에 매출·인기 모두 TOP100인 게임만 찍힙니다. 전일·7일·30일은 궤적을 얼마나 거슬러 그릴지 정합니다 (30일은 주 단위 점).</p>
       <div class="relative h-[420px] md:h-[500px]"><canvas id="mkPosChart"></canvas></div>
       <div id="mkPosViewTable" class="mt-4 hidden"></div>
-      <div id="mkPosRails" class="mt-4 space-y-2.5"></div>
       <div id="mkPosition" class="mt-5"></div>
     </section>
     <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -4387,32 +4383,34 @@ function mkPubScores(idx, mon){
 }
 
 /* ---------- 포지션 맵 ---------- */
-const mkPos = { period: 'day', month: '', view: '', trail: true, size: false, genre: '', pub: '', q: '', railOpen: { sales: false, popular: false } };
-const MK_POS_RAIL_SHOWN = 24; /* 접힌 줄에 넣어 둘 칩 후보 수 (보이는 개수는 화면 폭에 맞춤) */
+const mkPos = { period: '7d', view: 'new', trail: true, size: false, genre: '', pub: '', q: '' };
 const MK_POS_TICKS = [1, 2, 3, 5, 10, 20, 30, 50, 100];
-/* 차트 경력(첫 차트인 기준, 신작 판별 아님) · 형태(매출·인기 순위 비율 3배) · 보기 버튼 조건 */
-const MK_POS_TEN = { new: { c: '#fb7185', t: '새로 진입' }, mid: { c: '#a78bfa', t: '안착' }, long: { c: '#64748b', t: '장기' } };
+/* 차트 경력(신작 판별 아님): 새로 진입 = 최근 30일 안에 첫 차트인, 장기 = 불러온 수집 기간 내내 매출 TOP100을 90% 이상 유지, 나머지 기존.
+   형태: 매출·인기 순위 비율 3배 기준. 보기 버튼 조건 */
+const MK_POS_TEN = { new: { c: '#fb7185', t: '새로 진입' }, long: { c: '#a78bfa', t: '장기' }, mid: { c: '#64748b', t: '기존' } };
+const MK_POS_LONG_KEEP = 0.9;
 const MK_POS_TYPE = { sales: '매출형', bal: '균형형', pop: '인기형' };
 const MK_POS_VIEWS = {
   new: { f: it => it.ten === 'new' && it.sr <= 50 && it.pr <= 50, t: '최근 30일 안에 처음 차트에 든 게임 중 매출·인기 모두 50위 안' },
-  long: { f: it => it.ten === 'long' && it.sr <= 20, t: '수집 시작부터 차트에 있던 게임 중 매출 20위 안' },
+  long: { f: it => it.ten === 'long' && it.sr <= 20, t: '수집 기간 내내 매출 TOP100을 90% 이상 지킨 게임 중 매출 20위 안' },
   sales: { f: it => it.type === 'sales' && it.sr <= 40, t: '매출 순위가 인기 순위보다 3배 이상 높은 게임 (매출 40위 안)' },
   bal: { f: it => it.type === 'bal' && it.sr <= 40, t: '매출·인기 순위 차이가 3배 안쪽인 게임 (매출 40위 안)' },
   pop: { f: it => it.type === 'pop', t: '인기 순위가 매출 순위보다 3배 이상 높은 게임' }
 };
 function mkPosType(sr, pr){ return pr / sr >= 3 ? 'sales' : sr / pr >= 3 ? 'pop' : 'bal'; }
-/* 두 스토어 중 한쪽이라도 수집 시작부터 있었으면 장기, 아니면 가장 이른 첫 차트인으로 판단 (첫 차트인 기록을 아직 못 받았으면 null) */
-function mkPosTenure(it, base){
+/* 새로 진입: 두 스토어 모두 수집 시작 뒤에 처음 나타났고, 그중 이른 첫 차트인이 30일 안. 첫 차트인 기록을 아직 못 받았으면 장기만 판단 */
+function mkPosTenure(it, base, keep){
   const fss = [mkFirstSeenCache.sales, mkFirstSeenCache.popular];
+  if(keep >= MK_POS_LONG_KEEP) return 'long';
   if(fss.some(fs => !fs)) return null;
-  let long = false, first = null;
+  let atStart = false, first = null;
   fss.forEach(fs => {
     const p = it.key.startsWith('id:') ? fs.pkgFirst.get(it.key.slice(3)) : null, n = fs.nameFirst.get(getGameKey(it.name));
     if(!p && !n) return;
     const d = mkFirstChartDate(fs, it.key, it.name);
-    if(!d) long = true; else if(!first || d < first) first = d;
+    if(!d) atStart = true; else if(!first || d < first) first = d;
   });
-  return long || !first ? 'long' : first >= mkAddDays(base, -30) ? 'new' : 'mid';
+  return !atStart && first && first >= mkAddDays(base, -30) ? 'new' : 'mid';
 }
 /* 경력 테두리용 첫 차트인 기록: 포지션 맵을 처음 그릴 때 받아 두고, 도착하면 다시 그림 */
 function mkPosEnsureFirstSeen(){
@@ -4424,25 +4422,6 @@ const mkImgCache = new Map();
 function mkPosSet(key, val){
   mkPos[key] = val;
   if(currentView === 'business' && mkSection === 'structure' && mkMonthsReady) mkRenderPosition();
-}
-
-/* 기간 창 (매출 순위 관측일 기준): 현재 기간 + 비교할 직전 기간 */
-function mkPosWindows(){
-  const dates = mkGetIndex('sales').dates, base = dates.at(-1);
-  if(!base) return null;
-  if(mkPos.period === 'day'){
-    const prev = dates.filter(d => d <= mkAddDays(base, -7)).at(-1);
-    return { cur: [base], prev: prev ? [prev] : [], label: `기준일 ${base}`, prevLabel: prev ? `1주 전(${mkShort(prev)})` : '' };
-  }
-  if(mkPos.period === '7d' || mkPos.period === '30d'){
-    const n = mkPos.period === '7d' ? 7 : 30, cur = dates.slice(-n), prev = dates.slice(-2 * n, -n);
-    return { cur, prev: prev.length >= Math.ceil(n / 2) ? prev : [], label: `${mkShort(cur[0])}~${mkShort(base)} ${n}일 평균`, prevLabel: `직전 ${n}일 평균` };
-  }
-  const months = [...new Set(dates.map(d => d.slice(0, 7)))];
-  const ym = months.includes(mkPos.month) ? mkPos.month : months.at(-1);
-  const pym = months[months.indexOf(ym) - 1] || null;
-  const cur = dates.filter(d => d.startsWith(ym)), prev = pym ? dates.filter(d => d.startsWith(pym)) : [];
-  return { cur, prev, months, ym, label: `${Number(ym.slice(5))}월 평균${ym === base.slice(0, 7) ? ` (${mkShort(base)}까지)` : ''}`, prevLabel: pym ? `${Number(pym.slice(5))}월 평균` : '' };
 }
 
 /* 기간 집계: 기간의 절반 이상 TOP100이었던 게임만, 빠진 날은 101로 평균 */
@@ -4458,32 +4437,34 @@ function mkPosAgg(idx, dates){
 }
 
 function mkPosData(){
-  const W = mkPosWindows();
-  if(!W || !W.cur.length) return null;
-  const S = mkGetIndex('sales'), P = mkGetIndex('popular');
-  const cs = mkPosAgg(S, W.cur), cp = mkPosAgg(P, W.cur);
-  const ps = W.prev.length ? mkPosAgg(S, W.prev) : new Map(), pp = W.prev.length ? mkPosAgg(P, W.prev) : new Map();
+  const S = mkGetIndex('sales'), P = mkGetIndex('popular'), dates = S.dates, base = dates.at(-1);
+  if(!base) return null;
+  const day = (idx, d) => (d && idx.byDate.get(d)) || new Map();
+  const cs = day(S, base), cp = day(P, base);
   /* 크기용: 최근 30 관측일 중 매출 또는 인기 TOP100에 있던 날 수 */
-  const last30 = S.dates.slice(-30);
+  const last30 = dates.slice(-30);
   const days30 = k => last30.filter(d => S.byDate.get(d)?.has(k) || P.byDate.get(d)?.has(k)).length;
-  const plane = [], rails = { sales: [], popular: [] }, base = S.dates.at(-1);
-  /* 일별 시점(전일·7일 전·30일 전) 순위: 보기 버튼의 궤적과 요약표용 */
-  const at = n => S.dates.filter(d => d <= mkAddDays(base, -n)).at(-1);
-  const snapD = { now: base, d1: S.dates.at(-2), d7: at(7), d30: at(30) };
-  const snapR = (k, d) => [d ? S.byDate.get(d)?.get(k)?.rank ?? null : null, d ? P.byDate.get(d)?.get(k)?.rank ?? null : null];
+  /* 장기 판단: 불러온 수집 기간 중 매출 TOP100에 있던 날 비율 */
+  const keepRate = k => dates.filter(d => S.byDate.get(d)?.has(k)).length / dates.length;
+  /* 일별 시점(전일·7일 전·30일 전) 순위: 요약표용 */
+  const at = n => dates.filter(d => d <= mkAddDays(base, -n)).at(-1);
+  const snapD = { now: base, d1: dates.at(-2), d7: at(7), d30: at(30) };
+  const snapR = (k, d) => [day(S, d).get(k)?.rank ?? null, day(P, d).get(k)?.rank ?? null];
+  /* 궤적 시점: 전일 = 전일 한 점, 7일 = 7일 전부터 매일, 30일 = 30일 전부터 주 단위 (+전일) */
+  const trailD = [...new Set(mkPos.period === '30d' ? [30, 21, 14, 7, 1].map(at) : mkPos.period === '7d' ? dates.filter(d => d >= mkAddDays(base, -7) && d < base) : [dates.at(-2)])].filter(Boolean);
+  const plane = [], rails = { sales: [], popular: [] };
   new Set([...cs.keys(), ...cp.keys()]).forEach(k => {
     const s = cs.get(k), p = cp.get(k), meta = s || p;
     const it = { key: k, name: meta.name, genre: meta.genre, publisher: meta.publisher, sr: s?.rank ?? null, pr: p?.rank ?? null, days: days30(k) };
     if(s && p){
-      const a = ps.get(k), b = pp.get(k);
-      if(a && b) it.prev = { sr: a.rank, pr: b.rank };
-      it.type = mkPosType(it.sr, it.pr); it.ten = mkPosTenure(it, base);
+      it.type = mkPosType(it.sr, it.pr); it.ten = mkPosTenure(it, base, keepRate(k));
       it.snap = Object.fromEntries(Object.entries(snapD).map(([n, d]) => [n, snapR(k, d)]));
+      /* 차트에 없던 시점은 건너뜀 → 처음 들어온 지점부터 선이 시작 */
+      it.trail = trailD.map(d => snapR(k, d)).filter(r => r[0] != null && r[1] != null);
       plane.push(it);
     }else rails[s ? 'sales' : 'popular'].push(it);
   });
-  rails.sales.sort((a, b) => a.sr - b.sr);
-  rails.popular.sort((a, b) => a.pr - b.pr);
+  const W = { label: `기준일 ${base}`, span: { d1: '전일', '7d': '7일', '30d': '30일' }[mkPos.period] };
   return { W, plane, rails, cs, cp, snapD };
 }
 
@@ -4534,7 +4515,7 @@ function mkRenderPosScatter(D){
   const font = w => `${w} 11px "Pretendard Variable", Pretendard, sans-serif`;
   /* 눈금 범위: 데이터(이동 궤적 포함)의 가장 높은 순위보다 한 칸 위부터 → 빈 상단을 줄임 */
   const axisMin = key => {
-    const top = Math.min(100, ...pts.flatMap(p => [p.it[key], ...(mkPos.trail && p.it.prev ? [p.it.prev[key]] : [])]));
+    const top = Math.min(100, ...pts.flatMap(p => [p.it[key], ...(mkPos.trail && p.focus ? p.it.trail.map(r => r[key === 'sr' ? 0 : 1]) : [])]));
     return ([...MK_POS_TICKS].reverse().find(t => t < top * 0.95) || 1) * 0.8;
   };
   const axis = (title, min, color) => ({
@@ -4549,15 +4530,27 @@ function mkRenderPosScatter(D){
     beforeDatasetsDraw(chart){
       const { ctx, chartArea: a, scales: { x, y } } = chart;
       ctx.save();
-      /* 형태 띠: 매출·인기 순위 차이 3배 이내 = 균형형. 띠 아래 오른쪽 = 매출형, 위 왼쪽 = 인기형 */
+      /* 형태: 대각선(매출 = 인기) 아래 오른쪽은 매출 우위(노랑), 위 왼쪽은 인기 우위(청록). 점선(순위 차 3배) 사이가 균형형 */
       ctx.save(); ctx.beginPath(); ctx.rect(a.left, a.top, a.right - a.left, a.bottom - a.top); ctx.clip();
       const vs = []; for(let v = 0.3; v <= 400; v *= 1.12) vs.push(v);
       const line = k => vs.map(v => [x.getPixelForValue(v), y.getPixelForValue(v * k)]);
-      const hi = line(1 / 3), lo = line(3);
-      ctx.fillStyle = 'rgba(96,165,250,.08)'; ctx.beginPath(); [...hi, ...lo.slice().reverse()].forEach(([px, py], i) => i ? ctx.lineTo(px, py) : ctx.moveTo(px, py)); ctx.closePath(); ctx.fill();
-      ctx.strokeStyle = 'rgba(96,165,250,.35)'; ctx.setLineDash([4, 4]); ctx.lineWidth = 1;
-      [hi, lo].forEach(l => { ctx.beginPath(); l.forEach(([px, py], i) => i ? ctx.lineTo(px, py) : ctx.moveTo(px, py)); ctx.stroke(); });
-      ctx.setLineDash([]); ctx.restore();
+      const path = l => { ctx.beginPath(); l.forEach(([px, py], i) => i ? ctx.lineTo(px, py) : ctx.moveTo(px, py)); };
+      const mid = line(1), hi = line(1 / 3), lo = line(3);
+      path(mid); ctx.lineTo(a.right + 2000, a.bottom + 2000); ctx.closePath(); ctx.fillStyle = 'rgba(251,191,36,.06)'; ctx.fill();
+      path(mid); ctx.lineTo(a.left - 2000, a.top - 2000); ctx.closePath(); ctx.fillStyle = 'rgba(45,212,191,.06)'; ctx.fill();
+      ctx.strokeStyle = 'rgba(96,165,250,.4)'; ctx.setLineDash([4, 4]); ctx.lineWidth = 1;
+      [hi, lo].forEach(l => { path(l); ctx.stroke(); });
+      ctx.setLineDash([]); ctx.strokeStyle = 'rgba(96,165,250,.75)'; ctx.lineWidth = 1.5; path(mid); ctx.stroke();
+      ctx.restore();
+      /* 경계 예시 라벨: 점선 위의 한 점(10위·30위)에 실제 순위로 적음 */
+      ctx.font = font(600); ctx.textBaseline = 'middle';
+      [[10, 30, '매출 10위 · 인기 30위'], [30, 10, '인기 10위 · 매출 30위'], [3, 3, '매출 = 인기']].forEach(([sv, pv, t]) => {
+        const px = x.getPixelForValue(sv), py = y.getPixelForValue(pv);
+        if(px < a.left || px > a.right || py < a.top || py > a.bottom) return;
+        const w = ctx.measureText(t).width + 10;
+        ctx.fillStyle = 'rgba(7,11,20,.75)'; mkRoundRect(ctx, px + 4, py - 9, w, 18, 5); ctx.fill();
+        ctx.fillStyle = '#93c5fd'; ctx.textAlign = 'left'; ctx.fillText(t, px + 9, py + 0.5);
+      });
       ctx.font = font(700); ctx.textBaseline = 'middle';
       [{ text: '매출형', fg: '#fde68a', bg: 'rgba(180,83,9,.4)', bd: '#fbbf24', r: true, b: true }, { text: '인기형', fg: '#99f6e4', bg: 'rgba(13,148,136,.35)', bd: '#2dd4bf', r: false, b: false }].forEach(z => {
         const w = ctx.measureText(z.text).width + 16, h = 20, bx = z.r ? a.right - w - 6 : a.left + 6, by = z.b ? a.bottom - h - 6 : a.top + 6;
@@ -4565,10 +4558,10 @@ function mkRenderPosScatter(D){
         ctx.strokeStyle = z.bd; ctx.lineWidth = 1; ctx.stroke();
         ctx.fillStyle = z.fg; ctx.textAlign = 'left'; ctx.fillText(z.text, bx + 8, by + h / 2 + 0.5);
       });
-      /* 보기 + 기준일: 30일 전 → 7일 전 → 전일 → 지금을 점선으로 (색은 처음 점 대비 상승 빨강·하락 파랑) */
-      if(view && mkPos.trail && mkPos.period === 'day') pts.forEach(p => {
+      /* 이동 궤적: 보기에 걸린 게임만, 기간 첫 시점 → … → 기준일을 점선으로 (색은 첫 점 대비 상승 빨강·하락 파랑) */
+      if(mkPos.trail) pts.forEach(p => {
         if(!p.focus) return;
-        const seq = ['d30', 'd7', 'd1'].map(n => p.it.snap[n]).filter(r => r[0] != null && r[1] != null);
+        const seq = p.it.trail;
         if(!seq.length) return;
         const better = (seq[0][0] + seq[0][1]) > (p.tx + p.ty), col = better ? 'rgba(248,113,113,.8)' : 'rgba(96,165,250,.8)';
         const xy = [...seq.map(r => [x.getPixelForValue(r[0]), y.getPixelForValue(r[1])]), [x.getPixelForValue(p.x), y.getPixelForValue(p.y)]];
@@ -4578,18 +4571,6 @@ function mkRenderPosScatter(D){
         ctx.globalAlpha = 1;
       });
       /* 이동 궤적: 직전 기간 위치(작은 점) → 현재 아이콘. 오른쪽 위로 가면 빨강(상승), 반대면 파랑(하락) */
-      if(mkPos.trail && !(view && mkPos.period === 'day')) pts.forEach(p => {
-        if(!p.it.prev || p.dim) return;
-        const x0 = x.getPixelForValue(p.it.prev.sr), y0 = y.getPixelForValue(p.it.prev.pr), x1 = x.getPixelForValue(p.x), y1 = y.getPixelForValue(p.y);
-        const len = Math.hypot(x1 - x0, y1 - y0), stop = p.size / 2 + 3;
-        if(len < stop + 6) return;
-        const better = (p.it.prev.sr + p.it.prev.pr) > (p.tx + p.ty), col = better ? 'rgba(248,113,113,.75)' : 'rgba(96,165,250,.75)';
-        const ex = x1 - (x1 - x0) / len * stop, ey = y1 - (y1 - y0) / len * stop, ang = Math.atan2(ey - y0, ex - x0);
-        ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = 1.3;
-        ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(ex, ey); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(ex, ey); ctx.lineTo(ex - 6 * Math.cos(ang - 0.45), ey - 6 * Math.sin(ang - 0.45)); ctx.lineTo(ex - 6 * Math.cos(ang + 0.45), ey - 6 * Math.sin(ang + 0.45)); ctx.closePath(); ctx.fill();
-        ctx.beginPath(); ctx.arc(x0, y0, 2.4, 0, Math.PI * 2); ctx.fill();
-      });
       ctx.restore();
     },
     afterDatasetsDraw(chart){
@@ -4618,7 +4599,7 @@ function mkRenderPosScatter(D){
       /* 이름표: 검색·관심 → 양쪽 10위권 → 이동 폭 큰 순. 겹치면 생략, 최대 10개(검색·관심은 항상) */
       const live = pts.filter(p => !p.dim);
       const boxes = live.map(p => { const [cx, cy] = pos(p); return [cx - p.size / 2 - 1, cy - p.size / 2 - 1, cx + p.size / 2 + 1, cy + p.size / 2 + 1]; });
-      const cand = live.map(p => ({ p, score: (p.hl ? 1e4 : 0) + (p.focus ? 8e3 : 0) + (p.watch ? 5e3 : 0) + (p.tx <= 10 && p.ty <= 10 ? 300 : 0) + (p.it.prev ? Math.abs(Math.log(p.it.prev.sr / p.tx)) + Math.abs(Math.log(p.it.prev.pr / p.ty)) : 0) * 60 + (100 - Math.min(p.tx, p.ty)) / 5 })).sort((a, b) => b.score - a.score);
+      const cand = live.map(p => ({ p, score: (p.hl ? 1e4 : 0) + (p.focus ? 8e3 : 0) + (p.watch ? 5e3 : 0) + (p.tx <= 10 && p.ty <= 10 ? 300 : 0) + (p.it.trail[0] ? Math.abs(Math.log(p.it.trail[0][0] / p.tx)) + Math.abs(Math.log(p.it.trail[0][1] / p.ty)) : 0) * 60 + (100 - Math.min(p.tx, p.ty)) / 5 })).sort((a, b) => b.score - a.score);
       const placed = [], hit = (r, q) => !(r[2] < q[0] || r[0] > q[2] || r[3] < q[1] || r[1] > q[3]);
       ctx.font = font(600); ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
       let n = 0;
@@ -4679,8 +4660,9 @@ function mkRenderPosScatter(D){
             title: items => items[0].raw.it.name,
             label: c => {
               const it = c.raw.it, lines = [`매출 ${mkPosRank(it.sr)}위 · 인기 ${mkPosRank(it.pr)}위`];
-              if(it.prev) lines.push(`${D.W.prevLabel}: 매출 ${mkPosRank(it.prev.sr)}위 · 인기 ${mkPosRank(it.prev.pr)}위`);
-              lines.push([MK_POS_TEN[it.ten]?.t, MK_POS_TYPE[it.type]].filter(Boolean).join(' · '));
+              const t0 = it.trail[0], r = it.pr / it.sr;
+              if(t0) lines.push(`${D.W.span} 궤적 시작: 매출 ${t0[0]}위 · 인기 ${t0[1]}위`);
+              lines.push(`${[MK_POS_TEN[it.ten]?.t, MK_POS_TYPE[it.type]].filter(Boolean).join(' · ')} (${r >= 1 ? `인기 순위가 매출보다 ${r.toFixed(1)}배 낮음` : `매출 순위가 인기보다 ${(1 / r).toFixed(1)}배 낮음`})`);
               lines.push([it.genre, it.publisher].filter(v => v && v !== '미분류' && v !== '미상').join(' · ') || '-');
               lines.push(`최근 30일 중 TOP100 ${it.days}일`);
               return lines;
@@ -4710,57 +4692,11 @@ function mkRenderPosViewTable(D){
     <p class="text-[11px] muted mt-1.5">기준일(${mkShort(D.snapD.now)}) 일간 순위를 전일·7일 전·30일 전과 비교 · '신규'는 그때 TOP100 밖 · 행을 누르면 게임 상세</p>`;
 }
 
-/* 한쪽에만 순위권인 게임: 순위순 칩 몇 개 + 나머지 개수로 압축 */
-function mkRenderPosRails(D){
-  const watch = mkWatchKeys();
-  const row = (store, label, cls) => {
-    const list = D.rails[store], open = !!mkPos.railOpen[store];
-    /* 접힌 상태: 앞쪽 칩 후보 + 검색에 걸린 칩. 실제로 보일 개수는 mkFitRails가 화면 폭에 맞춰 정함 */
-    const shown = open ? list : [...list.slice(0, MK_POS_RAIL_SHOWN), ...(mkPos.q ? list.slice(MK_POS_RAIL_SHOWN).filter(mkPosHit) : [])];
-    const chips = shown.map(it => {
-      const url = getIconUrlForGame(it.name), r = store === 'sales' ? it.sr : it.pr, hl = mkPosHit(it);
-      const st = `${hl || mkPosMatch(it) ? '' : 'dim'} ${hl ? 'hl' : ''} ${watch.has(getGameKey(it.name)) ? 'watch' : ''}`;
-      return `<span class="pos-chip ${st}" data-game="${escapeAttr(it.name)}" title="${escapeAttr(it.name)}">${url ? `<img src="${escapeAttr(url)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">` : '<span class="ph"></span>'}<span class="nm">${escapeHtml(it.name)}</span><b class="${cls} font-semibold shrink-0">${mkPosRank(r)}위</b></span>`;
-    }).join('');
-    const more = list.length ? `<button type="button" class="pos-chip" style="padding-left:10px" data-railtoggle="${store}">${open ? '접기' : `+${list.length - shown.length}개 더`}</button>` : '';
-    return `<div class="flex flex-wrap items-center gap-1.5" data-rail="${store}" data-total="${list.length}" data-open="${open ? 1 : 0}"><span class="text-[11px] font-semibold ${cls} w-[120px] shrink-0">${label} ${list.length}개</span>${chips || '<span class="text-[11px] muted">없음</span>'}${more}</div>`;
-  };
-  document.getElementById('mkPosRails').innerHTML = row('sales', '매출에만 TOP100', 't-sales') + row('popular', '인기에만 TOP100', 't-pop');
-  mkFitRails();
-}
-
-/* 접힌 줄: 화면 폭에 맞춰 넘치는 칩을 숨기고 "+N개 더"에 합침 (좁은 화면은 3줄까지, 검색 칩은 항상 표시) */
-function mkFitRails(){
-  document.querySelectorAll('#mkPosRails [data-rail]').forEach(row => {
-    const more = row.querySelector('[data-railtoggle]');
-    if(!more) return;
-    if(row.dataset.open === '1'){ more.style.display = ''; return; }
-    const chips = [...row.querySelectorAll('.pos-chip[data-game]')], total = Number(row.dataset.total);
-    chips.forEach(c => { c.style.display = ''; });
-    more.style.display = '';
-    const lines = innerWidth < 640 ? 3 : 1, top = row.firstElementChild.offsetTop, lineH = more.offsetHeight + 6;
-    const fits = () => more.offsetTop + more.offsetHeight <= top + lines * lineH;
-    let visible = chips.length;
-    const label = () => { more.textContent = `+${total - visible}개 더`; };
-    label();
-    for(let i = chips.length - 1; i > 0 && !fits(); i--){
-      if(chips[i].classList.contains('hl')) continue;
-      chips[i].style.display = 'none'; visible--; label();
-    }
-    if(total - visible <= 0) more.style.display = 'none';
-  });
-}
-let mkFitTimer = null;
-window.addEventListener('resize', () => { clearTimeout(mkFitTimer); mkFitTimer = setTimeout(() => { if(currentView === 'business' && mkSection === 'structure') mkFitRails(); }, 150); });
-
 function mkRenderPosition(){
   const D = mkPosData();
   if(!D){ document.getElementById('mkPosition').innerHTML = mkEmpty('데이터가 없습니다.'); return null; }
   /* 컨트롤 상태 */
   document.querySelectorAll('#mkPosPeriod button').forEach(b => b.classList.toggle('on', b.dataset.v === mkPos.period));
-  const mSel = document.getElementById('mkPosMonth');
-  mSel.classList.toggle('hidden', mkPos.period !== 'month');
-  if(D.W.months){ mkPos.month = D.W.ym; mSel.innerHTML = D.W.months.slice().reverse().map(m => `<option value="${m}" ${m === D.W.ym ? 'selected' : ''}>${m.slice(0, 4)}년 ${Number(m.slice(5))}월</option>`).join(''); }
   document.getElementById('mkPosTrail').checked = mkPos.trail;
   document.getElementById('mkPosSize').checked = mkPos.size;
   const all = [...D.plane, ...D.rails.sales, ...D.rails.popular];
@@ -4773,22 +4709,19 @@ function mkRenderPosition(){
   fill('mkPosPub', countBy('publisher').slice(0, 40), mkPos.pub, '전체 퍼블리셔');
   document.getElementById('mkPosNames').innerHTML = all.map(it => `<option value="${escapeAttr(it.name)}"></option>`).join('');
   const hits = mkPos.q ? all.filter(mkPosHit).length : 0;
-  setText('mkPosDesc', `${D.W.label} · 양쪽 TOP100 ${D.plane.length}개 · 매출에만 ${D.rails.sales.length}개 · 인기에만 ${D.rails.popular.length}개`
-    + (mkPos.trail && D.W.prev.length ? ` · 화살표는 ${D.W.prevLabel} 위치에서 이동` : '')
-    + (mkPos.genre || mkPos.pub ? ` · 필터 일치 ${all.filter(mkPosMatch).length}개` : '')
-    + (mkPos.q ? ` · 검색 일치 ${hits}개` : ''));
   mkPosEnsureFirstSeen();
   document.querySelectorAll('#mkPosView button').forEach(b => b.classList.toggle('on', b.dataset.v === mkPos.view));
   const view = MK_POS_VIEWS[mkPos.view];
-  if(view) setText('mkPosDesc', `${D.W.label} · ${view.t} · ${D.plane.filter(it => view.f(it) && mkPosMatch(it)).length}개 강조`
-    + (mkPos.period === 'day' && mkPos.trail ? ' · 점선은 30일 전 → 7일 전 → 전일 → 기준일' : '')
+  setText('mkPosDesc', `${D.W.label} · 양쪽 TOP100 ${D.plane.length}개 · ${view ? `${view.t} ${D.plane.filter(it => view.f(it) && mkPosMatch(it)).length}개 강조` : ''}`
+    + (mkPos.trail ? ` · 점선은 ${D.W.span} 이동` : '')
+    + (mkPos.genre || mkPos.pub ? ` · 필터 일치 ${all.filter(mkPosMatch).length}개` : '')
+    + (mkPos.q ? ` · 검색 일치 ${all.filter(mkPosHit).length}개` : '')
     + (D.plane.some(it => !it.ten) ? ' · 차트 경력 불러오는 중' : ''));
   mkRenderPosScatter(D);
   mkRenderPosViewTable(D);
-  mkRenderPosRails(D);
   /* 구역별 목록 (50위 기준) */
   const toMap = m => new Map([...m].map(([k, v]) => [k, { name: v.name, rank: v.rank }]));
-  mkRenderPositionMap('mkPosition', toMap(D.cs), toMap(D.cp), mkPos.period === 'day' ? { unit: '' } : { unit: '평균 ', note: '기간 평균은 절반 이상 TOP100이었던 게임만, 빠진 날은 100+로 계산했습니다.' });
+  mkRenderPositionMap('mkPosition', toMap(D.cs), toMap(D.cp), { unit: '' });
   return D;
 }
 
@@ -4900,7 +4833,7 @@ function mkRenderStructureSkeleton(){
   setText('mkAsOf', '지난 기간 데이터를 불러오는 중...');
   setText('mkPosDesc', '-');
   if(mkPosChartInst){ mkPosChartInst.destroy(); mkPosChartInst = null; }
-  ['mkPosition', 'mkPosRails', 'mkWGenre', 'mkWPub'].forEach(id => { document.getElementById(id).innerHTML = skBlocks(6); });
+  ['mkPosition', 'mkWGenre', 'mkWPub'].forEach(id => { document.getElementById(id).innerHTML = skBlocks(6); });
 }
 
 /* ---------- 월간/주간 순위표: 기간 평균 순위로 선택 기간 vs 직전 기간 ---------- */
@@ -5446,8 +5379,6 @@ function mkInitEvents(){
   root.addEventListener('click', e => {
     const exp = e.target.closest('button[data-posexpand]');
     if(exp){ const k = exp.dataset.posexpand; mkPosExpand[k] = !mkPosExpand[k]; mkRender(); return; }
-    const rail = e.target.closest('button[data-railtoggle]');
-    if(rail){ const s = rail.dataset.railtoggle; mkPos.railOpen[s] = !mkPos.railOpen[s]; mkRenderPosition(); return; }
     const tab = e.target.closest('button[data-tabkey]');
     if(tab){ const k = tab.dataset.tabkey; mkTabs[k] = tab.dataset.store; (MK_TAB_GROUPS[k] || []).forEach(m => { mkTabs[m] = tab.dataset.store; }); mkRender(); return; }
     const game = e.target.closest('[data-game]');
