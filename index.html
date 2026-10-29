@@ -793,9 +793,9 @@ html.panel-lock { overflow: hidden; }
 
   <!-- 질문 단위 탭 -->
   <nav class="flex gap-1 overflow-x-auto overflow-y-hidden border-b border-slate-800" id="mkSectionTabs">
+    <button type="button" data-section="structure" onclick="mkSetSection('structure')" class="mk-sec"><i class="fa-solid fa-chess-board mr-1.5"></i>시장 구조</button>
     <button type="button" data-section="change" onclick="mkSetSection('change')" class="mk-sec"><i class="fa-solid fa-arrow-trend-up mr-1.5"></i>순위 변동</button>
     <button type="button" data-section="monthly" onclick="mkSetSection('monthly')" class="mk-sec"><i class="fa-solid fa-table-list mr-1.5"></i>월간/주간 순위</button>
-    <button type="button" data-section="structure" onclick="mkSetSection('structure')" class="mk-sec"><i class="fa-solid fa-chess-board mr-1.5"></i>시장 구조</button>
     <button type="button" data-section="debut" onclick="mkSetSection('debut')" class="mk-sec"><i class="fa-solid fa-seedling mr-1.5"></i>첫 차트인</button>
     <button type="button" data-section="releases" onclick="mkSetSection('releases')" class="mk-sec"><i class="fa-regular fa-calendar-plus mr-1.5"></i>신작 동향</button>
   </nav>
@@ -3895,7 +3895,7 @@ function lightboxKeyHandler(e){
    ===================================================================== */
 const MK_STORE_LABEL = { sales: '매출', popular: '인기' };
 let mkMode = 'daily';
-let mkSection = 'change';
+let mkSection = 'structure';  /* 시장 분석 첫 화면 (대시보드 '더보기'는 순위 변동으로 바로 감) */
 const mkPosExpand = {};
 /* 탭 단위 매출/인기 전환: 한 번에 그 탭의 카드들을 같이 바꿈 */
 const MK_TAB_GROUPS = { secChange: ['dMovers', 'dEntries', 'wMovers', 'wEntries'] };  /* 시장 구조의 장르·퍼블리셔는 카드마다 따로 전환 */
