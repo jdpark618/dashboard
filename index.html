@@ -439,6 +439,10 @@ html.panel-lock { overflow: hidden; }
 .rp-ty-c li { display:flex; justify-content:space-between; gap:2mm; font-size:8pt; padding:.7mm 0; border-top:1px solid rgba(15,23,42,.06); }
 .rp-ty-c li b { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:700; } .rp-ty-c li span { white-space:nowrap; color:var(--sub); }
 .rp-tynote { font-size:7.4pt; color:var(--mute); margin-top:1.4mm; }
+/* 2쪽: 섹션 블록 사이로 남는 공간을 고르게 (글자 크기는 다른 쪽과 같게 유지) */
+.rp-fill { flex:1; display:flex; flex-direction:column; justify-content:space-between; padding-bottom:3mm; }
+.rp-mv { display:flex; flex-wrap:wrap; align-items:center; gap:1.5mm; margin-top:2mm; font-size:7.8pt; }
+.rp-mv .l { color:var(--mute); margin-right:1mm; } .rp-mv .c { background:#f1f5f9; border-radius:1.2mm; padding:.6mm 2mm; color:var(--sub); } .rp-mv .c b { color:var(--ink); margin-left:.8mm; } .rp-mv .mu { color:var(--mute); }
 .rp-ent2 { width:100%; border-collapse:collapse; table-layout:fixed; font-size:8.2pt; }
 .rp-ent2 th { font-size:7.2pt; font-weight:600; color:var(--mute); text-align:center; padding:1mm; border-bottom:1px solid var(--line); }
 .rp-ent2 td { text-align:center; padding:1.3mm 1mm; border-bottom:1px solid rgba(15,23,42,.06); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -5549,7 +5553,7 @@ function rpBuild(mon){
     }
     S[s] = { cur, prev, ca, pa, top, up, down, leadWeeks, cmpN: pairs.length, partial: partial.sort((x, y) => x.to - y.to).slice(0, 4), entrantsN: en.list.length, entrantsPrevN: enPrev.prevHasData ? enPrev.list.length : null, entrants,
       retention: a?.size ? Math.round(kept / a.size * 100) : null,
-      genres: Object.entries(gNow).sort((x, y) => y[1] - x[1]).slice(0, 6).map(([g, c]) => ({ g, c, d: c - (gPrev[g] || 0) })) };
+      genres: Object.entries(gNow).sort((x, y) => y[1] - x[1]).slice(0, 8).map(([g, c]) => ({ g, c, d: c - (gPrev[g] || 0) })) };
   }
   /* 포지션: 매출·인기 주 평균 */
   const cs = S.sales.ca, cp = S.popular.ca, both = [];
@@ -5570,10 +5574,11 @@ function rpBuild(mon){
     ps.forEach((g, k) => { const q = pp.get(k); if(q) prevTypes[mkPosType(g.rank, q.rank)]++; });
     const top = t => items.filter(x => x.type === t).sort((a, b) => (a.sr + a.pr) - (b.sr + b.pr)).slice(0, 5);
     const s20 = [...cs].filter(([, g]) => g.rank <= 20);
+    const mv = {}; items.forEach(x => { if(x.ps == null || x.pp == null) return; const t0 = mkPosType(x.ps, x.pp); if(t0 !== x.type){ const k = `${t0}>${x.type}`; mv[k] = (mv[k] || 0) + 1; } });
     return { types, prevTypes: ps.size && pp.size ? prevTypes : null, top: { sales: top('sales'), bal: top('bal'), pop: top('pop') },
       entries: os.size && op.size ? items.filter(x => x.entry).sort((a, b) => a.sr - b.sr) : null,
       onlyS: [...cs].filter(([k, g]) => !cp.has(k) && g.rank <= 40).length, onlyP: [...cp].filter(([k, g]) => !cs.has(k) && g.rank <= 30).length,
-      s20: s20.length, steady20: s20.filter(([k]) => keep(k) >= MK_POS_LONG_KEEP).length };
+      moves: Object.entries(mv).sort((a, b) => b[1] - a[1]).slice(0, 4), s20: s20.length, steady20: s20.filter(([k]) => keep(k) >= MK_POS_LONG_KEEP).length };
   })();
   const only = (A, B) => [...A].filter(([k]) => !B.has(k)).map(([, g]) => ({ n: g.name, r: g.rank, g: g.genre || '미분류' })).sort((x, y) => x.r - y.r);
   let prevBoth = null; if(S.sales.pa.size && S.popular.pa.size){ prevBoth = 0; S.sales.pa.forEach((_, k) => { if(S.popular.pa.has(k)) prevBoth++; }); }
@@ -5782,17 +5787,23 @@ function rpRender(D){
   })();
   const p2 = `<section class="rp-page">${run(2)}
     <h2 class="first">매출·인기 포지션 <small>주간 평균 · 양쪽 TOP100 ${D.both}개${D.prevBoth != null ? ` (전주 ${D.prevBoth})` : ''} · 형태는 순위 차 2배 기준</small></h2>
+    <div class="rp-fill"><div>
     <h3 class="rp-sub">형태 분포 <small>( ) 전주 대비</small></h3>
     <div class="rp-ty">${tyCard('sales', '매출형')}${tyCard('bal', '균형형')}${tyCard('pop', '인기형')}</div>
+    ${PS.prevTypes ? `<div class="rp-mv"><span class="l">형태 이동</span>${PS.moves.length ? PS.moves.map(([k, n]) => { const [a, b] = k.split('>'); return `<span class="c">${MK_POS_TYPE[a]} → ${MK_POS_TYPE[b]} <b>${n}</b></span>`; }).join('') : '<span class="mu">없음</span>'}</div>` : ''}
     <div class="rp-tynote">순위는 매출 · 인기 / 한쪽만 상위권: 매출 ${PS.onlyS}개 · 인기 ${PS.onlyP}개</div>
+    </div><div>
     <h3 class="rp-sub">신작(재진입) <small>${ent ? `4주 전 대비 · 첫 진입 ${nF} · 재진입 ${nR}` : '4주 전 기록 없음'}</small></h3>
     ${ent && ent.length ? `<table class="rp-ent2"><colgroup><col><col style="width:18mm"><col style="width:16mm"><col style="width:24mm"><col style="width:24mm"></colgroup>
       <tr><th>게임</th><th>분류</th><th>형태</th><th>매출</th><th>인기</th></tr>
       ${ent.slice(0, 6).map(x => `<tr><td><b>${esc(x.name)}</b></td><td class="tg">${x.entry === 'first' ? '첫 진입' : '재진입'}</td><td>${MK_POS_TYPE[x.type]}</td><td><b class="t-sales">${R(x.sr)}</b> ${dl(x.ps, x.sr)}</td><td><b class="t-pop">${R(x.pr)}</b> ${dl(x.pp, x.pr)}</td></tr>`).join('')}</table>` : '<div class="rp-empty">해당 게임 없음</div>'}
+    </div><div>
     <h3 class="rp-sub">해석</h3>
     <div class="rp-posx">${posNotes.map(([h, ev]) => `<div class="it"><span class="c">${h}</span><span class="e">${ev}</span></div>`).join('')}</div>
+    </div><div>
     <h2>장르 구성 <small>그 주 마지막 날 TOP100 · 전주 대비</small></h2>
     <div class="rp-cols"><div><h3><span class="rp-tag bg-sales">매출</span></h3>${bars(S.sales.genres, '#d97706')}</div><div><h3><span class="rp-tag bg-pop">인기</span></h3>${bars(S.popular.genres, '#0d9488')}</div></div>
+    </div></div>
     ${foot}</section>`;
 
   /* 4쪽(+이어지는 장) 신작 일정: 한 열 표. 넘치면 다음 A4 장에 머리·표 머리를 다시 붙임 */
