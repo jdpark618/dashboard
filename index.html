@@ -3593,7 +3593,7 @@ async function detailEnsureRange(){
 
 /* ---------- 전체 순위 페이지 (인기·매출 1~100위) ---------- */
 const RANK_JUMPS = [[1, 10], [11, 30], [31, 50], [51, 100]];
-const rankState = { store: 'popular', filter: '', genre: '', pub: '', q: '', histFor: null };
+const rankState = { store: 'popular', filter: '', genre: '', pub: '', q: '' };
 
 /* 기준일 100개 순위 + 전일 대비 변동 (이미 받아 둔 데이터만 사용) */
 function rankPanelItems(store){
@@ -3623,7 +3623,7 @@ function rankJump(from){
   if(el) el.scrollIntoView({ block: 'start', behavior: 'smooth' });
 }
 
-/* 칸 이름 → 순위 인덱스 키 (미니 그래프·첫 차트인 판정용) */
+/* 칸 이름 → 순위 인덱스 키 (첫 차트인 판정용) */
 function rankIndexKeys(idx, d){
   const m = new Map(); idx.byDate.get(d)?.forEach((v, k) => m.set(getGameKey(v.name), k)); return m;
 }
@@ -3631,20 +3631,17 @@ function renderRanking(){
   const { filter, genre, pub } = rankState, data = { popular: rankPanelItems('popular'), sales: rankPanelItems('sales') };
   dashPairSet('rkCols', rankState.store);
   const { last, prev } = data.popular.last ? data.popular : data.sales;
-  setText('rankSub', last ? `기준일 ${last}${prev ? ` · 변동은 전일(${mkShort(prev)}) 대비` : ''} · 그래프는 최근 30일 순위 · 게임을 누르면 상세` : '데이터 없음');
+  setText('rankSub', last ? `기준일 ${last}${prev ? ` · 변동은 전일(${mkShort(prev)}) 대비` : ''} · 게임을 누르면 상세` : '데이터 없음');
   document.getElementById('rankTools').style.top = `${document.getElementById('topNav').offsetHeight}px`;
-  /* 30일 그래프용 지난 달 데이터, 첫 차트인 판정용 첫 등장일 (처음 한 번 받고 다시 그림) */
-  /* (데이터를 새로 받으면 한 번 더. 실패해도 같은 데이터로는 다시 시도하지 않음) */
-  if(!mkMonthsReady && rankState.histFor !== rawStore.sales){ rankState.histFor = rawStore.sales; mkEnsureHistory().finally(() => { if(currentView === 'ranking') renderRanking(); }); }
+  /* 첫 차트인 판정용 첫 등장일 (처음 한 번 받고 다시 그림) */
   ['popular', 'sales'].forEach(st => { if(!mkFirstSeenCache[st] && !mkFirstSeenInFlight[st]) mkLoadFirstSeen(st).then(() => { if(currentView === 'ranking') renderRanking(); }).catch(() => {}); });
 
-  /* 칸마다: 30일 순위 흐름, NEW를 첫 차트인 / 재진입으로 */
+  /* 칸마다: NEW를 첫 차트인 / 재진입으로 */
   const watch = mkWatchKeys();
   ['popular', 'sales'].forEach(st => {
-    const idx = mkGetIndex(st), keys = rankIndexKeys(idx, data[st].last), ds = idx.dates.filter(d => d <= data[st].last).slice(-30);
+    const keys = rankIndexKeys(mkGetIndex(st), data[st].last);
     data[st].items.forEach(x => {
       const k = keys.get(getGameKey(x.name));
-      x.spark = k ? ds.map(d => idx.byDate.get(d)?.get(k)?.rank ?? null) : null;
       if(x.change === 'NEW') x.isFirst = !!k && mkFirstChartDate(mkFirstSeenCache[st], k, x.name) === data[st].last;
       x.watch = watch.has(getGameKey(x.name));
     });
@@ -3666,7 +3663,7 @@ function renderRanking(){
   const q = getGameKey(rankState.q.trim());
   const openKey = !document.getElementById('detailPanel').classList.contains('translate-x-full') ? getGameKey(detailCurrentName) : '';
   ['popular', 'sales'].forEach(st => {
-    const items = data[st].items, color = st === 'sales' ? '#fbbf24' : '#2dd4bf';
+    const items = data[st].items;
     const list = items.filter(x => (!filter || rankMatchFilter(x, filter)) && (!genre || x.genre === genre) && (!pub || x.publisher === pub) && (q === '-' || !q || getGameKey(x.name).includes(q)));
     setText(`rankCnt-${st}`, list.length === items.length ? '' : `${list.length}개`);
     document.getElementById(`rankList-${st}`).innerHTML = list.length ? list.map(x => {
@@ -3678,7 +3675,6 @@ function renderRanking(){
         <span class="w-7 text-right shrink-0 font-bold ${x.rank <= 3 ? 'text-slate-50 text-sm' : 'text-slate-400 text-xs'}">${x.rank}</span>
         ${x.icon ? `<img src="${escapeAttr(x.icon)}" class="w-8 h-8 rounded-lg object-cover bg-slate-800 shrink-0" alt="" loading="lazy" onerror="this.style.visibility='hidden'">` : '<span class="w-8 h-8 rounded-lg bg-slate-800 shrink-0"></span>'}
         <div class="min-w-0 flex-1"><div class="text-[13px] font-medium truncate text-slate-100">${x.watch ? '<i class="fa-solid fa-star text-amber-300 text-[10px] mr-1"></i>' : ''}${escapeHtml(x.name)}</div><div class="text-[11px] muted truncate mt-0.5">${meta.join('<span class="mx-1 text-slate-600">·</span>')}</div></div>
-        <div class="hidden sm:block shrink-0 opacity-90" title="최근 30일 순위 (위가 높은 순위, 끊긴 곳은 TOP100 밖)">${x.spark && x.spark.some(v => v != null) ? mkRankSpark(x.spark, color, 96, 26) : ''}</div>
         <div class="w-12 text-right shrink-0">${chg}</div>
       </li>`;
     }).join('') : `<li class="text-xs muted text-center py-10">조건에 맞는 게임이 없습니다</li>`;
@@ -5044,13 +5040,13 @@ function mkComputeDebuts(store){
   return { list, base, windowStart, pkgStart: fs.pkgStart };
 }
 /* 순위 추이 미니 선 그래프 (위가 높은 순위, 빈 구간 = TOP100 밖). 세로 눈금은 게임별 최고 순위~100위 */
-function mkRankSpark(series, color = '#818cf8', w = 120, h = 28){
+function mkRankSpark(series){
   const top = Math.max(1, Math.floor((Math.min(...series.filter(r => r != null)) - 1) / 10) * 10 + 1), span = Math.max(1, 100 - top);
-  const n = series.length, xOf = i => n === 1 ? w / 2 : i / (n - 1) * (w - 4) + 2, yOf = r => 2 + (r - top) / span * (h - 4);
+  const w = 120, h = 28, n = series.length, xOf = i => n === 1 ? w / 2 : i / (n - 1) * (w - 4) + 2, yOf = r => 2 + (r - top) / span * (h - 4);
   let path = '', pen = false;
   series.forEach((r, i) => { if(r == null){ pen = false; return; } path += `${pen ? 'L' : 'M'}${xOf(i).toFixed(1)},${yOf(r).toFixed(1)}`; pen = true; });
-  const dots = series.map((r, i) => r != null && (i === 0 || series[i - 1] == null) && (i === n - 1 || series[i + 1] == null) ? `<circle cx="${xOf(i).toFixed(1)}" cy="${yOf(r).toFixed(1)}" r="1.6" fill="${color}"/>` : '').join('');
-  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" class="block" role="img" aria-label="${top}~100위 범위 순위 추이"><title>세로 범위 ${top}위~100위</title>${top <= 10 ? `<line x1="0" x2="${w}" y1="${yOf(10)}" y2="${yOf(10)}" stroke="rgba(148,163,184,.25)" stroke-dasharray="2 2"/>` : ''}<path d="${path}" fill="none" stroke="${color}" stroke-width="1.6" stroke-linejoin="round"/>${dots}</svg>`;
+  const dots = series.map((r, i) => r != null && (i === 0 || series[i - 1] == null) && (i === n - 1 || series[i + 1] == null) ? `<circle cx="${xOf(i).toFixed(1)}" cy="${yOf(r).toFixed(1)}" r="1.6" fill="#818cf8"/>` : '').join('');
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" class="block" role="img" aria-label="${top}~100위 범위 순위 추이"><title>세로 범위 ${top}위~100위</title>${top <= 10 ? `<line x1="0" x2="${w}" y1="${yOf(10)}" y2="${yOf(10)}" stroke="rgba(148,163,184,.25)" stroke-dasharray="2 2"/>` : ''}<path d="${path}" fill="none" stroke="#818cf8" stroke-width="1.6" stroke-linejoin="round"/>${dots}</svg>`;
 }
 function mkRenderDebut(){
   const store = mkTabs.debut, label = MK_STORE_LABEL[store], R = mkComputeDebuts(store);
