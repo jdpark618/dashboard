@@ -1027,6 +1027,9 @@ html.panel-lock { overflow: hidden; }
   <div id="calDayBody" class="p-3"></div>
 </div>
 
+<!-- 맨 위로: 긴 화면에서 스크롤을 내리면 오른쪽 아래에 나타남 (모든 화면 공통) -->
+<button type="button" id="toTopBtn" onclick="window.scrollTo({ top: 0, behavior: 'smooth' })" class="hidden fixed right-5 bottom-5 z-30 w-11 h-11 rounded-full bg-slate-800/95 hover:bg-indigo-600 border border-slate-600 text-slate-100 shadow-lg transition-colors" title="맨 위로" aria-label="맨 위로"><i class="fa-solid fa-arrow-up"></i></button>
+
 <!-- RANKING VIEW (전체 순위: 인기·매출 1~100위, 넓은 화면은 나란히, 좁은 화면은 탭) -->
 <div id="view-ranking" class="hidden space-y-4">
   <div class="page-head">
@@ -1035,7 +1038,7 @@ html.panel-lock { overflow: hidden; }
       <p class="sub" id="rankSub">-</p>
     </div>
   </div>
-  <section class="card rounded-xl px-4 py-3">
+  <section id="rankTools" class="card rounded-xl px-4 py-3 sticky z-20 shadow-lg shadow-black/30">
     <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
       <div class="relative flex-1 min-w-[200px] max-w-[300px]"><input id="rankSearch" class="mk-sel w-full pr-7" placeholder="순위에서 게임 검색" autocomplete="off" oninput="rankState.q = this.value; renderRanking()"><button type="button" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-200 text-xs" onclick="document.getElementById('rankSearch').value=''; rankState.q=''; renderRanking()" aria-label="검색 지우기"><i class="fa-solid fa-xmark"></i></button></div>
       <div class="flex flex-wrap items-center gap-1.5" id="rankJumps"></div>
@@ -3590,7 +3593,7 @@ async function detailEnsureRange(){
 
 /* ---------- 전체 순위 페이지 (인기·매출 1~100위) ---------- */
 const RANK_JUMPS = [[1, 10], [11, 30], [31, 50], [51, 100]];
-const rankState = { store: 'popular', filter: '', genre: '', q: '' };
+const rankState = { store: 'popular', filter: '', genre: '', pub: '', q: '', histFor: null };
 
 /* 기준일 100개 순위 + 전일 대비 변동 (이미 받아 둔 데이터만 사용) */
 function rankPanelItems(store){
@@ -3620,41 +3623,80 @@ function rankJump(from){
   if(el) el.scrollIntoView({ block: 'start', behavior: 'smooth' });
 }
 
+/* 칸 이름 → 순위 인덱스 키 (미니 그래프·첫 차트인 판정용) */
+function rankIndexKeys(idx, d){
+  const m = new Map(); idx.byDate.get(d)?.forEach((v, k) => m.set(getGameKey(v.name), k)); return m;
+}
 function renderRanking(){
-  const { filter, genre } = rankState, data = { popular: rankPanelItems('popular'), sales: rankPanelItems('sales') };
+  const { filter, genre, pub } = rankState, data = { popular: rankPanelItems('popular'), sales: rankPanelItems('sales') };
   dashPairSet('rkCols', rankState.store);
   const { last, prev } = data.popular.last ? data.popular : data.sales;
-  setText('rankSub', last ? `기준일 ${last}${prev ? ` · 변동은 전일(${mkShort(prev)}) 대비` : ''} · 게임을 누르면 상세` : '데이터 없음');
+  setText('rankSub', last ? `기준일 ${last}${prev ? ` · 변동은 전일(${mkShort(prev)}) 대비` : ''} · 그래프는 최근 30일 순위 · 게임을 누르면 상세` : '데이터 없음');
+  document.getElementById('rankTools').style.top = `${document.getElementById('topNav').offsetHeight}px`;
+  /* 30일 그래프용 지난 달 데이터, 첫 차트인 판정용 첫 등장일 (처음 한 번 받고 다시 그림) */
+  /* (데이터를 새로 받으면 한 번 더. 실패해도 같은 데이터로는 다시 시도하지 않음) */
+  if(!mkMonthsReady && rankState.histFor !== rawStore.sales){ rankState.histFor = rawStore.sales; mkEnsureHistory().finally(() => { if(currentView === 'ranking') renderRanking(); }); }
+  ['popular', 'sales'].forEach(st => { if(!mkFirstSeenCache[st] && !mkFirstSeenInFlight[st]) mkLoadFirstSeen(st).then(() => { if(currentView === 'ranking') renderRanking(); }).catch(() => {}); });
 
-  /* 구간 이동 */
+  /* 칸마다: 30일 순위 흐름, NEW를 첫 차트인 / 재진입으로 */
+  const watch = mkWatchKeys();
+  ['popular', 'sales'].forEach(st => {
+    const idx = mkGetIndex(st), keys = rankIndexKeys(idx, data[st].last), ds = idx.dates.filter(d => d <= data[st].last).slice(-30);
+    data[st].items.forEach(x => {
+      const k = keys.get(getGameKey(x.name));
+      x.spark = k ? ds.map(d => idx.byDate.get(d)?.get(k)?.rank ?? null) : null;
+      if(x.change === 'NEW') x.isFirst = !!k && mkFirstChartDate(mkFirstSeenCache[st], k, x.name) === data[st].last;
+      x.watch = watch.has(getGameKey(x.name));
+    });
+  });
+
+  /* 구간 이동 (보고 있는 구간에 불) */
   document.getElementById('rankJumps').innerHTML = '<span class="text-[11px] muted mr-0.5">구간</span>' + RANK_JUMPS.map(([a, b]) =>
-    `<button type="button" class="cal-chip !py-1 !px-2.5 !text-[11px]" onclick="rankJump(${a})">${a}–${b}</button>`).join('');
+    `<button type="button" class="cal-chip !py-1 !px-2.5 !text-[11px]" data-from="${a}" data-to="${b}" onclick="rankJump(${a})">${a}–${b}</button>`).join('');
 
-  /* 빠른 필터 + 장르 (인기·매출 합산 개수) */
+  /* 빠른 필터 + 장르 + 퍼블리셔 (인기·매출 합산 개수) */
   const all = [...data.popular.items, ...data.sales.items], count = f => all.filter(x => rankMatchFilter(x, f)).length;
   const fchip = (f, text, cls) => `<button type="button" class="cal-chip !py-1 !px-2.5 !text-[11px] ${filter === f ? 'on' : ''}" onclick="rankSetFilter('${f}')" aria-pressed="${filter === f}"><span class="${cls}">${text}</span> <b>${count(f)}</b></button>`;
-  const genres = [...all.reduce((m, x) => x.genre ? m.set(x.genre, (m.get(x.genre) || 0) + 1) : m, new Map())].sort((a, b) => b[1] - a[1]);
-  document.getElementById('rankFilters').innerHTML = fchip('new', '신규 진입', 't-new') + fchip('up', '급상승', 'rank-up') + fchip('down', '급하락', 'rank-down')
-    + `<select class="mk-sel !py-1 !text-[11px] ml-auto max-w-[160px]" onchange="rankState.genre = this.value; renderRanking()" aria-label="장르 필터"><option value="">전체 장르</option>${genres.map(([g, c]) => `<option value="${escapeAttr(g)}" ${g === genre ? 'selected' : ''}>${escapeHtml(g)} (${c})</option>`).join('')}</select>`;
+  const tally = f => [...all.reduce((m, x) => { const v = f(x); return v && v !== '-' && v !== '미분류' && v !== '미상' ? m.set(v, (m.get(v) || 0) + 1) : m; }, new Map())].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'ko'));
+  const sel = (key, label, list, cur) => `<select class="mk-sel !py-1 !text-[11px] max-w-[170px]" onchange="rankState.${key} = this.value; renderRanking()" aria-label="${label} 필터"><option value="">전체 ${label}</option>${list.map(([g, c]) => `<option value="${escapeAttr(g)}" ${g === cur ? 'selected' : ''}>${escapeHtml(g)} (${c})</option>`).join('')}</select>`;
+  document.getElementById('rankFilters').innerHTML = fchip('first', '첫 차트인', 't-new') + fchip('re', '재진입', 't-new') + fchip('up', '급상승', 'rank-up') + fchip('down', '급하락', 'rank-down') + fchip('watch', '★ 관심 게임', 'text-amber-300')
+    + `<span class="ml-auto flex items-center gap-1.5">${sel('genre', '장르', tally(x => x.genre), genre)}${sel('pub', '퍼블리셔', tally(x => x.publisher), pub)}</span>`;
 
   /* 두 열 목록 */
   const q = getGameKey(rankState.q.trim());
   const openKey = !document.getElementById('detailPanel').classList.contains('translate-x-full') ? getGameKey(detailCurrentName) : '';
   ['popular', 'sales'].forEach(st => {
-    const items = data[st].items, list = items.filter(x => (!filter || rankMatchFilter(x, filter)) && (!genre || x.genre === genre) && (q === '-' || !q || getGameKey(x.name).includes(q)));
-    setText(`rankCnt-${st}`, list.length === items.length ? `${items.length}개` : `${list.length} / ${items.length}개`);
+    const items = data[st].items, color = st === 'sales' ? '#fbbf24' : '#2dd4bf';
+    const list = items.filter(x => (!filter || rankMatchFilter(x, filter)) && (!genre || x.genre === genre) && (!pub || x.publisher === pub) && (q === '-' || !q || getGameKey(x.name).includes(q)));
+    setText(`rankCnt-${st}`, list.length === items.length ? '' : `${list.length}개`);
     document.getElementById(`rankList-${st}`).innerHTML = list.length ? list.map(x => {
       const meta = [x.genre && x.genre !== '미분류' ? escapeHtml(x.genre) : '', x.publisher && x.publisher !== '-' ? escapeHtml(x.publisher) : '', x.score && x.score !== '-' ? renderScoreBadgeHtml(x.score) : ''].filter(Boolean);
-      const sep = [10, 30, 50].includes(x.rank) && !filter && !genre && !q ? ' border-b-2 border-b-slate-700' : '';
-      return `<li data-rank="${x.rank}" data-key="${escapeAttr(getGameKey(x.name))}" class="group flex items-center gap-2.5 py-2 px-2 rounded-lg cursor-pointer hover:bg-slate-800/60 transition-colors scroll-mt-24${sep}${getGameKey(x.name) === openKey ? ' bg-indigo-500/15' : ''}" onclick="openGameDetail('${escapeAttr(x.name).replace(/&#039;/g, "\\'")}')">
+      const sep = [10, 30, 50].includes(x.rank) && !filter && !genre && !pub && !q ? ' border-b-2 border-b-slate-700' : '';
+      const chg = x.change === 'NEW' ? (x.isFirst ? '<span class="t-new text-[11px] font-semibold">NEW</span>' : '<span class="t-new text-[11px] font-semibold">재진입</span>')
+        : x.change ? `<span class="text-[11px] font-semibold ${x.change > 0 ? 'rank-up' : 'rank-down'}">${x.change > 0 ? '▲' : '▼'}${Math.abs(x.change)}</span>` : '<span class="text-[11px] muted">-</span>';
+      return `<li data-rank="${x.rank}" data-key="${escapeAttr(getGameKey(x.name))}" class="group flex items-center gap-2.5 py-2 px-2 rounded-lg cursor-pointer hover:bg-slate-800/60 transition-colors scroll-mt-40${sep}${getGameKey(x.name) === openKey ? ' bg-indigo-500/15' : ''}" onclick="openGameDetail('${escapeAttr(x.name).replace(/&#039;/g, "\\'")}')">
         <span class="w-7 text-right shrink-0 font-bold ${x.rank <= 3 ? 'text-slate-50 text-sm' : 'text-slate-400 text-xs'}">${x.rank}</span>
         ${x.icon ? `<img src="${escapeAttr(x.icon)}" class="w-8 h-8 rounded-lg object-cover bg-slate-800 shrink-0" alt="" loading="lazy" onerror="this.style.visibility='hidden'">` : '<span class="w-8 h-8 rounded-lg bg-slate-800 shrink-0"></span>'}
-        <div class="min-w-0 flex-1"><div class="text-[13px] font-medium truncate text-slate-100">${escapeHtml(x.name)}</div><div class="text-[11px] muted truncate mt-0.5">${meta.join('<span class="mx-1 text-slate-600">·</span>')}</div></div>
-        <div class="w-12 text-right shrink-0">${x.change === 'NEW' ? '<span class="t-new text-[11px] font-semibold">NEW</span>' : x.change ? `<span class="text-[11px] font-semibold ${x.change > 0 ? 'rank-up' : 'rank-down'}">${x.change > 0 ? '▲' : '▼'}${Math.abs(x.change)}</span>` : '<span class="text-[11px] muted">-</span>'}</div>
+        <div class="min-w-0 flex-1"><div class="text-[13px] font-medium truncate text-slate-100">${x.watch ? '<i class="fa-solid fa-star text-amber-300 text-[10px] mr-1"></i>' : ''}${escapeHtml(x.name)}</div><div class="text-[11px] muted truncate mt-0.5">${meta.join('<span class="mx-1 text-slate-600">·</span>')}</div></div>
+        <div class="hidden sm:block shrink-0 opacity-90" title="최근 30일 순위 (위가 높은 순위, 끊긴 곳은 TOP100 밖)">${x.spark && x.spark.some(v => v != null) ? mkRankSpark(x.spark, color, 96, 26) : ''}</div>
+        <div class="w-12 text-right shrink-0">${chg}</div>
       </li>`;
     }).join('') : `<li class="text-xs muted text-center py-10">조건에 맞는 게임이 없습니다</li>`;
   });
+  rankOnScroll();
 }
+/* 스크롤: 보고 있는 구간 칩에 불 */
+function rankOnScroll(){
+  if(currentView !== 'ranking') return;
+  const st = innerWidth >= 1024 ? 'popular' : rankState.store, bar = document.getElementById('rankTools').getBoundingClientRect().bottom;
+  const first = [...document.querySelectorAll(`#rankList-${st} li[data-rank]`)].find(li => li.getBoundingClientRect().bottom > bar + 8);
+  const r = first ? Number(first.dataset.rank) : 0;
+  document.querySelectorAll('#rankJumps [data-from]').forEach(b => b.classList.toggle('on', r >= Number(b.dataset.from) && r <= Number(b.dataset.to)));
+}
+window.addEventListener('scroll', () => {
+  rankOnScroll();
+  document.getElementById('toTopBtn')?.classList.toggle('hidden', window.scrollY < 600);
+}, { passive: true });
 /* 슬라이드 패널이 하나라도 열려 있으면 뒤쪽 페이지 스크롤 잠금 (스크롤바가 겹쳐 보이지 않게) */
 (function panelScrollLock(){
   const ids = ['detailPanel', 'releaseDetailPanel', 'calDayPanel'];
@@ -3666,6 +3708,9 @@ function renderRanking(){
 /* 급상승·급하락: 전일 대비 5계단 이상 */
 function rankMatchFilter(x, f){
   if(f === 'new') return x.change === 'NEW';
+  if(f === 'first') return x.change === 'NEW' && !!x.isFirst;
+  if(f === 're') return x.change === 'NEW' && !x.isFirst;
+  if(f === 'watch') return !!x.watch;
   if(f === 'up') return typeof x.change === 'number' && x.change >= 5;
   if(f === 'down') return typeof x.change === 'number' && x.change <= -5;
   return true;
@@ -4999,13 +5044,13 @@ function mkComputeDebuts(store){
   return { list, base, windowStart, pkgStart: fs.pkgStart };
 }
 /* 순위 추이 미니 선 그래프 (위가 높은 순위, 빈 구간 = TOP100 밖). 세로 눈금은 게임별 최고 순위~100위 */
-function mkRankSpark(series){
+function mkRankSpark(series, color = '#818cf8', w = 120, h = 28){
   const top = Math.max(1, Math.floor((Math.min(...series.filter(r => r != null)) - 1) / 10) * 10 + 1), span = Math.max(1, 100 - top);
-  const w = 120, h = 28, n = series.length, xOf = i => n === 1 ? w / 2 : i / (n - 1) * (w - 4) + 2, yOf = r => 2 + (r - top) / span * (h - 4);
+  const n = series.length, xOf = i => n === 1 ? w / 2 : i / (n - 1) * (w - 4) + 2, yOf = r => 2 + (r - top) / span * (h - 4);
   let path = '', pen = false;
   series.forEach((r, i) => { if(r == null){ pen = false; return; } path += `${pen ? 'L' : 'M'}${xOf(i).toFixed(1)},${yOf(r).toFixed(1)}`; pen = true; });
-  const dots = series.map((r, i) => r != null && (i === 0 || series[i - 1] == null) && (i === n - 1 || series[i + 1] == null) ? `<circle cx="${xOf(i).toFixed(1)}" cy="${yOf(r).toFixed(1)}" r="1.6" fill="#818cf8"/>` : '').join('');
-  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" class="block" role="img" aria-label="${top}~100위 범위 순위 추이"><title>세로 범위 ${top}위~100위</title>${top <= 10 ? `<line x1="0" x2="${w}" y1="${yOf(10)}" y2="${yOf(10)}" stroke="rgba(148,163,184,.25)" stroke-dasharray="2 2"/>` : ''}<path d="${path}" fill="none" stroke="#818cf8" stroke-width="1.6" stroke-linejoin="round"/>${dots}</svg>`;
+  const dots = series.map((r, i) => r != null && (i === 0 || series[i - 1] == null) && (i === n - 1 || series[i + 1] == null) ? `<circle cx="${xOf(i).toFixed(1)}" cy="${yOf(r).toFixed(1)}" r="1.6" fill="${color}"/>` : '').join('');
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" class="block" role="img" aria-label="${top}~100위 범위 순위 추이"><title>세로 범위 ${top}위~100위</title>${top <= 10 ? `<line x1="0" x2="${w}" y1="${yOf(10)}" y2="${yOf(10)}" stroke="rgba(148,163,184,.25)" stroke-dasharray="2 2"/>` : ''}<path d="${path}" fill="none" stroke="${color}" stroke-width="1.6" stroke-linejoin="round"/>${dots}</svg>`;
 }
 function mkRenderDebut(){
   const store = mkTabs.debut, label = MK_STORE_LABEL[store], R = mkComputeDebuts(store);
