@@ -533,17 +533,19 @@ html.panel-lock { overflow: hidden; }
     <button class="tab" data-view="calendar" onclick="switchView('calendar')">
       <i class="fa-regular fa-calendar-days mr-1.5"></i> 신작 달력
     </button>
+    <button class="tab" data-view="search" onclick="switchView('search')">
+      <i class="fa-solid fa-chart-line mr-1.5"></i> 순위 비교
+    </button>
+    <!-- DB 메뉴는 오른쪽 끝에 -->
+    <span class="flex-1 min-w-4" aria-hidden="true"></span>
     <button class="tab" data-view="sales" onclick="switchView('sales')">
-      <i class="fa-solid fa-coins mr-1.5"></i> 매출 순위 DB
+      <i class="fa-solid fa-coins mr-1.5"></i> 매출 DB
     </button>
     <button class="tab" data-view="popular" onclick="switchView('popular')">
-      <i class="fa-solid fa-fire mr-1.5"></i> 인기 순위 DB
+      <i class="fa-solid fa-fire mr-1.5"></i> 인기 DB
     </button>
     <button class="tab" data-view="newReleases" onclick="switchView('newReleases')">
-      <i class="fa-solid fa-table-list mr-1.5"></i> 신작 정보 DB
-    </button>
-    <button class="tab" data-view="search" onclick="switchView('search')">
-      <i class="fa-solid fa-chart-line mr-1.5"></i> 순위 추이
+      <i class="fa-solid fa-table-list mr-1.5"></i> 신작 DB
     </button>
   </div>
 </nav>
@@ -1030,7 +1032,7 @@ html.panel-lock { overflow: hidden; }
 <div id="view-search" class="hidden space-y-4">
   <div class="page-head">
     <div>
-      <h2><i class="fa-solid fa-chart-line text-indigo-400"></i>순위 추이
+      <h2><i class="fa-solid fa-chart-line text-indigo-400"></i>순위 비교
         <span id="searchLoadingIndicator" class="hidden text-[11px] font-normal text-indigo-300"><i class="fa-solid fa-spinner fa-spin mr-1"></i>지난 기간 데이터 불러오는 중...</span>
       </h2>
       <p class="sub">최대 5개 게임의 매출·인기 순위를 나란히 비교합니다.</p>
@@ -1055,11 +1057,11 @@ html.panel-lock { overflow: hidden; }
     <div id="searchAnchorNote" class="hidden text-[11px] text-amber-300/90"></div>
   </section>
 
-  <!-- 비교 요약: 기간 선택이 바꾸는 첫 대상이라 기간은 여기 머리에 -->
-  <section class="card rounded-xl p-5" data-snap>
+  <!-- 순위 추이(먼저): 기간·보기 방식·평점은 차트 머리에 -->
+  <section class="card rounded-xl p-5" id="searchChartsCard" data-snap>
     <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-      <div class="flex items-center gap-2"><h3 class="font-semibold text-sm">비교 요약</h3><span id="searchRangeLabel" class="text-[11px] muted">-</span></div>
-      <div class="flex flex-wrap items-center gap-2"><button type="button" class="snap-btn" data-nosnap onclick="snapEl(this, '순위비교요약')" title="이미지로 저장" aria-label="이미지로 저장"><i class="fa-solid fa-camera"></i></button><div class="contents" data-nosnap>
+      <h3 class="font-semibold text-sm">순위 추이 <span id="searchLegendNote" class="text-[11px] font-normal muted ml-1">매출 실선 · 인기 점선 · 로그 눈금</span></h3>
+      <div class="flex flex-wrap items-center gap-2"><button type="button" class="snap-btn" data-nosnap onclick="snapEl(this, '순위추이')" title="이미지로 저장" aria-label="이미지로 저장"><i class="fa-solid fa-camera"></i></button><div class="contents" data-nosnap>
       <div class="mk-seg" id="searchPeriodSel">
         <button type="button" data-d="7" onclick="searchSetDays(7)">7일</button>
         <button type="button" data-d="15" onclick="searchSetDays(15)">15일</button>
@@ -1072,16 +1074,6 @@ html.panel-lock { overflow: hidden; }
         <input type="date" id="searchFrom" class="mk-sel" onchange="searchSetCustom()" aria-label="시작일"> ~
         <input type="date" id="searchTo" class="mk-sel" onchange="searchSetCustom()" aria-label="종료일">
       </div>
-      </div></div>
-    </div>
-    <div id="searchSummary"></div>
-  </section>
-
-  <!-- 순위 추이: 보기 방식·평점은 차트 머리에 -->
-  <section class="card rounded-xl p-5" id="searchChartsCard" data-snap>
-    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-      <h3 class="font-semibold text-sm">순위 추이 <span id="searchLegendNote" class="text-[11px] font-normal muted ml-1">매출 실선 · 인기 점선 · 로그 눈금</span></h3>
-      <div class="flex flex-wrap items-center gap-2"><button type="button" class="snap-btn" data-nosnap onclick="snapEl(this, '순위추이')" title="이미지로 저장" aria-label="이미지로 저장"><i class="fa-solid fa-camera"></i></button><div class="contents" data-nosnap>
       <div class="mk-seg" id="searchLayoutSel">
         <button type="button" data-l="combined" onclick="searchSetLayout('combined')">통합</button>
         <button type="button" data-l="sales" onclick="searchSetLayout('sales')">매출</button>
@@ -1106,6 +1098,16 @@ html.panel-lock { overflow: hidden; }
   <section class="card rounded-xl p-5 hidden" id="searchRatingWrap">
     <div class="text-xs font-semibold text-slate-300 mb-2"><i class="fa-solid fa-star text-amber-400/80 mr-1"></i>평점 추이 <span class="font-normal muted ml-1">9/8부터 수집</span></div>
     <div class="h-[220px]"><canvas id="searchRatingChart"></canvas></div>
+  </section>
+
+  <!-- 비교 요약: 차트 아래. 기간은 차트 머리에서 고름 -->
+  <section class="card rounded-xl p-5" data-snap>
+    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+      <div class="flex items-center gap-2"><h3 class="font-semibold text-sm">비교 요약</h3><span id="searchRangeLabel" class="text-[11px] muted">-</span></div>
+      <div class="flex flex-wrap items-center gap-2"><button type="button" class="snap-btn" data-nosnap onclick="snapEl(this, '순위비교요약')" title="이미지로 저장" aria-label="이미지로 저장"><i class="fa-solid fa-camera"></i></button><div class="contents" data-nosnap>
+      </div></div>
+    </div>
+    <div id="searchSummary"></div>
   </section>
 </div>
 
