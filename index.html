@@ -377,23 +377,20 @@ html.panel-lock { overflow: hidden; }
 .rp-page h3 { font-size:9.5pt; font-weight:700; margin-bottom:2mm; }
 .rp-eyebrow { font-size:8pt; font-weight:700; letter-spacing:.12em; color:var(--brand); }
 .rp-lead { font-size:10pt; color:var(--sub); margin-top:1.5mm; font-weight:600; }
-/* 1쪽 이번 주 핵심: 관찰 · 해석 · 확인할 곳 카드 */
-.rp-ins { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:2.5mm; }  /* 한 줄 근거 글자가 길어도 열이 페이지 밖으로 늘어나지 않게 */
-.rp-in { border:1px solid var(--line); border-radius:2.5mm; padding:2mm 3mm; position:relative; }
-.rp-in .go { position:absolute; top:2mm; right:3mm; font-size:7pt; color:var(--mute); }
-.rp-in .ob { font-size:8.8pt; font-weight:700; padding-right:9mm; line-height:1.3; }
-.rp-in .ob small { font-weight:500; color:var(--mute); font-size:7.5pt; }
-.rp-in .tg { display:inline-block; font-size:7pt; font-weight:700; border-radius:1mm; padding:0 1.3mm; margin-right:1.3mm; vertical-align:1px; }
-.rp-in .tg.s { background:var(--sales-bg); color:var(--sales); } .rp-in .tg.p { background:var(--pop-bg); color:var(--pop); } .rp-in .tg.b { background:#e0e7ff; color:#4338ca; }
-.rp-in .it { font-size:8pt; color:#334155; margin-top:1mm; padding-left:2mm; border-left:.6mm solid #c7d2fe; line-height:1.4; }  /* 결론 줄 */
-.rp-in .ck { font-size:7.4pt; color:var(--sub); margin-top:.8mm; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }  /* 근거 줄은 한 줄로 (주마다 카드 높이 고정) */
-.rp-in .up { color:var(--up); font-weight:700; } .rp-in .dn { color:var(--down); font-weight:700; }
+/* 1쪽 분석: 맨 위 한 문장 · 고정 질문 4개(결론 + 근거) · 유형 흐름 */
+.rp-hl { margin-top:7mm; font-size:12pt; font-weight:700; line-height:1.55; background:var(--soft); border-left:1.2mm solid var(--brand); padding:4mm 5mm; }
+.rp-qs { display:flex; flex-direction:column; gap:7mm; }
+.rp-q { border-left:.8mm solid #c7d2fe; padding:.5mm 0 .5mm 4mm; }
+.rp-q .t { font-size:8pt; font-weight:700; color:var(--brand); }
+.rp-q .c { font-size:10pt; font-weight:600; line-height:1.5; margin-top:1mm; }
+.rp-q .c b { font-weight:800; }
+.rp-q .e { font-size:8pt; color:var(--sub); line-height:1.5; margin-top:1mm; }
+.rp-t4s { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:3mm; }
+.rp-t4 { border:1px solid var(--line); border-radius:2.5mm; padding:3mm 3.5mm; }
+.rp-t4 .l { font-size:8pt; color:var(--sub); font-weight:600; }
+.rp-t4 .v { font-size:15pt; font-weight:800; margin-top:1mm; }
+.rp-t4 .v span { font-size:8pt; font-weight:700; margin-left:1.5mm; color:var(--mute); } .rp-t4 .v span.u { color:var(--up); } .rp-t4 .v span.d { color:var(--down); }
 .rp-rel-line { font-size:8pt; color:var(--sub); margin-top:2mm; padding-top:1.5mm; border-top:1px dashed var(--line); }
-.rp-kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:3mm; margin-top:6mm; }
-.rp-kpi { border:1px solid var(--line); border-radius:3mm; padding:3.5mm; }
-.rp-kpi .l { font-size:8pt; color:var(--sub); font-weight:600; }
-.rp-kpi .v { font-size:13pt; font-weight:800; margin-top:1.5mm; line-height:1.25; }
-.rp-kpi .s { font-size:7.5pt; color:var(--mute); margin-top:1mm; }
 .rp-cols { display:grid; grid-template-columns:1fr 1fr; gap:5mm; }
 .rp-tag { display:inline-block; font-size:7.5pt; font-weight:700; padding:.3mm 1.6mm; border-radius:1mm; }
 .rp-page .t-sales { color:var(--sales); } .rp-page .t-pop { color:var(--pop); } .rp-page .t-up { color:var(--up); } .rp-page .t-down { color:var(--down); } .rp-page .t-new { color:var(--new); }
@@ -401,14 +398,7 @@ html.panel-lock { overflow: hidden; }
 .rp-mini { display:inline-block; font-size:6.8pt; font-weight:700; padding:0 1.2mm; border-radius:.8mm; white-space:nowrap; line-height:1.6; }
 .rp-mini.first { background:var(--new-bg); color:var(--new); } .rp-mini.re { background:transparent; color:var(--new); outline:1px solid #a78bfa; outline-offset:-1px; } .rp-mini.part { background:#f1f5f9; color:#64748b; }
 .rp-mini.test { background:#fef3c7; color:#b45309; } .rp-mini.soft { background:#e0f2fe; color:#0369a1; } .rp-mini.open { background:#dcfce7; color:#15803d; }
-.rp-mv { width:100%; border-collapse:collapse; font-size:8.6pt; }
-.rp-mv td { padding:1.3mm 1mm; border-bottom:1px solid var(--line); }
-.rp-mv .nm { max-width:48mm; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.rp-mv .num { text-align:right; white-space:nowrap; color:var(--sub); }
-.rp-mv .d { text-align:right; font-weight:700; white-space:nowrap; width:13mm; }
-.rp-mv .h td { font-size:7.5pt; color:var(--mute); font-weight:600; }
 .rp-empty { font-size:8.4pt; color:var(--mute); padding:2mm 0; }
-.rp-partial { margin-top:2.5mm; font-size:7.6pt; color:var(--mute); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }  /* 게임명 없이 한 줄 안내 */
 .rp-rk2 { width:100%; border-collapse:collapse; font-size:8.4pt; table-layout:fixed; }
 .rp-rk2 th { font-size:7.2pt; color:var(--mute); font-weight:600; text-align:left; padding:1mm; border-bottom:1.2px solid #cbd5e1; }
 .rp-rk2 td { height:7.55mm; padding:0 1mm; border-bottom:1px solid var(--line); vertical-align:middle; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -5522,6 +5512,62 @@ window.addEventListener('beforeprint', () => { if(currentView === 'report' && do
 window.addEventListener('afterprint', rpCleanupPrint);
 
 /* ---- 리포트 데이터 ---- */
+/* 1쪽 유형 4분류. 구글 장르는 판매자가 정해서(복수 지정 가능) 이름·장르로 대략 나누고, 틀리는 게임은 RP_CLASS_FIX로 고침 */
+const RP_CLASSES = ['하이퍼 캐주얼', '캐주얼', '미드코어', '기타·웹보드'];
+const RP_CLASS_FIX = { '우마무스메': '미드코어', '꿈의 정원': '하이퍼 캐주얼', '테이스티 트레블': '하이퍼 캐주얼' };
+function rpClass(name, genre){
+  const n = String(name || ''), g = String(genre || '').trim();
+  for(const [k, v] of Object.entries(RP_CLASS_FIX)) if(n.includes(k)) return v;
+  if(/포커|맞고|섯다|홀덤|바카라|슬롯|카지노|고스톱/.test(n) || g === '카지노') return '기타·웹보드';
+  if(/키우기|방치/.test(n)) return '캐주얼';
+  if(/^(퍼즐|보드|단어)$/.test(g)) return '하이퍼 캐주얼';
+  if(/^(캐주얼|시뮬레이션|음악|아케이드|카드|교육|퀴즈)$/.test(g)) return '캐주얼';
+  return '미드코어';
+}
+/* 1쪽 분석 판정 (일간 순위. 마켓 순위는 하루 이틀 늦게 반영됨)
+   신작 = 이 주에 첫 차트인 · 재진입 = 직전 14일 동안 양쪽 TOP100 밖이다가 이 주에 들어옴
+   급등 = 3관측일 안에 매출 10계단 이상 올라 30위 안 (인기 변화 5계단 이내면 업데이트 반응)
+   안정 = 전주·이번 주 매일 매출 30위 안 · 하락 = 전주 평균 30위 안에서 5계단 이상 밀림(3일 15계단 이상이면 급락) */
+function rpAnalyze(D){
+  const SI = mkGetIndex('sales'), PI = mkGetIndex('popular'), wkS = D.S.sales.cur, wkP = D.S.popular.cur, pw = D.S.sales.prev;
+  const rk = (idx, k, d) => (d && idx.byDate.get(d)?.get(k)?.rank) || 101;
+  const back = (idx, d, n) => { const i = idx.dates.indexOf(d); return i >= n ? idx.dates[i - n] : null; };
+  const best = (idx, k, ds) => Math.min(101, ...ds.map(d => rk(idx, k, d)));
+  const meta = new Map();
+  [[SI, wkS], [PI, wkP]].forEach(([idx, ds]) => ds.forEach(d => idx.byDate.get(d)?.forEach((v, k) => { if(!meta.has(k)) meta.set(k, v); })));
+  const first = (k, n) => [mkFirstChartDate(mkFirstSeenCache.sales, k, n), mkFirstChartDate(mkFirstSeenCache.popular, k, n)].filter(Boolean).sort()[0] || null;
+  const gap0 = mkAddDays(D.mon, -14), seen = (idx, k) => idx.dates.some(d => d >= gap0 && d < D.mon && idx.byDate.get(d).has(k));
+  const longEnough = (SI.dates[0] || '9') < gap0, before = (idx, k) => idx.dates.some(d => d < D.mon && idx.byDate.get(d).has(k));
+  const nw = [], re = [], surge = [], stable = [];
+  meta.forEach((v, k) => {
+    const it = { n: v.name, cls: rpClass(v.name, v.genre), sb: best(SI, k, wkS), pb: best(PI, k, wkP) }, f = first(k, v.name);
+    /* 신작: 이 주 첫 차트인이고 그 전엔 매출·인기 어느 쪽에도 없던 게임.
+       인기 순위 없이 매출로만 들어온 게임은 수집 전부터 있던 게임의 업데이트 복귀로 봄 */
+    const debut = f && f >= D.mon && f <= D.end && !before(SI, k) && !before(PI, k);
+    if(debut && !(it.pb > 100 && it.sb <= 100)) nw.push(it);
+    else if(debut || (longEnough && !seen(SI, k) && !seen(PI, k))) re.push(it);
+    let ev = null;
+    wkS.forEach(d => { const d3 = back(SI, d, 3); if(!d3) return; const a = rk(SI, k, d3), b = rk(SI, k, d);
+      if(b <= 30 && a - b >= 10 && (!ev || a - b > ev.a - ev.b)) ev = { a, b, pa: rk(PI, k, back(PI, d, 3) || d3), pb: rk(PI, k, d) }; });
+    if(ev) surge.push({ ...it, ...ev, flat: (ev.pa > 100 && ev.pb > 100) || Math.abs(ev.pa - ev.pb) <= 5 });
+    if(pw.length){ const r = [...pw, ...wkS].map(d => rk(SI, k, d));
+      if(r.every(x => x <= 30)){ const m = r.reduce((a, b) => a + b, 0) / r.length; stable.push({ ...it, lo: Math.min(...r), hi: Math.max(...r), sd: Math.sqrt(r.reduce((a, b) => a + (b - m) ** 2, 0) / r.length) }); } }
+  });
+  const drops = [];
+  D.S.sales.pa.forEach((g, k) => { if(g.rank > 30) return; const c = D.S.sales.ca.get(k)?.rank ?? 101; if(c - g.rank < 5) return;
+    const r = [...pw, ...wkS].map(d => rk(SI, k, d)); let mx = 0; for(let i = 3; i < r.length; i++) mx = Math.max(mx, r[i] - r[i - 3]);
+    /* 직전 3주 안에 업데이트 급등(3일 10계단+)이 있었으면 하락은 그 효과가 끝난 것 */
+    const h = SI.dates.filter(d => d >= mkAddDays(D.mon, -28) && d < D.mon).map(d => rk(SI, k, d)); let up = 0; for(let i = 3; i < h.length; i++) up = Math.max(up, h[i - 3] - h[i]);
+    drops.push({ n: g.name, a: r[0], b: r.at(-1), sharp: mx >= 15, after: up >= 10, d: c - g.rank }); });
+  const ord = m => [...m].sort((a, b) => mkAvgOrder(a[1], b[1]));
+  const top5 = D.S.sales.top.slice(0, 5), keys5 = new Set(top5.map(x => x.key)), curPos = new Map(ord(D.S.sales.ca).map(([k], i) => [k, i + 1]));
+  const outs = ord(D.S.sales.pa).slice(0, 5).filter(([k]) => !keys5.has(k)).map(([k, g]) => ({ n: g.name, pos: curPos.get(k) ?? null }));
+  const types = ds => { const c = Object.fromEntries(RP_CLASSES.map(x => [x, 0])), m = new Map();
+    ds.forEach(d => SI.byDate.get(d)?.forEach((v, k) => { if(v.rank > 30) return; const o = m.get(k) || { n: 0, v }; o.n++; m.set(k, o); }));
+    m.forEach(o => { if(o.n >= Math.ceil(ds.length / 2)) c[rpClass(o.v.name, o.v.genre)]++; }); return c; };
+  return { hasPrev: pw.length > 0, nw, re: re.sort((a, b) => Math.min(a.sb, a.pb) - Math.min(b.sb, b.pb)), surge: surge.sort((a, b) => (b.a - b.b) - (a.a - a.b)),
+    stable: stable.sort((a, b) => a.sd - b.sd), drops: drops.sort((a, b) => b.d - a.d), top5, outs, types: types(wkS), prevTypes: pw.length ? types(pw) : null };
+}
 function rpBuild(mon){
   const pmon = mkAddDays(mon, -7), end = mkAddDays(mon, 6);
   const firstOf = (s, k, name) => mkFirstChartDate(mkFirstSeenCache[s], k, name);
@@ -5640,113 +5686,65 @@ function rpRender(D){
   const relPages = rpRelPaginate(D), isFirst = f => f && f >= D.pmon, PAGES = 3 + relPages.length, period = rpWeekRange(D.mon);
   const run = n => `<div class="rp-run"><span><b>Game Market Intelligence</b> · 주간 리포트</span><span>${period} · ${n}/${PAGES}</span></div>`;
   const foot = `<div class="rp-foot"><span>Google Play 국내 매출·인기 순위(일별 TOP100) · 신작 정보는 순위 데이터와 연결하지 않음 · '첫 차트인'은 수집 기록 기준</span><span>발행 ${D.issue}</span></div>`;
-  const sTop = S.sales.top[0], pTop = S.popular.top[0];
-  const kpiSub = t => !t ? '-' : isFirst(t.first) ? `7일 평균 순위 기준 · <span class="t-new">${rpSlash(t.first)} 첫 차트인</span>` : t.prevPos === 1 ? '7일 평균 순위 기준 · 전주에도 1위' : `7일 평균 순위 기준 · 전주 ${t.prevPos ? t.prevPos + '번째' : '순위표 밖'}`;
-  /* 이번 주 핵심: 규칙으로 고른 변화 최대 4개. 사실 한 줄 → 결론(사업적 해석) → 근거 수치. 게임명은 1위만.
-     신작 = 최근 6주 안에 처음 차트인. 데이터로 못 가리는 원인(업데이트·마케팅 등)은 '추정'으로 적음 */
-  const isNew = f => f && f >= mkAddDays(D.mon, -42);
-  const wkSet = (st, m) => { const idx = mkGetIndex(st), mp = new Map(); idx.dates.filter(d => d >= m && d <= mkAddDays(m, 6)).forEach(d => idx.byDate.get(d)?.forEach((v, k) => { const o = mp.get(k); if(o) o.best = Math.min(o.best, v.rank); else mp.set(k, { k, n: v.name, g: v.genre || '미분류', best: v.rank }); })); return mp; };
-  const W = {};
-  ['sales', 'popular'].forEach(st => {
-    const a = wkSet(st, D.mon), b = wkSet(st, D.pmon), b2 = wkSet(st, mkAddDays(D.pmon, -7));
-    const ins = [...a].filter(([k]) => !b.has(k)).map(([, v]) => v), outs = [...b].filter(([k]) => !a.has(k)).map(([, v]) => v);
-    W[st] = { a, b, ins, outs, prevIns: b2.size ? [...b].filter(([k]) => !b2.has(k)).length : null, label: st === 'sales' ? '매출' : '인기', tg: st === 'sales' ? 's' : 'p' };
-  });
-  const top10 = st => S[st].top.slice(0, 10), kept10 = st => top10(st).filter(x => x.prevPos != null && x.prevPos <= 10).length;
-  const casual = /퍼즐|캐주얼|아케이드|보드|카드|단어|시뮬/;
-  const cards = [];
-  const card = (pri, tg, tgLabel, go, ob, it, ck) => cards.push({ pri, html: `<div class="rp-in"><span class="go">→ ${go}쪽</span><div class="ob"><span class="tg ${tg}">${tgLabel}</span>${ob}</div><div class="it">${it}</div>${ck ? `<div class="ck">${ck}</div>` : ''}</div>` });
-  /* ① 1위 교체 (1위는 위 요약 칸에도 있으므로 자리가 남을 때만) */
-  [['sales', sTop], ['popular', pTop]].forEach(([st, t]) => {
-    if(!t || t.prevPos === 1) return;
-    const old = S[st].top.find(x => x.prevPos === 1);
-    card(45, W[st].tg, W[st].label, 3, `주간 1위 교체 — <b>${esc(cut(t.n, 18))}</b>`,
-      isNew(t.first) ? '출시 초기 신작이 곧바로 <b>정상</b>을 차지. 신작 효과가 시장 꼭대기까지 닿은 주입니다.'
-        : t.prevPos == null ? '순위권 밖에 있던 기존 게임이 1위로 <b>복귀</b>. 업데이트·이벤트 효과로 추정됩니다.'
-        : t.prevPos <= 10 ? `기존 게임이 전주 ${t.prevPos}위에서 <b>정상</b>에 올랐습니다. 상위권 내부의 순위 다툼입니다.`
-        : `기존 게임이 전주 ${t.prevPos}위에서 <b>급부상</b>해 정상에 올랐습니다. 업데이트·이벤트 효과로 추정됩니다.`,
-      `${isNew(t.first) ? `${rpSlash(t.first)} 첫 차트인` : t.prevPos == null ? '전주 순위표 밖' : `전주 ${t.prevPos}위`}${old ? ` · 전주 1위 ${esc(cut(old.n, 16))} 이번 주 ${old.pos}위` : ''}`);
-  });
-  /* ② 매출·인기 교차: 인기 TOP10 중 매출 TOP100(양쪽 TOP100)에 든 게임 수 */
-  const pTen = top10('popular');
-  if(pTen.length >= 5){
-    const k = pTen.filter(x => S.sales.ca.has(x.key)).length, nNew = pTen.filter(x => isNew(x.first)).length, nCas = pTen.filter(x => casual.test(x.g || '')).length, sk = kept10('sales');
-    card(80, 'b', '교차', 2, `인기 TOP10 중 매출 TOP100은 <b>${k}개</b>`,
-      k <= 3 ? `인기(다운로드) 상승이 <b>매출로 이어지지 않은</b> 주. ${sk >= 8 ? '매출 상위권은 기존 타이틀이 견고합니다.' : '매출 상위권은 따로 움직였습니다.'}`
-        : k >= 6 ? '인기 상위권 대부분이 <b>매출에도 반영</b>된 주. 유입이 매출로 바로 이어지는 흐름입니다.'
-        : '인기 상위권 <b>일부만</b> 매출로 이어졌습니다. 유입형과 과금형 게임이 섞인 주입니다.',
-      `인기 TOP10 중 신작 ${nNew}개 · 캐주얼 ${nCas}개 / 매출 TOP10은 전주 대비 ${sk}개 유지`);
-  }
-  /* ③ 시장 회전: 차트인·이탈 수를 전주와 비교 (변화가 큰 쪽 하나) */
-  const turn = ['sales', 'popular'].map(st => ({ st, r: W[st].prevIns ? W[st].ins.length / W[st].prevIns : 1 })).sort((a, b) => Math.abs(b.r - 1) - Math.abs(a.r - 1))[0];
-  if(turn){
-    const st = turn.st, w = W[st], r = turn.r, gc = {};
-    w.ins.forEach(v => { if(!bizIsMiscGenre(v.g)) gc[v.g] = (gc[v.g] || 0) + 1; });
-    const gTop = Object.entries(gc).sort((a, b) => b[1] - a[1])[0];
-    const t30 = w.ins.filter(v => v.best <= 30).length, nFirst = w.ins.filter(v => { const f = mkFirstChartDate(mkFirstSeenCache[st], v.k, v.n); return f && f >= D.mon; }).length;
-    card(r >= 1.2 || r <= 0.8 ? 70 : 40, w.tg, w.label, 2, `${w.ins.length}개 들어오고 ${w.outs.length}개 빠짐 <small>(전주 들어온 수 ${w.prevIns ?? '-'})</small>`,
-      `${w.label} 차트 진입이 ${r >= 1.2 ? `<span class="up">늘었${t30 <= 1 ? '지만' : '고'}</span>` : r <= 0.8 ? `<span class="dn">줄었${t30 >= 3 ? '지만' : '고'}</span>` : '전주와 비슷하고'}, `
-        + (t30 <= 1 ? `들어온 게임 대부분이 하위권에 머묾. <b>기존 게임의 자리가 견고</b>한 주입니다.`
-          : t30 >= 3 ? `30위 안까지 오른 게임이 ${t30}개. <b>새 게임이 상위권을 위협</b>하는 주입니다.`
-          : `일부만 상위권까지 올라왔습니다. 진입 장벽은 여전히 높은 편입니다.`),
-      `들어온 ${w.ins.length}개 중 처음 차트인 ${nFirst}개 · 30위 안 ${t30}개${gTop && gTop[1] >= 3 ? ` · 최다 ${esc(gTop[0])} ${gTop[1]}개` : ''}`);
-  }
-  /* ④ 장르 변화를 들고 남으로 쪼개기: 순증감이 가장 큰 장르 하나 (2개 이상) */
-  const gMoves = [];
-  ['sales', 'popular'].forEach(st => {
-    const m = {};
-    W[st].ins.forEach(v => { (m[v.g] = m[v.g] || { i: [], o: [] }).i.push(v); });
-    W[st].outs.forEach(v => { (m[v.g] = m[v.g] || { i: [], o: [] }).o.push(v); });
-    Object.entries(m).forEach(([g, x]) => { if(!bizIsMiscGenre(g)) gMoves.push({ st, g, i: x.i, o: x.o, net: x.i.length - x.o.length }); });
-  });
-  const gm = gMoves.filter(x => Math.abs(x.net) >= 2).sort((a, b) => Math.abs(b.net) - Math.abs(a.net) || (b.i.length + b.o.length) - (a.i.length + a.o.length))[0];
-  if(gm){
-    const ni = gm.i.length, no = gm.o.length, w = W[gm.st], g = esc(gm.g), cnt = m => [...m.values()].filter(v => v.g === gm.g).length;
-    const inS = top10('sales').filter(x => x.g === gm.g).length, inP = top10('popular').filter(x => x.g === gm.g).length;
-    card(60, w.tg, w.label, 2, `${g} <span class="${gm.net > 0 ? 'up' : 'dn'}">${gm.net > 0 ? '+' : '−'}${Math.abs(gm.net)}개</span> <small>(${ni}개 들어오고 ${no}개 빠짐)</small>`,
-      gm.st === 'popular'
-        ? (gm.net > 0 ? (inS < 2 || inS < inP ? `${g} 다운로드는 늘었지만 <b>매출 기여는 제한적</b>. 모객형으로 움직이는 장르입니다.` : `${g} 다운로드가 늘었고 매출 상위권에도 자리 잡은 <b>수익형 흐름</b>입니다.`)
-          : `${g}에 대한 <b>유입 관심이 식은</b> 주. ${ni >= 2 && no >= 2 ? '여러 게임이 교체되며 줄었습니다.' : '여러 게임이 함께 빠졌습니다.'}`)
-        : (gm.net > 0 ? `<b>과금 수요가 ${g}로 모인</b> 주. ${inP <= 1 ? '다운로드 상위권과는 별개로 움직였습니다.' : '다운로드 상위권에서도 함께 보입니다.'}`
-          : `${g}의 <b>매출 비중이 줄어든</b> 주. ${ni >= 2 && no >= 2 ? '여러 게임이 교체되며 줄었습니다.' : '여러 게임이 함께 빠졌습니다.'}`),
-      `${w.label} 차트에 든 ${g} ${cnt(w.b)}개 → ${cnt(w.a)}개 · TOP10 안 ${g}: 매출 ${inS}개 · 인기 ${inP}개`);
-  }
-  /* ⑤ 상위권 고착: TOP10 교체 수 (교체가 많은 쪽, 없으면 매출) */
-  const t10 = ['sales', 'popular'].map(st => { const nw = S[st].top.filter(x => x.pos <= 10 && (x.prevPos == null || x.prevPos > 10)); return { st, nw }; }).sort((a, b) => b.nw.length - a.nw.length);
-  const tt = t10[0].nw.length >= 3 ? t10[0] : t10.find(x => x.st === 'sales');
-  if(tt){
-    const n = tt.nw.length, rt = S[tt.st].retention, nNew = tt.nw.filter(x => isNew(x.first)).length, lead = S[tt.st].top[0], lw = S[tt.st].leadWeeks;
-    card(n >= 3 ? 65 : 50, W[tt.st].tg, W[tt.st].label, 3, `TOP10 교체 ${n}개${rt != null ? ` · 4주 잔존 ${rt}%` : ''}`,
-      n <= 1 ? '상위권은 거의 그대로. 기존 타이틀이 <b>자리를 굳힌</b> 고정적인 시장입니다.'
-        : n >= 3 ? (nNew >= 2 ? '상위권 교체를 <b>신작이 주도</b>. 신작 중심으로 상위권이 재편되는 중입니다.' : '상위권 교체가 많았지만 <b>기존 게임의 순위 이동</b>이 중심. 업데이트·이벤트 효과로 추정됩니다.')
-        : (nNew ? '상위권 일부가 바뀌었고, <b>신작이 상위권에 진입</b>했습니다.' : '상위권 일부가 바뀌었지만 <b>기존 게임 간 순위 이동</b>입니다.'),
-      `새로 TOP10에 든 ${n}개 중 신작 ${nNew}개${lead ? ` · 1위 ${esc(cut(lead.n, 16))} ${lw >= 2 ? `${lw}주 연속` : '(새 1위)'}` : ''}`);
-  }
-  const pts = S.sales.prev.length && S.popular.prev.length ? cards.sort((a, b) => b.pri - a.pri).slice(0, 4).map(c => c.html) : ['<div class="rp-empty">전주 수집 기록이 없어 비교할 수 없습니다.</div>'];
+  /* 1쪽 분석: 고정 질문 4개에 결론 한 줄 + 근거 한 줄. 맨 위 한 문장은 질문들의 판정을 이어 붙임.
+     게임명은 굵게, 조사를 바로 붙이지 않음 */
+  const A = rpAnalyze(D), bn = n => `<b>${esc(cut(n, 22))}</b>`, nm = n => esc(cut(n, 18)), rv = v => v > 100 ? '밖' : v;
+  const lst = (arr, f, n = 4) => arr.length ? arr.slice(0, n).map(f).join(' · ') + (arr.length > n ? ` 외 ${arr.length - n}개` : '') : '없음';
+  const major = arr => { const c = {}; arr.forEach(x => { c[x.cls] = (c[x.cls] || 0) + 1; }); const t = Object.entries(c).sort((a, b) => b[1] - a[1])[0]; return t && t[1] * 2 > arr.length ? t : null; };
+  /* ① 신작 · 재진입 */
+  const nS30 = A.nw.filter(x => x.sb <= 30).sort((a, b) => a.sb - b.sb), nS = A.nw.filter(x => x.sb <= 100).sort((a, b) => a.sb - b.sb), nP30 = A.nw.filter(x => x.pb <= 30).sort((a, b) => a.pb - b.pb), mP = major(nP30);
+  const q1c = (!A.nw.length ? '이번 주 새로 차트에 든 신작은 없습니다.'
+      : nS30.length ? `신작 ${A.nw.length}개 중 ${bn(nS30[0].n)} 매출 ${nS30[0].sb}위까지 오르며 상위권에 들었습니다.`
+      : nS.length ? `신작 ${A.nw.length}개 중 매출로 이어진 게임은 ${nS.length}개이고, 가장 높은 ${bn(nS[0].n)} 매출 ${nS[0].sb}위입니다.`
+      : `신작 ${A.nw.length}개 모두 매출 TOP100 밖으로, 아직 매출 성과는 없습니다.`)
+    + (nP30.length ? ` 인기 30위 안에 든 ${nP30.length}개는 ${mP ? `${mP[0]} 중심의 ` : ''}UA 집행입니다.` : '');
+  const q1e = `인기 30위 안: ${lst(nP30, x => `${nm(x.n)} ${x.pb}위`)} / 재진입: ${lst(A.re, x => `${nm(x.n)} ${x.sb <= 100 ? `매출 ${x.sb}위` : `인기 ${x.pb}위`}`, 3)}`;
+  /* ② 매출 급등 */
+  const sv = A.surge, sF = sv.filter(x => x.flat).length, mS = major(sv);
+  const q2c = !sv.length ? '매출 30위 안으로 급등한 게임은 없었습니다.'
+    : sv.length === 1 ? `${bn(sv[0].n)} 매출 ${rv(sv[0].a)}→${sv[0].b}위로 급등했습니다. ${sv[0].flat ? '인기 변화가 없어 업데이트 반응입니다.' : '인기도 함께 올라 업데이트와 마케팅이 겹친 경우입니다.'}`
+    : (sF === sv.length ? `${sv.length}개 모두 인기 변화 없이 매출만 올라 신규 콘텐츠·픽업 업데이트 반응입니다.`
+      : !sF ? `${sv.length}개 모두 인기도 함께 올라 업데이트와 마케팅이 겹친 급등입니다.`
+      : `${sv.length}개 중 ${sF}개는 인기 변화 없는 업데이트 반응, ${sv.length - sF}개는 인기도 함께 오른 업데이트·마케팅 동반 급등입니다.`)
+      + (!mS ? '' : mS[1] === sv.length ? ` 모두 ${mS[0]}입니다.` : ` 이 중 ${mS[0]}${rpJosa(mS[0])} ${mS[1]}개입니다.`);
+  const q2e = lst(sv, x => `${nm(x.n)} ${rv(x.a)}→${x.b}`, 5);
+  /* ③ 안정 유지 · 하락 */
+  const st = A.stable, dp = A.drops[0];
+  const q3c = !A.hasPrev ? '전주 수집 기록이 없어 판단할 수 없습니다.'
+    : `2주 내내 매출 30위 안을 지킨 게임은 ${st.length}개입니다.`
+      + (st.length ? ` 흔들림이 가장 적은 ${bn(st[0].n)} ${st[0].lo === st[0].hi ? `${st[0].lo}위를 그대로` : `${st[0].lo}–${st[0].hi}위를`} 지켰습니다.` : '')
+      + (dp ? ` 반면 ${bn(dp.n)} 매출 ${dp.a}→${rv(dp.b)}위로 ${dp.after ? '내려와, 직전 업데이트 효과가 끝나고 이전 자리로 돌아가는 중입니다.' : dp.sharp ? '급락해 게임 내 이슈 가능성이 있습니다.' : '완만하게 밀리는 중이라 다음 업데이트 전 숨고르기 구간입니다.'}` : '');
+  const q3e = `${lst(st, x => `${nm(x.n)} ${x.lo === x.hi ? x.lo : `${x.lo}–${x.hi}`}위`)}${A.drops.length ? ` / 하락: ${lst(A.drops, x => `${nm(x.n)} ${x.a}→${rv(x.b)}`, 2)}` : ''}`;
+  /* ④ TOP5 */
+  const t5 = A.top5, inn = t5.filter(x => x.prevPos == null || x.prevPos > 5), mv = t5.filter(x => x.prevPos != null && x.prevPos !== x.pos).sort((a, b) => Math.abs(b.prevPos - b.pos) - Math.abs(a.prevPos - a.pos))[0];
+  const q4c = !A.hasPrev ? '전주 수집 기록이 없어 비교할 수 없습니다.'
+    : inn.length ? `${inn.map(x => bn(x.n)).join(', ')} TOP5에 새로 들어왔습니다.${A.outs.length ? ` 대신 ${A.outs.map(o => `${bn(o.n)} ${o.pos ? `${o.pos}위` : '순위권 밖'}`).join(', ')}${A.outs.at(-1).pos ? '로' : '으로'} 밀렸습니다.` : ''}`
+    : !mv ? 'TOP5 구성과 순서 모두 전주와 같습니다.'
+    : `구성은 같고 순서만 바뀌었습니다. ${bn(mv.n)} ${mv.prevPos}위에서 ${mv.pos}위로 ${mv.prevPos > mv.pos ? '올랐습니다' : '내려왔습니다'}.`;
+  const q4e = `주 평균 ${t5.map(x => `${x.pos} ${nm(x.n)}${x.prevPos !== x.pos ? ` (${x.prevPos ?? '밖'}→${x.pos})` : ''}`).join(' · ')}`;
+  /* 맨 위 한 문장: 차트를 움직인 것 · 신작 상태 · 상위권 */
+  const headline = `이번 주는 ${sv.length >= 2 ? '업데이트를 통한 매출 급등이 차트 변화를 이끌었고' : sv.length ? '업데이트 급등 한 건 외에는 차트 변화가 크지 않았고' : '차트 변화가 크지 않았고'}, `
+    + (!A.nw.length ? '새로 차트에 든 신작은 없었습니다.' : nS30.length ? '신작이 매출 30위 안까지 올라섰습니다.' : nP30.length ? '신작은 인기 진입에 그쳐 아직 매출 안착 전입니다.' : '신작은 인기 상위권에도 들지 못했습니다.')
+    + (!A.hasPrev ? '' : inn.length ? ` 상위 5위 중 ${inn.length}자리가 바뀌었습니다.` : ' 상위권 게임들은 매출을 견고하게 유지하고 있습니다.');
+  const t4 = RP_CLASSES.map(c => { const n = A.types[c], p = A.prevTypes?.[c], d = p == null ? null : n - p;
+    return `<div class="rp-t4"><div class="l">${c}</div><div class="v">${n}<span class="${d > 0 ? 'u' : d < 0 ? 'd' : ''}">${d == null ? '' : d ? `${d > 0 ? '▲' : '▼'}${Math.abs(d)}` : '유지'}</span></div></div>`; }).join('');
   const relPt = `신작(모바일·PC): 이 주 <b>${D.relLast.length}개</b> 출시 · 다음 주(${rpDot(D.issue)} – ${rpDot(mkAddDays(D.issue, 6))}) <b>${D.relNext.length}개</b> 예정 → 4쪽`;
-
-  const mvTable = (list, cls) => list.length ? `<table class="rp-mv"><tr class="h"><td>게임</td><td class="num">평균 순위</td><td class="d">변화</td></tr>${list.map(x =>
-    `<tr><td class="nm">${esc(x.n)}</td><td class="num">${R(x.from)}위 → <b style="color:var(--ink)">${R(x.to)}위</b></td><td class="d ${cls}">${x.d > 0 ? '▲' : '▼'}${Math.abs(x.d)}</td></tr>`).join('')}</table>` : '<div class="rp-empty">해당 게임 없음</div>';
-  const partialAll = [...S.sales.partial.map(x => ({ ...x, s: '매출' })), ...S.popular.partial.map(x => ({ ...x, s: '인기' }))];
+  const qb = (no, t, c, e) => `<div class="rp-q"><div class="t">${no} · ${t}</div><div class="c">${c}</div><div class="e">${e}</div></div>`;
   const p1 = `<section class="rp-page">${run(1)}
     <div class="rp-eyebrow">WEEKLY MARKET REPORT</div>
     <h1>주간 모바일 게임 시장 리포트</h1>
     <div class="rp-lead">${rpWeekName(D.mon)} · ${period} · 전주 대비</div>
-    <div class="rp-kpis">
-      <div class="rp-kpi"><div class="l t-sales">매출 주간 1위</div><div class="v">${esc(sTop?.n || '-')}</div><div class="s">${kpiSub(sTop)}</div></div>
-      <div class="rp-kpi"><div class="l t-pop">인기 주간 1위</div><div class="v">${esc(pTop?.n || '-')}</div><div class="s">${kpiSub(pTop)}</div></div>
-      <div class="rp-kpi"><div class="l">주간 차트인</div><div class="v"><span class="t-sales">${S.sales.entrantsN}</span> · <span class="t-pop">${S.popular.entrantsN}</span></div><div class="s">매출 · 인기 / 전주 ${S.sales.entrantsPrevN ?? '-'} · ${S.popular.entrantsPrevN ?? '-'}</div></div>
-      <div class="rp-kpi"><div class="l">4주 뒤에도 TOP100</div><div class="v"><span class="t-sales">${S.sales.retention ?? '-'}%</span> · <span class="t-pop">${S.popular.retention ?? '-'}%</span></div><div class="s">매출 · 인기 / 높을수록 고정된 시장</div></div>
+    <div class="rp-hl">${headline}</div>
+    <h2>이번 주 분석</h2>
+    <div class="rp-qs">
+      ${qb(1, '신작, 차트 재진입한 게임들의 성적은?', q1c, q1e)}
+      ${qb(2, '매출이 급등한 게임은?', q2c, q2e)}
+      ${qb(3, '안정적인 흐름으로 유지되고 있는 게임은?', q3c, q3e)}
+      ${qb(4, 'TOP5 내 변경점이 있는지?', q4c, q4e)}
     </div>
-    <h2>이번 주 핵심</h2>
-    <div class="rp-ins">${pts.join('')}</div>
+    <h2>유형 흐름 <small>매출 30위 안 게임 수 · 전주 대비</small></h2>
+    <div class="rp-t4s">${t4}</div>
     <div class="rp-rel-line">${relPt}</div>
-    <h2>순위 변동 <small>주 평균 순위(반올림) · 두 주 모두 7일 내내 TOP100인 게임(매출 ${S.sales.cmpN}개 · 인기 ${S.popular.cmpN}개)만 비교</small></h2>
-    <div class="rp-cols">
-      <div><h3><span class="rp-tag bg-sales">매출</span> 급상승</h3>${mvTable(S.sales.up, 't-up')}<h3 style="margin-top:3.5mm"><span class="rp-tag bg-sales">매출</span> 급하락</h3>${mvTable(S.sales.down, 't-down')}</div>
-      <div><h3><span class="rp-tag bg-pop">인기</span> 급상승</h3>${mvTable(S.popular.up, 't-up')}<h3 style="margin-top:3.5mm"><span class="rp-tag bg-pop">인기</span> 급하락</h3>${mvTable(S.popular.down, 't-down')}</div>
-    </div>
-    ${partialAll.length ? `<div class="rp-partial">※ 두 주 모두 TOP100을 7일 내내 유지하지 못한 게임은 상위권이라도 비교에서 제외했습니다.</div>` : ''}
     ${foot}</section>`;
 
   /* 3쪽 순위표: # · 게임(아이콘 + 이름 한 줄) · 순위(7일 평균) · 증감 */
