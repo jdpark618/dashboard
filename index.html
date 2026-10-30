@@ -1042,6 +1042,7 @@ html.panel-lock { overflow: hidden; }
     <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
       <div class="relative flex-1 min-w-[200px] max-w-[300px]"><input id="rankSearch" class="mk-sel w-full pr-7" placeholder="순위에서 게임 검색" autocomplete="off" oninput="rankState.q = this.value; renderRanking()"><button type="button" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-200 text-xs" onclick="document.getElementById('rankSearch').value=''; rankState.q=''; renderRanking()" aria-label="검색 지우기"><i class="fa-solid fa-xmark"></i></button></div>
       <div class="flex flex-wrap items-center gap-1.5" id="rankJumps"></div>
+      <span class="hidden lg:block w-px h-5 bg-slate-700" aria-hidden="true"></span>
       <div class="flex flex-wrap items-center gap-1.5 flex-1" id="rankFilters"></div>
     </div>
   </section>
@@ -3593,7 +3594,7 @@ async function detailEnsureRange(){
 
 /* ---------- 전체 순위 페이지 (인기·매출 1~100위) ---------- */
 const RANK_JUMPS = [[1, 10], [11, 30], [31, 50], [51, 100]];
-const rankState = { store: 'popular', filter: '', genre: '', pub: '', q: '' };
+const rankState = { store: 'popular', filter: '', genre: '', pub: '', q: '', sort: 'rank' };
 
 /* 기준일 100개 순위 + 전일 대비 변동 (이미 받아 둔 데이터만 사용) */
 function rankPanelItems(store){
@@ -3628,7 +3629,7 @@ function rankIndexKeys(idx, d){
   const m = new Map(); idx.byDate.get(d)?.forEach((v, k) => m.set(getGameKey(v.name), k)); return m;
 }
 function renderRanking(){
-  const { filter, genre, pub } = rankState, data = { popular: rankPanelItems('popular'), sales: rankPanelItems('sales') };
+  const { filter, genre, pub, sort } = rankState, data = { popular: rankPanelItems('popular'), sales: rankPanelItems('sales') };
   dashPairSet('rkCols', rankState.store);
   const { last, prev } = data.popular.last ? data.popular : data.sales;
   setText('rankSub', last ? `기준일 ${last}${prev ? ` · 변동은 전일(${mkShort(prev)}) 대비` : ''} · 게임을 누르면 상세` : '데이터 없음');
@@ -3649,7 +3650,7 @@ function renderRanking(){
 
   /* 구간 이동 (보고 있는 구간에 불) */
   document.getElementById('rankJumps').innerHTML = '<span class="text-[11px] muted mr-0.5">구간</span>' + RANK_JUMPS.map(([a, b]) =>
-    `<button type="button" class="cal-chip !py-1 !px-2.5 !text-[11px]" data-from="${a}" data-to="${b}" onclick="rankJump(${a})">${a}–${b}</button>`).join('');
+    `<button type="button" class="cal-chip !py-1 !px-2.5 !text-[11px]${sort !== 'rank' ? ' opacity-40 pointer-events-none' : ''}" data-from="${a}" data-to="${b}" onclick="rankJump(${a})" ${sort !== 'rank' ? 'title="순위순일 때만 쓸 수 있습니다"' : ''}>${a}–${b}</button>`).join('');
 
   /* 빠른 필터 + 장르 + 퍼블리셔 (인기·매출 합산 개수) */
   const all = [...data.popular.items, ...data.sales.items], count = f => all.filter(x => rankMatchFilter(x, f)).length;
@@ -3657,24 +3658,26 @@ function renderRanking(){
   const tally = f => [...all.reduce((m, x) => { const v = f(x); return v && v !== '-' && v !== '미분류' && v !== '미상' ? m.set(v, (m.get(v) || 0) + 1) : m; }, new Map())].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'ko'));
   const sel = (key, label, list, cur) => `<select class="mk-sel !py-1 !text-[11px] max-w-[170px]" onchange="rankState.${key} = this.value; renderRanking()" aria-label="${label} 필터"><option value="">전체 ${label}</option>${list.map(([g, c]) => `<option value="${escapeAttr(g)}" ${g === cur ? 'selected' : ''}>${escapeHtml(g)} (${c})</option>`).join('')}</select>`;
   document.getElementById('rankFilters').innerHTML = fchip('first', '첫 차트인', 't-new') + fchip('re', '재진입', 't-new') + fchip('up', '급상승', 'rank-up') + fchip('down', '급하락', 'rank-down') + fchip('watch', '★ 관심 게임', 'text-amber-300')
-    + `<span class="ml-auto flex items-center gap-1.5">${sel('genre', '장르', tally(x => x.genre), genre)}${sel('pub', '퍼블리셔', tally(x => x.publisher), pub)}</span>`;
+    + `<span class="ml-auto flex flex-wrap items-center gap-1.5"><span class="hidden lg:block w-px h-5 bg-slate-700" aria-hidden="true"></span><select class="mk-sel !py-1 !text-[11px]" onchange="rankState.sort = this.value; renderRanking()" aria-label="정렬">${[['rank', '순위순'], ['up', '전일 대비 상승순'], ['down', '전일 대비 하락순']].map(([v, t]) => `<option value="${v}" ${v === sort ? 'selected' : ''}>${t}</option>`).join('')}</select>${sel('genre', '장르', tally(x => x.genre), genre)}${sel('pub', '퍼블리셔', tally(x => x.publisher), pub)}</span>`;
 
   /* 두 열 목록 */
   const q = getGameKey(rankState.q.trim());
   const openKey = !document.getElementById('detailPanel').classList.contains('translate-x-full') ? getGameKey(detailCurrentName) : '';
   ['popular', 'sales'].forEach(st => {
     const items = data[st].items;
+    const mv = x => typeof x.change === 'number' && x.change ? x.change : null;
     const list = items.filter(x => (!filter || rankMatchFilter(x, filter)) && (!genre || x.genre === genre) && (!pub || x.publisher === pub) && (q === '-' || !q || getGameKey(x.name).includes(q)));
+    if(sort !== 'rank') list.sort((a, b) => { const va = mv(a), vb = mv(b); if(va == null || vb == null) return (va == null) - (vb == null) || a.rank - b.rank; return (sort === 'up' ? vb - va : va - vb) || a.rank - b.rank; });
     setText(`rankCnt-${st}`, list.length === items.length ? '' : `${list.length}개`);
     document.getElementById(`rankList-${st}`).innerHTML = list.length ? list.map(x => {
       const meta = [x.genre && x.genre !== '미분류' ? escapeHtml(x.genre) : '', x.publisher && x.publisher !== '-' ? escapeHtml(x.publisher) : '', x.score && x.score !== '-' ? renderScoreBadgeHtml(x.score) : ''].filter(Boolean);
-      const sep = [10, 30, 50].includes(x.rank) && !filter && !genre && !pub && !q ? ' border-b-2 border-b-slate-700' : '';
+      const sep = [10, 30, 50].includes(x.rank) && sort === 'rank' && !filter && !genre && !pub && !q ? ' border-b-2 border-b-slate-700' : '';
       const chg = x.change === 'NEW' ? (x.isFirst ? '<span class="t-new text-[11px] font-semibold">NEW</span>' : '<span class="t-new text-[11px] font-semibold">재진입</span>')
         : x.change ? `<span class="text-[11px] font-semibold ${x.change > 0 ? 'rank-up' : 'rank-down'}">${x.change > 0 ? '▲' : '▼'}${Math.abs(x.change)}</span>` : '<span class="text-[11px] muted">-</span>';
       return `<li data-rank="${x.rank}" data-key="${escapeAttr(getGameKey(x.name))}" class="group flex items-center gap-2.5 py-2 px-2 rounded-lg cursor-pointer hover:bg-slate-800/60 transition-colors scroll-mt-40${sep}${getGameKey(x.name) === openKey ? ' bg-indigo-500/15' : ''}" onclick="openGameDetail('${escapeAttr(x.name).replace(/&#039;/g, "\\'")}')">
         <span class="w-7 text-right shrink-0 font-bold ${x.rank <= 3 ? 'text-slate-50 text-sm' : 'text-slate-400 text-xs'}">${x.rank}</span>
         ${x.icon ? `<img src="${escapeAttr(x.icon)}" class="w-8 h-8 rounded-lg object-cover bg-slate-800 shrink-0" alt="" loading="lazy" onerror="this.style.visibility='hidden'">` : '<span class="w-8 h-8 rounded-lg bg-slate-800 shrink-0"></span>'}
-        <div class="min-w-0 flex-1"><div class="text-[13px] font-medium truncate text-slate-100">${x.watch ? '<i class="fa-solid fa-star text-amber-300 text-[10px] mr-1"></i>' : ''}${escapeHtml(x.name)}</div><div class="text-[11px] muted truncate mt-0.5">${meta.join('<span class="mx-1 text-slate-600">·</span>')}</div></div>
+        <div class="min-w-0 flex-1"><div class="text-[13px] font-medium truncate text-slate-100"><button type="button" class="mr-1 text-[11px] align-[1px] ${x.watch ? 'text-amber-300' : 'text-slate-500 hover:text-amber-300 opacity-0 group-hover:opacity-100 focus:opacity-100'}" onclick="event.stopPropagation(); mkWatchToggle('${escapeAttr(x.name).replace(/&#039;/g, "\\'")}')" title="${x.watch ? '관심 게임에서 빼기' : '관심 게임에 추가'}" aria-label="${x.watch ? '관심 게임에서 빼기' : '관심 게임에 추가'}"><i class="fa-${x.watch ? 'solid' : 'regular'} fa-star"></i></button>${escapeHtml(x.name)}</div><div class="text-[11px] muted truncate mt-0.5">${meta.join('<span class="mx-1 text-slate-600">·</span>')}</div></div>
         <div class="w-12 text-right shrink-0">${chg}</div>
       </li>`;
     }).join('') : `<li class="text-xs muted text-center py-10">조건에 맞는 게임이 없습니다</li>`;
@@ -5259,6 +5262,7 @@ function mkWatchToggle(name){
   renderWatchlist();
   syncDetailWatchBtn(name);
   if(currentView === 'business' && mkSection === 'structure' && mkMonthsReady) mkRenderPosition();
+  if(currentView === 'ranking') renderRanking();
 }
 function syncDetailWatchBtn(name){
   const b = document.getElementById('detailWatchBtn');
