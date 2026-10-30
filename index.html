@@ -454,12 +454,7 @@ html.panel-lock { overflow: hidden; }
 .rp-ent2 th { font-size:7.2pt; font-weight:600; color:var(--mute); text-align:center; padding:1mm; border-bottom:1px solid var(--line); }
 .rp-ent2 td { text-align:center; padding:1.3mm 1mm; border-bottom:1px solid rgba(15,23,42,.06); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .rp-ent2 th:first-child, .rp-ent2 td:first-child { text-align:left; } .rp-ent2 .tg { color:var(--new); font-weight:600; }
-.rp-ty-c .up, .rp-ent2 .up, .rp-posx .up { color:var(--up); font-weight:700; } .rp-ty-c .dn, .rp-ent2 .dn, .rp-posx .dn { color:var(--down); font-weight:700; } .rp-ty-c .mu, .rp-ent2 .mu { color:var(--mute); }
-.rp-posx { margin-top:2.5mm; border:1px solid var(--line); border-radius:3mm; padding:2.5mm 3.5mm; }
-.rp-posx .hd { font-size:8.6pt; font-weight:800; margin-bottom:1mm; } .rp-posx .hd span { font-size:7pt; font-weight:500; color:var(--mute); margin-left:1.5mm; }
-.rp-posx .it { padding:.4mm 0 .4mm 2.5mm; border-left:.6mm solid #c7d2fe; margin-top:1.3mm; }
-.rp-posx .c { font-size:8.2pt; color:#334155; } .rp-posx .c b { color:var(--ink); }
-.rp-posx .e { font-size:7.2pt; color:var(--mute); margin-left:2mm; white-space:nowrap; }
+.rp-ty-c .up, .rp-ent2 .up { color:var(--up); font-weight:700; } .rp-ty-c .dn, .rp-ent2 .dn { color:var(--down); font-weight:700; } .rp-ty-c .mu, .rp-ent2 .mu { color:var(--mute); }
 .rp-bars .row { display:grid; grid-template-columns:20mm 1fr 15mm; align-items:center; gap:2mm; font-size:8.4pt; padding:.9mm 0; }
 .rp-bars .track { height:2.6mm; background:#f1f5f9; border-radius:1mm; overflow:hidden; }
 .rp-bars .fill { height:100%; border-radius:1mm; }
@@ -5556,7 +5551,7 @@ function rpAnalyze(D){
   const longEnough = (SI.dates[0] || '9') < gap0, before = (idx, k) => idx.dates.some(d => d < D.mon && idx.byDate.get(d).has(k));
   const nw = [], re = [], surge = [], stable = [];
   meta.forEach((v, k) => {
-    const it = { n: v.name, cls: rpClass(v.name, v.genre), sb: best(SI, k, wkS), pb: best(PI, k, wkP) }, f = first(k, v.name);
+    const it = { n: v.name, g: v.genre, cls: rpClass(v.name, v.genre), sb: best(SI, k, wkS), pb: best(PI, k, wkP) }, f = first(k, v.name);
     /* 신작: 이 주 첫 차트인이고 그 전엔 매출·인기 어느 쪽에도 없던 게임.
        인기 순위 없이 매출로만 들어온 게임은 수집 전부터 있던 게임의 업데이트 복귀로 봄 */
     const debut = f && f >= D.mon && f <= D.end && !before(SI, k) && !before(PI, k);
@@ -5669,7 +5664,7 @@ function rpBuild(mon){
     const types = { sales: 0, bal: 0, pop: 0 }, prevTypes = { sales: 0, bal: 0, pop: 0 };
     items.forEach(x => types[x.type]++);
     ps.forEach((g, k) => { const q = pp.get(k); if(q) prevTypes[mkPosType(g.rank, q.rank)]++; });
-    const top = t => items.filter(x => x.type === t).sort((a, b) => (a.sr + a.pr) - (b.sr + b.pr)).slice(0, 5);
+    const top = t => items.filter(x => x.type === t).sort((a, b) => (a.sr + a.pr) - (b.sr + b.pr)).slice(0, 10);
     const s20 = [...cs].filter(([, g]) => g.rank <= 20);
     const mv = {}; items.forEach(x => { if(x.ps == null || x.pp == null) return; const t0 = mkPosType(x.ps, x.pp); if(t0 !== x.type){ const k = `${t0}>${x.type}`; mv[k] = (mv[k] || 0) + 1; } });
     return { types, prevTypes: ps.size && pp.size ? prevTypes : null, top: { sales: top('sales'), bal: top('bal'), pop: top('pop') },
@@ -5813,24 +5808,11 @@ function rpRender(D){
     ${foot}</section>`;
 
   const bars = (list, color) => `<div class="rp-bars">${list.map(x => `<div class="row"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(x.g)}</span><div class="track"><div class="fill" style="width:${Math.min(100, x.c / 40 * 100)}%;background:${color}"></div></div><span class="val">${x.c}개 ${x.d ? `<b class="${x.d > 0 ? 't-up' : 't-down'}">${x.d > 0 ? '▲' : '▼'}${Math.abs(x.d)}</b>` : ''}</span></div>`).join('')}</div>`;
-  /* 2쪽 포지션: 형태 분포 → 신작(재진입) → 해석(결론 한 줄 + 근거) → 장르 구성. 게임명은 실제 이름 그대로 굵게, 문장 끝에 따로 */
-  const PS = D.pos, dl = (prev, now) => prev == null ? '<span class="mu">신규</span>' : R(prev) === R(now) ? '<span class="mu">-</span>' : R(prev) > R(now) ? `<span class="up">▲${R(prev) - R(now)}</span>` : `<span class="dn">▼${R(now) - R(prev)}</span>`;
+  /* 3쪽 포지션: 형태 분포 → 신작·재진입(2쪽 1번과 같은 판정) → 장르 구성. 해석·분석은 2쪽에서만 */
+  const PS = D.pos;
   const tyDiff = t => { if(!PS.prevTypes) return ''; const d = PS.types[t] - PS.prevTypes[t]; return d ? `<small class="${d > 0 ? 'up' : 'dn'}">${d > 0 ? '+' : '−'}${Math.abs(d)}</small>` : '<small class="mu">±0</small>'; };
   const tyCard = (t, label) => `<div class="rp-ty-c ${t}"><div class="h"><span class="t">${label}</span><span class="n">${PS.types[t]}${tyDiff(t)}</span></div><ul>${PS.top[t].map(x => `<li><b>${esc(x.name)}</b><span>${R(x.sr)} · ${R(x.pr)}</span></li>`).join('') || '<li class="mu">해당 없음</li>'}</ul></div>`;
-  const ent = PS.entries, nF = ent ? ent.filter(x => x.entry === 'first').length : 0, nR = ent ? ent.length - nF : 0;
-  const posNotes = (() => {
-    const out = [], T = PS.types, P0 = PS.prevTypes;
-    if(P0) out.push([T.sales > P0.sales && T.bal <= P0.bal ? '상위권이 <b>과금 중심</b>으로 기울었습니다.' : T.pop > P0.pop && T.bal <= P0.bal ? '상위권이 <b>유입 중심</b>으로 기울었습니다.' : '형태 구성은 <b>전주와 비슷</b>합니다.',
-      `매출형 ${P0.sales}→${T.sales} · 균형형 ${P0.bal}→${T.bal} · 인기형 ${P0.pop}→${T.pop}`]);
-    if(PS.s20){ const r = PS.steady20 / PS.s20;
-      out.push([r >= 0.7 ? '매출 상위는 <b>상위 유지 게임</b>이 지킵니다.' : r <= 0.4 ? '매출 상위에 <b>새로 올라온 게임</b>이 많은 주입니다.' : '매출 상위는 상위 유지 게임과 새로 올라온 게임이 섞여 있습니다.',
-        `매출 20위 안 ${PS.s20}개 중 상위 유지 ${PS.steady20}개`]); }
-    if(ent && ent.length){ const hi = ent.filter(x => x.sr <= 30), c = t => ent.filter(x => x.type === t).length;
-      out.push([hi.length ? `신작 중 매출 30위 안까지 오른 게임은 ${hi.length}개입니다.${hi.length <= 2 ? ` ${hi.map(x => `<b>${esc(x.name)}</b>`).join(' · ')}` : ''}` : '신작은 아직 <b>매출 상위권 밖</b>입니다. 유입 단계로 추정됩니다.',
-        `신작 ${ent.length}개 중 매출형 ${c('sales')} · 균형형 ${c('bal')} · 인기형 ${c('pop')}`]); }
-    if(PS.onlyP >= 5) out.push(['인기 상위 상당수는 <b>매출로 이어지지 않습니다</b> (추정: 광고·저과금).', `인기 30위 안·매출 100위 밖 ${PS.onlyP}개`]);
-    return out;
-  })();
+  const ents = [...A.nw.map(x => ({ ...x, re: false })), ...A.re.map(x => ({ ...x, re: true }))].sort((a, b) => Math.min(a.sb, a.pb) - Math.min(b.sb, b.pb));
   const p2 = `<section class="rp-page">${run(3)}
     <h2 class="first">매출·인기 포지션 <small>주간 평균 · 양쪽 TOP100 ${D.both}개${D.prevBoth != null ? ` (전주 ${D.prevBoth})` : ''} · 형태는 순위 차 2배 기준</small></h2>
     <div class="rp-fill"><div>
@@ -5838,12 +5820,10 @@ function rpRender(D){
     <div class="rp-ty">${tyCard('sales', '매출형')}${tyCard('bal', '균형형')}${tyCard('pop', '인기형')}</div>
     ${PS.prevTypes ? `<div class="rp-mv"><span class="l">형태 이동</span>${PS.moves.length ? PS.moves.map(([k, n]) => { const [a, b] = k.split('>'); return `<span class="c">${MK_POS_TYPE[a]} → ${MK_POS_TYPE[b]} <b>${n}</b></span>`; }).join('') : '<span class="mu">없음</span>'}</div>` : ''}
     <div class="rp-tynote">순위는 매출 · 인기 / 한쪽만 상위권: 매출 ${PS.onlyS}개 · 인기 ${PS.onlyP}개</div>
-    <h3 class="rp-sub">신작(재진입) <small>${ent ? `4주 전 대비 · 첫 진입 ${nF} · 재진입 ${nR}` : '4주 전 기록 없음'}</small></h3>
-    ${ent && ent.length ? `<table class="rp-ent2"><colgroup><col><col style="width:18mm"><col style="width:16mm"><col style="width:24mm"><col style="width:24mm"></colgroup>
-      <tr><th>게임</th><th>분류</th><th>형태</th><th>매출</th><th>인기</th></tr>
-      ${ent.slice(0, 6).map(x => `<tr><td><b>${esc(x.name)}</b></td><td class="tg">${x.entry === 'first' ? '첫 진입' : '재진입'}</td><td>${MK_POS_TYPE[x.type]}</td><td><b class="t-sales">${R(x.sr)}</b> ${dl(x.ps, x.sr)}</td><td><b class="t-pop">${R(x.pr)}</b> ${dl(x.pp, x.pr)}</td></tr>`).join('')}</table>` : '<div class="rp-empty">해당 게임 없음</div>'}
-    <h3 class="rp-sub">해석</h3>
-    <div class="rp-posx">${posNotes.map(([h, ev]) => `<div class="it"><span class="c">${h}</span><span class="e">${ev}</span></div>`).join('')}</div>
+    <h3 class="rp-sub">신작·재진입 <small>이 주 첫 차트인 ${A.nw.length} · 재진입 ${A.re.length} · 주간 최고 순위</small></h3>
+    ${ents.length ? `<table class="rp-ent2"><colgroup><col><col style="width:16mm"><col style="width:24mm"><col style="width:20mm"><col style="width:20mm"></colgroup>
+      <tr><th>게임</th><th>구분</th><th>장르</th><th>매출</th><th>인기</th></tr>
+      ${ents.slice(0, 8).map(x => `<tr><td><b>${esc(x.n)}</b></td><td class="tg">${x.re ? '재진입' : '신작'}</td><td>${esc(x.g || '-')}</td><td>${x.sb <= 100 ? `<b class="t-sales">${x.sb}위</b>` : '<span class="mu">밖</span>'}</td><td>${x.pb <= 100 ? `<b class="t-pop">${x.pb}위</b>` : '<span class="mu">밖</span>'}</td></tr>`).join('')}</table>${ents.length > 8 ? `<div class="rp-tynote">외 ${ents.length - 8}개는 순위가 낮아 생략</div>` : ''}` : '<div class="rp-empty">해당 게임 없음</div>'}
     </div><div>
     <h2 class="rp-gap2">장르 구성 <small>그 주 마지막 날 TOP100 · 전주 대비</small></h2>
     <div class="rp-cols"><div><h3><span class="rp-tag bg-sales">매출</span></h3>${bars(S.sales.genres, '#d97706')}</div><div><h3><span class="rp-tag bg-pop">인기</span></h3>${bars(S.popular.genres, '#0d9488')}</div></div>
