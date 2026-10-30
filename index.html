@@ -5735,7 +5735,7 @@ function rpRender(D){
   const S = D.S, R = v => Math.round(v), esc = escapeHtml, cut = (t, n) => t.length > n ? t.slice(0, n) + '…' : t;
   const relPages = rpRelPaginate(D), isFirst = f => f && f >= D.pmon, PAGES = 4 + relPages.length, period = rpWeekRange(D.mon);
   const run = n => `<div class="rp-run"><span><b>Game Market Intelligence</b> · 주간 리포트</span><span>${period} · ${n}/${PAGES}</span></div>`;
-  const foot = `<div class="rp-foot"><span>Google Play 국내 매출·인기 순위(일별 TOP100) · 신작 정보는 순위 데이터와 연결하지 않음 · '첫 차트인'은 수집 기록 기준</span><span>발행 ${D.issue}</span></div>`;
+  const foot = `<div class="rp-foot"><span>Google Play 국내 매출·인기 순위(일별 TOP100) 기준</span><span>발행 ${D.issue}</span></div>`;
   /* 1쪽 분석: 고정 질문 4개에 결론 한 줄 + 근거 한 줄. 맨 위 한 문장은 질문들의 판정을 이어 붙임.
      게임명은 굵게, 조사를 바로 붙이지 않음 */
   const A = rpAnalyze(D), bn = n => `<b>${esc(cut(n, 22))}</b>`, nm = n => esc(cut(n, 18)), rv = v => v > 100 ? '밖' : v;
