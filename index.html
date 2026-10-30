@@ -74,6 +74,10 @@ body { background:var(--bg); font-family:'Pretendard Variable',Pretendard,-apple
 .tab i { color:#64748b; }
 .tab:hover { color:#f1f5f9; } .tab:hover i { color:#94a3b8; }
 .tab.active { color:#c7d2fe; border-color:#6366f1; } .tab.active i { color:#818cf8; }
+.top-nav > div > .tab:first-child { padding-left:4px; }  /* 첫 메뉴를 서비스명과 같은 선에서 시작 */
+/* DB 메뉴: 오른쪽 보조 메뉴 (한 단계 작고 흐리게) */
+.tab.tab-sub { font-size:11.5px; font-weight:500; color:#94a3b8; padding:10px 11px; } .tab.tab-sub i { color:#475569; }
+.tab.tab-sub:hover { color:#e2e8f0; } .tab.tab-sub.active { color:#c7d2fe; } .tab.tab-sub.active i { color:#818cf8; }
 .rank-up { color:var(--c-up); }
 .rank-down { color:var(--c-down); }
 .rank-flat { color:#94a3b8; }
@@ -298,7 +302,7 @@ html.panel-lock { overflow: hidden; }
 .page-head h2 { font-size:18px; font-weight:700; display:flex; align-items:center; gap:8px; }
 .page-head .sub { font-size:12px; color:#94a3b8; margin-top:3px; }
 /* 상단 메뉴: 스크롤해도 위에 고정, 넘치는 메뉴가 있으면 오른쪽 끝을 흐리게 */
-.top-nav { position:sticky; top:0; z-index:30; background:rgba(14,22,38,.94); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
+.top-nav { position:sticky; top:0; z-index:30; background:rgba(7,11,20,.94); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); border-bottom:1px solid var(--line); }
 .top-nav.fade-r { -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 40px),transparent); mask-image:linear-gradient(90deg,#000 calc(100% - 40px),transparent); }
 /* 조작 높이 2단계: 페이지 조작 32px, 카드 안 28px */
 .mk-seg button, .mk-tabs button { height:26px; display:inline-flex; align-items:center; }
@@ -502,13 +506,11 @@ html.panel-lock { overflow: hidden; }
 <body class="text-slate-100 min-h-screen relative overflow-x-hidden">
 <div class="max-w-[1500px] mx-auto px-4 md:px-6 py-5">
 
-<header class="flex flex-col lg:flex-row lg:items-center justify-between gap-2 lg:gap-4 mb-3 lg:mb-4">
-  <div>
-    <div class="flex items-center gap-2">
-      <i class="fa-solid fa-chart-line text-indigo-400"></i>
-      <h1 class="text-xl lg:text-2xl font-bold">Game Market Intelligence</h1>
-    </div>
-    <p class="text-xs muted mt-1 hidden sm:block">Google Play 시장 모니터링</p>
+<header class="flex flex-col lg:flex-row lg:items-center justify-between gap-2 lg:gap-4 mb-1.5">
+  <div class="flex items-center gap-2">
+    <i class="fa-solid fa-chart-line text-indigo-400"></i>
+    <h1 class="text-lg lg:text-xl font-bold">Game Market Intelligence</h1>
+    <p class="text-xs muted hidden sm:block ml-1 pl-3 border-l border-slate-700">Google Play 시장 모니터링</p>
   </div>
   <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 [&>*]:whitespace-nowrap">
     <span class="text-xs muted font-medium inline-flex items-center gap-2 sm:mr-1"><span id="todayLabel"></span><span class="text-slate-700">|</span><span id="syncStatus" class="text-slate-400">● 확인 중</span></span>
@@ -518,7 +520,7 @@ html.panel-lock { overflow: hidden; }
 </header>
 
 <!-- TOP NAV -->
-<nav id="topNav" class="card top-nav rounded-xl mb-5 px-3 overflow-x-auto">
+<nav id="topNav" class="top-nav mb-5 overflow-x-auto">
   <div class="flex items-center gap-1 whitespace-nowrap">
     <button class="tab active" data-view="dashboard" onclick="switchView('dashboard')">
       <i class="fa-solid fa-gauge-high mr-1.5"></i> 일간 브리핑
@@ -535,15 +537,16 @@ html.panel-lock { overflow: hidden; }
     <button class="tab" data-view="search" onclick="switchView('search')">
       <i class="fa-solid fa-chart-line mr-1.5"></i> 순위 비교
     </button>
-    <!-- DB 메뉴는 오른쪽 끝에 -->
+    <!-- DB 메뉴는 오른쪽 끝에, 보조 메뉴로 -->
     <span class="flex-1 min-w-4" aria-hidden="true"></span>
-    <button class="tab" data-view="sales" onclick="switchView('sales')">
+    <span class="w-px h-4 bg-slate-700 mx-1" aria-hidden="true"></span>
+    <button class="tab tab-sub" data-view="sales" onclick="switchView('sales')">
       <i class="fa-solid fa-coins mr-1.5"></i> 매출 DB
     </button>
-    <button class="tab" data-view="popular" onclick="switchView('popular')">
+    <button class="tab tab-sub" data-view="popular" onclick="switchView('popular')">
       <i class="fa-solid fa-fire mr-1.5"></i> 인기 DB
     </button>
-    <button class="tab" data-view="newReleases" onclick="switchView('newReleases')">
+    <button class="tab tab-sub" data-view="newReleases" onclick="switchView('newReleases')">
       <i class="fa-solid fa-table-list mr-1.5"></i> 신작 DB
     </button>
   </div>
