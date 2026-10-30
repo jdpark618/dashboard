@@ -383,7 +383,7 @@ html.panel-lock { overflow: hidden; }
 .rp-cv-hd { display:flex; align-items:center; gap:4mm; }
 .rp-cv-ic { position:relative; width:21mm; height:21mm; flex:none; }
 .rp-cv-ic img.ic { width:100%; height:100%; border-radius:5mm; object-fit:cover; box-shadow:0 .8mm 2.5mm rgba(15,23,42,.18); }
-.rp-cv-ic img.md { position:absolute; left:-6.5mm; top:-6.5mm; width:13mm; height:13mm; filter:drop-shadow(0 .4mm .8mm rgba(15,23,42,.25)); }
+.rp-cv-ic img.md { position:absolute; left:-4.5mm; top:-4.5mm; width:10mm; height:10mm; filter:drop-shadow(0 .3mm .6mm rgba(15,23,42,.2)); }
 .rp-cv .nm { font-size:11.5pt; font-weight:800; line-height:1.3; }
 .rp-cv .sb { font-size:8.5pt; color:var(--mute); margin-top:1mm; }
 .rp-cv .st { background:#f8fafc; border-radius:3mm; padding:3mm 4mm; margin-top:4.5mm; font-size:9.5pt; color:var(--sub); line-height:1.85; }
@@ -5586,7 +5586,7 @@ function rpAnalyze(D){
 }
 /* 표지 차트: 4주 일간 매출·인기 순위 (로그 눈금, 1위가 위). 점 + 옅은 면 + 끝 순위 배지. SVG라 인쇄 복제에도 그대로 나옴 */
 function rpCoverChart(sv, pv, ds, wk0, id){
-  const W = 460, H = 250, L = 28, R = 40, T = 10, B = 22, n = ds.length, SC = '#d97706', PC = '#14b8a6';
+  const W = 460, H = 198, L = 28, R = 40, T = 10, B = 22, n = ds.length, SC = '#d97706', PC = '#14b8a6';
   const x = i => L + i * (W - L - R) / Math.max(1, n - 1), y = v => T + Math.log(v) / Math.log(100) * (H - T - B), bot = H - B;
   const segs = arr => { const out = []; let cur = [];
     arr.forEach((v, i) => { if(v == null){ if(cur.length) out.push(cur); cur = []; } else cur.push([x(i), y(v)]); }); if(cur.length) out.push(cur); return out; };
