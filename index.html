@@ -5697,7 +5697,7 @@ function rpRender(D){
       : nS30.length ? `신작 ${A.nw.length}개 중 ${bn(nS30[0].n)} 매출 ${nS30[0].sb}위까지 오르며 상위권에 들었습니다.`
       : nS.length ? `신작 ${A.nw.length}개 중 매출로 이어진 게임은 ${nS.length}개이고, 가장 높은 ${bn(nS[0].n)} 매출 ${nS[0].sb}위입니다.`
       : `신작 ${A.nw.length}개 모두 매출 TOP100 밖으로, 아직 매출 성과는 없습니다.`)
-    + (nP30.length ? ` 인기 30위 안에 든 ${nP30.length}개는 ${mP ? `${mP[0]} 중심의 ` : ''}UA 집행입니다.` : '');
+    + (nP30.length ? ` 인기 30위 안에 든 ${nP30.length}개는 ${mP ? `${mP[0]} 장르 중심의 ` : ''}UA 집행입니다.` : '');
   const q1e = `인기 30위 안: ${lst(nP30, x => `${nm(x.n)} ${x.pb}위`)} / 재진입: ${lst(A.re, x => `${nm(x.n)} ${x.sb <= 100 ? `매출 ${x.sb}위` : `인기 ${x.pb}위`}`, 3)}`;
   /* ② 매출 급등 */
   const sv = A.surge, sF = sv.filter(x => x.flat).length, mS = major(sv);
@@ -5706,14 +5706,14 @@ function rpRender(D){
     : (sF === sv.length ? `${sv.length}개 모두 인기 변화 없이 매출만 올라 신규 콘텐츠·픽업 업데이트 반응입니다.`
       : !sF ? `${sv.length}개 모두 인기도 함께 올라 업데이트와 마케팅이 겹친 급등입니다.`
       : `${sv.length}개 중 ${sF}개는 인기 변화 없는 업데이트 반응, ${sv.length - sF}개는 인기도 함께 오른 업데이트·마케팅 동반 급등입니다.`)
-      + (!mS ? '' : mS[1] === sv.length ? ` 모두 ${mS[0]}입니다.` : ` 이 중 ${mS[0]}${rpJosa(mS[0])} ${mS[1]}개입니다.`);
+      + (!mS ? '' : mS[1] === sv.length ? ` 모두 ${mS[0]} 장르입니다.` : ` 이 중 ${mS[0]} 장르가 ${mS[1]}개입니다.`);
   const q2e = lst(sv, x => `${nm(x.n)} ${rv(x.a)}→${x.b}`, 5);
   /* ③ 안정 유지 · 하락 */
   const st = A.stable, dp = A.drops[0];
   const q3c = !A.hasPrev ? '전주 수집 기록이 없어 판단할 수 없습니다.'
     : `2주 내내 매출 30위 안을 지킨 게임은 ${st.length}개입니다.`
-      + (st.length ? ` 흔들림이 가장 적은 ${bn(st[0].n)} ${st[0].lo === st[0].hi ? `${st[0].lo}위를 그대로` : `${st[0].lo}–${st[0].hi}위를`} 지켰습니다.` : '')
-      + (dp ? ` 반면 ${bn(dp.n)} 매출 ${dp.a}→${rv(dp.b)}위로 ${dp.after ? '내려와, 직전 업데이트 효과가 끝나고 이전 자리로 돌아가는 중입니다.' : dp.sharp ? '급락해 게임 내 이슈 가능성이 있습니다.' : '완만하게 밀리는 중이라 다음 업데이트 전 숨고르기 구간입니다.'}` : '');
+      + (st.length ? ` 순위 변동이 가장 적은 ${bn(st[0].n)} ${st[0].lo === st[0].hi ? `${st[0].lo}위를 그대로` : `${st[0].lo}–${st[0].hi}위를`} 지켰습니다.` : '')
+      + (dp ? ` 반면 ${bn(dp.n)} 매출 ${dp.a}→${rv(dp.b)}위로 ${dp.after ? '내려왔습니다. 직전 업데이트 효과가 끝나 급등 전 순위로 돌아가고 있습니다.' : dp.sharp ? '급락했습니다. 밸런스·콘텐츠 등 게임 내 문제 가능성이 있습니다.' : '완만하게 내려가고 있습니다. 다음 업데이트 전 일시적으로 매출이 감소하는 시기입니다.'}` : '');
   const q3e = `${lst(st, x => `${nm(x.n)} ${x.lo === x.hi ? x.lo : `${x.lo}–${x.hi}`}위`)}${A.drops.length ? ` / 하락: ${lst(A.drops, x => `${nm(x.n)} ${x.a}→${rv(x.b)}`, 2)}` : ''}`;
   /* ④ TOP5 */
   const t5 = A.top5, inn = t5.filter(x => x.prevPos == null || x.prevPos > 5), mv = t5.filter(x => x.prevPos != null && x.prevPos !== x.pos).sort((a, b) => Math.abs(b.prevPos - b.pos) - Math.abs(a.prevPos - a.pos))[0];
