@@ -377,6 +377,22 @@ html.panel-lock { overflow: hidden; }
 .rp-page h3 { font-size:9.5pt; font-weight:700; margin-bottom:2mm; }
 .rp-eyebrow { font-size:8pt; font-weight:700; letter-spacing:.12em; color:var(--brand); }
 .rp-lead { font-size:10pt; color:var(--sub); margin-top:1.5mm; font-weight:600; }
+/* 표지: 주간 매출 TOP3 카드 (왼쪽 아이콘·메달·이름 + 지표 상자, 오른쪽 4주 순위 차트) */
+.rp-cv-list { flex:1; display:flex; flex-direction:column; gap:4mm; margin:5mm 0 3mm; }
+.rp-cv { flex:1; display:grid; grid-template-columns:64mm minmax(0,1fr); gap:6mm; align-items:center; border:1px solid #eef2f7; border-radius:4mm; box-shadow:0 .6mm 2.5mm rgba(15,23,42,.06); padding:5mm 5mm 4mm 6mm; }
+.rp-cv-hd { display:flex; align-items:center; gap:4mm; }
+.rp-cv-ic { position:relative; width:21mm; height:21mm; flex:none; }
+.rp-cv-ic img.ic { width:100%; height:100%; border-radius:5mm; object-fit:cover; box-shadow:0 .8mm 2.5mm rgba(15,23,42,.18); }
+.rp-cv-ic img.md { position:absolute; left:-6.5mm; top:-6.5mm; width:13mm; height:13mm; filter:drop-shadow(0 .4mm .8mm rgba(15,23,42,.25)); }
+.rp-cv .nm { font-size:11.5pt; font-weight:800; line-height:1.3; }
+.rp-cv .sb { font-size:8.5pt; color:var(--mute); margin-top:1mm; }
+.rp-cv .st { background:#f8fafc; border-radius:3mm; padding:3mm 4mm; margin-top:4.5mm; font-size:9.5pt; color:var(--sub); line-height:1.85; }
+.rp-cv .st b { color:var(--ink); font-weight:800; } .rp-cv .st i { font-style:normal; color:var(--mute); }
+.rp-cv-pl { display:flex; justify-content:flex-end; gap:1.5mm; margin-bottom:1mm; }
+.rp-cv-pl span { font-size:7.5pt; font-weight:700; border-radius:9mm; padding:.8mm 3mm; }
+.rp-cv-pl .s { background:#d97706; color:#fff; } .rp-cv-pl .p { background:#e6f7f5; color:#0f766e; }
+.rp-cv svg { display:block; width:100%; height:auto; }
+.rp-cv-note { font-size:7.6pt; color:var(--mute); margin-bottom:2mm; }
 /* 1쪽 분석: 맨 위 한 문장 · 고정 질문 4개(결론 + 근거) · 유형 흐름 */
 .rp-hl { margin-top:7mm; font-size:12pt; font-weight:700; line-height:1.55; background:var(--soft); border-left:1.2mm solid var(--brand); padding:4mm 5mm; }
 .rp-qs { display:flex; flex-direction:column; gap:7mm; }
@@ -5568,6 +5584,40 @@ function rpAnalyze(D){
   return { hasPrev: pw.length > 0, nw, re: re.sort((a, b) => Math.min(a.sb, a.pb) - Math.min(b.sb, b.pb)), surge: surge.sort((a, b) => (b.a - b.b) - (a.a - a.b)),
     stable: stable.sort((a, b) => a.sd - b.sd), drops: drops.sort((a, b) => b.d - a.d), top5, outs, types: types(wkS), prevTypes: pw.length ? types(pw) : null };
 }
+/* 표지 차트: 4주 일간 매출·인기 순위 (로그 눈금, 1위가 위). 점 + 옅은 면 + 끝 순위 배지. SVG라 인쇄 복제에도 그대로 나옴 */
+function rpCoverChart(sv, pv, ds, wk0, id){
+  const W = 460, H = 250, L = 28, R = 40, T = 10, B = 22, n = ds.length, SC = '#d97706', PC = '#14b8a6';
+  const x = i => L + i * (W - L - R) / Math.max(1, n - 1), y = v => T + Math.log(v) / Math.log(100) * (H - T - B), bot = H - B;
+  const segs = arr => { const out = []; let cur = [];
+    arr.forEach((v, i) => { if(v == null){ if(cur.length) out.push(cur); cur = []; } else cur.push([x(i), y(v)]); }); if(cur.length) out.push(cur); return out; };
+  /* 살짝 둥근 곡선 (Catmull-Rom 1/8, 눈금 밖으로 튀지 않게 제한) */
+  const curve = pt => pt.map((q, i) => { if(!i) return `M${q[0].toFixed(1)} ${q[1].toFixed(1)}`;
+    const p0 = pt[i - 2] || pt[i - 1], p1 = pt[i - 1], p3 = pt[i + 1] || q, cl = v => Math.min(bot, Math.max(T, v)).toFixed(1);
+    return `C${(p1[0] + (q[0] - p0[0]) / 8).toFixed(1)} ${cl(p1[1] + (q[1] - p0[1]) / 8)} ${(q[0] - (p3[0] - p1[0]) / 8).toFixed(1)} ${cl(q[1] - (p3[1] - p1[1]) / 8)} ${q[0].toFixed(1)} ${q[1].toFixed(1)}`; }).join(' ');
+  const series = (arr, c, gid) => segs(arr).map(pt => pt.length < 2 ? `<circle cx="${pt[0][0]}" cy="${pt[0][1]}" r="2.4" fill="${c}"/>` : `<path d="${curve(pt)} L${pt.at(-1)[0].toFixed(1)} ${bot} L${pt[0][0].toFixed(1)} ${bot} Z" fill="url(#${gid})"/><path d="${curve(pt)}" fill="none" stroke="${c}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>`).join('')
+    + arr.map((v, i) => v == null ? '' : `<circle cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="2.1" fill="${c}" stroke="#fff" stroke-width=".9"/>`).join('');
+  const last = arr => { for(let i = arr.length - 1; i >= 0; i--) if(arr[i] != null) return [i, arr[i]]; return null; };
+  const grad = (gid, c, o) => `<linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c}" stop-opacity="${o}"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></linearGradient>`;
+  let g = `<svg viewBox="0 0 ${W} ${H}" role="img"><defs>${grad(id + 's', SC, .16)}${grad(id + 'p', PC, .13)}</defs>`;
+  if(wk0 < n) g += `<rect x="${x(wk0) - 4}" y="${T}" width="${x(n - 1) - x(wk0) + 8}" height="${bot - T}" fill="#f1f5f9"/>`;
+  [1, 3, 10, 30, 100].forEach(t => { g += `<line x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}" stroke="#eef2f7"/><text x="${L - 7}" y="${y(t) + 3.5}" font-size="9" fill="#94a3b8" text-anchor="end">${t}</text>`; });
+  ds.forEach((d, i) => { if(i % 7 === 0) g += `<line x1="${x(i)}" x2="${x(i)}" y1="${T}" y2="${bot}" stroke="#f3f5f9"/><text x="${x(i)}" y="${H - 6}" font-size="9" fill="#94a3b8" text-anchor="${i ? 'middle' : 'start'}">${rpSlash(d)}</text>`; });
+  g += series(pv, PC, id + 'p') + series(sv, SC, id + 's');
+  /* 끝 순위 배지 (둘이 겹치면 위아래로 벌림) */
+  const ends = [[last(sv), SC], [last(pv), PC]].filter(e => e[0]).map(([[i, v], c]) => ({ i, v, c, cy: y(v) }));
+  if(ends.length === 2 && Math.abs(ends[0].cy - ends[1].cy) < 15){ const a = ends[0].cy <= ends[1].cy ? 0 : 1; ends[a].cy -= 8; ends[1 - a].cy += 8; }
+  ends.forEach(e => { const t = `${e.v}위`, w = 10 + t.length * 6.2, bx = Math.min(W - w - 1, x(e.i) + 6), by = Math.min(bot - 8, Math.max(T + 8, e.cy));
+    g += `<rect x="${bx}" y="${by - 8}" width="${w}" height="16" rx="8" fill="${e.c}"/><text x="${bx + w / 2}" y="${by + 3.6}" font-size="9.5" font-weight="800" fill="#fff" text-anchor="middle">${t}</text>`; });
+  if(!last(pv)) g += `<rect x="${W - R - 104}" y="${bot - 26}" width="104" height="17" rx="8.5" fill="#fff" stroke="#e2e8f0"/><text x="${W - R - 52}" y="${bot - 14.2}" font-size="8.8" fill="#0f766e" text-anchor="middle">인기 4주 내내 TOP100 밖</text>`;
+  return g + '</svg>';
+}
+/* 표지 평점: 이름 기준으로 기간 안 첫·마지막 평점 */
+function rpRating(name, from, to){
+  const k = getGameKey(name), vals = [];
+  ['sales', 'popular'].forEach(st => (rawStore[st]?.rows || []).forEach(r => { const d = rowDate(r); if(d >= from && d <= to && getGameKey(gameName(r)) === k){ const v = parseFloat(scoreOf(r)); if(!isNaN(v)) vals.push([d, v]); } }));
+  vals.sort((a, b) => a[0].localeCompare(b[0]));
+  return vals.length ? { a: vals[0][1], b: vals.at(-1)[1] } : null;
+}
 function rpBuild(mon){
   const pmon = mkAddDays(mon, -7), end = mkAddDays(mon, 6);
   const firstOf = (s, k, name) => mkFirstChartDate(mkFirstSeenCache[s], k, name);
@@ -5683,7 +5733,7 @@ function rpPubClean(p){
 /* ---- 리포트 그리기 ---- */
 function rpRender(D){
   const S = D.S, R = v => Math.round(v), esc = escapeHtml, cut = (t, n) => t.length > n ? t.slice(0, n) + '…' : t;
-  const relPages = rpRelPaginate(D), isFirst = f => f && f >= D.pmon, PAGES = 3 + relPages.length, period = rpWeekRange(D.mon);
+  const relPages = rpRelPaginate(D), isFirst = f => f && f >= D.pmon, PAGES = 4 + relPages.length, period = rpWeekRange(D.mon);
   const run = n => `<div class="rp-run"><span><b>Game Market Intelligence</b> · 주간 리포트</span><span>${period} · ${n}/${PAGES}</span></div>`;
   const foot = `<div class="rp-foot"><span>Google Play 국내 매출·인기 순위(일별 TOP100) · 신작 정보는 순위 데이터와 연결하지 않음 · '첫 차트인'은 수집 기록 기준</span><span>발행 ${D.issue}</span></div>`;
   /* 1쪽 분석: 고정 질문 4개에 결론 한 줄 + 근거 한 줄. 맨 위 한 문장은 질문들의 판정을 이어 붙임.
@@ -5730,12 +5780,9 @@ function rpRender(D){
     return `<div class="rp-t4"><div class="l">${c}</div><div class="v">${n}<span class="${d > 0 ? 'u' : d < 0 ? 'd' : ''}">${d == null ? '' : d ? `${d > 0 ? '▲' : '▼'}${Math.abs(d)}` : '유지'}</span></div></div>`; }).join('');
   const relPt = `신작(모바일·PC): 이 주 <b>${D.relLast.length}개</b> 출시 · 다음 주(${rpDot(D.issue)} – ${rpDot(mkAddDays(D.issue, 6))}) <b>${D.relNext.length}개</b> 예정 → 4쪽`;
   const qb = (no, t, c, e) => `<div class="rp-q"><div class="t">${no} · ${t}</div><div class="c">${c}</div><div class="e">${e}</div></div>`;
-  const p1 = `<section class="rp-page">${run(1)}
-    <div class="rp-eyebrow">WEEKLY MARKET REPORT</div>
-    <h1>주간 모바일 게임 시장 리포트</h1>
-    <div class="rp-lead">${rpWeekName(D.mon)} · ${period} · 전주 대비</div>
-    <div class="rp-hl">${headline}</div>
-    <h2>이번 주 분석</h2>
+  const p1 = `<section class="rp-page">${run(2)}
+    <h2 class="first">이번 주 분석 <small>${rpWeekName(D.mon)} · ${period} · 전주 대비</small></h2>
+    <div class="rp-hl" style="margin:1mm 0 6mm">${headline}</div>
     <div class="rp-qs">
       ${qb(1, '신작, 차트 재진입한 게임들의 성적은?', q1c, q1e)}
       ${qb(2, '매출이 급등한 게임은?', q2c, q2e)}
@@ -5756,7 +5803,7 @@ function rpRender(D){
     const icon = getIconUrlForGame(x.n);
     return `<tr><td class="p">${x.pos}</td><td class="g"><span class="ic">${icon ? `<img src="${escapeAttr(icon)}" alt="" onerror="this.remove()">` : ''}</span>${esc(x.n)}</td><td class="v">${R(x.avg)}위</td><td class="tr">${tr}</td></tr>`;
   }).join('')}</table>`;
-  const p3 = `<section class="rp-page">${run(3)}
+  const p3 = `<section class="rp-page">${run(4)}
     <h2 class="first">주간 순위표 TOP ${RP_TOP_N} <small>7일 평균 순위 · 증감은 전주 순위표 대비</small></h2>
     <div class="rp-cols">
       <div><h3><span class="rp-tag bg-sales">매출</span></h3>${rkTable(S.sales.top, S.sales.prev.length)}</div>
@@ -5784,7 +5831,7 @@ function rpRender(D){
     if(PS.onlyP >= 5) out.push(['인기 상위 상당수는 <b>매출로 이어지지 않습니다</b> (추정: 광고·저과금).', `인기 30위 안·매출 100위 밖 ${PS.onlyP}개`]);
     return out;
   })();
-  const p2 = `<section class="rp-page">${run(2)}
+  const p2 = `<section class="rp-page">${run(3)}
     <h2 class="first">매출·인기 포지션 <small>주간 평균 · 양쪽 TOP100 ${D.both}개${D.prevBoth != null ? ` (전주 ${D.prevBoth})` : ''} · 형태는 순위 차 2배 기준</small></h2>
     <div class="rp-fill"><div>
     <h3 class="rp-sub">형태 분포 <small>( ) 전주 대비</small></h3>
@@ -5811,11 +5858,32 @@ function rpRender(D){
     return `<tr class="${x.first ? 'g1' : ''}"><td class="d">${x.first ? `${rpSlash(r.d)} ${dow}` : ''}</td><td class="g"><span class="ic">${/^https?:/.test(r.ic) ? `<img src="${escapeAttr(r.ic)}" alt="" onerror="this.remove()">` : ''}</span>${esc(r.n)}</td><td class="pf">${esc(calPlatformShort(r.pf))}</td><td>${relTag(r.t)}</td><td class="pb">${esc(rpPubClean(r.p))}</td></tr>`; };
   const relPart = pt => `<div class="rp-sec${pt.sec.box ? ' box' : ''}"><div class="rp-rel2-h">${pt.sec.title}${pt.cont ? ' <span>(이어서)</span>' : pt.sec.sub ? ` <span>${pt.sec.sub}</span>` : ''}</div>`
     + (pt.sec.list.length ? `<table class="rp-rel2"><colgroup><col style="width:20mm"><col><col style="width:22mm"><col style="width:17mm"><col style="width:36mm"></colgroup><tr><th>날짜</th><th>게임</th><th>플랫폼</th><th>유형</th><th>퍼블리셔</th></tr>${pt.rows.map(relRow).join('')}</table>` : '<div class="rp-empty">해당 일정 없음</div>') + '</div>';
-  const p4 = relPages.map((pg, i) => `<section class="rp-page">${run(4 + i)}
+  const p4 = relPages.map((pg, i) => `<section class="rp-page">${run(5 + i)}
     ${i === 0 ? `<h2 class="first">신작 일정 <small>신작 정보 기준 · 모바일·PC (같은 날은 모바일 → 멀티 → PC 순) · 순위 데이터와 별개</small></h2>${D.relLast.length ? relBand(D.relLast, D.mon) : ''}` : ''}
     ${pg.parts.map(relPart).join('')}
     ${foot}</section>`).join('');
-  return p1 + p2 + p3 + p4;  /* 1 요약 → 2 포지션·장르·차트인 → 3 순위표 → 4~ 신작 */
+  /* 표지: 주간 매출 TOP3. 장르·퍼블리셔는 구글 데이터 그대로 */
+  const SI = mkGetIndex('sales'), PI = mkGetIndex('popular'), c0 = mkAddDays(D.mon, -21), cds = [];
+  for(let d = c0; d <= D.end; d = mkAddDays(d, 1)) cds.push(d);
+  const wk0 = cds.indexOf(D.mon), sr = (idx, k) => cds.map(d => idx.byDate.get(d)?.get(k)?.rank ?? null);
+  const covers = S.sales.top.slice(0, 3).map((t, i) => {
+    const pc = S.popular.ca.get(t.key), pp = S.popular.pa.get(t.key), rt = rpRating(t.n, c0, D.end), icon = getIconUrlForGame(t.n);
+    const rd = rt ? Math.round((rt.b - rt.a) * 10) / 10 : 0;
+    return `<div class="rp-cv"><div>
+        <div class="rp-cv-hd"><div class="rp-cv-ic">${icon ? `<img class="ic" src="${escapeAttr(playIconSize(icon, 256))}" alt="" onerror="this.style.visibility='hidden'">` : ''}<img class="md" src="img/medal-${i + 1}.png" alt="${i + 1}위"></div>
+          <div><div class="nm">${esc(t.n)}</div><div class="sb">${esc(rpPubClean(t.p) || '-')} · ${esc(t.g || '-')}</div></div></div>
+        <div class="st">매출 <b>${R(t.avg)}위</b> <i>(전주 ${t.prevPos ? `${t.prevPos}위` : '순위권 밖'})</i><br>
+          인기 <b>${pc ? `${R(pc.rank)}위` : 'TOP100 밖'}</b>${pc ? ` <i>(전주 ${pp ? `${R(pp.rank)}위` : '순위권 밖'})</i>` : ''}<br>
+          평점 <b>${rt ? rt.b.toFixed(1) : '-'}</b>${rt ? ` <i>(4주 전 ${rt.a.toFixed(1)})</i> ${rd ? `<span class="${rd > 0 ? 't-up' : 't-down'}" style="font-weight:800">${rd > 0 ? '▲' : '▼'}${Math.abs(rd).toFixed(1)}</span>` : '<i>변동 없음</i>'}` : ''}</div>
+      </div><div><div class="rp-cv-pl"><span class="s">매출 순위</span><span class="p">인기 순위</span></div>${rpCoverChart(sr(SI, t.key), sr(PI, t.key), cds, wk0, `rpcv${i}`)}</div></div>`; }).join('');
+  const cover = `<section class="rp-page">${run(1)}
+    <div class="rp-eyebrow">WEEKLY MARKET REPORT</div>
+    <h1>주간 모바일 게임 시장 리포트</h1>
+    <div class="rp-lead">${rpWeekName(D.mon)} · ${period} · 이번 주 매출 TOP3</div>
+    <div class="rp-cv-list">${covers || '<div class="rp-empty">이번 주 매출 기록이 없습니다.</div>'}</div>
+    <div class="rp-cv-note">순위는 주 평균 · 차트는 최근 4주 일간 순위(로그 눈금, 회색 띠 = 이번 주) · 선이 끊긴 날은 TOP100 밖</div>
+    ${foot}</section>`;
+  return cover + p1 + p2 + p3 + p4;  /* 표지 TOP3 → 1 분석 → 2 포지션·장르 → 3 순위표 → 4~ 신작 */
 }
 
 async function fetchAllData(){
