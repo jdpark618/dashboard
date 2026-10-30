@@ -1041,7 +1041,6 @@ html.panel-lock { overflow: hidden; }
   <section id="rankTools" class="card rounded-xl px-4 py-3 sticky z-20 shadow-lg shadow-black/30">
     <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
       <div class="relative flex-1 min-w-[200px] max-w-[300px]"><input id="rankSearch" class="mk-sel w-full pr-7" placeholder="순위에서 게임 검색" autocomplete="off" oninput="rankState.q = this.value; renderRanking()"><button type="button" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-200 text-xs" onclick="document.getElementById('rankSearch').value=''; rankState.q=''; renderRanking()" aria-label="검색 지우기"><i class="fa-solid fa-xmark"></i></button></div>
-      <div class="flex flex-wrap items-center gap-1.5" id="rankJumps"></div>
       <span class="hidden lg:block w-px h-5 bg-slate-700" aria-hidden="true"></span>
       <div class="flex flex-wrap items-center gap-1.5 flex-1" id="rankFilters"></div>
     </div>
@@ -3593,7 +3592,6 @@ async function detailEnsureRange(){
 }
 
 /* ---------- 전체 순위 페이지 (인기·매출 1~100위) ---------- */
-const RANK_JUMPS = [[1, 10], [11, 30], [31, 50], [51, 100]];
 const rankState = { store: 'popular', filter: '', genre: '', pub: '', q: '', sort: 'rank' };
 
 /* 기준일 100개 순위 + 전일 대비 변동 (이미 받아 둔 데이터만 사용) */
@@ -3617,12 +3615,6 @@ function openRanking(store){
 }
 function rankSetStore(s){ rankState.store = s; renderRanking(); }
 function rankSetFilter(f){ rankState.filter = rankState.filter === f ? '' : f; renderRanking(); }
-/* 구간 이동: 보이는 열(넓은 화면은 인기 열 기준, 두 열은 같은 높이로 줄이 맞음) */
-function rankJump(from){
-  const st = innerWidth >= 1024 ? 'popular' : rankState.store;
-  const el = [...document.querySelectorAll(`#rankList-${st} [data-rank]`)].find(li => Number(li.dataset.rank) >= from);
-  if(el) el.scrollIntoView({ block: 'start', behavior: 'smooth' });
-}
 
 /* 칸 이름 → 순위 인덱스 키 (첫 차트인 판정용) */
 function rankIndexKeys(idx, d){
@@ -3648,10 +3640,6 @@ function renderRanking(){
     });
   });
 
-  /* 구간 이동 (보고 있는 구간에 불) */
-  document.getElementById('rankJumps').innerHTML = '<span class="text-[11px] muted mr-0.5">구간</span>' + RANK_JUMPS.map(([a, b]) =>
-    `<button type="button" class="cal-chip !py-1 !px-2.5 !text-[11px]${sort !== 'rank' ? ' opacity-40 pointer-events-none' : ''}" data-from="${a}" data-to="${b}" onclick="rankJump(${a})" ${sort !== 'rank' ? 'title="순위순일 때만 쓸 수 있습니다"' : ''}>${a}–${b}</button>`).join('');
-
   /* 빠른 필터 + 장르 + 퍼블리셔 (인기·매출 합산 개수) */
   const all = [...data.popular.items, ...data.sales.items], count = f => all.filter(x => rankMatchFilter(x, f)).length;
   const fchip = (f, text, cls) => `<button type="button" class="cal-chip !py-1 !px-2.5 !text-[11px] ${filter === f ? 'on' : ''}" onclick="rankSetFilter('${f}')" aria-pressed="${filter === f}"><span class="${cls}">${text}</span> <b>${count(f)}</b></button>`;
@@ -3674,7 +3662,7 @@ function renderRanking(){
       const sep = [10, 30, 50].includes(x.rank) && sort === 'rank' && !filter && !genre && !pub && !q ? ' border-b-2 border-b-slate-700' : '';
       const chg = x.change === 'NEW' ? (x.isFirst ? '<span class="t-new text-[11px] font-semibold">NEW</span>' : '<span class="t-new text-[11px] font-semibold">재진입</span>')
         : x.change ? `<span class="text-[11px] font-semibold ${x.change > 0 ? 'rank-up' : 'rank-down'}">${x.change > 0 ? '▲' : '▼'}${Math.abs(x.change)}</span>` : '<span class="text-[11px] muted">-</span>';
-      return `<li data-rank="${x.rank}" data-key="${escapeAttr(getGameKey(x.name))}" class="group flex items-center gap-2.5 py-2 px-2 rounded-lg cursor-pointer hover:bg-slate-800/60 transition-colors scroll-mt-40${sep}${getGameKey(x.name) === openKey ? ' bg-indigo-500/15' : ''}" onclick="openGameDetail('${escapeAttr(x.name).replace(/&#039;/g, "\\'")}')">
+      return `<li data-rank="${x.rank}" data-key="${escapeAttr(getGameKey(x.name))}" class="group flex items-center gap-2.5 py-2 px-2 rounded-lg cursor-pointer hover:bg-slate-800/60 transition-colors${sep}${getGameKey(x.name) === openKey ? ' bg-indigo-500/15' : ''}" onclick="openGameDetail('${escapeAttr(x.name).replace(/&#039;/g, "\\'")}')">
         <span class="w-7 text-right shrink-0 font-bold ${x.rank <= 3 ? 'text-slate-50 text-sm' : 'text-slate-400 text-xs'}">${x.rank}</span>
         ${x.icon ? `<img src="${escapeAttr(x.icon)}" class="w-8 h-8 rounded-lg object-cover bg-slate-800 shrink-0" alt="" loading="lazy" onerror="this.style.visibility='hidden'">` : '<span class="w-8 h-8 rounded-lg bg-slate-800 shrink-0"></span>'}
         <div class="min-w-0 flex-1"><div class="text-[13px] font-medium truncate text-slate-100"><button type="button" class="mr-1 text-[11px] align-[1px] ${x.watch ? 'text-amber-300' : 'text-slate-500 hover:text-amber-300 opacity-0 group-hover:opacity-100 focus:opacity-100'}" onclick="event.stopPropagation(); mkWatchToggle('${escapeAttr(x.name).replace(/&#039;/g, "\\'")}')" title="${x.watch ? '관심 게임에서 빼기' : '관심 게임에 추가'}" aria-label="${x.watch ? '관심 게임에서 빼기' : '관심 게임에 추가'}"><i class="fa-${x.watch ? 'solid' : 'regular'} fa-star"></i></button>${escapeHtml(x.name)}</div><div class="text-[11px] muted truncate mt-0.5">${meta.join('<span class="mx-1 text-slate-600">·</span>')}</div></div>
@@ -3682,18 +3670,9 @@ function renderRanking(){
       </li>`;
     }).join('') : `<li class="text-xs muted text-center py-10">조건에 맞는 게임이 없습니다</li>`;
   });
-  rankOnScroll();
 }
-/* 스크롤: 보고 있는 구간 칩에 불 */
-function rankOnScroll(){
-  if(currentView !== 'ranking') return;
-  const st = innerWidth >= 1024 ? 'popular' : rankState.store, bar = document.getElementById('rankTools').getBoundingClientRect().bottom;
-  const first = [...document.querySelectorAll(`#rankList-${st} li[data-rank]`)].find(li => li.getBoundingClientRect().bottom > bar + 8);
-  const r = first ? Number(first.dataset.rank) : 0;
-  document.querySelectorAll('#rankJumps [data-from]').forEach(b => b.classList.toggle('on', r >= Number(b.dataset.from) && r <= Number(b.dataset.to)));
-}
+/* 맨 위로 버튼: 스크롤을 내리면 표시 */
 window.addEventListener('scroll', () => {
-  rankOnScroll();
   document.getElementById('toTopBtn')?.classList.toggle('hidden', window.scrollY < 600);
 }, { passive: true });
 /* 슬라이드 패널이 하나라도 열려 있으면 뒤쪽 페이지 스크롤 잠금 (스크롤바가 겹쳐 보이지 않게) */
