@@ -75,10 +75,10 @@ body { background:var(--bg); font-family:'Pretendard Variable',Pretendard,-apple
 .tab:hover { color:#f1f5f9; } .tab:hover i { color:#94a3b8; }
 .tab.active { color:#c7d2fe; border-color:#6366f1; } .tab.active i { color:#818cf8; }
 .top-nav > div > .tab:first-child { padding-left:4px; }  /* 첫 메뉴를 서비스명과 같은 선에서 시작 */
-/* DB 메뉴: 오른쪽 보조 메뉴를 둥근 칩으로 (점 색 = 매출 주황 · 인기 청록 · 신작 남색) */
-.tab.tab-sub { font-size:11.5px; font-weight:500; color:#94a3b8; padding:4px 11px; margin-left:6px; border:1px solid #334155; border-radius:9999px; background:rgba(30,41,59,.5); display:inline-flex; align-items:center; gap:6px; }
-.tab.tab-sub .dot { width:6px; height:6px; border-radius:50%; background:var(--dot); }
-.tab.tab-sub:hover { color:#e2e8f0; border-color:#475569; } .tab.tab-sub.active { color:#e2e8f0; border-color:var(--dot); background:rgba(30,41,59,.95); }
+/* DB 펼침 목록 */
+.db-item { display:flex; align-items:center; gap:8px; width:100%; text-align:left; font-size:12px; color:#cbd5e1; padding:7px 10px; border-radius:6px; }
+.db-item i { width:14px; color:#64748b; font-size:11px; } .db-item:hover { background:#1e293b; color:#f1f5f9; }
+.db-item.on { background:rgba(99,102,241,.15); color:#c7d2fe; } .db-item.on i { color:#818cf8; }
 .rank-up { color:var(--c-up); }
 .rank-down { color:var(--c-down); }
 .rank-flat { color:#94a3b8; }
@@ -538,19 +538,19 @@ html.panel-lock { overflow: hidden; }
     <button class="tab" data-view="search" onclick="switchView('search')">
       <i class="fa-solid fa-chart-line mr-1.5"></i> 순위 비교
     </button>
-    <!-- DB 메뉴는 오른쪽 끝에, 보조 메뉴로 -->
+    <!-- DB 메뉴: 원본 데이터가 필요할 때만 쓰므로 오른쪽 끝 'DB ▾' 하나로 묶고, 누르면 목록 -->
     <span class="flex-1 min-w-4" aria-hidden="true"></span>
-    <button class="tab tab-sub" data-view="sales" onclick="switchView('sales')" style="--dot:#f59e0b">
-      <span class="dot" aria-hidden="true"></span>매출 DB
-    </button>
-    <button class="tab tab-sub" data-view="popular" onclick="switchView('popular')" style="--dot:#2dd4bf">
-      <span class="dot" aria-hidden="true"></span>인기 DB
-    </button>
-    <button class="tab tab-sub" data-view="newReleases" onclick="switchView('newReleases')" style="--dot:#818cf8">
-      <span class="dot" aria-hidden="true"></span>신작 DB
+    <button id="dbMenuBtn" class="tab" type="button" onclick="dbMenuToggle()" aria-haspopup="menu" aria-expanded="false">
+      <i class="fa-solid fa-database mr-1.5"></i><span id="dbMenuLabel">DB</span><i class="fa-solid fa-chevron-down ml-1.5 text-[9px]"></i>
     </button>
   </div>
 </nav>
+<!-- DB 목록: 메뉴 줄은 가로 스크롤이라 그 밖(body)에 두고 버튼 아래에 띄움 -->
+<div id="dbMenu" class="hidden fixed z-40 w-40 rounded-lg border border-slate-700 bg-slate-900 shadow-xl shadow-black/40 p-1" role="menu">
+  <button type="button" class="db-item" role="menuitem" data-view="sales" onclick="dbMenuGo('sales')"><i class="fa-solid fa-coins"></i>매출 DB</button>
+  <button type="button" class="db-item" role="menuitem" data-view="popular" onclick="dbMenuGo('popular')"><i class="fa-solid fa-fire"></i>인기 DB</button>
+  <button type="button" class="db-item" role="menuitem" data-view="newReleases" onclick="dbMenuGo('newReleases')"><i class="fa-solid fa-table-list"></i>신작 DB</button>
+</div>
 
 <main>
 <!-- DASHBOARD VIEW -->
@@ -2033,10 +2033,32 @@ function dashChgSet(k){
   document.querySelectorAll('#dashChgSel button, #dashChg > [data-chg]').forEach(el => el.classList.toggle('on', el.dataset.chg === k));
 }
 
+/* DB 메뉴 (DB ▾): 버튼 아래에 목록을 띄움. 바깥 클릭·Esc·스크롤이면 닫힘 */
+const DB_VIEWS = { sales: '매출', popular: '인기', newReleases: '신작' };
+function dbMenuToggle(force){
+  const menu = document.getElementById('dbMenu'), btn = document.getElementById('dbMenuBtn');
+  const open = force ?? menu.classList.contains('hidden');
+  if(open){
+    const r = btn.getBoundingClientRect();
+    menu.style.top = `${r.bottom + 4}px`; menu.style.left = `${Math.max(8, Math.min(r.right - 160, innerWidth - 168))}px`;
+    menu.querySelectorAll('.db-item').forEach(b => b.classList.toggle('on', b.dataset.view === currentView));
+  }
+  menu.classList.toggle('hidden', !open); btn.setAttribute('aria-expanded', String(open));
+}
+function dbMenuGo(view){ dbMenuToggle(false); switchView(view); }
+document.addEventListener('click', e => { if(!e.target.closest('#dbMenu, #dbMenuBtn')) dbMenuToggle(false); });
+document.addEventListener('keydown', e => { if(e.key === 'Escape') dbMenuToggle(false); });
+window.addEventListener('scroll', () => dbMenuToggle(false), { passive: true });
+window.addEventListener('resize', () => dbMenuToggle(false));
+document.getElementById('topNav')?.addEventListener('scroll', () => dbMenuToggle(false), { passive: true });
+
 function switchView(view){
   currentView=view;
   if(view !== 'report' && typeof RP_BASE_TITLE !== 'undefined') document.title = RP_BASE_TITLE;
   document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.view===view));
+  /* DB 화면이면 'DB ▾'에 밑줄과 지금 DB 이름 (DB · 매출) */
+  document.getElementById('dbMenuBtn')?.classList.toggle('active', view in DB_VIEWS);
+  setText('dbMenuLabel', view in DB_VIEWS ? `DB · ${DB_VIEWS[view]}` : 'DB');
   /* 고정 메뉴 아래에서 새 화면이 시작되게, 휴대폰은 현재 메뉴가 보이도록 가로 스크롤 */
   const nav = document.getElementById('topNav'), act = nav.querySelector('.tab.active');
   if(window.scrollY > nav.offsetTop) window.scrollTo({ top: nav.offsetTop });
