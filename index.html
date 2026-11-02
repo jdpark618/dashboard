@@ -69,15 +69,47 @@ const bootFetch = (() => {
 body { background:var(--bg); font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFont,system-ui,'Apple SD Gothic Neo','Malgun Gothic',sans-serif; font-variant-numeric:tabular-nums; letter-spacing:-0.01em; }
 .card { background:var(--surface); border:1px solid var(--line); }
 .muted { color:#94a3b8; }
-/* 상단 메뉴: 이름은 밝게, 아이콘은 한 단계 어둡게 (선택 메뉴는 인디고 밑줄) */
-.tab { font-size:12px; font-weight:600; color:#cbd5e1; padding:10px 15px; border-bottom:2px solid transparent; cursor:pointer; }
-.tab i { color:#64748b; }
-.tab:hover { color:#f1f5f9; } .tab:hover i { color:#94a3b8; }
-.tab.active { color:#c7d2fe; border-color:#6366f1; } .tab.active i { color:#818cf8; }
-.top-nav > div > .tab:first-child { padding-left:4px; }  /* 첫 메뉴를 서비스명과 같은 선에서 시작 */
-/* DB 펼침 목록 */
-.db-item { display:flex; align-items:center; gap:8px; width:100%; text-align:left; font-size:12px; color:#cbd5e1; padding:7px 10px; border-radius:6px; }
-.db-item i { width:14px; color:#64748b; font-size:11px; } .db-item:hover { background:#1e293b; color:#f1f5f9; }
+/* 왼쪽 사이드바: 넓을 때 아이콘+이름(216px), 접으면 아이콘만(64px). 1024px 아래는 ☰ 로 여는 서랍 */
+:root { --sb-w:216px; }
+@media (min-width:1024px){ html.sb-mini { --sb-w:64px; } }
+.side-nav { position:fixed; top:0; left:0; bottom:0; width:var(--sb-w); z-index:45; display:flex; flex-direction:column; background:#0a1020; border-right:1px solid var(--line); transition:width .18s, transform .2s; }
+.sb-brand { display:flex; align-items:center; gap:10px; padding:18px 18px 6px; }
+.sb-brand i { color:#818cf8; font-size:17px; width:28px; text-align:center; flex:none; }
+.sb-brand b { font-size:14px; font-weight:800; line-height:1.25; color:#f1f5f9; }
+.sb-stat { font-size:11px; color:#94a3b8; padding:0 18px 14px 56px; line-height:1.6; border-bottom:1px solid var(--line); }
+.sb-scroll { flex:1; overflow-y:auto; padding:6px 10px; }
+.sb-group { font-size:10.5px; font-weight:700; letter-spacing:.08em; color:#64748b; padding:16px 10px 6px; }
+.sb-item { display:flex; align-items:center; gap:12px; width:100%; height:38px; padding:0 10px; border-radius:9px; font-size:13px; font-weight:600; color:#cbd5e1; text-align:left; white-space:nowrap; }
+.sb-item i { width:18px; text-align:center; color:#64748b; font-size:14px; flex:none; }
+.sb-item:hover { background:#141e33; color:#f1f5f9; } .sb-item:hover i { color:#94a3b8; }
+.sb-item.active { background:rgba(99,102,241,.16); color:#c7d2fe; box-shadow:inset 3px 0 0 #6366f1; } .sb-item.active i { color:#818cf8; }
+.sb-foot { padding:12px 10px 14px; border-top:1px solid var(--line); display:flex; flex-direction:column; gap:6px; }
+.sb-foot .hd-btn { width:100%; justify-content:flex-start; gap:12px; padding:0 10px; height:36px; }
+.sb-foot .hd-btn i { width:18px; text-align:center; }
+.sb-foot .sb-row { display:flex; gap:6px; } .sb-foot .sb-row .hd-btn { flex:1; }
+/* 접힌 상태: 글자 숨기고 아이콘만 가운데 */
+@media (min-width:1024px){
+html.sb-mini .sb-tx, html.sb-mini .sb-stat, html.sb-mini .sb-brand b { display:none; }
+html.sb-mini .sb-brand { justify-content:center; padding:18px 0 14px; border-bottom:1px solid var(--line); }
+html.sb-mini .sb-group { font-size:0; padding:10px 0 4px; margin:0 10px; border-top:1px solid var(--line); }
+html.sb-mini .sb-group:first-child { border-top:0; }
+html.sb-mini .sb-item, html.sb-mini .sb-foot .hd-btn { justify-content:center; padding:0; gap:0; }
+html.sb-mini .sb-foot .sb-row { flex-direction:column; }
+html.sb-mini #sbFold i { transform:rotate(180deg); }
+html.sb-mini .hd-new { position:absolute; top:-5px; right:-5px; padding:0 4px; } .sb-foot .hd-report { position:relative; }
+}
+.sb-main { padding-left:var(--sb-w); transition:padding-left .18s; }
+/* 휴대폰·태블릿: 위 얇은 바 + 서랍 */
+.m-bar { display:none; }
+.sb-dim { display:none; }
+@media (max-width:1023px){
+  .sb-main { padding-left:0; }
+  .side-nav { width:248px; transform:translateX(-100%); box-shadow:0 0 40px rgba(0,0,0,.6); }
+  html.sb-open .side-nav { transform:none; }
+  html.sb-open .sb-dim { display:block; position:fixed; inset:0; z-index:44; background:rgba(0,0,0,.5); }
+  #sbFold { display:none; }
+  .m-bar { display:flex; align-items:center; gap:10px; position:sticky; top:0; z-index:30; height:52px; padding:0 14px; background:rgba(7,11,20,.94); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); border-bottom:1px solid var(--line); }
+}
 .db-item.on { background:rgba(99,102,241,.15); color:#c7d2fe; } .db-item.on i { color:#818cf8; }
 .rank-up { color:var(--c-up); }
 .rank-down { color:var(--c-down); }
@@ -302,9 +334,6 @@ html.panel-lock { overflow: hidden; }
 .page-head { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 16px; }
 .page-head h2 { font-size:18px; font-weight:700; display:flex; align-items:center; gap:8px; }
 .page-head .sub { font-size:12px; color:#94a3b8; margin-top:3px; }
-/* 상단 메뉴: 스크롤해도 위에 고정, 넘치는 메뉴가 있으면 오른쪽 끝을 흐리게 */
-.top-nav { position:sticky; top:0; z-index:30; background:rgba(7,11,20,.94); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); border-bottom:1px solid var(--line); }
-.top-nav.fade-r { -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 40px),transparent); mask-image:linear-gradient(90deg,#000 calc(100% - 40px),transparent); }
 /* 조작 높이 2단계: 페이지 조작 32px, 카드 안 28px */
 .mk-seg button, .mk-tabs button { height:26px; display:inline-flex; align-items:center; }
 .mk-seg.sm button { height:22px; font-size:11px; padding:0 9px; }
@@ -513,52 +542,41 @@ html.panel-lock { overflow: hidden; }
 </head>
 
 <body class="text-slate-100 min-h-screen relative overflow-x-hidden">
-<div class="max-w-[1500px] mx-auto px-4 md:px-6 py-5">
-
-<header class="flex flex-col lg:flex-row lg:items-center justify-between gap-2 lg:gap-4 mb-1.5">
-  <!-- 왼쪽: 서비스명 + 모니터링 상태(기준일·동기화) / 오른쪽: 액션(리포트·새로고침)만 -->
-  <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
-    <i class="fa-solid fa-chart-line text-indigo-400"></i>
-    <h1 class="text-lg lg:text-xl font-bold">Game Market Intelligence</h1>
-    <span class="text-xs muted font-medium inline-flex items-center gap-2 whitespace-nowrap w-full sm:w-auto sm:ml-1 sm:pl-3 sm:border-l sm:border-slate-700"><span id="todayLabel"></span><span class="text-slate-700">|</span><span id="syncStatus" class="text-slate-400">● Google Play 확인 중</span></span>
+<script>try{ if(localStorage.getItem('sbMini') === '1') document.documentElement.classList.add('sb-mini'); }catch(e){}</script>
+<!-- 왼쪽 사이드바: 서비스명·동기화 상태 / 분석 · 일정 · RAW DATA 메뉴 / 아래 리포트·새로고침·접기 -->
+<aside id="sideNav" class="side-nav" aria-label="메뉴">
+  <div class="sb-brand"><i class="fa-solid fa-chart-line"></i><b>Game Market<br>Intelligence</b></div>
+  <div class="sb-stat"><div id="todayLabel"></div><div id="syncStatus" class="text-slate-400">● Google Play 확인 중</div></div>
+  <nav class="sb-scroll thin-scroll">
+    <div class="sb-group">분석</div>
+    <button class="sb-item active" data-view="dashboard" onclick="switchView('dashboard')" title="일간 브리핑"><i class="fa-solid fa-gauge-high"></i><span class="sb-tx">일간 브리핑</span></button>
+    <button class="sb-item" data-view="ranking" onclick="switchView('ranking')" title="전체 순위"><i class="fa-solid fa-list-ol"></i><span class="sb-tx">전체 순위</span></button>
+    <button class="sb-item" data-view="business" onclick="switchView('business')" title="시장 분석"><i class="fa-solid fa-chart-pie"></i><span class="sb-tx">시장 분석</span></button>
+    <button class="sb-item" data-view="search" onclick="switchView('search')" title="순위 비교"><i class="fa-solid fa-chart-line"></i><span class="sb-tx">순위 비교</span></button>
+    <div class="sb-group">일정</div>
+    <button class="sb-item" data-view="calendar" onclick="switchView('calendar')" title="신작 달력"><i class="fa-regular fa-calendar-days"></i><span class="sb-tx">신작 달력</span></button>
+    <!-- DB 메뉴: 원본 데이터가 필요할 때만 쓰는 메뉴라 맨 아래 묶음으로 -->
+    <div class="sb-group">RAW DATA</div>
+    <button class="sb-item" data-view="sales" onclick="switchView('sales')" title="매출 DB"><i class="fa-solid fa-coins"></i><span class="sb-tx">매출 DB</span></button>
+    <button class="sb-item" data-view="popular" onclick="switchView('popular')" title="인기 DB"><i class="fa-solid fa-fire"></i><span class="sb-tx">인기 DB</span></button>
+    <button class="sb-item" data-view="newReleases" onclick="switchView('newReleases')" title="신작 DB"><i class="fa-solid fa-table-list"></i><span class="sb-tx">신작 DB</span></button>
+  </nav>
+  <div class="sb-foot">
+    <button id="reportBtn" type="button" onclick="openReport()" class="hd-btn hd-report" title="주간 리포트"><i class="fa-regular fa-file-lines"></i><span class="sb-tx">주간 리포트</span><span id="reportNew" class="hd-new hidden">NEW</span></button>
+    <div class="sb-row">
+      <button id="refreshBtn" type="button" onclick="fetchAllData()" class="hd-btn" title="새로고침" aria-label="새로고침"><i class="fa-solid fa-rotate"></i><span class="sb-tx">새로고침</span></button>
+      <button id="sbFold" type="button" onclick="sbFold()" class="hd-btn !w-9 !flex-none !justify-center !p-0" title="메뉴 접기·펼치기" aria-label="메뉴 접기·펼치기"><i class="fa-solid fa-angles-left"></i></button>
+    </div>
   </div>
-  <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 [&>*]:whitespace-nowrap">
-    <button id="reportBtn" type="button" onclick="openReport()" class="hd-btn hd-report" title="주간 리포트"><i class="fa-regular fa-file-lines"></i>주간 리포트<span id="reportNew" class="hd-new hidden">NEW</span></button>
-    <button id="refreshBtn" type="button" onclick="fetchAllData()" class="hd-btn hd-icon" title="새로고침" aria-label="새로고침"><i class="fa-solid fa-rotate"></i></button>
-  </div>
-</header>
-
-<!-- TOP NAV -->
-<nav id="topNav" class="top-nav mb-5 overflow-x-auto">
-  <div class="flex items-center gap-1 whitespace-nowrap">
-    <button class="tab active" data-view="dashboard" onclick="switchView('dashboard')">
-      <i class="fa-solid fa-gauge-high mr-1.5"></i> 일간 브리핑
-    </button>
-    <button class="tab" data-view="ranking" onclick="switchView('ranking')">
-      <i class="fa-solid fa-list-ol mr-1.5"></i> 전체 순위
-    </button>
-    <button class="tab" data-view="business" onclick="switchView('business')">
-      <i class="fa-solid fa-chart-pie mr-1.5"></i> 시장 분석
-    </button>
-    <button class="tab" data-view="calendar" onclick="switchView('calendar')">
-      <i class="fa-regular fa-calendar-days mr-1.5"></i> 신작 달력
-    </button>
-    <button class="tab" data-view="search" onclick="switchView('search')">
-      <i class="fa-solid fa-chart-line mr-1.5"></i> 순위 비교
-    </button>
-    <!-- DB 메뉴: 원본 데이터가 필요할 때만 쓰므로 오른쪽 끝 'DB ▾' 하나로 묶고, 누르면 목록 -->
-    <span class="flex-1 min-w-4" aria-hidden="true"></span>
-    <button id="dbMenuBtn" class="tab" type="button" onclick="dbMenuToggle()" aria-haspopup="menu" aria-expanded="false">
-      <i class="fa-solid fa-database mr-1.5"></i><span id="dbMenuLabel">DB</span><i class="fa-solid fa-chevron-down ml-1.5 text-[9px]"></i>
-    </button>
-  </div>
-</nav>
-<!-- DB 목록: 메뉴 줄은 가로 스크롤이라 그 밖(body)에 두고 버튼 아래에 띄움 -->
-<div id="dbMenu" class="hidden fixed z-40 w-40 rounded-lg border border-slate-700 bg-slate-900 shadow-xl shadow-black/40 p-1" role="menu">
-  <button type="button" class="db-item" role="menuitem" data-view="sales" onclick="dbMenuGo('sales')"><i class="fa-solid fa-coins"></i>매출 DB</button>
-  <button type="button" class="db-item" role="menuitem" data-view="popular" onclick="dbMenuGo('popular')"><i class="fa-solid fa-fire"></i>인기 DB</button>
-  <button type="button" class="db-item" role="menuitem" data-view="newReleases" onclick="dbMenuGo('newReleases')"><i class="fa-solid fa-table-list"></i>신작 DB</button>
+</aside>
+<div class="sb-dim" onclick="sbDrawer(false)"></div>
+<div class="sb-main">
+<!-- 휴대폰·태블릿 위 바 -->
+<div id="mBar" class="m-bar">
+  <button type="button" onclick="sbDrawer(true)" class="hd-btn hd-icon" aria-label="메뉴 열기"><i class="fa-solid fa-bars"></i></button>
+  <i class="fa-solid fa-chart-line text-indigo-400"></i><b class="text-sm">Game Market Intelligence</b>
 </div>
+<div class="max-w-[1500px] mx-auto px-4 md:px-6 py-5">
 
 <main>
 <!-- DASHBOARD VIEW -->
@@ -1202,6 +1220,7 @@ html.panel-lock { overflow: hidden; }
 </div>
 
 </main>
+</div>
 
 <footer class="text-[11px] muted text-center py-5">
   jd
@@ -2044,37 +2063,18 @@ function dashChgSet(k){
   document.querySelectorAll('#dashChgSel button, #dashChg > [data-chg]').forEach(el => el.classList.toggle('on', el.dataset.chg === k));
 }
 
-/* DB 메뉴 (DB ▾): 버튼 아래에 목록을 띄움. 바깥 클릭·Esc·스크롤이면 닫힘 */
-const DB_VIEWS = { sales: '매출', popular: '인기', newReleases: '신작' };
-function dbMenuToggle(force){
-  const menu = document.getElementById('dbMenu'), btn = document.getElementById('dbMenuBtn');
-  const open = force ?? menu.classList.contains('hidden');
-  if(open){
-    const r = btn.getBoundingClientRect();
-    menu.style.top = `${r.bottom + 4}px`; menu.style.left = `${Math.max(8, Math.min(r.right - 160, innerWidth - 168))}px`;
-    menu.querySelectorAll('.db-item').forEach(b => b.classList.toggle('on', b.dataset.view === currentView));
-  }
-  menu.classList.toggle('hidden', !open); btn.setAttribute('aria-expanded', String(open));
-}
-function dbMenuGo(view){ dbMenuToggle(false); switchView(view); }
-document.addEventListener('click', e => { if(!e.target.closest('#dbMenu, #dbMenuBtn')) dbMenuToggle(false); });
-document.addEventListener('keydown', e => { if(e.key === 'Escape') dbMenuToggle(false); });
-window.addEventListener('scroll', () => dbMenuToggle(false), { passive: true });
-window.addEventListener('resize', () => dbMenuToggle(false));
-document.getElementById('topNav')?.addEventListener('scroll', () => dbMenuToggle(false), { passive: true });
+/* 사이드바: 접기(넓은 화면, 상태 기억) / 서랍 열기·닫기(좁은 화면) */
+function sbFold(){ const on = document.documentElement.classList.toggle('sb-mini'); try{ localStorage.setItem('sbMini', on ? '1' : '0'); }catch(e){} window.dispatchEvent(new Event('resize')); }
+function sbDrawer(open){ document.documentElement.classList.toggle('sb-open', open); }
+document.addEventListener('keydown', e => { if(e.key === 'Escape') sbDrawer(false); });
 
 function switchView(view){
   currentView=view;
   if(view !== 'report' && typeof RP_BASE_TITLE !== 'undefined') document.title = RP_BASE_TITLE;
-  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.view===view));
-  /* DB 화면이면 'DB ▾'에 밑줄과 지금 DB 이름 (DB · 매출) */
-  document.getElementById('dbMenuBtn')?.classList.toggle('active', view in DB_VIEWS);
-  setText('dbMenuLabel', view in DB_VIEWS ? `DB · ${DB_VIEWS[view]}` : 'DB');
-  /* 고정 메뉴 아래에서 새 화면이 시작되게, 휴대폰은 현재 메뉴가 보이도록 가로 스크롤 */
-  const nav = document.getElementById('topNav'), act = nav.querySelector('.tab.active');
-  if(window.scrollY > nav.offsetTop) window.scrollTo({ top: nav.offsetTop });
-  if(act && (act.offsetLeft < nav.scrollLeft || act.offsetLeft + act.offsetWidth > nav.scrollLeft + nav.clientWidth)) nav.scrollLeft = act.offsetLeft - 12;
-  navFadeSync();
+  document.querySelectorAll('.sb-item').forEach(x=>x.classList.toggle('active',x.dataset.view===view));
+  /* 새 화면은 맨 위에서 시작, 서랍은 닫음 */
+  if(window.scrollY > 0) window.scrollTo({ top: 0 });
+  sbDrawer(false);
   ['dashboard','ranking','business','search','calendar','database','report'].forEach(v => {
     const el = document.getElementById(`view-${v}`);
     if(el) el.classList.toggle('hidden', v==='database' ? !(view==='sales'||view==='popular'||view==='newReleases') : view!==v);
@@ -2121,12 +2121,6 @@ async function snapEl(btn, name){
   }finally{ btn.disabled = false; btn.innerHTML = icon; }
 }
 
-function navFadeSync(){
-  const nav = document.getElementById('topNav');
-  if(nav) nav.classList.toggle('fade-r', nav.scrollLeft + nav.clientWidth < nav.scrollWidth - 4);
-}
-document.getElementById('topNav')?.addEventListener('scroll', navFadeSync, { passive: true });
-window.addEventListener('resize', navFadeSync);
 
 const VALID_VIEWS = ['dashboard','ranking','business','calendar','sales','popular','newReleases','search','report'];
 function viewFromHash(){ const v = decodeURIComponent(location.hash.slice(1)).split('?')[0]; return VALID_VIEWS.includes(v) ? v : 'dashboard'; }
@@ -3658,7 +3652,7 @@ function renderRanking(){
   dashPairSet('rkCols', rankState.store);
   const { last, prev } = data.popular.last ? data.popular : data.sales;
   setText('rankSub', last ? `기준일 ${last}${prev ? ` · 변동은 전일(${mkShort(prev)}) 대비` : ''} · 게임을 누르면 상세` : '데이터 없음');
-  document.getElementById('rankTools').style.top = `${document.getElementById('topNav').offsetHeight}px`;
+  document.getElementById('rankTools').style.top = `${document.getElementById('mBar').offsetHeight}px`;
   /* 첫 차트인 판정용 첫 등장일 (처음 한 번 받고 다시 그림) */
   ['popular', 'sales'].forEach(st => { if(!mkFirstSeenCache[st] && !mkFirstSeenInFlight[st]) mkLoadFirstSeen(st).then(() => { if(currentView === 'ranking') renderRanking(); }).catch(() => {}); });
 
