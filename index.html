@@ -111,7 +111,7 @@ body { background:var(--bg); font-family:'Pretendard Variable',Pretendard,-apple
 /* 메뉴 접기 버튼 (위 바 맨 왼쪽): 펼침은 panel-left-close, 접힘은 panel-left-open */
 .sb-fold { position:fixed; z-index:46; top:12px; left:calc(var(--sb-w) - 40px); width:28px; height:28px; display:flex; align-items:center; justify-content:center; border-radius:8px; color:#64748b; border:1px solid transparent; transition:left .18s, background .15s, color .15s; }
 .sb-fold:hover { background:#141e33; color:#f1f5f9; }
-.sb-fold svg { width:17px; height:17px; stroke-width:2; }
+.sb-fold i { font-size:15px; line-height:1; }
 /* 접힌 상태: 사이드바 경계에 반쯤 걸친 둥근 버튼 */
 html.sb-mini .sb-fold { left:calc(var(--sb-w) - 14px); border-radius:50%; background:#0f172a; border-color:#334155; color:#94a3b8; }
 html.sb-mini .sb-fold:hover { background:#1e293b; color:#fff; }
@@ -131,6 +131,9 @@ html.sb-mini .sb-group.raw::before { display:none; }
 html.sb-mini .sb-rep .hd-new { position:absolute; top:3px; right:2px; margin:0; padding:0 3px; font-size:9px; line-height:14px; }
 /* 넓은 화면은 사이드바가 시장 분석 섹션 메뉴 역할 → 페이지 안 탭은 숨김 (좁은 화면은 그대로) */
 #mkSectionTabs { display:none; }
+/* 섹션이 다른 화면처럼 위 바 바로 아래(같은 간격)에서 시작 */
+#view-business > [id^="mkSec"] { margin-top:0 !important; }
+#mkLoading:not(.hidden) { margin-bottom:16px; }
 }
 .sb-main { padding-left:var(--sb-w); transition:padding-left .18s; }
 /* 위 얇은 바 (모든 화면): 왼쪽 현재 위치 / 오른쪽 기준일·동기화 상태 · 새로고침 · 주간 리포트 */
@@ -475,7 +478,7 @@ html.panel-lock { overflow: hidden; }
 .gd-hd-sep { display:none; width:1px; height:24px; background:#334155; flex:none; }
 .gd-shots { display:flex; gap:10px; overflow-x:auto; padding-bottom:6px; margin-bottom:12px; }
 .gd-shots:empty { display:none; }
-.gd-shots a { flex:none; display:block; border-radius:10px; overflow:hidden; border:1px solid var(--line); background:#0b1222; }
+.gd-shots .shot { flex:none; position:relative; display:block; border-radius:10px; overflow:hidden; border:1px solid var(--line); background:#0b1222; cursor:zoom-in; }
 .gd-shots img { display:block; height:200px; width:auto; }
 @media (min-width:1600px){ .gd-shots img { height:240px; } }
 .gd-desc { font-size:13px; line-height:1.75; color:#cbd5e1; white-space:pre-line; }
@@ -697,7 +700,7 @@ html.panel-lock { overflow: hidden; }
     <button class="sb-item" data-view="newReleases" onclick="switchView('newReleases')" data-tip="신작 DB"><i data-lucide="table-properties"></i><span class="sb-tx">신작 DB</span></button>
   </nav>
 </aside>
-<button id="sbFold" type="button" onclick="sbFold()" class="sb-fold" aria-label="메뉴 접기·펼치기"><i data-lucide="panel-left-close" class="fold-l"></i><i data-lucide="panel-left-open" class="fold-r"></i></button>
+<button id="sbFold" type="button" onclick="sbFold()" class="sb-fold" aria-label="메뉴 접기·펼치기"><i class="fa-solid fa-caret-left fold-l"></i><i class="fa-solid fa-caret-right fold-r"></i></button>
 <div id="sbFly" class="sb-fly" role="menu"><div class="t">시장 분석</div><div class="l"><button type="button" data-sec="structure" onclick="sbSec('structure')">시장 구조</button><button type="button" data-sec="change" onclick="sbSec('change')">순위 변동</button><button type="button" data-sec="monthly" onclick="sbSec('monthly')">월간/주간 순위</button><button type="button" data-sec="debut" onclick="sbSec('debut')">첫 차트인</button><button type="button" data-sec="releases" onclick="sbSec('releases')">신작 동향</button></div></div>
 <div class="sb-dim" onclick="sbDrawer(false)"></div>
 <div class="sb-main">
@@ -1388,7 +1391,7 @@ html.panel-lock { overflow: hidden; }
 
     <!-- 게임 정보: 스크린샷 · 설명 (수집기 DB_앱정보, 패키지명으로 한 줄만 읽음) -->
     <section id="gdInfo" class="gd-sec hidden">
-      <h4 class="text-sm font-semibold mb-2">게임 정보 <span id="gdInfoDate" class="text-[11px] muted font-normal ml-1"></span></h4>
+      <h4 class="text-sm font-semibold mb-2">게임 정보 <span id="gdInfoDate" class="text-[11px] muted font-normal ml-1"></span><span id="gdShotCount" class="text-[11px] muted font-normal ml-2"></span></h4>
       <div id="gdShots" class="gd-shots thin-scroll"></div>
       <div id="gdDesc" class="gd-desc clamp"></div>
       <button type="button" id="gdDescMore" class="gd-more hidden" onclick="gdDescToggle()">더보기</button>
@@ -3952,7 +3955,11 @@ async function gdLoadInfo(pkg){
     if(want !== detailCurrentName) return;
     sec.classList.toggle('hidden', !info);
     if(info){
-      document.getElementById('gdShots').innerHTML = info.shots.map((u, i) => `<a href="${escapeAttr(u)}" target="_blank" rel="noopener" title="스크린샷 ${i + 1} 크게 보기"><img src="${escapeAttr(u.replace(/=[whs]\d+[^/]*$/, '') + '=h480')}" data-o="${escapeAttr(u)}" alt="스크린샷 ${i + 1}" onerror="if(!this.dataset.f){ this.dataset.f = 1; this.src = this.dataset.o; } else this.closest('a').remove()"></a>`).join('');
+      /* 신작 상세와 같은 부품: 마우스를 올리면 어둡게 + 돋보기, 누르면 크게 보기(좌우 이동·닫기·장수) */
+      document.getElementById('gdShots').innerHTML = info.shots.map((u, i) => `<div class="shot group" onclick="gdOpenShot(${i})" title="스크린샷 ${i + 1} 크게 보기"><img src="${escapeAttr(u.replace(/=[whs]\d+[^/]*$/, '') + '=h480')}" data-o="${escapeAttr(u)}" alt="스크린샷 ${i + 1}" onerror="if(!this.dataset.f){ this.dataset.f = 1; this.src = this.dataset.o; } else this.closest('.shot').remove()">
+        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center pointer-events-none"><i class="fa-solid fa-magnifying-glass-plus text-white text-base opacity-0 group-hover:opacity-100 transition-opacity"></i></div></div>`).join('');
+      setText('gdShotCount', info.shots.length ? `· 스크린샷 ${info.shots.length}장 · 눌러서 크게 보기` : '');
+      gdShotList = info.shots;
       const d = document.getElementById('gdDesc'); d.textContent = info.desc || ''; d.classList.add('clamp');
       setText('gdInfoDate', info.date ? `구글 플레이 · ${info.date} 기준` : '구글 플레이');
       setTimeout(() => { const more = document.getElementById('gdDescMore'); more.textContent = '더보기'; more.classList.toggle('hidden', d.scrollHeight <= d.clientHeight + 2); }, 0);
@@ -3972,6 +3979,13 @@ async function gdLoadInfo(pkg){
     gdInfoCache.set(pkg, info && (info.desc || info.shots.length) ? info : null);
   }catch(e){ gdInfoCache.set(pkg, null); }
   show(gdInfoCache.get(pkg));
+}
+/* 게임 상세 스크린샷 크게 보기: 신작 상세의 확대 창을 그대로 씀. 큰 이미지는 고해상도 주소, 실패하면 원래 주소 */
+let gdShotList = [];
+function gdOpenShot(i){
+  currentShotList = gdShotList.map(u => u.replace(/=[whs]\d+[^/]*$/, '') + '=h1080');
+  currentShotFallback = gdShotList.slice();
+  openLightbox(i);
 }
 function gdDescToggle(){
   const d = document.getElementById('gdDesc'), open = d.classList.toggle('clamp');
@@ -4083,7 +4097,7 @@ function openReleaseDetail(key){
 
   /* 스크린샷: 첫 장은 상단 배너로도 사용 */
   const shotList = shots ? shots.split('|').map(s => s.trim()).filter(Boolean) : [];
-  currentShotList = shotList;
+  currentShotList = shotList; currentShotFallback = [];
   const banner = document.getElementById('releaseDetailBanner');
   if(shotList.length){ document.getElementById('releaseDetailBannerImg').src = shotList[0]; banner.classList.remove('hidden'); } else banner.classList.add('hidden');
   const shotsWrap = document.getElementById('releaseDetailShotsWrap'), shotsEl = document.getElementById('releaseDetailShots');
@@ -4145,11 +4159,13 @@ function closeReleaseDetail() {
   setTimeout(() => document.getElementById('releaseDetailOverlay').classList.add('hidden'), 300);
 }
 
-let currentShotList = [];
+let currentShotList = [], currentShotFallback = [];
 let currentShotIndex = 0;
 
 function renderLightbox(){
-  document.getElementById('lightboxImg').src = currentShotList[currentShotIndex] || '';
+  const img = document.getElementById('lightboxImg'), fb = currentShotFallback[currentShotIndex];
+  img.onerror = fb ? () => { if(img.src !== fb) img.src = fb; } : null;
+  img.src = currentShotList[currentShotIndex] || '';
   setText('lightboxCounter', `${currentShotIndex + 1} / ${currentShotList.length}`);
   const multi = currentShotList.length > 1;
   document.getElementById('lightboxPrevBtn').classList.toggle('hidden', !multi);
