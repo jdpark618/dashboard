@@ -93,6 +93,7 @@ body { background:var(--bg); font-family:'Pretendard Variable',Pretendard,-apple
 /* 주간 리포트: 메뉴와 같은 모양, 새 리포트면 NEW (접힘 상태는 아이콘 모서리) */
 .sb-rep { margin-top:4px; }
 .sb-rep .hd-new { margin-left:auto; margin-right:10px; }
+.sb-cnt { margin-left:auto; margin-right:12px; font-size:11px; font-weight:600; color:#64748b; }
 .sb-chev { margin-left:auto; margin-right:10px; display:inline-flex; }
 .sb-chev svg { width:15px; height:15px; transition:transform .15s; }
 .sb-wrap.open .sb-chev svg { transform:rotate(180deg); }
@@ -110,12 +111,17 @@ body { background:var(--bg); font-family:'Pretendard Variable',Pretendard,-apple
 /* 하단: 메뉴 접기만 */
 .sb-foot { flex:none; padding:10px 10px 14px; border-top:1px solid var(--line); }
 .sb-foot .sb-item { height:36px; font-weight:500; color:#94a3b8; }
-html.sb-mini #sbFold svg { transform:rotate(180deg); }
+/* 접기 버튼: 펼침은 chevrons-left, 접힘은 chevrons-right */
+#sbFold .fold-r, html.sb-mini #sbFold .fold-l { display:none; } html.sb-mini #sbFold .fold-r { display:block; }
+/* 접고 펼칠 때 글자는 폭 변화(0.18초)와 함께 흐려지고 잘림 */
+.sb-tx, .sb-brand b { transition:opacity .15s; } .sb-group { transition:color .15s; }
+@media (prefers-reduced-motion:reduce){ .side-nav, .sb-main, .sb-tx, .sb-brand b, .sb-group { transition:none !important; } }
 .sb-tip { position:fixed; z-index:60; transform:translateY(-50%); pointer-events:none; opacity:0; transition:opacity .1s; max-width:320px; background:#1e293b; color:#f1f5f9; border:1px solid #334155; border-radius:7px; padding:5px 9px; font-size:12px; font-weight:600; white-space:nowrap; box-shadow:0 6px 18px rgba(0,0,0,.45); }
 .sb-tip.on { opacity:1; }
 /* 접힌 상태: 글자만 숨김 (위치·높이는 그대로) */
 @media (min-width:1024px){
-html.sb-mini .sb-tx, html.sb-mini .sb-brand b, html.sb-mini .sb-wrap .sb-sub { display:none; }
+html.sb-mini .sb-tx, html.sb-mini .sb-brand b { opacity:0; pointer-events:none; }
+html.sb-mini .sb-wrap .sb-sub { display:none; }
 html.sb-mini .sb-group { color:transparent; }
 html.sb-mini .sb-group:not(:first-child)::after { content:''; position:absolute; left:8px; right:8px; top:50%; border-top:1px solid #1e293b; }
 html.sb-mini .sb-group.raw::before { display:none; }
@@ -417,6 +423,56 @@ html.panel-lock { overflow: hidden; }
 .card-p { padding:14px 20px 20px; }
 .card-hd { display:flex; align-items:center; justify-content:space-between; gap:8px; min-height:41px; padding-bottom:12px; margin-bottom:12px; border-bottom:1px solid rgba(30,41,59,.8); }
 /* 관심 게임 카드 변동 배지 (전일 대비) */
+/* 관심 게임 페이지: 한 줄에 한 게임 */
+.wl-head, .wl-row { display:grid; grid-template-columns:22px 40px minmax(0,1fr) 92px 92px 156px 84px 92px; align-items:center; column-gap:14px; }
+.wl-head { font-size:11px; font-weight:600; color:#64748b; padding:12px 18px 10px; }
+.wl-row { padding:11px 18px; border-top:1px solid var(--line); cursor:pointer; transition:background .12s; }
+.wl-row:hover { background:rgba(30,41,59,.55); }
+.wl-star { color:#f59e0b; font-size:13px; } .wl-star:hover { color:#fcd34d; }
+.wl-ic { width:40px; height:40px; border-radius:10px; object-fit:cover; background:#1e293b; }
+.wl-nm { font-size:13.5px; font-weight:700; color:#f1f5f9; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.wl-meta { font-size:11.5px; color:#94a3b8; margin-top:2px; display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; }
+.wl-ev { font-size:11px; font-weight:700; line-height:18px; padding:0 7px; border-radius:5px; white-space:nowrap; }
+.wl-ev.in { background:#f59e0b; color:#451a03; } .wl-ev.out { background:#334155; color:#e2e8f0; } .wl-ev.up { background:#dc2626; color:#fee2e2; } .wl-ev.down { background:#2563eb; color:#dbeafe; }
+.wl-rk { font-size:13px; display:flex; align-items:center; gap:5px; white-space:nowrap; }
+.wl-sub { font-size:11px; color:#94a3b8; white-space:nowrap; }
+.wl-row.ev { box-shadow:inset 3px 0 0 #f59e0b; }
+@media (max-width:1023px){
+  .wl-head, .wl-row { grid-template-columns:22px 36px minmax(0,1fr) 74px 74px; column-gap:10px; padding-left:12px; padding-right:12px; }
+  .wl-ic { width:36px; height:36px; }
+  .wl-m { display:none; }
+}
+/* 게임 상세: 넓은 화면은 본문을 거의 덮는 큰 창 (왼쪽 목차), 좁은 화면은 지금처럼 전체 패널 */
+.gd-toc { display:flex; gap:4px; overflow-x:auto; padding:10px 16px 0; scrollbar-width:none; }
+.gd-toc::-webkit-scrollbar { display:none; }
+.gd-toc-t { display:none; }
+.gd-toc button { flex:none; font-size:12.5px; font-weight:600; color:#94a3b8; padding:6px 11px; border-radius:8px; white-space:nowrap; text-align:left; }
+.gd-toc button:hover { color:#f1f5f9; background:#141e33; }
+.gd-toc button.on { color:#c7d2fe; background:rgba(99,102,241,.16); }
+.gd-sec { scroll-margin-top:150px; }
+/* 넓은 화면 큰 창: 화면 끝에서 미끄러지는 대신 0.2초 동안 오른쪽에서 살짝 밀려 들어오며 나타남 (닫을 때 반대) */
+@media (min-width:1024px){
+  #detailPanel { transition:transform .2s cubic-bezier(.2,.8,.2,1), opacity .2s ease, visibility 0s linear 0s; }
+  #detailPanel.translate-x-full { transform:translateX(40px); opacity:0; visibility:hidden; transition:transform .2s ease-in, opacity .2s ease, visibility 0s linear .2s; }
+  #detailOverlay { transition-duration:.2s; }
+}
+@media (prefers-reduced-motion:reduce){ #detailPanel, #detailOverlay { transition:none !important; } }
+@media (min-width:1024px){
+  #detailPanel { max-width:min(1240px, calc(100vw - var(--sb-w) - 32px)); }
+  #detailPanel .gd-body { display:grid; grid-template-columns:180px minmax(0,1fr); align-items:start; }
+  .gd-toc { flex-direction:column; position:sticky; top:var(--gd-hd, 123px); padding:20px 12px; gap:2px; border-right:1px solid var(--line); min-height:calc(100vh - var(--gd-hd, 123px)); }
+  .gd-toc-t { display:block; font-size:11px; font-weight:700; color:#64748b; padding:0 11px 8px; }
+  .gd-toc button { width:100%; padding:8px 11px; }
+  #detailPanel .gd-main { padding:22px 28px 40px; }
+  #detailPanel .gd-rank-box { height:340px; }
+  #detailPanel .gd-score-box { height:190px; }
+  #detailPanel .sticky.top-0 { padding-left:28px; padding-right:28px; }
+}
+@media (min-width:1280px){
+  .gd-pair { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:24px; align-items:start; }
+}
+.gd-pair > * + * { margin-top:20px; }
+@media (min-width:1280px){ .gd-pair > * + * { margin-top:0; } }
 .watch-ev { position:absolute; top:-9px; right:8px; font-size:11px; font-weight:600; line-height:17px; padding:0 6px; border-radius:5px; white-space:nowrap; }
 .watch-card.ev-in { border-color:rgba(245,158,11,.6); } .ev-in .watch-ev { background:#f59e0b; color:#451a03; }
 .watch-card.ev-out { border-color:#475569; } .ev-out .watch-ev { background:#334155; color:#e2e8f0; }
@@ -589,6 +645,7 @@ html.panel-lock { overflow: hidden; }
     <button id="reportBtn" class="sb-item sb-rep" data-view="report" onclick="openReport()" data-tip="주간 리포트"><i data-lucide="file-chart-column"></i><span class="sb-tx">주간 리포트</span><span id="reportNew" class="hd-new hidden">NEW</span></button>
     <div class="sb-group raw">분석</div>
     <button class="sb-item active" data-view="dashboard" onclick="switchView('dashboard')" data-tip="일간 브리핑"><i data-lucide="gauge"></i><span class="sb-tx">일간 브리핑</span></button>
+    <button class="sb-item" data-view="watch" onclick="switchView('watch')" data-tip="관심 게임"><i data-lucide="star"></i><span class="sb-tx">관심 게임</span><span id="sbWatchN" class="sb-tx sb-cnt"></span></button>
     <button class="sb-item" data-view="ranking" onclick="switchView('ranking')" data-tip="전체 순위"><i data-lucide="list-ordered"></i><span class="sb-tx">전체 순위</span></button>
     <div class="sb-wrap" id="sbBiz">
       <button class="sb-item" data-view="business" onclick="sbBizClick()" aria-expanded="false"><i data-lucide="chart-pie"></i><span class="sb-tx">시장 분석</span><span class="sb-tx sb-chev"><i data-lucide="chevron-down"></i></span></button>
@@ -604,7 +661,7 @@ html.panel-lock { overflow: hidden; }
     <button class="sb-item" data-view="newReleases" onclick="switchView('newReleases')" data-tip="신작 DB"><i data-lucide="table-properties"></i><span class="sb-tx">신작 DB</span></button>
   </nav>
   <div class="sb-foot">
-    <button id="sbFold" type="button" onclick="sbFold()" class="sb-item" data-tip="메뉴 펼치기" aria-label="메뉴 접기·펼치기"><i data-lucide="chevrons-left"></i><span class="sb-tx">메뉴 접기</span></button>
+    <button id="sbFold" type="button" onclick="sbFold()" class="sb-item" data-tip="메뉴 펼치기" aria-label="메뉴 접기·펼치기"><i data-lucide="chevrons-left" class="fold-l"></i><i data-lucide="chevrons-right" class="fold-r"></i><span class="sb-tx">메뉴 접기</span></button>
   </div>
 </aside>
 <div id="sbFly" class="sb-fly" role="menu"><div class="t">시장 분석</div><div class="l"><button type="button" data-sec="structure" onclick="sbSec('structure')">시장 구조</button><button type="button" data-sec="change" onclick="sbSec('change')">순위 변동</button><button type="button" data-sec="monthly" onclick="sbSec('monthly')">월간/주간 순위</button><button type="button" data-sec="debut" onclick="sbSec('debut')">첫 차트인</button><button type="button" data-sec="releases" onclick="sbSec('releases')">신작 동향</button></div></div>
@@ -736,7 +793,7 @@ html.panel-lock { overflow: hidden; }
         <h2 class="text-base font-bold text-slate-200 flex items-center gap-2"><i class="fa-solid fa-star text-amber-400"></i>관심 게임 <span id="watchCount" class="text-xs muted font-normal"></span></h2>
         <span id="watchEmptyHint" class="hidden text-[12px] muted">게임 상세에서 <i class="fa-regular fa-star text-amber-400/80"></i> 를 누르면 여기에 모입니다 · 이 브라우저에만 저장</span>
       </div>
-      <span id="watchActions" class="flex items-center gap-2"><span class="text-[11px] muted hidden sm:inline">이 브라우저에만 저장</span><button type="button" class="cal-today-btn" onclick="searchLoadWatch()"><i class="fa-solid fa-chart-line mr-1"></i>순위 비교</button></span>
+      <span id="watchActions" class="flex items-center gap-2"><button type="button" onclick="switchView('watch')" class="more-btn">관심 게임에서 보기<i class="fa-solid fa-chevron-right ml-1 text-[11px] text-amber-400"></i></button></span>
     </div>
     <div id="watchList" class="card rounded-xl p-5"></div>
   </section>
@@ -1104,6 +1161,24 @@ html.panel-lock { overflow: hidden; }
 <button type="button" id="toTopBtn" onclick="window.scrollTo({ top: 0, behavior: 'smooth' })" class="hidden fixed right-5 bottom-5 z-30 w-11 h-11 rounded-full bg-indigo-600 hover:bg-indigo-500 border border-indigo-400/60 text-white shadow-lg shadow-black/40 transition-colors" title="맨 위로" aria-label="맨 위로"><i class="fa-solid fa-arrow-up"></i></button>
 
 <!-- RANKING VIEW (전체 순위: 인기·매출 1~100위, 넓은 화면은 나란히, 좁은 화면은 탭) -->
+<!-- 관심 게임 (이 브라우저에만 저장) -->
+<div id="view-watch" class="hidden space-y-4">
+  <div class="page-head">
+    <div>
+      <h2><i class="fa-solid fa-star text-amber-400"></i>관심 게임</h2>
+      <p class="sub" id="wlSub">-</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      <select id="wlSort" class="mk-sel" onchange="watchState.sort = this.value; renderWatchPage()" aria-label="정렬">
+        <option value="event">변동 있는 게임 먼저</option><option value="sales">매출 순위순</option><option value="popular">인기 순위순</option><option value="added">최근 등록순</option>
+      </select>
+      <button type="button" class="more-btn h-8" onclick="searchLoadWatch()"><i class="fa-solid fa-chart-line mr-1.5"></i>순위 비교에 모두 넣기</button>
+    </div>
+  </div>
+  <section id="wlList" class="card rounded-xl overflow-hidden"></section>
+  <p class="text-[11px] muted px-1">목록은 이 브라우저에만 저장됩니다 · 순위는 기준일 하루, 변동은 전일 대비 · 추이는 최근 30일 일간 순위(위가 1위, 끊긴 날은 TOP100 밖)</p>
+</div>
+
 <div id="view-ranking" class="hidden space-y-4">
   <div class="page-head">
     <div>
@@ -1291,13 +1366,25 @@ html.panel-lock { overflow: hidden; }
     </div>
   </div>
 
-  <div class="p-5 space-y-5 flex-1">
+  <div class="gd-body flex-1">
+  <!-- 섹션 목차: 넓은 화면은 왼쪽 세로, 좁은 화면은 위 가로 -->
+  <nav id="gdToc" class="gd-toc" aria-label="게임 상세 목차">
+    <div class="gd-toc-t">게임 정보</div>
+    <button type="button" data-sec="gdSum" onclick="gdGo('gdSum')">요약</button>
+    <button type="button" data-sec="gdRank" onclick="gdGo('gdRank')">순위 추이</button>
+    <button type="button" data-sec="gdScore" onclick="gdGo('gdScore')">평점 추이</button>
+    <button type="button" data-sec="gdStats" onclick="gdGo('gdStats')">기간 분석</button>
+    <button type="button" data-sec="gdPub" onclick="gdGo('gdPub')">같은 퍼블리셔</button>
+  </nav>
+  <div class="gd-main p-5 space-y-5">
     <!-- 현재 상태: 매출 · 인기 · 평점 -->
+    <section id="gdSum" class="gd-sec space-y-3">
     <div class="grid grid-cols-3 gap-2" id="detailKpis"></div>
-    <div id="detailContext" class="text-[12px] text-slate-300 -mt-2"></div>
+    <div id="detailContext" class="text-[12px] text-slate-300"></div>
+    </section>
 
     <!-- 추이 -->
-    <div>
+    <section id="gdRank" class="gd-sec">
       <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
         <div class="flex flex-wrap items-center gap-x-3 gap-y-1" aria-label="순위 추이 범례">
           <h4 class="text-sm font-semibold">순위 추이</h4>
@@ -1312,24 +1399,27 @@ html.panel-lock { overflow: hidden; }
           <button type="button" data-d="0" onclick="detailSetDays(0)">전체</button>
         </div>
       </div>
-      <div class="h-[230px] card rounded-xl p-2.5 border-slate-700/50 relative"><canvas id="detailChart"></canvas><div id="detailLoading" class="hidden absolute inset-0 flex items-center justify-center text-[11px] text-indigo-300 bg-slate-900/60 rounded-xl"><i class="fa-solid fa-spinner fa-spin mr-1"></i>지난 기간 불러오는 중</div></div>
-    </div>
-    <div>
+      <div class="gd-rank-box h-[230px] card rounded-xl p-2.5 border-slate-700/50 relative"><canvas id="detailChart"></canvas><div id="detailLoading" class="hidden absolute inset-0 flex items-center justify-center text-[11px] text-indigo-300 bg-slate-900/60 rounded-xl"><i class="fa-solid fa-spinner fa-spin mr-1"></i>지난 기간 불러오는 중</div></div>
+    </section>
+    <div class="gd-pair">
+    <section id="gdScore" class="gd-sec">
       <h4 class="text-sm font-semibold mb-2"><i class="fa-solid fa-star text-amber-300 text-[11px] mr-1"></i>평점 추이 <span class="text-[11px] font-normal muted ml-1">눈금은 변동 폭에 맞춤</span></h4>
-      <div class="h-[130px] card rounded-xl p-2.5 border-slate-700/50"><canvas id="detailScoreChart"></canvas></div>
-    </div>
+      <div class="gd-score-box h-[130px] card rounded-xl p-2.5 border-slate-700/50"><canvas id="detailScoreChart"></canvas></div>
+    </section>
 
     <!-- 기간 분석 -->
-    <div>
+    <section id="gdStats" class="gd-sec">
       <h4 class="text-sm font-semibold mb-2">기간 분석 <span id="detailRangeLabel" class="text-[11px] muted font-normal ml-1">-</span></h4>
       <div id="detailStats"></div>
+    </section>
     </div>
 
     <!-- 같은 퍼블리셔 -->
-    <div id="detailPubWrap" class="hidden">
+    <section id="gdPub" class="gd-sec"><div id="detailPubWrap" class="hidden">
       <h4 class="text-sm font-semibold mb-2">같은 퍼블리셔의 TOP100 게임 <span id="detailPubName" class="text-[11px] muted font-normal ml-1"></span></h4>
       <div id="detailPubList" class="space-y-1"></div>
-    </div>
+    </div></section>
+  </div>
   </div>
 </div>
 
@@ -2108,18 +2198,23 @@ function dashChgSet(k){
 }
 
 /* 사이드바: 접기(넓은 화면, 상태 기억) / 서랍 열기·닫기(좁은 화면) */
-function sbFold(){ const on = document.documentElement.classList.toggle('sb-mini'); try{ localStorage.setItem('sbMini', on ? '1' : '0'); }catch(e){} window.dispatchEvent(new Event('resize')); }
+/* 접기·펼치기: 폭이 0.18초 동안 바뀌고, 다 바뀐 뒤 차트가 새 폭에 맞춰 다시 그려지게 resize */
+function sbFold(){ const on = document.documentElement.classList.toggle('sb-mini'); sbTipHide(); try{ localStorage.setItem('sbMini', on ? '1' : '0'); }catch(e){} setTimeout(() => window.dispatchEvent(new Event('resize')), 200); }
 function sbDrawer(open){ document.documentElement.classList.toggle('sb-open', open); }
-/* 접힌 상태 툴팁: 마우스를 올리면 바로 오른쪽에 메뉴 이름 */
+/* 접힌 상태 툴팁: 마우스를 올리고 0.18초 뒤 오른쪽에 메뉴 이름 (이미 떠 있으면 옆 메뉴로 바로 옮김) */
 const sbTip = Object.assign(document.createElement('div'), { className: 'sb-tip' });
 document.body.appendChild(sbTip);
+let sbTipTimer = null, sbTipFor = null;
+function sbTipHide(){ clearTimeout(sbTipTimer); sbTipFor = null; sbTip.classList.remove('on'); }
 document.getElementById('sideNav').addEventListener('mouseover', e => {
   const t = e.target.closest('[data-tip]');
-  if(!t || !document.documentElement.classList.contains('sb-mini') || innerWidth < 1024 || document.getElementById('sbFly').classList.contains('on')){ sbTip.classList.remove('on'); return; }
-  const r = t.getBoundingClientRect();
-  sbTip.textContent = t.dataset.tip; sbTip.style.left = `${r.right + 12}px`; sbTip.style.top = `${r.top + r.height / 2}px`; sbTip.classList.add('on');
+  if(!t || !document.documentElement.classList.contains('sb-mini') || innerWidth < 1024 || document.getElementById('sbFly').classList.contains('on')){ sbTipHide(); return; }
+  if(t === sbTipFor) return;
+  const show = () => { const r = t.getBoundingClientRect(); sbTip.textContent = t.dataset.tip; sbTip.style.left = `${r.right + 12}px`; sbTip.style.top = `${r.top + r.height / 2}px`; sbTip.classList.add('on'); };
+  clearTimeout(sbTipTimer); sbTipFor = t;
+  if(sbTip.classList.contains('on')) show(); else sbTipTimer = setTimeout(show, 180);
 });
-document.getElementById('sideNav').addEventListener('mouseleave', () => sbTip.classList.remove('on'));
+document.getElementById('sideNav').addEventListener('mouseleave', sbTipHide);
 /* 시장 분석 하위 메뉴: 머리를 누르면 이동(이미 시장 분석이면 펼침·접힘), 섹션을 누르면 그 섹션으로 */
 const SB_SEC = Object.fromEntries([...document.querySelectorAll('#sbBiz .sb-sub button')].map(b => [b.dataset.sec, b.textContent]));
 function sbBizClick(){
@@ -2166,7 +2261,8 @@ function switchView(view){
   /* 새 화면은 맨 위에서 시작, 서랍은 닫음 */
   if(window.scrollY > 0) window.scrollTo({ top: 0 });
   sbDrawer(false); sbSync();
-  ['dashboard','ranking','business','search','calendar','database','report'].forEach(v => {
+  if(!document.getElementById('detailPanel').classList.contains('translate-x-full')) closeGameDetail();
+  ['dashboard','watch','ranking','business','search','calendar','database','report'].forEach(v => {
     const el = document.getElementById(`view-${v}`);
     if(el) el.classList.toggle('hidden', v==='database' ? !(view==='sales'||view==='popular'||view==='newReleases') : view!==v);
   });
@@ -2177,6 +2273,7 @@ function switchView(view){
   if(view==='calendar')ensureCalendarMonthLoaded();
   /* 현재 탭을 URL 해시에 기록: 새로고침·링크 공유 시 같은 탭으로 열림 (리포트는 ?w= 주를 유지) */
   history.replaceState(null, '', view === 'dashboard' ? location.pathname + location.search : view === 'report' && location.hash.startsWith('#report') ? location.hash : `#${view}`);
+  if(view==='watch')renderWatchPage();
   if(view==='report')openReportView();
 }
 
@@ -2213,7 +2310,7 @@ async function snapEl(btn, name){
 }
 
 
-const VALID_VIEWS = ['dashboard','ranking','business','calendar','sales','popular','newReleases','search','report'];
+const VALID_VIEWS = ['dashboard','watch','ranking','business','calendar','sales','popular','newReleases','search','report'];
 function viewFromHash(){ const v = decodeURIComponent(location.hash.slice(1)).split('?')[0]; return VALID_VIEWS.includes(v) ? v : 'dashboard'; }
 
 /* KST 기준 오늘 날짜 (사용자 PC 시간대와 무관하게 스토어 집계일과 비교) */
@@ -3813,14 +3910,30 @@ function rankMatchFilter(x, f){
   return true;
 }
 
+/* 게임 상세 목차: 누르면 그 섹션으로, 스크롤하면 지금 보는 섹션 표시 */
+/* 목차로 고른 섹션은 끝까지 스크롤이 안 돼도(내용이 짧을 때) 선택 표시를 유지, 직접 스크롤하면 해제 */
+let gdPinned = null;
+function gdGo(id){ const el = document.getElementById(id), panel = document.getElementById('detailPanel'); if(!el) return; gdPinned = id; gdSpy(); panel.scrollTo({ top: el.offsetTop - (innerWidth >= 1024 ? 130 : 160), behavior: 'smooth' }); }
+['wheel', 'touchmove', 'keydown'].forEach(ev => document.getElementById('detailPanel').addEventListener(ev, () => { gdPinned = null; }, { passive: true }));
+function gdSpy(){
+  const panel = document.getElementById('detailPanel'), secs = [...panel.querySelectorAll('.gd-sec')].filter(x => x.offsetHeight);
+  panel.style.setProperty('--gd-hd', `${panel.querySelector('.sticky.top-0').offsetHeight}px`);  /* 목차는 머리 바로 아래에 고정 */
+  let cur = secs[0]?.id;
+  secs.forEach(x => { if(x.offsetTop - panel.scrollTop <= 170) cur = x.id; });
+  if(panel.scrollTop > 0 && panel.scrollTop + panel.clientHeight >= panel.scrollHeight - 4) cur = secs.at(-1)?.id;
+  if(gdPinned) cur = gdPinned;
+  document.querySelectorAll('#gdToc button').forEach(b => b.classList.toggle('on', b.dataset.sec === cur));
+  document.querySelector('#gdToc button[data-sec="gdPub"]').hidden = !document.getElementById('gdPub').offsetHeight;
+}
+document.getElementById('detailPanel').addEventListener('scroll', gdSpy, { passive: true });
 function openGameDetail(targetName) {
-  detailCurrentName = targetName;
+  detailCurrentName = targetName; gdPinned = null;
   syncDetailWatchBtn(targetName);
   document.querySelectorAll('#rkCols li[data-key]').forEach(li => li.classList.toggle('bg-indigo-500/15', li.dataset.key === getGameKey(targetName)));
   renderGameDetail();
   document.getElementById('detailPanel').scrollTop = 0;
   document.getElementById('detailOverlay').classList.remove('hidden');
-  setTimeout(() => { document.getElementById('detailOverlay').classList.remove('opacity-0'); document.getElementById('detailPanel').classList.remove('translate-x-full'); }, 10);
+  setTimeout(() => { document.getElementById('detailOverlay').classList.remove('opacity-0'); document.getElementById('detailPanel').classList.remove('translate-x-full'); gdSpy(); }, 10);
   detailEnsureRange();
 }
 
@@ -5358,6 +5471,7 @@ function mkWatchToggle(name){
   if(i >= 0) list.splice(i, 1); else list.unshift(name);
   try{ localStorage.setItem(WATCH_KEY, JSON.stringify(list.slice(0, 30))); }catch(e){}
   renderWatchlist();
+  if(currentView === 'watch') renderWatchPage(); else setText('sbWatchN', mkWatchList().length || '');
   syncDetailWatchBtn(name);
   if(currentView === 'business' && mkSection === 'structure' && mkMonthsReady) mkRenderPosition();
   if(currentView === 'ranking') renderRanking();
@@ -5370,6 +5484,71 @@ function syncDetailWatchBtn(name){
   b.classList.toggle('text-amber-200', on);
   b.title = on ? '관심 게임에서 빼기' : '관심 게임에 추가';
   b.setAttribute('aria-label', b.title); b.setAttribute('aria-pressed', on ? 'true' : 'false');
+}
+/* 관심 게임 화면: 게임마다 오늘 순위·변동, 30일 매출·인기 추이, 30일 최고 매출, 평점(4주 전 대비), 첫 차트인 */
+const watchState = { sort: 'event' };
+/* 순위 색인에서 이름 → 게임 키 (최근 60일, 최신 우선) */
+function watchKeyMap(idx){
+  const m = new Map();
+  for(let i = idx.dates.length - 1; i >= Math.max(0, idx.dates.length - 60); i--) idx.byDate.get(idx.dates[i]).forEach((v, key) => { const n = getGameKey(v.name); if(!m.has(n)) m.set(n, key); });
+  return m;
+}
+/* 매출(주황)·인기(청록) 두 줄 미니 차트, 로그 눈금(위가 1위) */
+function watchSpark(sv, pv){
+  const w = 156, h = 38, n = Math.max(sv.length, pv.length), x = i => 2 + i * (w - 4) / Math.max(1, n - 1), y = r => 3 + Math.log(r) / Math.log(100) * (h - 6);
+  const line = (arr, c) => { let d = '', pen = false; arr.forEach((r, i) => { if(r == null){ pen = false; return; } d += `${pen ? 'L' : 'M'}${x(i).toFixed(1)} ${y(r).toFixed(1)}`; pen = true; });
+    const li = arr.findLastIndex(r => r != null); return d ? `<path d="${d}" fill="none" stroke="${c}" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/>${li >= 0 ? `<circle cx="${x(li).toFixed(1)}" cy="${y(arr[li]).toFixed(1)}" r="2.2" fill="${c}"/>` : ''}` : ''; };
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" class="block" role="img" aria-label="최근 30일 매출·인기 순위 추이"><line x1="0" x2="${w}" y1="${y(10).toFixed(1)}" y2="${y(10).toFixed(1)}" stroke="rgba(148,163,184,.18)" stroke-dasharray="2 3"/>${line(pv, '#2dd4bf')}${line(sv, '#fbbf24')}</svg>`;
+}
+function renderWatchPage(){
+  const box = document.getElementById('wlList');
+  if(!box) return;
+  const list = mkWatchList();
+  setText('sbWatchN', list.length || '');
+  document.getElementById('wlSort').value = watchState.sort;
+  if(!list.length){
+    setText('wlSub', '등록한 게임 없음');
+    box.innerHTML = `<div class="p-10 text-center text-[13px] muted">전체 순위나 게임 상세에서 <i class="fa-regular fa-star text-amber-400"></i> 를 누르면 여기에 모입니다.</div>`;
+    return;
+  }
+  /* 첫 차트인 판정용 첫 등장일, 30일 추이용 지난달 순위는 처음 한 번 받고 다시 그림 */
+  ['sales', 'popular'].forEach(st => { if(!mkFirstSeenCache[st] && !mkFirstSeenInFlight[st]) mkLoadFirstSeen(st).then(() => { if(currentView === 'watch') renderWatchPage(); }).catch(() => {}); });
+  if(!mkMonthsReady && !watchState.loading){ watchState.loading = true; mkEnsureHistory().then(() => { if(currentView === 'watch') renderWatchPage(); }).catch(() => {}); }
+  const SI = mkGetIndex('sales'), PI = mkGetIndex('popular'), SK = watchKeyMap(SI), PK = watchKeyMap(PI);
+  const last = [SI.dates.at(-1), PI.dates.at(-1)].filter(Boolean).sort().at(-1) || '';
+  const ds = []; if(last) for(let i = 29; i >= 0; i--) ds.push(mkAddDays(last, -i));
+  const from28 = last ? mkAddDays(last, -28) : '';
+  const rows = list.map((name, order) => {
+    const k = getGameKey(name), s = salesLatestMap.get(k), p = popularLatestMap.get(k), sk = SK.get(k), pk = PK.get(k);
+    const ser = (idx, key) => ds.map(d => key ? idx.byDate.get(d)?.get(key)?.rank ?? null : null);
+    const sv = ser(SI, sk), pv = ser(PI, pk), seen = sv.filter(v => v != null);
+    const metaOf = (idx, key) => { if(!key) return null; for(let i = idx.dates.length - 1; i >= 0; i--){ const v = idx.byDate.get(idx.dates[i]).get(key); if(v) return v; } return null; };
+    const meta = metaOf(SI, sk) || metaOf(PI, pk) || {};
+    const ev = [watchEvent(s, 'sales'), watchEvent(p, 'popular')].filter(Boolean).sort((a, b) => b.p - a.p)[0] || null;
+    const fc = [sk && mkFirstChartDate(mkFirstSeenCache.sales, sk, name), pk && mkFirstChartDate(mkFirstSeenCache.popular, pk, name)].filter(Boolean).sort()[0] || null;
+    return { name, order, s, p, sv, pv, best: seen.length ? Math.min(...seen) : null, meta, ev, fc, rt: from28 ? rpRating(name, from28, last) : null, sr: rankOf(s) ?? 999, pr: rankOf(p) ?? 999 };
+  });
+  const by = { event: (a, b) => (b.ev?.p || 0) - (a.ev?.p || 0) || a.sr - b.sr || a.pr - b.pr, sales: (a, b) => a.sr - b.sr || a.pr - b.pr, popular: (a, b) => a.pr - b.pr || a.sr - b.sr, added: (a, b) => a.order - b.order };
+  rows.sort(by[watchState.sort] || by.event);
+  const evN = rows.filter(r => r.ev).length, top10 = rows.filter(r => r.sr <= 10).length;
+  setText('wlSub', `${rows.length}개 · 오늘 변동 ${evN}개 · 매출 TOP10 ${top10}개${last ? ` · 기준일 ${last}` : ''}`);
+  const rk = (row, cls) => row ? `<span class="wl-rk"><b class="${cls}">${rankOf(row)}위</b>${rankChangeBadge(String(row[2] || '-'))}</span>` : '<span class="wl-sub">TOP100 밖</span>';
+  box.innerHTML = `<div class="wl-head"><span></span><span></span><span>게임</span><span>매출</span><span>인기</span><span class="wl-m">30일 추이 <b class="t-sales">●</b>매출 <b class="t-pop">●</b>인기</span><span class="wl-m">30일 최고 매출</span><span class="wl-m">평점 (4주 전 대비)</span></div>`
+    + rows.map(r => {
+      const icon = getIconUrlForGame(r.name), nm = escapeAttr(r.name).replace(/&#039;/g, "\\'");
+      const rd = r.rt ? Math.round((r.rt.b - r.rt.a) * 10) / 10 : 0;
+      return `<div class="wl-row${r.ev ? ' ev' : ''}" onclick="openGameDetail('${nm}')">
+        <button type="button" class="wl-star" onclick="event.stopPropagation(); mkWatchToggle('${nm}')" title="관심 게임에서 빼기" aria-label="관심 게임에서 빼기"><i class="fa-solid fa-star"></i></button>
+        ${icon ? `<img class="wl-ic" src="${escapeAttr(icon)}" alt="" loading="lazy">` : '<span class="wl-ic"></span>'}
+        <div class="min-w-0"><div class="wl-nm">${escapeHtml(r.name)}</div>
+          <div class="wl-meta"><span>${escapeHtml(r.meta.publisher || '-')} · ${escapeHtml(r.meta.genre || '-')}</span>${r.fc ? `<span>첫 차트인 ${mkShort(r.fc)}</span>` : ''}${r.ev ? `<span class="wl-ev ${r.ev.cls}">${r.ev.text}</span>` : ''}</div></div>
+        <div>${rk(r.s, 't-sales')}</div>
+        <div>${rk(r.p, 't-pop')}</div>
+        <div class="wl-m">${r.sv.some(v => v != null) || r.pv.some(v => v != null) ? watchSpark(r.sv, r.pv) : '<span class="wl-sub">30일간 TOP100 밖</span>'}</div>
+        <div class="wl-m">${r.best ? `<b class="t-sales">${r.best}위</b>` : '<span class="wl-sub">-</span>'}</div>
+        <div class="wl-m wl-rk">${r.rt ? `<i class="fa-solid fa-star text-amber-400/70 text-[10px]"></i><b>${r.rt.b.toFixed(1)}</b>${rd ? `<span class="${rd > 0 ? 't-up' : 't-down'} text-[11px] font-bold">${rd > 0 ? '▲' : '▼'}${Math.abs(rd).toFixed(1)}</span>` : '<span class="wl-sub">-</span>'}` : '<span class="wl-sub">-</span>'}</div>
+      </div>`;
+    }).join('');
 }
 /* 관심 게임 변동: 전일 대비로 카드 하나에 가장 큰 사건 하나만 (TOP10 진입 > 이탈 > 급상승 > 급하락) */
 const WATCH_JUMP = 10;
@@ -5389,7 +5568,8 @@ function renderWatchlist(){
   const box = document.getElementById('watchList');
   if(!box) return;
   const list = mkWatchList();
-  setText('watchCount', list.length ? `${list.length}개` : '');
+  setText('watchCount', list.length ? `${list.length}개 중 오늘 변동` : '');
+  setText('sbWatchN', list.length || '');
   /* 비어 있으면 카드·순위 비교 버튼 없이 제목 줄의 한 줄 안내만 */
   box.classList.toggle('hidden', !list.length);
   document.getElementById('watchActions')?.classList.toggle('hidden', !list.length);
@@ -5399,9 +5579,13 @@ function renderWatchlist(){
   const cell = (row, label, cls) => row
     ? `<span class="inline-flex items-center gap-1 text-[12px]"><span class="${cls} font-semibold">${label} ${rankOf(row)}위</span>${rankChangeBadge(String(row[2] || '-'))}</span>`
     : `<span class="text-[11px] muted">${label} TOP100 밖</span>`;
-  box.innerHTML = `<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-x-2 gap-y-3 pt-1">${list.map(name => {
+  /* 브리핑에는 오늘 변동(진입·이탈·급등락)이 있는 게임만, 전체는 관심 게임 화면에서 */
+  const evOf = name => { const k = getGameKey(name); return [watchEvent(salesLatestMap.get(k), 'sales'), watchEvent(popularLatestMap.get(k), 'popular')].filter(Boolean).sort((a, b) => b.p - a.p)[0]; };
+  const hot = list.filter(evOf);
+  if(!hot.length){ box.innerHTML = `<div class="text-[13px] muted">오늘은 관심 게임 ${list.length}개 모두 큰 변동이 없습니다.</div>`; return; }
+  box.innerHTML = `<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-x-2 gap-y-3 pt-1">${hot.map(name => {
     const k = getGameKey(name), s = salesLatestMap.get(k), p = popularLatestMap.get(k), url = getIconUrlForGame(name), sc = scoreOf(s || p);
-    const ev = [watchEvent(s, 'sales'), watchEvent(p, 'popular')].filter(Boolean).sort((a, b) => b.p - a.p)[0];
+    const ev = evOf(name);
     return `<div class="watch-card${ev ? ' ev-' + ev.cls : ''} relative flex items-center gap-2.5 p-2.5 rounded-lg bg-slate-900/60 border border-slate-800 hover:border-slate-600 cursor-pointer transition-colors" onclick="openGameDetail('${escapeAttr(name).replace(/&#039;/g, "\\'")}')">
       ${ev ? `<span class="watch-ev">${ev.text}</span>` : ''}${url ? `<img src="${escapeAttr(url)}" class="w-9 h-9 rounded-lg object-cover bg-slate-800 shrink-0" alt="" loading="lazy">` : '<span class="w-9 h-9 rounded-lg bg-slate-800 shrink-0"></span>'}
       <div class="min-w-0 flex-1"><div class="text-[13px] font-medium truncate text-slate-100">${escapeHtml(name)}</div><div class="flex flex-wrap gap-x-3 gap-y-0.5 mt-0.5">${cell(s, '매출', 't-sales')}${cell(p, '인기', 't-pop')}</div></div>
