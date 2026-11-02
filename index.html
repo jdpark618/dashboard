@@ -487,9 +487,13 @@ html.panel-lock { overflow: hidden; }
 /* 열고 닫는 움직임은 신작 상세와 같음 (오른쪽에서 0.3초 슬라이드, Tailwind duration-300) */
 @media (prefers-reduced-motion:reduce){ #detailPanel, #detailOverlay { transition:none !important; } }
 @media (min-width:1024px){
-  #detailPanel { max-width:none; width:calc(100vw - var(--sb-w)); }
+  #detailPanel { max-width:none; width:calc(100vw - var(--sb-w) - 24px); top:52px; height:calc(100vh - 52px); border-top-left-radius:14px; border:1px solid #334155; border-right:0; border-bottom:0; }
+  #detailPanel:not(.translate-x-full) { box-shadow:-18px 0 48px rgba(0,0,0,.5), -2px 0 0 rgba(99,102,241,.06); }
+  #detailPanel .gd-hd { border-top-left-radius:14px; }
+  /* 어두운 배경은 본문 영역만 (상단 바·사이드바는 그대로 두어 경계선이 생기지 않게) */
+  #detailOverlay { top:52px; left:var(--sb-w); background:rgba(2,6,15,.62); }
   #detailPanel .gd-body { display:grid; grid-template-columns:180px minmax(0,1fr); align-items:start; }
-  .gd-toc { flex-direction:column; position:sticky; top:var(--gd-hd, 123px); padding:20px 12px; gap:2px; border-right:1px solid var(--line); min-height:calc(100vh - var(--gd-hd, 123px)); }
+  .gd-toc { flex-direction:column; position:sticky; top:var(--gd-hd, 123px); padding:20px 12px; gap:2px; border-right:1px solid var(--line); min-height:calc(100vh - 52px - var(--gd-hd, 123px)); }
   .gd-toc-t { display:block; font-size:11px; font-weight:700; color:#64748b; padding:0 11px 8px; }
   .gd-toc button { width:100%; padding:8px 11px; }
   #detailPanel .gd-main { padding:22px 28px 40px; }
@@ -2272,7 +2276,11 @@ function sbSync(){
   const item = document.querySelector(`.sb-item[data-view="${currentView}"]`);
   const name = item?.querySelector('.sb-tx')?.textContent || '', icon = item?.querySelector('svg')?.outerHTML || '';
   const chev = '<svg class="tb-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>';
-  document.getElementById('tbCrumb').innerHTML = `<span class="tb-ic">${icon}</span>` + (biz ? `<span class="tb-par">${name}</span>${chev}<b>${SB_SEC[mkSection] || ''}</b>` : `<b>${name}</b>`);
+  let crumb = biz ? `<span class="tb-par">${name}</span>${chev}<b>${SB_SEC[mkSection] || ''}</b>` : `<b>${name}</b>`;
+  /* 게임 상세가 열려 있으면 마지막에 게임 이름 (앞 단계는 보조 글자로) */
+  if(!document.getElementById('detailPanel').classList.contains('translate-x-full') && detailCurrentName)
+    crumb = crumb.replace(/<b>(.*?)<\/b>/, '<span class="tb-par">$1</span>') + `${chev}<b>${escapeHtml(detailCurrentName)}</b>`;
+  document.getElementById('tbCrumb').innerHTML = `<span class="tb-ic">${icon}</span>` + crumb;
 }
 /* 접힌 상태 플라이아웃 */
 let sbFlyTimer = null;
@@ -4014,13 +4022,14 @@ function openGameDetail(targetName) {
   renderGameDetail();
   document.getElementById('detailPanel').scrollTop = 0;
   document.getElementById('detailOverlay').classList.remove('hidden');
-  setTimeout(() => { document.getElementById('detailOverlay').classList.remove('opacity-0'); document.getElementById('detailPanel').classList.remove('translate-x-full'); gdSpy(); }, 10);
+  setTimeout(() => { document.getElementById('detailOverlay').classList.remove('opacity-0'); document.getElementById('detailPanel').classList.remove('translate-x-full'); gdSpy(); sbSync(); }, 10);
   detailEnsureRange();
 }
 
 function closeGameDetail() {
   document.querySelectorAll('#rkCols li[data-key]').forEach(li => li.classList.remove('bg-indigo-500/15'));
   document.getElementById('detailPanel').classList.add('translate-x-full');
+  sbSync();
   document.getElementById('detailOverlay').classList.add('opacity-0');
   setTimeout(() => document.getElementById('detailOverlay').classList.add('hidden'), 300);
 }
