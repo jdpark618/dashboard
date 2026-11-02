@@ -487,6 +487,19 @@ html.panel-lock { overflow: hidden; }
 .gd-mkt { display:grid; grid-template-columns:repeat(6, minmax(0,1fr)); border:1px solid var(--line); border-radius:12px; overflow:hidden; background:rgba(14,22,38,.6); }
 .gd-mkt > div { padding:10px 12px; text-align:center; font-size:13px; color:#e2e8f0; border-left:1px solid var(--line); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .gd-mkt > div:nth-child(6n+1) { border-left:0; }
+.gd-mkt.c4 { grid-template-columns:repeat(4, minmax(0,1fr)); }
+.gd-mkt.c4 > div { border-left:1px solid var(--line); } .gd-mkt.c4 > div:nth-child(4n+1) { border-left:0; }
+#releaseDetailStatus:not(.hidden) { margin-left:8px; font-size:11px !important; padding:1px 7px !important; border-radius:6px; vertical-align:1px; }
+/* 신작 상세: 스크린샷 한 줄 4장(16:9), 같은 날·같은 퍼블리셔는 3열 */
+.rel-shots { display:grid; grid-auto-flow:column; grid-auto-columns:calc((100% - 30px) / 4); gap:10px; overflow-x:auto; padding-bottom:4px; }
+.rel-shots img { width:100%; aspect-ratio:16 / 9; height:auto; }
+.rel-grid { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:2px 12px; }
+@media (max-width:767px){
+  .gd-mkt.c4 { grid-template-columns:repeat(2, minmax(0,1fr)); }
+  .gd-mkt.c4 > div:nth-child(2n+1) { border-left:0; }
+  .rel-shots { grid-auto-columns:75%; }
+  .rel-grid { grid-template-columns:1fr; }
+}
 .gd-mkt > .h { font-size:11.5px; color:#94a3b8; background:rgba(30,41,59,.45); border-bottom:1px solid var(--line); }
 .gd-mkt a { color:#a5b4fc; font-weight:600; } .gd-mkt a:hover { color:#e0e7ff; }
 @media (max-width:767px){ .gd-mkt { grid-template-columns:repeat(3, minmax(0,1fr)); } .gd-mkt > div:nth-child(3n+1) { border-left:0; } }
@@ -510,12 +523,13 @@ html.panel-lock { overflow: hidden; }
   #detailPanel:not(.translate-x-full) { box-shadow:-18px 0 48px rgba(0,0,0,.5), -2px 0 0 rgba(99,102,241,.06); }
   #detailPanel .gd-hd { border-top-left-radius:14px; }
   /* 신작 상세도 같은 팝업 크기·모양 (내용 배치는 그대로) */
-  #releaseDetailPanel { max-width:none; width:calc(100vw - var(--sb-w) - 24px); top:52px; height:calc(100vh - 52px); border-top-left-radius:14px; border:1px solid #334155; border-right:0; border-bottom:0; }
+  #releaseDetailPanel { max-width:none; width:min(calc(100vw - var(--sb-w) - 24px), 1080px); top:52px; height:calc(100vh - 52px); border-top-left-radius:14px; border:1px solid #334155; border-right:0; border-bottom:0; }
   #releaseDetailPanel:not(.translate-x-full) { box-shadow:-18px 0 48px rgba(0,0,0,.5); }
   #releaseDetailPanel .gd-hd { border-top-left-radius:14px; padding:16px 28px; flex-wrap:nowrap; column-gap:16px; }
   #releaseDetailPanel .gd-hd-ic { width:56px; height:56px; border-radius:14px; }
   #releaseDetailPanel .gd-hd-nm { font-size:20px; }
   #releaseDetailOverlay { top:52px; left:var(--sb-w); background:rgba(2,6,15,.62); }
+  #releaseDetailPanel .rel-body { padding:22px 28px 32px; }
   /* 어두운 배경은 본문 영역만 (상단 바·사이드바는 그대로 두어 경계선이 생기지 않게) */
   #detailOverlay { top:52px; left:var(--sb-w); background:rgba(2,6,15,.62); }
   #detailPanel .gd-body { display:grid; grid-template-columns:180px minmax(0,1fr); align-items:start; }
@@ -1495,42 +1509,34 @@ html.panel-lock { overflow: hidden; }
     <button onclick="closeReleaseDetail()" class="gd-hd-x text-slate-400 hover:text-white shrink-0 p-1" aria-label="닫기 (Esc)"><i class="fa-solid fa-xmark text-xl"></i></button>
   </div>
 
-  <div id="releaseDetailBanner" class="hidden relative h-40 shrink-0 overflow-hidden cursor-zoom-in" onclick="openLightbox(0)">
-    <img id="releaseDetailBannerImg" src="" alt="" class="w-full h-full object-cover" onerror="document.getElementById('releaseDetailBanner').classList.add('hidden')">
-    <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/20 to-transparent"></div>
-  </div>
-
-  <div class="p-5 space-y-5 flex-1">
-    <div class="flex flex-wrap items-center gap-2" id="releaseDetailBadges"></div>
-
-    <div class="card p-4 rounded-xl border-slate-700/50 bg-slate-800/30 flex items-center justify-between gap-3">
-      <div>
-        <div class="text-[11px] muted mb-1"><i class="fa-regular fa-calendar mr-1.5"></i>출시(예정)일</div>
-        <div class="text-base font-bold" id="releaseDetailDate">-</div>
-      </div>
-      <span id="releaseDetailStatus" class="text-[12px] font-bold px-2.5 py-1 rounded-lg shrink-0"></span>
+  <div class="p-5 space-y-6 flex-1 rel-body">
+    <!-- 신작 정보 표: 출시(예정)일 · 상태 · 유형·플랫폼 · 퍼블리셔 (대표 이미지 배너 대신) -->
+    <div class="gd-mkt c4">
+      <div class="h">출시(예정)일</div><div class="h">출시 유형</div><div class="h">플랫폼</div><div class="h">퍼블리셔</div>
+      <div><span class="font-semibold" id="releaseDetailDate">-</span><span id="releaseDetailStatus"></span></div>
+      <div id="releaseInfoType">-</div>
+      <div id="releaseInfoPlat">-</div>
+      <div id="releaseInfoPub">-</div>
     </div>
 
-    <a id="releasePlayLink" href="#" target="_blank" rel="noopener" class="cal-today-btn inline-flex"><i class="fa-brands fa-google-play mr-1.5 text-emerald-400"></i>Google Play에서 검색</a>
-
     <div id="releaseDetailSummaryWrap" class="hidden">
-      <h4 class="text-sm font-semibold mb-2">게임 소개</h4>
+      <h4 class="gd-h">게임 소개</h4>
       <p class="text-[13px] leading-relaxed text-slate-300 whitespace-pre-line" id="releaseDetailSummary">-</p>
     </div>
 
     <div id="releaseDetailShotsWrap" class="hidden">
-      <h4 class="text-sm font-semibold mb-2">스크린샷 <span id="releaseShotCount" class="text-[11px] muted font-normal"></span></h4>
-      <div id="releaseDetailShots" class="flex gap-2 overflow-x-auto scrollbar pb-1"></div>
+      <h4 class="gd-h">스크린샷 <span id="releaseShotCount" class="text-[11px] muted font-normal ml-1"></span></h4>
+      <div id="releaseDetailShots" class="rel-shots scrollbar"></div>
     </div>
 
     <div id="releaseSameDayWrap" class="hidden">
-      <h4 class="text-sm font-semibold mb-2">같은 날 출시 <span id="releaseSameDayCount" class="text-[11px] muted font-normal"></span></h4>
-      <div id="releaseSameDay" class="space-y-1"></div>
+      <h4 class="gd-h">같은 날 출시 <span id="releaseSameDayCount" class="text-[11px] muted font-normal ml-1"></span></h4>
+      <div id="releaseSameDay" class="rel-grid"></div>
     </div>
 
     <div id="releaseSamePubWrap" class="hidden">
-      <h4 class="text-sm font-semibold mb-2">같은 퍼블리셔의 다른 신작</h4>
-      <div id="releaseSamePub" class="space-y-1"></div>
+      <h4 class="gd-h">같은 퍼블리셔의 다른 신작</h4>
+      <div id="releaseSamePub" class="rel-grid"></div>
     </div>
 
     <div id="releaseCheckedAt" class="text-[11px] text-slate-400 pt-2 border-t border-slate-800"></div>
@@ -4154,7 +4160,7 @@ function openReleaseDetail(key){
   const checkedAt = String(row[9] || '').trim(), detailAt = String(row[10] || '').trim();
 
   setText('releaseDetailTitle', name);
-  setText('releaseDetailPub', publisher);
+  setText('releaseDetailPub', publisher); setText('releaseInfoPub', publisher);
   const iconEl = document.getElementById('releaseDetailIcon');
   if(icon.startsWith('http')){ iconEl.src = icon; iconEl.classList.remove('hidden'); } else iconEl.classList.add('hidden');
 
@@ -4168,26 +4174,23 @@ function openReleaseDetail(key){
     st.className = `text-[12px] font-bold px-2.5 py-1 rounded-lg shrink-0 ${diff > 0 ? 'bg-indigo-500/20 text-indigo-200' : diff === 0 ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-700/60 text-slate-300'}`;
   }else{ st.textContent = ''; st.className = 'hidden'; }
 
-  /* 배지: 출시유형(달력 칩과 같은 색) + 플랫폼 */
+  /* 출시 유형(달력 칩과 같은 색 점 + 글자) · 플랫폼(PC · 모바일 · PS) */
   const type = resolveCalType(releaseType);
-  document.getElementById('releaseDetailBadges').innerHTML = [badgePill(releaseType, CAL_TYPE_COLOR[type])]
-    .concat(platform.split('/').map(p => p.trim()).filter(Boolean).map(p => badgePill(p, '#94a3b8'))).join('');
-  document.getElementById('releasePlayLink').href = `https://play.google.com/store/search?q=${encodeURIComponent(name)}&c=apps`;
+  document.getElementById('releaseInfoType').innerHTML = `<span class="inline-flex items-center gap-1.5 font-semibold" style="color:${CAL_TYPE_COLOR[type]}"><i class="w-1.5 h-1.5 rounded-full" style="background:${CAL_TYPE_COLOR[type]}"></i>${escapeHtml(releaseType)}</span>`;
+  setText('releaseInfoPlat', platform.split('/').map(p => p.trim()).filter(Boolean).join(' · ') || '-');
 
   const summaryWrap = document.getElementById('releaseDetailSummaryWrap');
   if(summary){ setText('releaseDetailSummary', summary); summaryWrap.classList.remove('hidden'); } else summaryWrap.classList.add('hidden');
 
-  /* 스크린샷: 첫 장은 상단 배너로도 사용 */
+  /* 스크린샷: 한 줄 4장 (더 있으면 옆으로) */
   const shotList = shots ? shots.split('|').map(s => s.trim()).filter(Boolean) : [];
   currentShotList = shotList; currentShotFallback = [];
-  const banner = document.getElementById('releaseDetailBanner');
-  if(shotList.length){ document.getElementById('releaseDetailBannerImg').src = shotList[0]; banner.classList.remove('hidden'); } else banner.classList.add('hidden');
   const shotsWrap = document.getElementById('releaseDetailShotsWrap'), shotsEl = document.getElementById('releaseDetailShots');
   setText('releaseShotCount', shotList.length ? `${shotList.length}장 · 눌러서 크게 보기` : '');
   if(shotList.length){
     shotsEl.innerHTML = shotList.map((u, i) => `
-      <div class="relative group shrink-0 cursor-pointer" onclick="openLightbox(${i})">
-        <img src="${escapeAttr(u)}" class="h-36 max-w-[260px] rounded-lg object-cover block" alt="" loading="lazy" onerror="this.parentElement.style.display='none'">
+      <div class="relative group cursor-pointer" onclick="openLightbox(${i})">
+        <img src="${escapeAttr(u)}" class="rounded-lg object-cover block" alt="" onerror="this.parentElement.style.display='none'">
         <div class="absolute inset-0 rounded-lg bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center pointer-events-none">
           <i class="fa-solid fa-magnifying-glass-plus text-white text-base opacity-0 group-hover:opacity-100 transition-opacity"></i>
         </div>
