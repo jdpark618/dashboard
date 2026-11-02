@@ -470,20 +470,33 @@ html.panel-lock { overflow: hidden; }
 .gd-toc button:hover { color:#f1f5f9; background:#141e33; }
 .gd-toc button.on { color:#c7d2fe; background:rgba(99,102,241,.16); }
 .gd-sec { scroll-margin-top:150px; }
+#mkMonthlyTable thead tr:last-child th { text-align:center !important; }
 /* 게임 상세 머리: 넓은 화면은 한 줄(아이콘·이름·칩 | 순위 비교·관심 게임·Google Play | 닫기), 좁은 화면은 버튼이 아래 줄 */
 .gd-hd { display:flex; flex-wrap:wrap; align-items:center; column-gap:12px; row-gap:10px; }
 .gd-hd-ic { width:48px; height:48px; border-radius:12px; }
 .gd-hd-nm { font-size:17px; }
 .gd-acts { display:flex; flex-wrap:wrap; gap:6px; order:3; width:100%; }
 .gd-hd-sep { display:none; width:1px; height:24px; background:#334155; flex:none; }
-.gd-shots { display:flex; gap:10px; overflow-x:auto; padding-bottom:6px; margin-bottom:12px; }
+.gd-h { font-size:14px; font-weight:700; margin-bottom:10px; padding-left:10px; border-left:3px solid #6366f1; line-height:1.2; }
+.gd-mkt { display:grid; grid-template-columns:repeat(6, minmax(0,1fr)); border:1px solid var(--line); border-radius:12px; overflow:hidden; background:rgba(14,22,38,.6); }
+.gd-mkt > div { padding:10px 12px; text-align:center; font-size:13px; color:#e2e8f0; border-left:1px solid var(--line); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.gd-mkt > div:nth-child(6n+1) { border-left:0; }
+.gd-mkt > .h { font-size:11.5px; color:#94a3b8; background:rgba(30,41,59,.45); border-bottom:1px solid var(--line); }
+.gd-mkt a { color:#a5b4fc; font-weight:600; } .gd-mkt a:hover { color:#e0e7ff; }
+@media (max-width:767px){ .gd-mkt { grid-template-columns:repeat(3, minmax(0,1fr)); } .gd-mkt > div:nth-child(3n+1) { border-left:0; } }
+.gd-shots-wrap { position:relative; }
+.gd-sh-nav { position:absolute; top:50%; transform:translateY(-50%); z-index:2; width:38px; height:38px; border-radius:50%; background:rgba(15,23,42,.9); border:1px solid #334155; color:#cbd5e1; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 14px rgba(0,0,0,.4); }
+.gd-sh-nav:hover { background:#1e293b; color:#fff; } .gd-sh-nav.l { left:-14px; } .gd-sh-nav.r { right:-14px; }
+.gd-sh-nav[disabled] { opacity:0; pointer-events:none; }
+.gd-desc-box { max-height:260px; overflow:auto; border:1px solid var(--line); border-radius:12px; padding:14px 16px; background:rgba(14,22,38,.6); font-size:13px; line-height:1.75; color:#cbd5e1; white-space:pre-line; }
+.gd-rate { border:1px solid var(--line); border-radius:12px; padding:16px; background:rgba(14,22,38,.6); }
+.gd-shots { display:flex; gap:10px; overflow-x:auto; scroll-behavior:smooth; scrollbar-width:none; }
+.gd-shots::-webkit-scrollbar { display:none; }
 .gd-shots:empty { display:none; }
 .gd-shots .shot { flex:none; position:relative; display:block; border-radius:10px; overflow:hidden; border:1px solid var(--line); background:#0b1222; cursor:zoom-in; }
 .gd-shots img { display:block; height:200px; width:auto; }
 @media (min-width:1600px){ .gd-shots img { height:240px; } }
-.gd-desc { font-size:13px; line-height:1.75; color:#cbd5e1; white-space:pre-line; }
-.gd-desc.clamp { display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden; }
-.gd-more { margin-top:6px; font-size:12px; font-weight:600; color:#a5b4fc; } .gd-more:hover { color:#e0e7ff; }
+
 /* 열고 닫는 움직임은 신작 상세와 같음 (오른쪽에서 0.3초 슬라이드, Tailwind duration-300) */
 @media (prefers-reduced-motion:reduce){ #detailPanel, #detailOverlay { transition:none !important; } }
 @media (min-width:1024px){
@@ -512,10 +525,11 @@ html.panel-lock { overflow: hidden; }
   #detailPubList > * { margin-top:0 !important; margin-bottom:4px; }
 }
 @media (min-width:1280px){
-  .gd-pair { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:24px; align-items:start; }
+  .gd-dr { grid-template-columns:minmax(0,2fr) minmax(0,1fr); }
 }
-.gd-pair > * + * { margin-top:20px; }
-@media (min-width:1280px){ .gd-pair > * + * { margin-top:0; } }
+.gd-dr { display:grid; gap:20px; align-items:start; }
+.gd-dr > section.hidden + section { grid-column:1 / -1; }
+@media (max-width:1023px){ .gd-dr { grid-template-columns:1fr !important; } }
 .watch-ev { position:absolute; top:-9px; right:8px; font-size:11px; font-weight:600; line-height:17px; padding:0 6px; border-radius:5px; white-space:nowrap; }
 .watch-card.ev-in { border-color:rgba(245,158,11,.6); } .ev-in .watch-ev { background:#f59e0b; color:#451a03; }
 .watch-card.ev-out { border-color:#475569; } .ev-out .watch-ev { background:#334155; color:#e2e8f0; }
@@ -685,14 +699,18 @@ html.panel-lock { overflow: hidden; }
     <div class="sb-brand"><span class="sb-logo"><i data-lucide="chart-line"></i></span><b>Game Market<br>Intelligence</b></div>
   </div>
   <nav class="sb-scroll thin-scroll">
+    <div class="sb-group">모니터링</div>
     <button id="reportBtn" class="sb-item sb-rep" data-view="report" onclick="openReport()" data-tip="주간 리포트"><i data-lucide="file-chart-column"></i><span class="sb-tx">주간 리포트</span><span id="reportNew" class="hd-new hidden">NEW</span></button>
-    <div class="sb-group raw">분석</div>
-    <button class="sb-item active" data-view="dashboard" onclick="switchView('dashboard')" data-tip="일간 브리핑"><i data-lucide="gauge"></i><span class="sb-tx">일간 브리핑</span></button>
     <button class="sb-item" data-view="watch" onclick="switchView('watch')" data-tip="관심 게임"><i data-lucide="star"></i><span class="sb-tx">관심 게임</span><span id="sbWatchN" class="sb-tx sb-cnt"></span></button>
-    <button class="sb-item" data-view="ranking" onclick="switchView('ranking')" data-tip="전체 순위"><i data-lucide="list-ordered"></i><span class="sb-tx">전체 순위</span></button>
+    <div class="sb-group raw">분석</div>
+    <button class="sb-item" data-view="dashboard" onclick="switchView('dashboard')" data-tip="일간 브리핑"><i data-lucide="gauge"></i><span class="sb-tx">일간 브리핑</span></button>
+    <div class="sb-wrap" id="sbRank">
+      <button class="sb-item" data-view="ranking" onclick="sbGroupClick('sbRank')" aria-expanded="false"><i data-lucide="list-ordered"></i><span class="sb-tx">전체 순위</span><span class="sb-tx sb-chev"><i data-lucide="chevron-down"></i></span></button>
+      <div class="sb-sub"><button type="button" data-go="ranking" onclick="sbGo('ranking')">일간 순위</button><button type="button" data-go="monthly" onclick="sbGo('monthly')">월간/주간 순위</button></div>
+    </div>
     <div class="sb-wrap" id="sbBiz">
-      <button class="sb-item" data-view="business" onclick="sbBizClick()" aria-expanded="false"><i data-lucide="chart-pie"></i><span class="sb-tx">시장 분석</span><span class="sb-tx sb-chev"><i data-lucide="chevron-down"></i></span></button>
-      <div class="sb-sub"><button type="button" data-sec="structure" onclick="sbSec('structure')">시장 구조</button><button type="button" data-sec="change" onclick="sbSec('change')">순위 변동</button><button type="button" data-sec="monthly" onclick="sbSec('monthly')">월간/주간 순위</button><button type="button" data-sec="debut" onclick="sbSec('debut')">첫 차트인</button><button type="button" data-sec="releases" onclick="sbSec('releases')">신작 동향</button></div>
+      <button class="sb-item" data-view="business" onclick="sbGroupClick('sbBiz')" aria-expanded="false"><i data-lucide="chart-pie"></i><span class="sb-tx">시장 분석</span><span class="sb-tx sb-chev"><i data-lucide="chevron-down"></i></span></button>
+      <div class="sb-sub"><button type="button" data-go="biz:structure" onclick="sbGo('biz:structure')">시장 구조</button><button type="button" data-go="biz:change" onclick="sbGo('biz:change')">순위 변동</button><button type="button" data-go="biz:debut" onclick="sbGo('biz:debut')">첫 차트인</button><button type="button" data-go="biz:releases" onclick="sbGo('biz:releases')">신작 동향</button></div>
     </div>
     <button class="sb-item" data-view="search" onclick="switchView('search')" data-tip="순위 비교"><i data-lucide="chart-no-axes-combined"></i><span class="sb-tx">순위 비교</span></button>
     <div class="sb-group">일정</div>
@@ -705,7 +723,7 @@ html.panel-lock { overflow: hidden; }
   </nav>
 </aside>
 <button id="sbFold" type="button" onclick="sbFold()" class="sb-fold" aria-label="메뉴 접기·펼치기"><i class="fa-solid fa-caret-left fold-l"></i><i class="fa-solid fa-caret-right fold-r"></i></button>
-<div id="sbFly" class="sb-fly" role="menu"><div class="t">시장 분석</div><div class="l"><button type="button" data-sec="structure" onclick="sbSec('structure')">시장 구조</button><button type="button" data-sec="change" onclick="sbSec('change')">순위 변동</button><button type="button" data-sec="monthly" onclick="sbSec('monthly')">월간/주간 순위</button><button type="button" data-sec="debut" onclick="sbSec('debut')">첫 차트인</button><button type="button" data-sec="releases" onclick="sbSec('releases')">신작 동향</button></div></div>
+<div id="sbFly" class="sb-fly" role="menu"><div class="t"></div><div class="l"></div></div>
 <div class="sb-dim" onclick="sbDrawer(false)"></div>
 <div class="sb-main">
 <!-- 위 얇은 바 -->
@@ -953,7 +971,6 @@ html.panel-lock { overflow: hidden; }
   <nav class="flex gap-1 overflow-x-auto overflow-y-hidden border-b border-slate-800" id="mkSectionTabs">
     <button type="button" data-section="structure" onclick="mkSetSection('structure')" class="mk-sec"><i class="fa-solid fa-chess-board mr-1.5"></i>시장 구조</button>
     <button type="button" data-section="change" onclick="mkSetSection('change')" class="mk-sec"><i class="fa-solid fa-arrow-trend-up mr-1.5"></i>순위 변동</button>
-    <button type="button" data-section="monthly" onclick="mkSetSection('monthly')" class="mk-sec"><i class="fa-solid fa-table-list mr-1.5"></i>월간/주간 순위</button>
     <button type="button" data-section="debut" onclick="mkSetSection('debut')" class="mk-sec"><i class="fa-solid fa-seedling mr-1.5"></i>첫 차트인</button>
     <button type="button" data-section="releases" onclick="mkSetSection('releases')" class="mk-sec"><i class="fa-regular fa-calendar-plus mr-1.5"></i>신작 동향</button>
   </nav>
@@ -1376,33 +1393,46 @@ html.panel-lock { overflow: hidden; }
   </div>
 
   <div class="gd-body flex-1">
-  <!-- 섹션 목차: 넓은 화면은 왼쪽 세로, 좁은 화면은 위 가로 -->
-  <nav id="gdToc" class="gd-toc" aria-label="게임 상세 목차">
+  <!-- 목차 = 페이지: 넓은 화면은 왼쪽 세로, 좁은 화면은 위 가로. 처음은 요약 -->
+  <nav id="gdToc" class="gd-toc" aria-label="게임 상세 메뉴">
     <div class="gd-toc-t">게임 정보</div>
-    <button type="button" data-sec="gdSum" onclick="gdGo('gdSum')">요약</button>
-    <button type="button" data-sec="gdInfo" onclick="gdGo('gdInfo')">게임 정보</button>
+    <button type="button" data-sec="gdPgSum" onclick="gdGo('gdPgSum')">요약</button>
     <button type="button" data-sec="gdRank" onclick="gdGo('gdRank')">순위 추이</button>
     <button type="button" data-sec="gdScore" onclick="gdGo('gdScore')">평점 추이</button>
     <button type="button" data-sec="gdStats" onclick="gdGo('gdStats')">기간 분석</button>
     <button type="button" data-sec="gdPub" onclick="gdGo('gdPub')">같은 퍼블리셔</button>
   </nav>
-  <div class="gd-main p-5 space-y-5">
-    <!-- 현재 상태: 매출 · 인기 · 평점 -->
-    <section id="gdSum" class="gd-sec space-y-3">
-    <div class="grid grid-cols-3 gap-2" id="detailKpis"></div>
-    <div id="detailContext" class="text-[12px] text-slate-300"></div>
-    </section>
-
-    <!-- 게임 정보: 스크린샷 · 설명 (수집기 DB_앱정보, 패키지명으로 한 줄만 읽음) -->
-    <section id="gdInfo" class="gd-sec hidden">
-      <h4 class="text-sm font-semibold mb-2">게임 정보 <span id="gdInfoDate" class="text-[11px] muted font-normal ml-1"></span><span id="gdShotCount" class="text-[11px] muted font-normal ml-2"></span></h4>
-      <div id="gdShots" class="gd-shots thin-scroll"></div>
-      <div id="gdDesc" class="gd-desc clamp"></div>
-      <button type="button" id="gdDescMore" class="gd-more hidden" onclick="gdDescToggle()">더보기</button>
-    </section>
-
-    <!-- 추이 -->
-    <section id="gdRank" class="gd-sec">
+  <div class="gd-main p-5">
+    <!-- 요약: 현재 순위·평점 / 마켓 정보 / 스크린샷 / 설명 + 평점 -->
+    <div id="gdPgSum" class="gd-page space-y-6">
+      <section class="space-y-3">
+        <div class="grid grid-cols-3 gap-2" id="detailKpis"></div>
+        <div id="detailContext" class="text-[12px] text-slate-300"></div>
+      </section>
+      <section>
+        <h4 class="gd-h">마켓 정보</h4>
+        <div id="gdMarket" class="gd-mkt"></div>
+      </section>
+      <section id="gdInfo" class="hidden">
+        <h4 class="gd-h">스크린샷 <span id="gdShotCount" class="text-[11px] muted font-normal ml-1"></span></h4>
+        <div class="gd-shots-wrap">
+          <button type="button" class="gd-sh-nav l" onclick="gdShotScroll(-1)" aria-label="이전 스크린샷"><i class="fa-solid fa-chevron-left"></i></button>
+          <div id="gdShots" class="gd-shots"></div>
+          <button type="button" class="gd-sh-nav r" onclick="gdShotScroll(1)" aria-label="다음 스크린샷"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+      </section>
+      <div class="gd-dr">
+        <section id="gdDescWrap" class="hidden min-w-0">
+          <h4 class="gd-h">게임 설명 <span class="text-[11px] muted font-normal ml-1">구글 플레이</span></h4>
+          <div id="gdDesc" class="gd-desc-box thin-scroll"></div>
+        </section>
+        <section class="min-w-0">
+          <h4 class="gd-h">평점 <span class="text-[11px] muted font-normal ml-1">구글 플레이</span></h4>
+          <div id="gdRate" class="gd-rate"></div>
+        </section>
+      </div>
+    </div>
+    <section id="gdRank" class="gd-page hidden">
       <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
         <div class="flex flex-wrap items-center gap-x-3 gap-y-1" aria-label="순위 추이 범례">
           <h4 class="text-sm font-semibold">순위 추이</h4>
@@ -1419,21 +1449,15 @@ html.panel-lock { overflow: hidden; }
       </div>
       <div class="gd-rank-box h-[230px] card rounded-xl p-2.5 border-slate-700/50 relative"><canvas id="detailChart"></canvas><div id="detailLoading" class="hidden absolute inset-0 flex items-center justify-center text-[11px] text-indigo-300 bg-slate-900/60 rounded-xl"><i class="fa-solid fa-spinner fa-spin mr-1"></i>지난 기간 불러오는 중</div></div>
     </section>
-    <div class="gd-pair">
-    <section id="gdScore" class="gd-sec">
+    <section id="gdScore" class="gd-page hidden">
       <h4 class="text-sm font-semibold mb-2"><i class="fa-solid fa-star text-amber-300 text-[11px] mr-1"></i>평점 추이 <span class="text-[11px] font-normal muted ml-1">눈금은 변동 폭에 맞춤</span></h4>
-      <div class="gd-score-box h-[130px] card rounded-xl p-2.5 border-slate-700/50"><canvas id="detailScoreChart"></canvas></div>
+      <div class="gd-score-box h-[220px] card rounded-xl p-2.5 border-slate-700/50"><canvas id="detailScoreChart"></canvas></div>
     </section>
-
-    <!-- 기간 분석 -->
-    <section id="gdStats" class="gd-sec">
+    <section id="gdStats" class="gd-page hidden">
       <h4 class="text-sm font-semibold mb-2">기간 분석 <span id="detailRangeLabel" class="text-[11px] muted font-normal ml-1">-</span></h4>
       <div id="detailStats"></div>
     </section>
-    </div>
-
-    <!-- 같은 퍼블리셔 -->
-    <section id="gdPub" class="gd-sec"><div id="detailPubWrap" class="hidden">
+    <section id="gdPub" class="gd-page hidden"><div id="detailPubWrap" class="hidden">
       <h4 class="text-sm font-semibold mb-2">같은 퍼블리셔의 TOP100 게임 <span id="detailPubName" class="text-[11px] muted font-normal ml-1"></span></h4>
       <div id="detailPubList" class="space-y-1"></div>
     </div></section>
@@ -2255,50 +2279,66 @@ document.addEventListener('keydown', e => {
   e.preventDefault(); sbFold();
 });
 /* 시장 분석 하위 메뉴: 머리를 누르면 이동(이미 시장 분석이면 펼침·접힘), 섹션을 누르면 그 섹션으로 */
-const SB_SEC = Object.fromEntries([...document.querySelectorAll('#sbBiz .sb-sub button')].map(b => [b.dataset.sec, b.textContent]));
-function sbBizClick(){
-  const w = document.getElementById('sbBiz');
-  if(currentView === 'business' && !document.documentElement.classList.contains('sb-mini')){ w.classList.toggle('open'); w.firstElementChild.setAttribute('aria-expanded', String(w.classList.contains('open'))); }
-  else switchView('business');
-}
-function sbSec(sec){
+/* 사이드바 그룹 메뉴(전체 순위·시장 분석): 머리를 누르면 이동(이미 그 그룹이면 펼침·접힘), 하위 항목은 sbGo.
+   월간/주간 순위는 화면상 시장 분석의 한 섹션이지만 메뉴·위치 표시는 전체 순위 아래로 */
+const SB_LABEL = Object.fromEntries([...document.querySelectorAll('.sb-sub button')].map(b => [b.dataset.go, b.textContent]));
+function sbNavKey(){ return currentView === 'business' ? (mkSection === 'monthly' ? 'monthly' : `biz:${mkSection}`) : currentView; }
+function sbGo(key){
   sbFly(false);
+  if(key === 'ranking'){ switchView('ranking'); return; }
+  const sec = key === 'monthly' ? 'monthly' : key.slice(4);
   if(currentView === 'business') mkSetSection(sec);
   else { mkSection = sec; switchView('business'); }
 }
+function sbGroupClick(id){
+  const w = document.getElementById(id), mine = !!w.querySelector(`.sb-sub [data-go="${sbNavKey()}"]`);
+  if(mine && !document.documentElement.classList.contains('sb-mini')){ w.classList.toggle('open'); w.firstElementChild.setAttribute('aria-expanded', String(w.classList.contains('open'))); }
+  else sbGo(id === 'sbBiz' && mkSection !== 'monthly' ? `biz:${mkSection}` : w.querySelector('.sb-sub button').dataset.go);
+}
 /* 메뉴 상태·위 바 위치 표시를 화면·섹션에 맞춤 (switchView, mkSyncModeButtons 에서 부름) */
 function sbSync(){
-  const biz = currentView === 'business', w = document.getElementById('sbBiz');
-  if(biz && !w.dataset.seen){ w.classList.add('open'); w.dataset.seen = '1'; }
-  if(!biz){ w.classList.remove('open'); delete w.dataset.seen; }
-  w.firstElementChild.setAttribute('aria-expanded', String(w.classList.contains('open')));
-  document.querySelectorAll('#sbBiz .sb-sub button, #sbFly button').forEach(b => b.classList.toggle('on', biz && b.dataset.sec === mkSection));
-  const item = document.querySelector(`.sb-item[data-view="${currentView}"]`);
+  const key = sbNavKey();
+  let group = null;
+  document.querySelectorAll('.sb-wrap').forEach(w => {
+    const mine = !!w.querySelector(`.sb-sub [data-go="${key}"]`);
+    if(mine){ group = w; if(!w.dataset.seen){ w.classList.add('open'); w.dataset.seen = '1'; } }
+    else { w.classList.remove('open'); delete w.dataset.seen; }
+    w.firstElementChild.classList.toggle('active', mine);
+    w.firstElementChild.setAttribute('aria-expanded', String(w.classList.contains('open')));
+  });
+  document.querySelectorAll('.sb-sub button, #sbFly button').forEach(b => b.classList.toggle('on', b.dataset.go === key));
+  const item = group ? group.firstElementChild : document.querySelector(`.sb-item[data-view="${currentView}"]`);
   const name = item?.querySelector('.sb-tx')?.textContent || '', icon = item?.querySelector('svg')?.outerHTML || '';
   const chev = '<svg class="tb-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>';
-  let crumb = biz ? `<span class="tb-par">${name}</span>${chev}<b>${SB_SEC[mkSection] || ''}</b>` : `<b>${name}</b>`;
+  let crumb = group ? `<span class="tb-par">${name}</span>${chev}<b>${SB_LABEL[key] || ''}</b>` : `<b>${name}</b>`;
   /* 게임 상세가 열려 있으면 마지막에 게임 이름 (앞 단계는 보조 글자로) */
   if(!document.getElementById('detailPanel').classList.contains('translate-x-full') && detailCurrentName)
     crumb = crumb.replace(/<b>(.*?)<\/b>/, '<span class="tb-par">$1</span>') + `${chev}<b>${escapeHtml(detailCurrentName)}</b>`;
   document.getElementById('tbCrumb').innerHTML = `<span class="tb-ic">${icon}</span>` + crumb;
+  if(currentView === 'business') history.replaceState(null, '', key === 'monthly' ? '#monthly' : '#business');
 }
-/* 접힌 상태 플라이아웃 */
+/* 접힌 상태 플라이아웃: 마우스를 올린 그룹의 하위 메뉴를 오른쪽에 */
 let sbFlyTimer = null;
-function sbFly(open){
+function sbFly(open, w){
   clearTimeout(sbFlyTimer);
   const f = document.getElementById('sbFly');
   if(!open){ f.classList.remove('on'); return; }
-  const r = document.querySelector('#sbBiz .sb-item').getBoundingClientRect();
+  f.querySelector('.t').textContent = w.querySelector('.sb-item .sb-tx').textContent;
+  f.querySelector('.l').innerHTML = w.querySelector('.sb-sub').innerHTML;
+  const key = sbNavKey(); f.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.go === key));
+  const r = w.querySelector('.sb-item').getBoundingClientRect();
   f.style.left = `${r.right + 12}px`; f.style.top = `${r.top - 6}px`; f.classList.add('on'); sbTip.classList.remove('on');
 }
-document.getElementById('sbBiz').addEventListener('mouseenter', () => { if(document.documentElement.classList.contains('sb-mini') && innerWidth >= 1024) sbFly(true); });
-['sbBiz', 'sbFly'].forEach(id => {
-  document.getElementById(id).addEventListener('mouseleave', () => { sbFlyTimer = setTimeout(() => sbFly(false), 150); });
-  document.getElementById(id).addEventListener('mouseenter', () => clearTimeout(sbFlyTimer));
+document.querySelectorAll('.sb-wrap').forEach(w => {
+  w.addEventListener('mouseenter', () => { if(document.documentElement.classList.contains('sb-mini') && innerWidth >= 1024) sbFly(true, w); });
+  w.addEventListener('mouseleave', () => { sbFlyTimer = setTimeout(() => sbFly(false), 150); });
 });
+document.getElementById('sbFly').addEventListener('mouseleave', () => { sbFlyTimer = setTimeout(() => sbFly(false), 150); });
+document.getElementById('sbFly').addEventListener('mouseenter', () => clearTimeout(sbFlyTimer));
 document.addEventListener('keydown', e => { if(e.key === 'Escape') sbDrawer(false); });
 
 function switchView(view){
+  if(view === 'monthly'){ mkSection = 'monthly'; view = 'business'; }
   currentView=view;
   if(view !== 'report' && typeof RP_BASE_TITLE !== 'undefined') document.title = RP_BASE_TITLE;
   document.querySelectorAll('.sb-item').forEach(x=>x.classList.toggle('active',x.dataset.view===view));
@@ -2316,7 +2356,7 @@ function switchView(view){
   if(view==='search')openSearchView();
   if(view==='calendar')ensureCalendarMonthLoaded();
   /* 현재 탭을 URL 해시에 기록: 새로고침·링크 공유 시 같은 탭으로 열림 (리포트는 ?w= 주를 유지) */
-  history.replaceState(null, '', view === 'dashboard' ? location.pathname + location.search : view === 'report' && location.hash.startsWith('#report') ? location.hash : `#${view}`);
+  history.replaceState(null, '', view === 'dashboard' ? location.pathname + location.search : view === 'report' && location.hash.startsWith('#report') ? location.hash : view === 'business' && mkSection === 'monthly' ? '#monthly' : `#${view}`);
   if(view==='watch')renderWatchPage();
   if(view==='report')openReportView();
 }
@@ -2354,7 +2394,7 @@ async function snapEl(btn, name){
 }
 
 
-const VALID_VIEWS = ['dashboard','watch','ranking','business','calendar','sales','popular','newReleases','search','report'];
+const VALID_VIEWS = ['dashboard','watch','ranking','monthly','business','calendar','sales','popular','newReleases','search','report'];
 function viewFromHash(){ const v = decodeURIComponent(location.hash.slice(1)).split('?')[0]; return VALID_VIEWS.includes(v) ? v : 'dashboard'; }
 
 /* KST 기준 오늘 날짜 (사용자 PC 시간대와 무관하게 스토어 집계일과 비교) */
@@ -3770,6 +3810,22 @@ function renderGameDetail(){
     + `<div class="card rounded-xl p-3 border-slate-700/50 bg-slate-800/30 min-w-0"><div class="text-[11px] muted mb-1"><i class="fa-solid fa-star text-amber-400/80 mr-1"></i>평점</div>
         ${scNow != null ? `<div class="text-xl font-bold text-amber-300">${scNow.toFixed(1)}</div><div class="mt-0.5 leading-tight">${scDiff ? `<span class="text-[11px] font-semibold ${scDiff > 0 ? 'rank-up' : 'rank-down'}">${scDiff > 0 ? '▲' : '▼'}${Math.abs(scDiff).toFixed(1)} <span class="muted font-normal">7일</span></span>` : '<span class="text-[11px] muted">7일 변동 없음</span>'}</div>` : '<div class="text-[15px] font-bold text-slate-400 mt-1">-</div><div class="text-[11px] muted">평점 기록 없음</div>'}</div>`;
 
+  /* 마켓 정보: 마켓 · 장르 · 퍼블리셔 · 첫 차트인(순위 수집 기준) · 정보 갱신일 · 스토어 */
+  const fKey = meta.appId ? `id:${meta.appId}` : `nm:${k}`;
+  const firstAny = ['sales', 'popular'].map(st => mkFirstChartDate(mkFirstSeenCache[st], fKey, name)).filter(Boolean).sort()[0];
+  ['sales', 'popular'].forEach(st => { if(!mkFirstSeenCache[st] && !mkFirstSeenInFlight[st]) mkLoadFirstSeen(st).then(() => { if(detailCurrentName === name) renderGameDetail(); }).catch(() => {}); });
+  const storeUrl = link.href;
+  document.getElementById('gdMarket').innerHTML = ['마켓', '장르', '퍼블리셔', '첫 차트인', '정보 갱신', '스토어'].map(h => `<div class="h">${h}</div>`).join('')
+    + `<div><i class="fa-brands fa-google-play text-emerald-400 mr-1"></i>Google Play</div><div>${escapeHtml(genre || '-')}</div><div title="${escapeAttr(pub)}">${escapeHtml(pub || '-')}</div><div>${firstAny || (mkFirstSeenCache.sales ? '수집 시작 전부터' : '-')}</div><div id="gdMktDate">${escapeHtml(gdInfoCache.get(meta.appId)?.date || '-')}</div><div><a href="${escapeAttr(storeUrl)}" target="_blank" rel="noopener">바로가기 ›</a></div>`;
+  /* 평점 카드: 지금 · 7일 전 · 30일 전 */
+  const scAt = n => { const d = scDates.filter(x => x <= mkAddDays(scDates.at(-1) || '2000-01-01', -n)).at(-1); return d ? score.get(d) : null; };
+  const s7 = scAt(7), s30 = scAt(30), delta = (a, b) => { if(a == null || b == null) return '<span class="muted">-</span>'; const v = Math.round((a - b) * 10) / 10; return v ? `<span class="${v > 0 ? 'rank-up' : 'rank-down'} font-semibold">${v > 0 ? '▲' : '▼'}${Math.abs(v).toFixed(1)}</span>` : '<span class="muted">변동 없음</span>'; };
+  document.getElementById('gdRate').innerHTML = scNow != null
+    ? `<div class="flex items-end gap-2"><span class="text-[34px] font-extrabold text-amber-300 leading-none">${scNow.toFixed(1)}</span><span class="text-amber-400 text-[13px] mb-1">${'★'.repeat(Math.round(scNow))}<span class="text-slate-600">${'★'.repeat(5 - Math.round(scNow))}</span></span></div>
+       <div class="mt-4 space-y-2 text-[12.5px]"><div class="flex justify-between"><span class="muted">7일 전 ${s7 != null ? s7.toFixed(1) : '-'}</span>${delta(scNow, s7)}</div><div class="flex justify-between"><span class="muted">30일 전 ${s30 != null ? s30.toFixed(1) : '-'}</span>${delta(scNow, s30)}</div></div>
+       <button type="button" class="mt-4 text-[12px] font-semibold text-indigo-300 hover:text-indigo-200" onclick="gdGo('gdScore')">평점 추이 보기 ›</button>`
+    : '<div class="muted text-[13px]">평점 기록이 없습니다.</div>';
+
   /* 장르 안에서의 위치 */
   const genreRank = (map, cur) => {
     if(!genre || cur == null) return null;
@@ -3961,16 +4017,17 @@ async function gdLoadInfo(pkg){
   const sec = document.getElementById('gdInfo'), want = detailCurrentName;
   const show = info => {
     if(want !== detailCurrentName) return;
-    sec.classList.toggle('hidden', !info);
+    sec.classList.toggle('hidden', !info?.shots.length);
+    document.getElementById('gdDescWrap').classList.toggle('hidden', !info?.desc);
+    setText('gdMktDate', info?.date || '-');
     if(info){
       /* 신작 상세와 같은 부품: 마우스를 올리면 어둡게 + 돋보기, 누르면 크게 보기(좌우 이동·닫기·장수) */
       document.getElementById('gdShots').innerHTML = info.shots.map((u, i) => `<div class="shot group" onclick="gdOpenShot(${i})" title="스크린샷 ${i + 1} 크게 보기"><img src="${escapeAttr(u.replace(/=[whs]\d+[^/]*$/, '') + '=h480')}" data-o="${escapeAttr(u)}" alt="스크린샷 ${i + 1}" onerror="if(!this.dataset.f){ this.dataset.f = 1; this.src = this.dataset.o; } else this.closest('.shot').remove()">
         <div class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center pointer-events-none"><i class="fa-solid fa-magnifying-glass-plus text-white text-base opacity-0 group-hover:opacity-100 transition-opacity"></i></div></div>`).join('');
-      setText('gdShotCount', info.shots.length ? `· 스크린샷 ${info.shots.length}장 · 눌러서 크게 보기` : '');
+      setText('gdShotCount', info.shots.length ? `${info.shots.length}장 · 눌러서 크게 보기` : '');
       gdShotList = info.shots;
-      const d = document.getElementById('gdDesc'); d.textContent = info.desc || ''; d.classList.add('clamp');
-      setText('gdInfoDate', info.date ? `구글 플레이 · ${info.date} 기준` : '구글 플레이');
-      setTimeout(() => { const more = document.getElementById('gdDescMore'); more.textContent = '더보기'; more.classList.toggle('hidden', d.scrollHeight <= d.clientHeight + 2); }, 0);
+      const d = document.getElementById('gdDesc'); d.textContent = info.desc || ''; d.scrollTop = 0;
+      document.getElementById('gdShots').scrollLeft = 0; setTimeout(gdShotNav, 0);
     }
     gdSpy();
   };
@@ -3995,28 +4052,32 @@ function gdOpenShot(i){
   currentShotFallback = gdShotList.slice();
   openLightbox(i);
 }
-function gdDescToggle(){
-  const d = document.getElementById('gdDesc'), open = d.classList.toggle('clamp');
-  document.getElementById('gdDescMore').textContent = open ? '더보기' : '접기';
+/* 스크린샷 줄 좌우 버튼: 한 화면 폭만큼 이동, 끝에 닿으면 그쪽 버튼 숨김 */
+function gdShotScroll(dir){ const el = document.getElementById('gdShots'); el.scrollBy({ left: dir * el.clientWidth * .85 }); setTimeout(gdShotNav, 350); }
+function gdShotNav(){
+  const el = document.getElementById('gdShots');
+  document.querySelector('.gd-sh-nav.l').disabled = el.scrollLeft <= 2;
+  document.querySelector('.gd-sh-nav.r').disabled = el.scrollLeft + el.clientWidth >= el.scrollWidth - 2;
 }
-/* 게임 상세 목차: 누르면 그 섹션으로, 스크롤하면 지금 보는 섹션 표시 */
-/* 목차로 고른 섹션은 끝까지 스크롤이 안 돼도(내용이 짧을 때) 선택 표시를 유지, 직접 스크롤하면 해제 */
-let gdPinned = null;
-function gdGo(id){ const el = document.getElementById(id), panel = document.getElementById('detailPanel'); if(!el) return; gdPinned = id; gdSpy(); panel.scrollTo({ top: el.offsetTop - (innerWidth >= 1024 ? 130 : 160), behavior: 'smooth' }); }
-['wheel', 'touchmove', 'keydown'].forEach(ev => document.getElementById('detailPanel').addEventListener(ev, () => { gdPinned = null; }, { passive: true }));
+document.getElementById('gdShots').addEventListener('scroll', () => gdShotNav(), { passive: true });
+/* 게임 상세 메뉴: 누르면 그 페이지만 보임 (처음은 요약). 차트는 보일 때 크기를 다시 잡음 */
+let gdPage = 'gdPgSum';
+function gdGo(id){
+  gdPage = id;
+  document.querySelectorAll('#detailPanel .gd-page').forEach(pg => pg.classList.toggle('hidden', pg.id !== id));
+  document.getElementById('detailPanel').scrollTop = 0;
+  gdSpy();
+  Object.values(detailCharts).forEach(c => c?.resize?.());
+}
 function gdSpy(){
-  const panel = document.getElementById('detailPanel'), secs = [...panel.querySelectorAll('.gd-sec')].filter(x => x.offsetHeight);
+  const panel = document.getElementById('detailPanel');
   panel.style.setProperty('--gd-hd', `${panel.querySelector('.sticky.top-0').offsetHeight}px`);  /* 목차는 머리 바로 아래에 고정 */
-  let cur = secs[0]?.id;
-  secs.forEach(x => { if(x.offsetTop - panel.scrollTop <= 170) cur = x.id; });
-  if(panel.scrollTop > 0 && panel.scrollTop + panel.clientHeight >= panel.scrollHeight - 4) cur = secs.at(-1)?.id;
-  if(gdPinned) cur = gdPinned;
-  document.querySelectorAll('#gdToc button').forEach(b => b.classList.toggle('on', b.dataset.sec === cur));
-  document.querySelectorAll('#gdToc button').forEach(b => { const el = document.getElementById(b.dataset.sec); b.hidden = !el || !el.offsetHeight; });
+  const pubEmpty = document.getElementById('detailPubWrap').classList.contains('hidden');
+  document.querySelectorAll('#gdToc button').forEach(b => { b.classList.toggle('on', b.dataset.sec === gdPage); b.hidden = b.dataset.sec === 'gdPub' && pubEmpty; });
 }
-document.getElementById('detailPanel').addEventListener('scroll', gdSpy, { passive: true });
 function openGameDetail(targetName) {
-  detailCurrentName = targetName; gdPinned = null;
+  detailCurrentName = targetName; gdPage = 'gdPgSum';
+  document.querySelectorAll('#detailPanel .gd-page').forEach(pg => pg.classList.toggle('hidden', pg.id !== 'gdPgSum'));
   syncDetailWatchBtn(targetName);
   document.querySelectorAll('#rkCols li[data-key]').forEach(li => li.classList.toggle('bg-indigo-500/15', li.dataset.key === getGameKey(targetName)));
   renderGameDetail();
@@ -6318,7 +6379,7 @@ document.addEventListener('click', e => {
   tip.style.top = `${r.bottom + 6 + h > innerHeight ? r.top - h - 6 : r.bottom + 6}px`;
 }, true);
 window.addEventListener('scroll', () => document.querySelectorAll('.tap-tip').forEach(t => t.remove()), { passive: true });
-window.addEventListener('hashchange', () => { const v = viewFromHash(); if(v !== currentView) switchView(v); });
+window.addEventListener('hashchange', () => { const v = viewFromHash(); if(v !== sbNavKey().replace(/^biz:.*/, 'business')) switchView(v); });
 /* 탭을 오래 열어두었다가 돌아오면 30분 경과 시 자동 갱신 */
 document.addEventListener('visibilitychange', () => {
   if(document.visibilityState === 'visible' && lastSyncAt && Date.now() - lastSyncAt > AUTO_REFRESH_MS && !fetchBusy) fetchAllData();
