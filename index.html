@@ -455,6 +455,14 @@ html.panel-lock { overflow: hidden; }
 .gd-toc button:hover { color:#f1f5f9; background:#141e33; }
 .gd-toc button.on { color:#c7d2fe; background:rgba(99,102,241,.16); }
 .gd-sec { scroll-margin-top:150px; }
+.gd-shots { display:flex; gap:10px; overflow-x:auto; padding-bottom:6px; margin-bottom:12px; }
+.gd-shots:empty { display:none; }
+.gd-shots a { flex:none; display:block; border-radius:10px; overflow:hidden; border:1px solid var(--line); background:#0b1222; }
+.gd-shots img { display:block; height:200px; width:auto; }
+@media (min-width:1600px){ .gd-shots img { height:240px; } }
+.gd-desc { font-size:13px; line-height:1.75; color:#cbd5e1; white-space:pre-line; }
+.gd-desc.clamp { display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden; }
+.gd-more { margin-top:6px; font-size:12px; font-weight:600; color:#a5b4fc; } .gd-more:hover { color:#e0e7ff; }
 /* 열고 닫는 움직임은 신작 상세와 같음 (오른쪽에서 0.3초 슬라이드, Tailwind duration-300) */
 @media (prefers-reduced-motion:reduce){ #detailPanel, #detailOverlay { transition:none !important; } }
 @media (min-width:1024px){
@@ -1348,6 +1356,7 @@ html.panel-lock { overflow: hidden; }
   <nav id="gdToc" class="gd-toc" aria-label="게임 상세 목차">
     <div class="gd-toc-t">게임 정보</div>
     <button type="button" data-sec="gdSum" onclick="gdGo('gdSum')">요약</button>
+    <button type="button" data-sec="gdInfo" onclick="gdGo('gdInfo')">게임 정보</button>
     <button type="button" data-sec="gdRank" onclick="gdGo('gdRank')">순위 추이</button>
     <button type="button" data-sec="gdScore" onclick="gdGo('gdScore')">평점 추이</button>
     <button type="button" data-sec="gdStats" onclick="gdGo('gdStats')">기간 분석</button>
@@ -1358,6 +1367,14 @@ html.panel-lock { overflow: hidden; }
     <section id="gdSum" class="gd-sec space-y-3">
     <div class="grid grid-cols-3 gap-2" id="detailKpis"></div>
     <div id="detailContext" class="text-[12px] text-slate-300"></div>
+    </section>
+
+    <!-- 게임 정보: 스크린샷 · 설명 (수집기 DB_앱정보, 패키지명으로 한 줄만 읽음) -->
+    <section id="gdInfo" class="gd-sec hidden">
+      <h4 class="text-sm font-semibold mb-2">게임 정보 <span id="gdInfoDate" class="text-[11px] muted font-normal ml-1"></span></h4>
+      <div id="gdShots" class="gd-shots thin-scroll"></div>
+      <div id="gdDesc" class="gd-desc clamp"></div>
+      <button type="button" id="gdDescMore" class="gd-more hidden" onclick="gdDescToggle()">더보기</button>
     </section>
 
     <!-- 추이 -->
@@ -3706,6 +3723,7 @@ function renderGameDetail(){
   const link = document.getElementById('detailPlayStoreLink');
   link.href = meta.appId ? `https://play.google.com/store/apps/details?id=${encodeURIComponent(meta.appId)}` : `https://play.google.com/store/search?q=${encodeURIComponent(name)}&c=apps`;
   link.innerHTML = `<i class="fa-brands fa-google-play mr-1 text-emerald-400"></i>${meta.appId ? 'Google Play' : 'Google Play 검색'}`;
+  gdLoadInfo(meta.appId);
 
   /* 현재: 매출 · 인기 · 평점(7일 변화) */
   const nS = detailNow(sales, 'sales'), nP = detailNow(pop, 'popular');
@@ -3900,6 +3918,38 @@ function rankMatchFilter(x, f){
   return true;
 }
 
+/* 게임 정보(스크린샷·설명): DB_앱정보 시트에서 패키지명으로 한 줄만 읽고 기억. 시트·데이터가 없으면 섹션째 숨김
+   (시트 이름이 없을 때 gviz 가 첫 시트를 돌려주는 경우가 있어 머리글을 확인) */
+const APPINFO_SHEET = 'DB_앱정보', gdInfoCache = new Map();
+async function gdLoadInfo(pkg){
+  const sec = document.getElementById('gdInfo'), want = detailCurrentName;
+  const show = info => {
+    if(want !== detailCurrentName) return;
+    sec.classList.toggle('hidden', !info);
+    if(info){
+      document.getElementById('gdShots').innerHTML = info.shots.map((u, i) => `<a href="${escapeAttr(u)}" target="_blank" rel="noopener" title="스크린샷 ${i + 1} 크게 보기"><img src="${escapeAttr(u.replace(/=[whs]\d+[^/]*$/, '') + '=h480')}" data-o="${escapeAttr(u)}" alt="스크린샷 ${i + 1}" onerror="if(!this.dataset.f){ this.dataset.f = 1; this.src = this.dataset.o; } else this.closest('a').remove()"></a>`).join('');
+      const d = document.getElementById('gdDesc'); d.textContent = info.desc || ''; d.classList.add('clamp');
+      setText('gdInfoDate', info.date ? `구글 플레이 · ${info.date} 기준` : '구글 플레이');
+      setTimeout(() => { const more = document.getElementById('gdDescMore'); more.textContent = '더보기'; more.classList.toggle('hidden', d.scrollHeight <= d.clientHeight + 2); }, 0);
+    }
+    gdSpy();
+  };
+  if(!pkg || !/^[\w.]+$/.test(pkg)){ show(null); return; }
+  if(gdInfoCache.has(pkg)){ show(gdInfoCache.get(pkg)); return; }
+  show(null);
+  try{
+    const res = await fetch(gvizUrl(APPINFO_SHEET, 1, `A = '${pkg}'`), { cache: 'no-store' });
+    const { cols, rows } = parseGviz(await res.text());
+    const r = cols[0] === '패키지명' ? rows.find(x => String(x[0]).trim() === pkg) : null;
+    const info = r ? { desc: String(r[2] || '').trim(), shots: String(r[3] || '').split('\n').map(x => x.trim()).filter(x => /^https?:/.test(x)), date: String(r[4] || '').trim() } : null;
+    gdInfoCache.set(pkg, info && (info.desc || info.shots.length) ? info : null);
+  }catch(e){ gdInfoCache.set(pkg, null); }
+  show(gdInfoCache.get(pkg));
+}
+function gdDescToggle(){
+  const d = document.getElementById('gdDesc'), open = d.classList.toggle('clamp');
+  document.getElementById('gdDescMore').textContent = open ? '더보기' : '접기';
+}
 /* 게임 상세 목차: 누르면 그 섹션으로, 스크롤하면 지금 보는 섹션 표시 */
 /* 목차로 고른 섹션은 끝까지 스크롤이 안 돼도(내용이 짧을 때) 선택 표시를 유지, 직접 스크롤하면 해제 */
 let gdPinned = null;
@@ -3913,7 +3963,7 @@ function gdSpy(){
   if(panel.scrollTop > 0 && panel.scrollTop + panel.clientHeight >= panel.scrollHeight - 4) cur = secs.at(-1)?.id;
   if(gdPinned) cur = gdPinned;
   document.querySelectorAll('#gdToc button').forEach(b => b.classList.toggle('on', b.dataset.sec === cur));
-  document.querySelector('#gdToc button[data-sec="gdPub"]').hidden = !document.getElementById('gdPub').offsetHeight;
+  document.querySelectorAll('#gdToc button').forEach(b => { const el = document.getElementById(b.dataset.sec); b.hidden = !el || !el.offsetHeight; });
 }
 document.getElementById('detailPanel').addEventListener('scroll', gdSpy, { passive: true });
 function openGameDetail(targetName) {
