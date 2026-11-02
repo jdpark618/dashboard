@@ -471,6 +471,12 @@ html.panel-lock { overflow: hidden; }
 .gd-toc button.on { color:#c7d2fe; background:rgba(99,102,241,.16); }
 .gd-sec { scroll-margin-top:150px; }
 #mkMonthlyTable thead tr:last-child th { text-align:center !important; }
+@media (min-width:768px){
+  #detailKpis > .card { display:flex; align-items:center; gap:14px; padding:12px 16px; }
+  #detailKpis > .card > :first-child { margin:0; flex:none; font-size:12px; }
+  #detailKpis > .card > :nth-child(2) { margin:0; }
+  #detailKpis > .card > :nth-child(3) { margin:0 0 0 auto; text-align:right; }
+}
 /* 게임 상세 머리: 넓은 화면은 한 줄(아이콘·이름·칩 | 순위 비교·관심 게임·Google Play | 닫기), 좁은 화면은 버튼이 아래 줄 */
 .gd-hd { display:flex; flex-wrap:wrap; align-items:center; column-gap:12px; row-gap:10px; }
 .gd-hd-ic { width:48px; height:48px; border-radius:12px; }
@@ -498,11 +504,18 @@ html.panel-lock { overflow: hidden; }
 @media (min-width:1600px){ .gd-shots img { height:240px; } }
 
 /* 열고 닫는 움직임은 신작 상세와 같음 (오른쪽에서 0.3초 슬라이드, Tailwind duration-300) */
-@media (prefers-reduced-motion:reduce){ #detailPanel, #detailOverlay { transition:none !important; } }
+@media (prefers-reduced-motion:reduce){ #detailPanel, #detailOverlay, #releaseDetailPanel, #releaseDetailOverlay { transition:none !important; } }
 @media (min-width:1024px){
   #detailPanel { max-width:none; width:calc(100vw - var(--sb-w) - 24px); top:52px; height:calc(100vh - 52px); border-top-left-radius:14px; border:1px solid #334155; border-right:0; border-bottom:0; }
   #detailPanel:not(.translate-x-full) { box-shadow:-18px 0 48px rgba(0,0,0,.5), -2px 0 0 rgba(99,102,241,.06); }
   #detailPanel .gd-hd { border-top-left-radius:14px; }
+  /* 신작 상세도 같은 팝업 크기·모양 (내용 배치는 그대로) */
+  #releaseDetailPanel { max-width:none; width:calc(100vw - var(--sb-w) - 24px); top:52px; height:calc(100vh - 52px); border-top-left-radius:14px; border:1px solid #334155; border-right:0; border-bottom:0; }
+  #releaseDetailPanel:not(.translate-x-full) { box-shadow:-18px 0 48px rgba(0,0,0,.5); }
+  #releaseDetailPanel .gd-hd { border-top-left-radius:14px; padding:16px 28px; flex-wrap:nowrap; column-gap:16px; }
+  #releaseDetailPanel .gd-hd-ic { width:56px; height:56px; border-radius:14px; }
+  #releaseDetailPanel .gd-hd-nm { font-size:20px; }
+  #releaseDetailOverlay { top:52px; left:var(--sb-w); background:rgba(2,6,15,.62); }
   /* 어두운 배경은 본문 영역만 (상단 바·사이드바는 그대로 두어 경계선이 생기지 않게) */
   #detailOverlay { top:52px; left:var(--sb-w); background:rgba(2,6,15,.62); }
   #detailPanel .gd-body { display:grid; grid-template-columns:180px minmax(0,1fr); align-items:start; }
@@ -1468,19 +1481,18 @@ html.panel-lock { overflow: hidden; }
 <!-- NEW RELEASE DETAIL PANEL (신작 DB) -->
 <div id="releaseDetailOverlay" class="fixed inset-0 bg-black/70 z-40 hidden opacity-0 transition-opacity duration-300" onclick="closeReleaseDetail()"></div>
 <div id="releaseDetailPanel" class="fixed top-0 right-0 w-full max-w-[520px] h-full bg-slate-900 shadow-2xl z-50 transform translate-x-full transition-transform duration-300 overflow-y-auto thin-scroll border-l border-slate-700 flex flex-col" role="dialog" aria-labelledby="releaseDetailTitle">
-  <div class="px-5 pt-4 pb-3 border-b border-slate-800 sticky top-0 bg-slate-900/95 backdrop-blur z-20">
-    <div class="flex items-start gap-3">
-      <img id="releaseDetailIcon" src="" class="w-12 h-12 rounded-xl object-cover bg-slate-800 hidden shrink-0 shadow" alt="">
-      <div class="min-w-0 flex-1">
-        <h2 class="text-[17px] font-bold leading-snug line-clamp-2" id="releaseDetailTitle">-</h2>
-        <div class="text-[12px] text-slate-400 mt-0.5 truncate" id="releaseDetailPub">-</div>
-      </div>
-      <div class="flex items-center gap-1 shrink-0">
-        <button type="button" id="releasePrevBtn" onclick="releaseNav(-1)" class="cal-navbtn" aria-label="이전 신작 (←)"><i class="fa-solid fa-chevron-left"></i></button>
-        <button type="button" id="releaseNextBtn" onclick="releaseNav(1)" class="cal-navbtn" aria-label="다음 신작 (→)"><i class="fa-solid fa-chevron-right"></i></button>
-        <button onclick="closeReleaseDetail()" class="text-slate-400 hover:text-white p-1 ml-1" aria-label="닫기 (Esc)"><i class="fa-solid fa-xmark text-xl"></i></button>
-      </div>
+  <div class="gd-hd px-5 pt-4 pb-3 border-b border-slate-800 sticky top-0 bg-slate-900/95 backdrop-blur z-20">
+    <img id="releaseDetailIcon" src="" class="gd-hd-ic object-cover bg-slate-800 hidden shrink-0 shadow" alt="">
+    <div class="gd-hd-tx min-w-0 flex-1">
+      <h2 class="gd-hd-nm font-bold leading-snug line-clamp-2" id="releaseDetailTitle">-</h2>
+      <div class="mt-1"><span class="inline-block text-[11px] text-slate-300 bg-slate-800 border border-slate-700 rounded-full px-2 py-0.5 truncate max-w-[320px]" id="releaseDetailPub">-</span></div>
     </div>
+    <div class="flex items-center gap-1.5 shrink-0">
+      <button type="button" id="releasePrevBtn" onclick="releaseNav(-1)" class="cal-today-btn" aria-label="이전 신작 (←)"><i class="fa-solid fa-chevron-left mr-1.5"></i>이전</button>
+      <button type="button" id="releaseNextBtn" onclick="releaseNav(1)" class="cal-today-btn" aria-label="다음 신작 (→)">다음<i class="fa-solid fa-chevron-right ml-1.5"></i></button>
+    </div>
+    <span class="gd-hd-sep" aria-hidden="true"></span>
+    <button onclick="closeReleaseDetail()" class="gd-hd-x text-slate-400 hover:text-white shrink-0 p-1" aria-label="닫기 (Esc)"><i class="fa-solid fa-xmark text-xl"></i></button>
   </div>
 
   <div id="releaseDetailBanner" class="hidden relative h-40 shrink-0 overflow-hidden cursor-zoom-in" onclick="openLightbox(0)">
