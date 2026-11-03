@@ -141,6 +141,8 @@ const bootFetch = (() => {
   return { start, used:false, sales: get(SHEETS.sales, `A >= date '${start}'`), popular: get(SHEETS.popular, `A >= date '${start}'`), newReleases: get(SHEETS.newReleases, '') };
 })();
 /* 글로벌 순위: 나라·스토어별 최신일 차트. 스냅샷에 있으면 그걸, 없는 칸만 시트에서 최신일 100행 (날짜 내림차순 100행) */
+/* 국기: 윈도우는 국기 이모지가 글자(KR)로 보여서 그림으로 (flag-icons) */
+function glFlag(c, size){ return `<img src="https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/flags/4x3/${c}.svg" class="gl-flag${size ? ' ' + size : ''}" alt="" aria-hidden="true">`; }
 const GL_ORDER = ['kr', 'us', 'jp', 'tw'], GL_CHARTS = [['sales', 'DB_매출순위'], ['popular', 'DB_인기순위']];
 function glQueryUrl(base, c, st = STORE){ const since = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10); return gvizUrl(rkSheet(base, c, st), 1, `A >= date '${since}' order by A desc limit 100`); }
 function glFetchText(base, c, st = STORE){ return fetch(glQueryUrl(base, c, st), { cache:'no-store' }).then(r => r.ok ? r.text() : Promise.reject(new Error(`HTTP ${r.status}`))); }
@@ -250,8 +252,9 @@ html.sb-mini .sb-rep .hd-new { position:absolute; top:3px; right:2px; margin:0; 
 .scope-slot:empty { display:none; }
 .sc-store button { gap:6px; padding:0 10px; font-size:11.5px; }
 .sc-store button i { font-size:12px; }
-.sc-cty button { min-width:34px; justify-content:center; padding:0 8px; font-size:11.5px; letter-spacing:.02em; }
-@media (max-width:639px){ .sc-store button span { display:none; } .sc-store button { padding:0 9px; } .sc-cty button { min-width:0; padding:0 7px; } }
+.sc-cty button { display:inline-flex; align-items:center; gap:6px; padding:0 10px; font-size:11.5px; }
+/* 휴대폰: 한 줄에 들어가게 스토어는 아이콘, 나라는 국기만 (이름은 title) */
+@media (max-width:639px){ .sc-store button span, .sc-cty button span { display:none; } .sc-store button { padding:0 9px; } .sc-cty button { padding:0 8px; } }
 /* 게임 상세: 국가별 표 · 국가 버튼 */
 /* 화면 전환·나라/스토어 전환 중 덮개: 이전 화면이 깜빡이지 않게 본문 영역을 가림 */
 .view-loading { position:fixed; top:52px; left:var(--sb-w); right:0; bottom:0; z-index:30; background:var(--bg); display:flex; justify-content:center; align-items:flex-start; padding-top:22vh; font-size:13px; color:#a0a7ad; }
@@ -578,6 +581,11 @@ html.panel-lock { overflow: hidden; }
 .thin-scroll:hover::-webkit-scrollbar-thumb { background: rgba(160,167,173,.7); }
 .thin-scroll::-webkit-scrollbar-track { background: transparent; }
 /* 페이지 머리 (DB 화면 제외 공통): 카드 밖 한 줄, 왼쪽 제목·설명 / 오른쪽 페이지 조작 */
+/* 필터 줄 규칙: 조작은 왼쪽부터, 기준일(보라 글자)은 같은 줄 오른쪽 */
+.filter-row { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 16px; }
+.filter-l { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+.filter-row .mk-asof-slot, .filter-row .asof { margin-left:auto; text-align:right; }
+.asof { font-size:12px; color:rgba(189,181,255,.9); }
 .page-head { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 16px; }
 .page-head.end { justify-content:flex-end; }
 .page-head h2 { font-size:18px; font-weight:700; display:flex; align-items:center; gap:8px; }
@@ -981,10 +989,10 @@ html.panel-lock { overflow: hidden; }
     <button type="button" data-s="gp" onclick="setStore('gp')" title="Google Play"><i class="fa-brands fa-google-play"></i><span>Google Play</span></button><button type="button" data-s="ios" onclick="setStore('ios')" title="App Store"><i class="fa-brands fa-apple"></i><span>App Store</span></button>
   </div>
   <div class="sc-cty mk-seg" role="group" aria-label="국가">
-    <button type="button" data-c="kr" onclick="setCountry('kr')" title="한국">KR</button><button type="button" data-c="us" onclick="setCountry('us')" title="미국">US</button><button type="button" data-c="jp" onclick="setCountry('jp')" title="일본">JP</button><button type="button" data-c="tw" onclick="setCountry('tw')" title="대만">TW</button>
   </div>
 </div>
-<script>document.querySelectorAll('.sc-cty button').forEach(b => { const on = b.dataset.c === COUNTRY; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+<script>document.querySelector('#scopeBox .sc-cty').innerHTML = GL_ORDER.map(c => `<button type="button" data-c="${c}" onclick="setCountry('${c}')" title="${COUNTRIES[c].name}">${glFlag(c, 'sm')}<span>${COUNTRIES[c].name}</span></button>`).join('');
+document.querySelectorAll('.sc-cty button').forEach(b => { const on = b.dataset.c === COUNTRY; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
 document.querySelectorAll('.sc-store button').forEach(b => { const on = b.dataset.s === STORE; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });</script>
 <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
 <script>try{ lucide.createIcons(); }catch(e){ console.warn('lucide 아이콘을 불러오지 못했습니다', e); }</script>
@@ -993,13 +1001,13 @@ document.querySelectorAll('.sc-store button').forEach(b => { const on = b.datase
 <main>
 <!-- DASHBOARD VIEW -->
 <div id="view-dashboard" class="space-y-6">
+  <div class="filter-row"><div class="filter-l"><div class="scope-slot" data-for="dashboard"></div></div><span class="asof">기준일 <span id="snapshotDate">-</span></span></div>
   <!-- 섹션 1: 마켓 서머리 -->
   <section>
     <div class="flex items-center justify-between mb-3 px-0.5">
       <h2 class="text-base font-bold text-slate-200 flex items-center gap-2">
         <i class="fa-solid fa-chart-simple text-indigo-400"></i>오늘의 시장 요약
       </h2>
-      <div class="scope-slot" data-for="dashboard"></div>
     </div>
 
     <div id="freezeWarning" class="hidden mb-4 flex items-center gap-2 px-4 py-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-400 text-sm font-medium">
@@ -1210,28 +1218,26 @@ document.querySelectorAll('.sc-store button').forEach(b => { const on = b.datase
   <div class="hidden"><div id="mkAsOf" class="text-[12px] text-indigo-300/90">-</div></div>
 
   <!-- 질문 단위 탭 -->
-  <div class="flex flex-wrap items-end justify-between gap-x-3 gap-y-2 border-b border-slate-800">
-  <nav class="flex gap-1 overflow-x-auto overflow-y-hidden" id="mkSectionTabs">
+  <nav class="flex gap-1 overflow-x-auto overflow-y-hidden border-b border-slate-800" id="mkSectionTabs">
     <button type="button" data-section="structure" onclick="mkSetSection('structure')" class="mk-sec"><i class="fa-solid fa-chess-board mr-1.5"></i>시장 구조</button>
     <button type="button" data-section="change" onclick="mkSetSection('change')" class="mk-sec"><i class="fa-solid fa-arrow-trend-up mr-1.5"></i>순위 변동</button>
     <button type="button" data-section="debut" onclick="mkSetSection('debut')" class="mk-sec"><i class="fa-solid fa-seedling mr-1.5"></i>첫 차트인</button>
     <button type="button" data-section="releases" onclick="mkSetSection('releases')" class="mk-sec"><i class="fa-regular fa-calendar-plus mr-1.5"></i>신작 동향</button>
   </nav>
-  <div class="scope-slot pb-2" data-for="business"></div>
-  </div>
   <div id="mkLoading" class="hidden card rounded-xl p-3 text-xs text-indigo-300"><i class="fa-solid fa-spinner fa-spin mr-2"></i><span id="mkLoadingText">지난 기간 순위 데이터를 불러오는 중...</span></div>
 
   <!-- ① 순위 변동 -->
   <div id="mkSecChange" class="space-y-4">
-  <div class="flex flex-wrap items-center justify-between gap-2">
-    <div class="mk-asof-slot"></div>
-    <div class="flex flex-wrap items-center gap-2">
+  <div class="filter-row">
+    <div class="filter-l">
+      <div class="scope-slot" data-for="biz-change"></div>
       <div class="mk-tabs" data-tab="secChange"></div>
       <div class="mk-seg">
         <button type="button" data-mode="daily" onclick="mkSetMode('daily')" class="mk-mode">전일 대비</button>
         <button type="button" data-mode="weekly" onclick="mkSetMode('weekly')" class="mk-mode">전주 대비</button>
       </div>
     </div>
+    <div class="mk-asof-slot"></div>
   </div>
 
   <!-- 일간 분석 -->
@@ -1274,19 +1280,18 @@ document.querySelectorAll('.sc-store button').forEach(b => { const on = b.datase
 
   <!-- 월간/주간 순위 -->
   <div id="mkSecMonthly" class="hidden space-y-4">
-    <!-- 왼쪽: 기간(날짜) 선택 · 오른쪽: 월간/주간 -->
-    <div class="flex flex-wrap items-center justify-between gap-2">
-      <div class="flex flex-wrap items-center gap-3">
-        <select id="mkMonthlySel" class="mk-sel" onchange="mkMonthly[mkMonthly.period === 'week' ? 'wk' : 'ym'] = this.value; mkMonthly.all = false; mkRender()" aria-label="기간 선택"></select>
-        <div class="mk-asof-slot"></div>
-      </div>
-      <div class="flex flex-wrap items-center gap-2">
+    <!-- 왼쪽: 스토어·국가 · 월간/주간 · 기간 · 오른쪽: 기준일 -->
+    <div class="filter-row">
+      <div class="filter-l">
+        <div class="scope-slot" data-for="biz-monthly"></div>
         <div class="mk-seg" id="mkRankPeriod">
           <button type="button" data-v="month" onclick="mkRankPeriodSet('month')">월간</button>
           <button type="button" data-v="week" onclick="mkRankPeriodSet('week')">주간</button>
         </div>
+        <select id="mkMonthlySel" class="mk-sel" onchange="mkMonthly[mkMonthly.period === 'week' ? 'wk' : 'ym'] = this.value; mkMonthly.all = false; mkRender()" aria-label="기간 선택"></select>
         <div class="mk-tabs" data-tab="monthly"></div>
       </div>
+      <div class="mk-asof-slot"></div>
     </div>
     <section class="card rounded-xl p-5" data-snap>
       <div class="mk-card-head"><div><h3 class="font-semibold text-sm flex items-center gap-2"><span id="mkRankTitle">월간 순위표</span> <span class="mk-store" data-storeof="monthly"></span></h3><p id="mkMonthlyDesc" class="text-[11px] muted mt-1">-</p></div><button type="button" class="snap-btn" data-nosnap onclick="snapEl(this, mkMonthly.period === 'week' ? '주간순위표' : '월간순위표')" title="이미지로 저장" aria-label="이미지로 저장"><i class="fa-solid fa-camera"></i></button></div>
@@ -1296,7 +1301,10 @@ document.querySelectorAll('.sc-store button').forEach(b => { const on = b.datase
 
   <!-- ② 시장 구조 -->
   <div id="mkSecStructure" class="hidden space-y-4">
-    <div class="mk-asof-slot"></div>
+    <div class="filter-row">
+      <div class="filter-l"><div class="scope-slot" data-for="biz-structure"></div></div>
+      <div class="mk-asof-slot"></div>
+    </div>
     <section class="card rounded-xl p-5" data-snap>
       <div class="mk-card-head">
         <div><h3 class="font-semibold text-sm">시장 포지션 맵<i class="fa-regular fa-circle-question mk-info" title="매출·인기 둘 다 TOP100인 게임만 평면에 아이콘으로 놓습니다. 가로는 매출 순위(오른쪽이 1위), 세로는 인기 순위(위쪽이 1위)이고, 상위권이 잘 보이도록 로그 눈금을 씁니다. 아이콘은 기준일 순위에 놓고, 전일·7일·30일 버튼은 그 기간의 이동 궤적을 그립니다. 아이콘을 누르면 게임 상세가 열립니다."></i><span id="mkPosDesc" class="ml-2 text-[12px] font-normal text-indigo-300/90">-</span></h3></div>
@@ -1346,9 +1354,12 @@ document.querySelectorAll('.sc-store button').forEach(b => { const on = b.datase
 
   <!-- ③ 첫 차트인 -->
   <div id="mkSecDebut" class="hidden space-y-4">
-    <div class="flex flex-wrap items-center justify-between gap-2">
+    <div class="filter-row">
+      <div class="filter-l">
+        <div class="scope-slot" data-for="biz-debut"></div>
+        <div class="mk-tabs" data-tab="debut"></div>
+      </div>
       <div class="mk-asof-slot"></div>
-      <div class="mk-tabs" data-tab="debut"></div>
     </div>
     <section id="mkDebutKpis" class="grid grid-cols-2 lg:grid-cols-4 gap-3"></section>
     <section class="card rounded-xl p-5" data-snap>
@@ -1363,9 +1374,11 @@ document.querySelectorAll('.sc-store button').forEach(b => { const on = b.datase
 
   <!-- ④ 신작 동향 -->
   <div id="mkSecReleases" class="hidden space-y-4">
-    <div class="flex flex-wrap items-center justify-between gap-2">
-      <div class="mk-asof-slot"></div>
+    <div class="filter-row">
+      <div class="filter-l">
       <label class="cal-toggle"><input type="checkbox" id="mkRelMobileOnly" checked onchange="mkRender()"><span class="knob"></span>모바일(멀티 플랫폼)만 보기</label>
+      </div>
+      <div class="mk-asof-slot"></div>
     </div>
     <section id="mkRelKpis" class="grid grid-cols-2 lg:grid-cols-4 gap-3"></section>
     <section class="card rounded-xl p-5">
@@ -1462,13 +1475,13 @@ document.querySelectorAll('.sc-store button').forEach(b => { const on = b.datase
 
 <!-- 글로벌 순위: 네 나라 오늘 차트 TOP 10 + 글로벌 종합 상위권 (선택한 나라와 무관하게 항상 4개국) -->
 <div id="view-global" class="hidden space-y-4">
-  <div class="page-head">
-    <p class="text-[12px] muted" id="glSub">-</p>
-    <div class="flex flex-wrap items-center gap-2"><div class="scope-slot" data-for="global"></div>
+  <div class="filter-row">
+    <div class="filter-l"><div class="scope-slot" data-for="global"></div>
     <div class="mk-seg" id="glChart">
       <button type="button" data-k="sales" onclick="glSetChart('sales')" class="on">매출</button>
       <button type="button" data-k="popular" onclick="glSetChart('popular')">인기</button>
     </div></div>
+    <p class="asof" id="glSub">-</p>
   </div>
   <div id="glGrid" class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-4"><div class="text-xs muted py-6">불러오는 중...</div></div>
   <section class="card rounded-xl p-5">
@@ -1489,15 +1502,15 @@ document.querySelectorAll('.sc-store button').forEach(b => { const on = b.datase
 </div>
 
 <div id="view-watch" class="hidden space-y-4">
-  <div class="page-head">
-    <p class="text-[12px] muted" id="wlSub">-</p>
-    <div class="flex flex-wrap items-center gap-2">
+  <div class="filter-row">
+    <div class="filter-l">
       <div class="scope-slot" data-for="watch"></div>
       <select id="wlSort" class="mk-sel" onchange="watchState.sort = this.value; renderWatchPage()" aria-label="정렬">
         <option value="event">변동 있는 게임 먼저</option><option value="sales">매출 순위순</option><option value="popular">인기 순위순</option><option value="added">최근 등록순</option>
       </select>
       <button type="button" class="more-btn h-8" onclick="searchLoadWatch()"><i class="fa-solid fa-chart-line mr-1.5"></i>순위 비교에 모두 넣기</button>
     </div>
+    <p class="asof" id="wlSub">-</p>
   </div>
   <section id="wlList" class="card rounded-xl overflow-hidden"></section>
   <p class="text-[11px] muted px-1">목록은 이 브라우저에만 저장됩니다 · 나라별 순위는 각 나라 최신 수집일, 변동은 전일 대비 · '밖 · 날짜'는 TOP100 밖(마지막으로 오른 날) · 빈칸은 그 나라 차트에 오른 기록 없음 (해외는 11/03부터 수집)</p>
@@ -1621,7 +1634,7 @@ document.querySelectorAll('.sc-store button').forEach(b => { const on = b.datase
 
 <!-- DATABASE VIEW -->
 <!-- 매출·인기 DB: DB 화면은 손대지 않고 그 위에 선택 줄만 -->
-<div id="dbScopeRow" class="hidden flex justify-end mb-3"><div class="scope-slot" data-for="db"></div></div>
+<div id="dbScopeRow" class="hidden flex justify-start mb-3"><div class="scope-slot" data-for="db"></div></div>
 <div id="view-database" class="hidden">
   <section class="card rounded-xl overflow-hidden">
     <div class="p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800">
@@ -2656,11 +2669,12 @@ function switchView(view){
 /* 스토어·국가 선택을 지금 페이지 칸으로: both = 스토어+국가, store = 스토어만(4개국을 함께 보는 화면)
    일간 마켓별 순위(자체 국가 선택) · 신작 달력 · 신작 DB · 신작 동향 · 주간 리포트는 없음 */
 const SCOPE_VIEWS = { dashboard:'both', ranking:'both', business:'both', search:'both', sales:'both', popular:'both', global:'store', watch:'store' };
+function scopeSlotKey(v){ return v === 'sales' || v === 'popular' ? 'db' : v === 'business' ? `biz-${mkSection}` : v; }
 function scopePlace(){
   const box = document.getElementById('scopeBox'), v = currentView;
   const mode = v === 'business' && mkSection === 'releases' ? '' : SCOPE_VIEWS[v] || '';
   document.getElementById('dbScopeRow').classList.toggle('hidden', v !== 'sales' && v !== 'popular');
-  const slot = mode && document.querySelector(`.scope-slot[data-for="${v === 'sales' || v === 'popular' ? 'db' : v}"]`);
+  const slot = mode && document.querySelector(`.scope-slot[data-for="${scopeSlotKey(v)}"]`);
   if(slot){ if(box.parentNode !== slot) slot.appendChild(box); box.dataset.mode = mode; box.hidden = false; }
   else box.hidden = true;
 }
@@ -4592,7 +4606,7 @@ function gdCountryTableHtml(){
   if(!Pm || !Gm) return '';
   /* 머리 버튼: 스토어 · 나라 */
   document.getElementById('gdCty').innerHTML = `<span class="mk-seg">${['gp', 'ios'].map(st => `<button type="button" class="${st === detailStore ? 'on' : ''}" ${detailIds[st] ? `onclick="gdSetScope('${detailCountry}', '${st}')"` : 'disabled'} title="${STORES[st].name}">${GD_STORE_ICON[st].replace('"></i>', ' text-[13px]"></i>')}</button>`).join('')}</span>`
-    + `<span class="mk-seg">${GL_ORDER.map(c => `<button type="button" class="${c === detailCountry ? 'on' : ''}" ${gdHas(detailStore, c) ? `onclick="gdSetScope('${c}')"` : 'disabled'} title="${COUNTRIES[c].name}${gdHas(detailStore, c) ? '' : ' · 차트에 오른 기록 없음'}">${COUNTRIES[c].code}</button>`).join('')}</span>`;
+    + `<span class="mk-seg">${GL_ORDER.map(c => `<button type="button" class="${c === detailCountry ? 'on' : ''}" ${gdHas(detailStore, c) ? `onclick="gdSetScope('${c}')"` : 'disabled'} title="${COUNTRIES[c].name}${gdHas(detailStore, c) ? '' : ' · 차트에 오른 기록 없음'}">${glFlag(c, 'sm')}<span class="ml-1">${COUNTRIES[c].name}</span></button>`).join('')}</span>`;
   const cell = (st, c, k) => {
     const cls = k === 'sales' ? 't-sales' : 't-pop', on = c === detailCountry && st === detailStore ? ' on' : '';
     const P = gdPkgOf(st), G = gdGlobalSync(st);
@@ -6266,8 +6280,6 @@ function glOpenGame(c, name, pkg){
   if(c === COUNTRY || !pkg){ if(c === COUNTRY) openGameDetail(name, { pkg }); else { try{ sessionStorage.setItem('gmi.openDetail', name); }catch(e){} setCountry(c, 'global'); } return; }
   openGameDetail(name, { pkg, country: c });   /* 사이트 나라는 그대로, 상세만 그 나라 기준 */
 }
-/* 국기: 윈도우는 국기 이모지가 글자(KR)로 보여서 그림으로 (flag-icons) */
-function glFlag(c, size){ return `<img src="https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/flags/4x3/${c}.svg" class="gl-flag${size ? ' ' + size : ''}" alt="" aria-hidden="true">`; }
 function glIcon(r){ let u = String(r[9] || '').trim(); if(u.startsWith("'")) u = u.slice(1); return /^https?:/.test(u) ? u : ''; }
 function renderGlobalView(){
   const D = glState.data; if(!D) return;
@@ -6434,7 +6446,7 @@ function renderWatchPage(){
       const t = { sales: today[c].sales.get(e.id), popular: today[c].popular.get(e.id) }, ls = { sales: seen[c]?.sales?.get(e.id), popular: seen[c]?.popular?.get(e.id) };
       if(!e.id || (!t.sales && !t.popular && !ls.sales && !ls.popular)) return;   /* 그 나라 기록 없음 → 빈칸 */
       per[c] = { t, ls };
-      ['sales', 'popular'].forEach(k => { const w = watchEvent(t[k], k); if(w && (!ev || w.p > ev.p)) ev = { ...w, text: `${COUNTRIES[c].code} ${w.text}` }; });
+      ['sales', 'popular'].forEach(k => { const w = watchEvent(t[k], k); if(w && (!ev || w.p > ev.p)) ev = { ...w, text: `${COUNTRIES[c].name} ${w.text}` }; });
       bestS = Math.min(bestS, rankOf(t.sales) ?? 999); bestP = Math.min(bestP, rankOf(t.popular) ?? 999);
       const r = t.sales || t.popular;
       if(c === 'kr' && (r || ls.sales || ls.popular)) name = r ? gameName(r) : (ls.sales || ls.popular).n || name;   /* 한국 이름 우선 */
@@ -6453,7 +6465,7 @@ function renderWatchPage(){
     if(x.t[k]) return `<div class="wl-rk"><span class="wl-lb ${cls}">${lab}</span><b class="${cls}">${rankOf(x.t[k])}위</b>${rankChangeBadge(String(x.t[k][2] || '-'))}</div>`;
     return `<div class="wl-rk"><span class="wl-lb ${cls}">${lab}</span><span class="wl-sub">${x.ls[k]?.d ? `밖 · ${mkShort(x.ls[k].d)}` : '-'}</span></div>`;
   };
-  box.innerHTML = `<div class="wl-head"><span></span><span></span><span>게임</span>${GL_ORDER.map(c => `<span class="wl-chd">${glFlag(c, 'sm')}${COUNTRIES[c].code}</span>`).join('')}</div>`
+  box.innerHTML = `<div class="wl-head"><span></span><span></span><span>게임</span>${GL_ORDER.map(c => `<span class="wl-chd">${glFlag(c, 'sm')}${COUNTRIES[c].name}</span>`).join('')}</div>`
     + rows.map(r => {
       /* 상세는 지금 나라에 기록이 있으면 그 나라로, 없으면 기록이 있는 첫 나라로 */
       const oc = r.per[COUNTRY] ? COUNTRY : GL_ORDER.find(c => r.per[c]) || COUNTRY;
@@ -6465,7 +6477,7 @@ function renderWatchPage(){
         ${r.icon ? `<img class="wl-ic" src="${escapeAttr(r.icon)}" alt="" loading="lazy">` : '<span class="wl-ic"></span>'}
         <div class="min-w-0"><div class="wl-nm">${escapeHtml(r.name)}</div>
           <div class="wl-meta"><span>${escapeHtml(r.meta.publisher || '-')} · ${escapeHtml(r.meta.genre || '-')}</span>${r.ev ? `<span class="wl-ev ${r.ev.cls}">${r.ev.text}</span>` : ''}</div></div>
-        <div class="wl-cs">${GL_ORDER.map(c => r.per[c] ? `<div class="wl-c"><span class="wl-cc">${glFlag(c, 'sm')}${COUNTRIES[c].code}</span>${line(r.per[c], 'sales')}${line(r.per[c], 'popular')}</div>` : '<div class="wl-c"></div>').join('')}</div>
+        <div class="wl-cs">${GL_ORDER.map(c => r.per[c] ? `<div class="wl-c"><span class="wl-cc">${glFlag(c, 'sm')}${COUNTRIES[c].name}</span>${line(r.per[c], 'sales')}${line(r.per[c], 'popular')}</div>` : '<div class="wl-c"></div>').join('')}</div>
       </div>`;
     }).join('');
 }
