@@ -7206,7 +7206,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('.sb-item').forEach(x => x.classList.toggle('active', x.dataset.view === currentView));
   }
   document.documentElement.dataset.view = currentView;
-  sbSync();
+  sbSync(); scopePlace();   /* 첫 화면(일간 요약)은 switchView 를 거치지 않으므로 선택 줄을 여기서 놓음 */
   if(initial === 'global') switchView('global');   /* 4개국 차트는 따로 읽으므로 기다릴 필요 없음 (덮개는 그 화면이 다 그려지면 끔) */
   bootReveal = () => {   /* 데이터가 처음 준비되는 순간(저장 데이터든 새 데이터든) 한 번만 */
     bootReveal = null;
