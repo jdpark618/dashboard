@@ -37,18 +37,36 @@ const COUNTRY = (() => {
   return c;
 })();
 const CSFX = COUNTRIES[COUNTRY].sfx;
-/* 한국 전용 화면: 다른 나라에서 누르면 한국으로 전환해서 연다 */
-const KR_ONLY_VIEWS = ['report'];   /* 순위 시트로 만드는 리포트만 (신작 달력·신작 DB 는 원래 한국 데이터라 그대로 열림) */
-function setCountry(c, view){
-  if(!COUNTRIES[c] || (c === COUNTRY && !view)) return;
-  try{ localStorage.setItem('gmi.country', c); }catch(e){}
+/* 스토어: 주소 ?s=ios → 없으면 마지막 선택 → 기본 구글 플레이. 앱스토어 시트는 '_iOS' 가 나라 접미사 앞에 붙음 (DB_매출순위_iOS_US) */
+const STORES = { gp:{ name:'Google Play', sfx:'', icon:'<i class="fa-brands fa-google-play text-emerald-400"></i>' }, ios:{ name:'App Store', sfx:'_iOS', icon:'<i class="fa-brands fa-app-store-ios text-sky-400"></i>' } };
+const STORE = (() => {
+  const q = new URLSearchParams(location.search).get('s'); let v = q;
+  if(!v){ try{ v = localStorage.getItem('gmi.store'); }catch(e){} }
+  v = String(v || '').toLowerCase(); if(!STORES[v]) v = 'gp';
+  if(!q && v !== 'gp'){ const u = new URL(location.href); u.searchParams.set('s', v); history.replaceState(null, '', u); }
+  document.documentElement.dataset.store = v;
+  return v;
+})();
+const SSFX = STORES[STORE].sfx;
+/* 나라·스토어별 순위 시트 이름 */
+function rkSheet(base, c = COUNTRY, st = STORE){ return base + STORES[st].sfx + COUNTRIES[c].sfx; }
+/* 한국 구글 전용 화면: 다른 나라·스토어에서 누르면 한국 구글로 전환해서 연다 */
+const KR_ONLY_VIEWS = ['report'];   /* 구글 순위 시트로 만드는 리포트만 (신작 달력·신작 DB 는 원래 한국 데이터라 그대로 열림) */
+function setScope(c, st, view){
+  if(!COUNTRIES[c] || !STORES[st] || (c === COUNTRY && st === STORE && !view)) return;
+  try{ localStorage.setItem('gmi.country', c); localStorage.setItem('gmi.store', st); }catch(e){}
   const u = new URL(location.href);
   if(c === 'kr') u.searchParams.delete('c'); else u.searchParams.set('c', c);
+  if(st === 'gp') u.searchParams.delete('s'); else u.searchParams.set('s', st);
   const cur = location.hash.slice(1).split('?')[0];
-  u.hash = view ? view : (c !== 'kr' && KR_ONLY_VIEWS.includes(cur) ? '' : location.hash);
+  u.hash = view ? view : ((c !== 'kr' || st !== 'gp') && KR_ONLY_VIEWS.includes(cur) ? '' : location.hash);
+  const ld = document.getElementById('viewLoading');   /* 새 화면이 뜰 때까지 이전 화면 대신 '읽는 중' */
+  if(ld){ document.getElementById('viewLoadingTx').textContent = `${COUNTRIES[c].name} · ${STORES[st].name} 데이터 읽는 중…`; ld.classList.remove('hidden'); }
   location.href = u.toString();   /* 화면 곳곳의 캐시가 섞이지 않게 새로 불러온다 */
 }
-const SHEETS = { sales:'DB_매출순위' + CSFX, popular:'DB_인기순위' + CSFX, newReleases:'월간신작DB' };
+function setCountry(c, view){ setScope(c, STORE, view); }
+function setStore(st){ setScope(COUNTRY, st); }
+const SHEETS = { sales: rkSheet('DB_매출순위'), popular: rkSheet('DB_인기순위'), newReleases:'월간신작DB' };
 const DETAIL_LOOKBACK_DAYS = 15;
 function pad2(n){ return String(n).padStart(2,'0'); }
 function ymKey(y,m){ return `${y}-${pad2(m)}`; }
@@ -79,7 +97,7 @@ const bootFetch = (() => {
 })();
 /* 글로벌 순위: 시트마다 최신일 100행만 (날짜 내림차순 100행). 그 화면 주소로 들어오면 첫 요청과 함께 미리 보냄 */
 const GL_ORDER = ['kr', 'us', 'jp', 'tw'], GL_CHARTS = [['sales', 'DB_매출순위'], ['popular', 'DB_인기순위']];
-function glQueryUrl(base, c){ const since = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10); return gvizUrl(base + COUNTRIES[c].sfx, 1, `A >= date '${since}' order by A desc limit 100`); }
+function glQueryUrl(base, c){ const since = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10); return gvizUrl(rkSheet(base, c), 1, `A >= date '${since}' order by A desc limit 100`); }
 function glFetchText(base, c){ return fetch(glQueryUrl(base, c), { cache:'no-store' }).then(r => r.ok ? r.text() : Promise.reject(new Error(`HTTP ${r.status}`))); }
 const glBoot = location.hash.startsWith('#global')
   ? Object.fromEntries(GL_ORDER.flatMap(c => GL_CHARTS.map(([k, base]) => { const pr = glFetchText(base, c); pr.catch(() => {}); return [`${c}:${k}`, pr]; })))
@@ -181,9 +199,39 @@ html.sb-mini .sb-rep .hd-new { position:absolute; top:3px; right:2px; margin:0; 
 .tb-right { display:flex; align-items:center; gap:8px; flex:none; }
 /* 국가 선택 (상단바) · 한국 전용 메뉴 */
 .tb-right { display:flex; align-items:center; gap:14px; }
-html[data-view="global"] .tb-cty, html[data-view="watch"] .tb-cty { visibility:hidden; }   /* 4개국을 함께 보는 화면 */   /* 글로벌 순위는 항상 4개국이라 국가 선택이 의미 없음 */
+html[data-view="global"] .tb-cty, html[data-view="watch"] .tb-cty, html[data-view="market"] .tb-cty, html[data-view="market"] .tb-store { visibility:hidden; }
+.tb-store button { gap:6px; padding:0 10px; font-size:11.5px; }
+.tb-scope { display:none; }
+@media (max-width:639px){
+  .tb-store, .tb-cty { display:none !important; }
+  .tb-scope { display:block; height:32px; padding:0 22px 0 8px; font-size:12px; max-width:96px; }
+  html[data-view="global"] .tb-scope, html[data-view="watch"] .tb-scope, html[data-view="market"] .tb-scope { display:none; }
+}
+.tb-store button i { font-size:12px; }
+@media (max-width:1023px){ .tb-store button span { display:none; } .tb-store button { padding:0 8px; } }   /* 4개국을 함께 보는 화면 */   /* 글로벌 순위는 항상 4개국이라 국가 선택이 의미 없음 */
 /* 게임 상세: 국가별 표 · 국가 버튼 */
+/* 화면 전환·나라/스토어 전환 중 덮개: 이전 화면이 깜빡이지 않게 본문 영역을 가림 */
+.view-loading { position:fixed; top:52px; left:var(--sb-w); right:0; bottom:0; z-index:30; background:var(--bg); display:flex; justify-content:center; align-items:flex-start; padding-top:22vh; font-size:13px; color:#a0a7ad; }
+.view-loading.hidden { display:none; }
+@media (max-width:1023px){ .view-loading { left:0; } }
 .gd-main { position:relative; }
+/* 일간 마켓별 순위 */
+.mv-bar { display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
+.mv-date { display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; color:#e8eaed; }
+.mv-date .cal-navbtn[disabled] { opacity:.35; pointer-events:none; }
+#mvCty button { display:inline-flex; align-items:center; }
+.mv-cards { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:16px; align-items:start; }
+.mv-wide { grid-column:1 / -1; }
+.mv-hd { display:flex; align-items:center; gap:8px; padding:14px 18px; font-size:14px; font-weight:700; color:#e8eaed; border-bottom:1px solid var(--line); }
+.mv-rk { width:28px; text-align:center; font-size:13.5px; font-weight:700; color:#c3c7ca; flex:none; }
+.mv-c { display:flex; align-items:center; gap:12px; min-width:0; padding:8px 16px; border-top:1px solid rgba(52,58,62,.45); cursor:pointer; transition:background .12s; }
+.mv-c:first-child { border-top:0; }
+.mv-c:hover { background:#2b3034; }
+.mv-ic { width:40px; height:40px; border-radius:10px; object-fit:cover; background:#292f33; flex:none; }
+.mv-nm { font-size:13.5px; font-weight:600; color:#e8eaed; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.mv-pub { font-size:11.5px; color:#a0a7ad; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:1px; }
+@media (max-width:1023px){ .mv-cards { grid-template-columns:1fr; } }
+@media (max-width:639px){ .mv-ic { width:34px; height:34px; } .mv-c { gap:10px; padding:8px 12px; } }
 .gd-busy { position:absolute; inset:0; z-index:15; background:rgba(32,36,40,.94); display:flex; justify-content:center; align-items:flex-start; padding-top:140px; font-size:13px; color:#c3c7ca; }
 .gd-ctab { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; background:#25292d; font-size:13px; }
 .gd-ctab th { text-align:left; font-size:11.5px; font-weight:600; color:#a0a7ad; background:#292e32; padding:8px 14px; }
@@ -838,7 +886,7 @@ html.panel-lock { overflow: hidden; }
     <button class="sb-item" data-view="dashboard" onclick="switchView('dashboard')" data-tip="일간 브리핑"><i data-lucide="gauge"></i><span class="sb-tx">일간 브리핑</span></button>
     <div class="sb-wrap" id="sbRank">
       <button class="sb-item" data-view="ranking" onclick="sbGroupClick('sbRank')" aria-expanded="false"><i data-lucide="list-ordered"></i><span class="sb-tx">전체 순위</span><span class="sb-tx sb-chev"><i data-lucide="chevron-down"></i></span></button>
-      <div class="sb-sub"><button type="button" data-go="ranking" onclick="sbGo('ranking')">일간 순위</button><button type="button" data-go="monthly" onclick="sbGo('monthly')">월간/주간 순위</button></div>
+      <div class="sb-sub"><button type="button" data-go="ranking" onclick="sbGo('ranking')">일간 순위</button><button type="button" data-go="market" onclick="sbGo('market')">일간 마켓별 순위</button><button type="button" data-go="monthly" onclick="sbGo('monthly')">월간/주간 순위</button></div>
     </div>
     <div class="sb-wrap" id="sbBiz">
       <button class="sb-item" data-view="business" onclick="sbGroupClick('sbBiz')" aria-expanded="false"><i data-lucide="chart-pie"></i><span class="sb-tx">시장 분석</span><span class="sb-tx sb-chev"><i data-lucide="chevron-down"></i></span></button>
@@ -863,13 +911,20 @@ html.panel-lock { overflow: hidden; }
   <button type="button" onclick="sbDrawer(true)" class="tb-menu hd-btn hd-icon" aria-label="메뉴 열기"><i data-lucide="menu"></i></button>
   <div id="tbCrumb" class="tb-crumb"></div>
   <div class="tb-right">
+    <div class="tb-store mk-seg" role="group" aria-label="스토어">
+      <button type="button" data-s="gp" onclick="setStore('gp')" title="Google Play"><i class="fa-brands fa-google-play"></i><span>Google Play</span></button><button type="button" data-s="ios" onclick="setStore('ios')" title="App Store"><i class="fa-brands fa-app-store-ios"></i><span>App Store</span></button>
+    </div>
+    <select id="tbScope" class="tb-scope mk-sel" aria-label="나라·스토어" onchange="const [c, st] = this.value.split(':'); setScope(c, st)"></select>
     <div class="tb-cty mk-seg" role="group" aria-label="국가">
       <button type="button" data-c="kr" onclick="setCountry('kr')" title="한국">KR</button><button type="button" data-c="us" onclick="setCountry('us')" title="미국">US</button><button type="button" data-c="jp" onclick="setCountry('jp')" title="일본">JP</button><button type="button" data-c="tw" onclick="setCountry('tw')" title="대만">TW</button>
     </div>
-    <span class="tb-stat"><span id="todayLabel" class="tb-date"></span><span class="sep text-slate-700">|</span><span id="syncStatus" class="text-slate-400">● Google Play 확인 중</span></span>
+    <span class="tb-stat"><span id="todayLabel" class="tb-date"></span><span class="sep text-slate-700">|</span><span id="syncStatus" class="text-slate-400">● 확인 중</span></span>
   </div>
 </div>
-<script>document.querySelectorAll('.tb-cty button').forEach(b => { const on = b.dataset.c === COUNTRY; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });</script>
+<script>document.querySelectorAll('.tb-cty button').forEach(b => { const on = b.dataset.c === COUNTRY; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+document.querySelectorAll('.tb-store button').forEach(b => { const on = b.dataset.s === STORE; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+/* 휴대폰: 나라·스토어를 선택 상자 하나로 */
+document.getElementById('tbScope').innerHTML = Object.keys(STORES).flatMap(st => Object.keys(COUNTRIES).map(c => `<option value="${c}:${st}" ${c === COUNTRY && st === STORE ? 'selected' : ''}>${COUNTRIES[c].code} · ${st === 'ios' ? 'iOS' : 'GP'}</option>`)).join('');</script>
 <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
 <script>try{ lucide.createIcons(); }catch(e){ console.warn('lucide 아이콘을 불러오지 못했습니다', e); }</script>
 <div class="max-w-[1800px] mx-auto px-4 md:px-6 2xl:px-8 py-5">
@@ -1337,8 +1392,8 @@ html.panel-lock { overflow: hidden; }
 <!-- RANKING VIEW (전체 순위: 인기·매출 1~100위, 넓은 화면은 나란히, 좁은 화면은 탭) -->
 <!-- 관심 게임 (이 브라우저에만 저장) -->
 <!-- 첫 로딩 (일간 브리핑이 아닌 화면 주소로 들어왔을 때) -->
-<div id="bootLoading" class="hidden py-24 text-center text-sm muted"><i class="fa-solid fa-circle-notch fa-spin mr-2 text-indigo-400"></i><span id="bootLoadingTx">데이터를 불러오는 중…</span></div>
-<script>document.getElementById('bootLoadingTx').textContent = `${COUNTRIES[COUNTRY].name} 데이터를 불러오는 중…`;</script>
+<div id="viewLoading" class="view-loading" role="status" aria-live="polite"><span><i class="fa-solid fa-circle-notch fa-spin mr-2 text-indigo-400"></i><span id="viewLoadingTx">데이터 읽는 중…</span></span></div>
+<script>document.getElementById('viewLoadingTx').textContent = `${COUNTRIES[COUNTRY].name} · ${STORES[STORE].name} 데이터 읽는 중…`;</script>
 
 <!-- 글로벌 순위: 네 나라 오늘 차트 TOP 10 + 글로벌 종합 상위권 (선택한 나라와 무관하게 항상 4개국) -->
 <div id="view-global" class="hidden space-y-4">
@@ -1354,6 +1409,17 @@ html.panel-lock { overflow: hidden; }
     <div class="mk-card-head"><div><h3 class="font-semibold text-sm">글로벌 종합 상위권 <span id="glCommonSub" class="ml-1 text-[12px] font-normal muted"></span></h3></div></div>
     <div id="glCommon" class="overflow-x-auto"></div>
   </section>
+</div>
+
+<!-- 일간 마켓별 순위: 한 나라의 같은 날 구글 플레이 · 앱스토어 순위를 나란히 (선택한 스토어·나라와 무관) -->
+<div id="view-market" class="hidden space-y-4">
+  <div class="mv-bar">
+    <div class="mv-date"><button type="button" class="cal-navbtn" onclick="mvStep(-1)" aria-label="이전 날"><i class="fa-solid fa-chevron-left"></i></button><span id="mvDate"><i class="fa-regular fa-calendar mr-1.5 text-slate-400"></i>-</span><button type="button" class="cal-navbtn" onclick="mvStep(1)" aria-label="다음 날"><i class="fa-solid fa-chevron-right"></i></button></div>
+    <div class="mk-seg" id="mvCty"></div>
+    <div class="mk-seg" id="mvChart"><button type="button" data-k="sales" onclick="mvSet({ chart: 'sales' })">매출</button><button type="button" data-k="popular" onclick="mvSet({ chart: 'popular' })">인기</button></div>
+  </div>
+  <div id="mvTable" class="mv-cards"></div>
+  <p class="text-[11px] muted px-1">같은 날 각 스토어 순위 · 앱스토어는 2026-11-03부터 수집 · 게임을 누르면 그 스토어·나라 기준 상세</p>
 </div>
 
 <div id="view-watch" class="hidden space-y-4">
@@ -1576,11 +1642,12 @@ html.panel-lock { overflow: hidden; }
       </section>
       <div class="gd-dr">
         <section id="gdDescWrap" class="hidden min-w-0">
-          <h4 class="gd-h">게임 설명 <span class="text-[11px] muted font-normal ml-1">구글 플레이</span></h4>
+          <h4 class="gd-h">게임 설명 <span class="text-[11px] muted font-normal ml-1 gd-store-nm">구글 플레이</span></h4>
           <div id="gdDesc" class="gd-desc-box thin-scroll"></div>
         </section>
         <section class="min-w-0">
-          <h4 class="gd-h">평점 <span class="text-[11px] muted font-normal ml-1">구글 플레이</span></h4>
+          <h4 class="gd-h">평점 <span class="text-[11px] muted font-normal ml-1 gd-store-nm">구글 플레이</span></h4>
+          <script>document.querySelectorAll('.gd-store-nm').forEach(e => e.textContent = STORE === 'ios' ? '앱스토어' : '구글 플레이');</script>
           <div id="gdRate" class="gd-rate"></div>
         </section>
       </div>
@@ -2427,7 +2494,7 @@ const SB_LABEL = Object.fromEntries([...document.querySelectorAll('.sb-sub butto
 function sbNavKey(){ return currentView === 'business' ? (mkSection === 'monthly' ? 'monthly' : `biz:${mkSection}`) : currentView; }
 function sbGo(key){
   sbFly(false);
-  if(key === 'ranking'){ switchView('ranking'); return; }
+  if(key === 'ranking' || key === 'market'){ switchView(key); return; }
   const sec = key === 'monthly' ? 'monthly' : key.slice(4);
   if(currentView === 'business') mkSetSection(sec);
   else { mkSection = sec; switchView('business'); }
@@ -2479,6 +2546,18 @@ document.getElementById('sbFly').addEventListener('mouseleave', () => { sbFlyTim
 document.getElementById('sbFly').addEventListener('mouseenter', () => clearTimeout(sbFlyTimer));
 document.addEventListener('keydown', e => { if(e.key === 'Escape') sbDrawer(false); });
 
+let viewBusyToken = 0;
+function viewBusy(on, text){
+  const el = document.getElementById('viewLoading'); if(!el) return;
+  if(on) setText('viewLoadingTx', text || '데이터 읽는 중…');
+  el.classList.toggle('hidden', !on);
+}
+function viewBusyUntil(work){
+  const t = ++viewBusyToken;
+  if(!work.length){ viewBusy(false); return; }
+  viewBusy(true);
+  Promise.race([Promise.allSettled(work), new Promise(r => setTimeout(r, 8000))]).then(() => { if(t === viewBusyToken) viewBusy(false); });
+}
 function switchView(view){
   if(view === 'monthly'){ mkSection = 'monthly'; view = 'business'; }
   currentView=view;
@@ -2489,20 +2568,23 @@ function switchView(view){
   sbDrawer(false); sbSync();
   if(!document.getElementById('detailPanel').classList.contains('translate-x-full')) closeGameDetail();
   document.documentElement.dataset.view = view;
-  ['dashboard','global','watch','ranking','business','search','calendar','database','report'].forEach(v => {
+  ['dashboard','global','watch','ranking','market','business','search','calendar','database','report'].forEach(v => {
     const el = document.getElementById(`view-${v}`);
     if(el) el.classList.toggle('hidden', v==='database' ? !(view==='sales'||view==='popular'||view==='newReleases') : view!==v);
   });
+  const work = [];   /* 비동기로 그리는 화면은 끝날 때까지 '데이터 읽는 중' */
   if(view==='sales'||view==='popular'||view==='newReleases')renderDatabase(view);
   if(view==='ranking')renderRanking();
-  if(view==='business')openBusinessAnalysis();
-  if(view==='search')openSearchView();
-  if(view==='calendar')ensureCalendarMonthLoaded();
+  if(view==='business')work.push(openBusinessAnalysis());
+  if(view==='search')work.push(openSearchView());
+  if(view==='calendar')work.push(ensureCalendarMonthLoaded());
   /* 현재 탭을 URL 해시에 기록: 새로고침·링크 공유 시 같은 탭으로 열림 (리포트는 ?w= 주를 유지) */
   history.replaceState(null, '', view === 'dashboard' ? location.pathname + location.search : view === 'report' && location.hash.startsWith('#report') ? location.hash : view === 'business' && mkSection === 'monthly' ? '#monthly' : `#${view}`);
   if(view==='watch')renderWatchPage();
-  if(view==='global')openGlobalView();
-  if(view==='report')openReportView();
+  if(view==='global')work.push(openGlobalView());
+  if(view==='market')work.push(openMarketView());
+  if(view==='report')work.push(openReportView());
+  if(!bootReveal) viewBusyUntil(work);   /* 첫 로딩 중이면 덮개는 첫 로딩이 끔 */
 }
 
 /* 이미지로 저장: 버튼이 속한 [data-snap] 영역을 PNG로 (라이브러리는 처음 누를 때만 불러옴) */
@@ -2538,14 +2620,14 @@ async function snapEl(btn, name){
 }
 
 
-const VALID_VIEWS = ['dashboard','global','watch','ranking','monthly','business','calendar','sales','popular','newReleases','search','report'];
-function viewFromHash(){ const v = decodeURIComponent(location.hash.slice(1)).split('?')[0]; return VALID_VIEWS.includes(v) && !(COUNTRY !== 'kr' && KR_ONLY_VIEWS.includes(v)) ? v : 'dashboard'; }
+const VALID_VIEWS = ['dashboard','global','watch','ranking','market','monthly','business','calendar','sales','popular','newReleases','search','report'];
+function viewFromHash(){ const v = decodeURIComponent(location.hash.slice(1)).split('?')[0]; return VALID_VIEWS.includes(v) && !((COUNTRY !== 'kr' || STORE !== 'gp') && KR_ONLY_VIEWS.includes(v)) ? v : 'dashboard'; }
 /* 다른 나라에서 한국 전용 메뉴를 누르면 한국으로 바꿔 그 화면을 연다 */
 document.addEventListener('click', e => {
-  const b = COUNTRY !== 'kr' && e.target.closest('.kr-only[data-view]');
+  const b = (COUNTRY !== 'kr' || STORE !== 'gp') && e.target.closest('.kr-only[data-view]');
   if(!b) return;
   e.preventDefault(); e.stopImmediatePropagation();
-  setCountry('kr', b.dataset.view);
+  setScope('kr', 'gp', b.dataset.view);
 }, true);
 
 /* KST 기준 오늘 날짜 (사용자 PC 시간대와 무관하게 스토어 집계일과 비교) */
@@ -3969,8 +4051,15 @@ function renderGameDetail(){
   const iconUrl = local ? getIconUrlForGame(name) : X.icon, iconEl = document.getElementById('detailAppIcon');
   if(iconUrl){ iconEl.src = playIconSize(iconUrl, 192); iconEl.classList.remove('hidden'); } else iconEl.classList.add('hidden');
   const link = document.getElementById('detailPlayStoreLink');
-  link.href = meta.appId ? `https://play.google.com/store/apps/details?id=${encodeURIComponent(meta.appId)}${detailCountry !== 'kr' ? `&gl=${detailCountry}` : ''}` : `https://play.google.com/store/search?q=${encodeURIComponent(name)}&c=apps`;
-  link.innerHTML = `<i class="fa-brands fa-google-play mr-1 text-emerald-400"></i>${meta.appId ? 'Google Play' : 'Google Play 검색'}`;
+  if(STORE === 'ios'){
+    /* 앱스토어 주소는 번들 ID로 바로 못 만들어 조회 API(JSONP)로 받아 옴 */
+    link.href = `https://apps.apple.com/${detailCountry}/search?term=${encodeURIComponent(name)}`;
+    link.innerHTML = `${STORES.ios.icon}<span class="ml-1">App Store</span>`;
+    if(meta.appId) iosStoreUrl(meta.appId, detailCountry).then(u => { if(u && detailCurrentName === name) link.href = u; });
+  }else{
+    link.href = meta.appId ? `https://play.google.com/store/apps/details?id=${encodeURIComponent(meta.appId)}${detailCountry !== 'kr' ? `&gl=${detailCountry}` : ''}` : `https://play.google.com/store/search?q=${encodeURIComponent(name)}&c=apps`;
+    link.innerHTML = `<i class="fa-brands fa-google-play mr-1 text-emerald-400"></i>${meta.appId ? 'Google Play' : 'Google Play 검색'}`;
+  }
   gdLoadInfo(meta.appId, detailCountry);
 
   /* 현재: 매출 · 인기 · 평점(7일 변화) — 패키지가 있으면 4개국 표, 없으면(초기 기록) 카드 */
@@ -3988,7 +4077,7 @@ function renderGameDetail(){
   if(local) ['sales', 'popular'].forEach(st => { if(!mkFirstSeenCache[st] && !mkFirstSeenInFlight[st]) mkLoadFirstSeen(st).then(() => { if(detailCurrentName === name) renderGameDetail(); }).catch(() => {}); });
   const storeUrl = link.href;
   document.getElementById('gdMarket').innerHTML = ['마켓', '장르', '퍼블리셔', '첫 차트인', '정보 갱신', '스토어'].map(h => `<div class="h">${h}</div>`).join('')
-    + `<div><i class="fa-brands fa-google-play text-emerald-400 mr-1"></i>Google Play</div><div>${escapeHtml(genre || '-')}</div><div title="${escapeAttr(pub)}">${escapeHtml(pub || '-')}</div><div>${firstAny || (local && mkFirstSeenCache.sales ? '수집 시작 전부터' : '-')}</div><div id="gdMktDate">${escapeHtml(gdInfoCache.get(`${detailCountry}:${meta.appId}`)?.date || '-')}</div><div><a href="${escapeAttr(storeUrl)}" target="_blank" rel="noopener">바로가기 ›</a></div>`;
+    + `<div>${STORES[STORE].icon}<span class="ml-1">${STORES[STORE].name}</span></div><div>${escapeHtml(genre || '-')}</div><div title="${escapeAttr(pub)}">${escapeHtml(pub || '-')}</div><div>${firstAny || (local && mkFirstSeenCache.sales ? '수집 시작 전부터' : '-')}</div><div id="gdMktDate">${escapeHtml(gdInfoCache.get(`${detailCountry}:${meta.appId}`)?.date || '-')}</div><div><a href="${escapeAttr(storeUrl)}" target="_blank" rel="noopener">바로가기 ›</a></div>`;
   /* 평점 카드: 지금 · 7일 전 · 30일 전 */
   const scAt = n => { const d = scDates.filter(x => x <= mkAddDays(scDates.at(-1) || '2000-01-01', -n)).at(-1); return d ? score.get(d) : null; };
   const s7 = scAt(7), s30 = scAt(30), delta = (a, b) => { if(a == null || b == null) return '<span class="muted">-</span>'; const v = Math.round((a - b) * 10) / 10; return v ? `<span class="${v > 0 ? 'rank-up' : 'rank-down'} font-semibold">${v > 0 ? '▲' : '▼'}${Math.abs(v).toFixed(1)}</span>` : '<span class="muted">변동 없음</span>'; };
@@ -4218,8 +4307,8 @@ async function gdLoadInfo(pkg, c = COUNTRY){
       return [cols, ...rows].find(x => Array.isArray(x) && x.length >= 4 && String(x[0]).trim() === pkg) || null;
     };
     const sfx = COUNTRIES[c].sfx;
-    let r = await look(APPINFO_SHEET + sfx);
-    if(!r && sfx) r = await look(APPINFO_SHEET);
+    let r = await look(APPINFO_SHEET + SSFX + sfx);
+    if(!r && sfx) r = await look(APPINFO_SHEET + SSFX);
     const info = r ? { desc: String(r[2] || '').trim(), shots: String(r[3] || '').split('\n').map(x => x.trim()).filter(x => /^https?:/.test(x)), date: String(r[4] || '').trim() } : null;
     gdInfoCache.set(ck, info && (info.desc || info.shots.length) ? info : null);
   }catch(e){ gdInfoCache.set(ck, null); }
@@ -4272,6 +4361,20 @@ function openGameDetail(targetName, opts = {}) {
   if(ext) gdSetCountry(opts.country); else detailEnsureRange();
 }
 
+/* 앱스토어 상세 주소: 번들 ID → 조회 API(JSONP, CORS 없이) → trackViewUrl */
+const iosUrlCache = new Map();
+function iosStoreUrl(bundle, c){
+  const k = `${c}:${bundle}`;
+  if(!iosUrlCache.has(k)) iosUrlCache.set(k, new Promise(ok => {
+    const cb = 'iosCb' + Math.random().toString(36).slice(2), sc = document.createElement('script');
+    const done = v => { ok(v); delete window[cb]; sc.remove(); };
+    window[cb] = d => done(d?.results?.[0]?.trackViewUrl || '');
+    sc.onerror = () => done('');
+    sc.src = `https://itunes.apple.com/lookup?bundleId=${encodeURIComponent(bundle)}&country=${c}&callback=${cb}`;
+    document.head.appendChild(sc); setTimeout(() => done(''), 8000);
+  }));
+  return iosUrlCache.get(k);
+}
 /* 상세 본문 위 '불러오는 중' (이전 화면이 남은 채 바뀌지 않게) */
 function gdBusy(on, c){
   if(on) setText('gdBusyTx', `${COUNTRIES[c]?.name || ''} 데이터를 불러오는 중…`);
@@ -4286,7 +4389,7 @@ function gdPkgLoad(pkg){
     const out = {};
     await Promise.all(GL_ORDER.flatMap(c => GL_CHARTS.map(async ([k, base]) => {
       try{
-        const { cols, rows } = parseGviz(await (await fetch(gvizUrl(base + COUNTRIES[c].sfx, 1, `E = '${pkg}'`), { cache: 'no-store' })).text());
+        const { cols, rows } = parseGviz(await (await fetch(gvizUrl(rkSheet(base, c), 1, `E = '${pkg}'`), { cache: 'no-store' })).text());
         /* 조건 조회는 머리글 없이 올 수 있어 첫 줄도 함께 보고, 이 패키지 줄만 */
         (out[c] ||= {})[k] = [cols, ...rows].filter(r => Array.isArray(r) && String(r[4] || '').replace(/^'/, '').trim() === pkg).sort((a, b) => String(a[0]).localeCompare(String(b[0])));
       }catch(e){ (out[c] ||= {})[k] = []; }
@@ -4298,7 +4401,7 @@ function gdPkgLoad(pkg){
 }
 /* 그 나라 수집 날짜 목록 (추이 그래프 가로축 · 전일 판단) */
 function gdCountryDates(c){
-  gdDatesCache[c] ||= fetchAvailableDates('DB_매출순위' + COUNTRIES[c].sfx).then(set => (gdDatesData[c] = [...set].sort())).catch(() => (gdDatesData[c] = []));
+  gdDatesCache[c] ||= fetchAvailableDates(rkSheet('DB_매출순위', c)).then(set => (gdDatesData[c] = [...set].sort())).catch(() => (gdDatesData[c] = []));
   return gdDatesCache[c];
 }
 function gdEnsureGlobal(){
@@ -5955,7 +6058,7 @@ function watchSpark(sv, pv){
 }
 /* ── 글로벌 순위: 나라별 최신일 차트 (나라마다 시트를 따로 읽음, 처음 열 때 한 번) ── */
 const glState = { chart: 'sales', data: null, loading: null, fresh: false };
-const GL_CACHE_KEY = 'gmi.global.v1';
+const GL_CACHE_KEY = 'gmi.global.v1' + SSFX;
 function glSetChart(k){ glState.chart = k; document.querySelectorAll('#glChart button').forEach(b => b.classList.toggle('on', b.dataset.k === k)); renderGlobalView(); }
 async function glLoad(){
   const one = async (c, k, base) => {
@@ -6041,7 +6144,7 @@ function watchSeenLoad(ids){
     await Promise.all(GL_ORDER.flatMap(c => GL_CHARTS.map(async ([k, base]) => {
       const m = new Map(); (out[c] ||= {})[k] = m;
       try{
-        const params = new URLSearchParams({ tqx: 'out:json;headers:1', sheet: base + COUNTRIES[c].sfx, t: String(Date.now()), tq: `select E, max(A), max(D), max(F), max(G) where ${cond} group by E` });
+        const params = new URLSearchParams({ tqx: 'out:json;headers:1', sheet: rkSheet(base, c), t: String(Date.now()), tq: `select E, max(A), max(D), max(F), max(G) where ${cond} group by E` });
         const { cols, rows } = parseGviz(await (await fetch(`https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?${params}`, { cache: 'no-store' })).text());
         [cols, ...rows].forEach(r => { const id = String(r?.[0] || '').replace(/^'/, '').trim(); if(ids.includes(id)) m.set(id, { d: String(r[1] || ''), n: String(r[2] || ''), g: String(r[3] || ''), p: String(r[4] || '').replace(/^'/, '') }); });
       }catch(e){}
@@ -6059,7 +6162,7 @@ function watchResolveMissing(){
     const found = new Map(), cond = miss.map(n => `D = "${n}"`).join(' or ');
     await Promise.all(GL_ORDER.flatMap(c => GL_CHARTS.map(async ([, base]) => {
       try{
-        const params = new URLSearchParams({ tqx: 'out:json;headers:1', sheet: base + COUNTRIES[c].sfx, t: String(Date.now()), tq: `select D, max(E) where ${cond} group by D` });
+        const params = new URLSearchParams({ tqx: 'out:json;headers:1', sheet: rkSheet(base, c), t: String(Date.now()), tq: `select D, max(E) where ${cond} group by D` });
         const { cols, rows } = parseGviz(await (await fetch(`https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?${params}`, { cache: 'no-store' })).text());
         [cols, ...rows].forEach(r => { const n = String(r?.[0] || '').trim(), id = String(r?.[1] || '').replace(/^'/, '').trim(); if(miss.includes(n) && id.includes('.')) found.set(n, id); });
       }catch(e){}
@@ -6071,6 +6174,62 @@ function watchResolveMissing(){
   })();
   return watchIdTry;
 }
+/* ── 일간 마켓별 순위 ── */
+const mvState = { c: COUNTRY, chart: 'sales', date: '', dates: {}, rows: new Map() };
+function mvSet(o){ Object.assign(mvState, o); if(o.c) mvState.date = ''; openMarketView(); }
+function mvStep(d){ const all = mvAllDates(), i = all.indexOf(mvState.date); const n = all[i + d]; if(n){ mvState.date = n; openMarketView(); } }
+function mvAllDates(){ return [...new Set([...(mvState.dates[`gp:${mvState.c}`] || []), ...(mvState.dates[`ios:${mvState.c}`] || [])])].sort(); }
+function mvDatesLoad(st, c){
+  const k = `${st}:${c}`;
+  if(mvState.dates[k]) return Promise.resolve(mvState.dates[k]);
+  return fetchAvailableDates(rkSheet('DB_매출순위', c, st)).then(set => (mvState.dates[k] = [...set].sort())).catch(() => (mvState.dates[k] = []));
+}
+function mvRowsLoad(st, c, chart, date){
+  const k = `${st}:${c}:${chart}:${date}`;
+  if(!mvState.rows.has(k)) mvState.rows.set(k, (async () => {
+    if(!(mvState.dates[`${st}:${c}`] || []).includes(date)) return null;   /* 그날 수집 안 함 */
+    const { cols, rows } = parseGviz(await (await fetch(gvizUrl(rkSheet(chart === 'sales' ? 'DB_매출순위' : 'DB_인기순위', c, st), 1, `A = date '${date}'`), { cache: 'no-store' })).text());
+    return [cols, ...rows].filter(r => Array.isArray(r) && String(r[0]) === date && rankOf(r)).sort((a, b) => rankOf(a) - rankOf(b));
+  })().catch(() => []));
+  return mvState.rows.get(k);
+}
+async function openMarketView(){
+  const { c, chart } = mvState;
+  document.getElementById('mvCty').innerHTML = GL_ORDER.map(x => `<button type="button" class="${x === c ? 'on' : ''}" onclick="mvSet({ c: '${x}' })">${glFlag(x, 'sm')}<span class="ml-1.5">${COUNTRIES[x].name}</span></button>`).join('');
+  document.querySelectorAll('#mvChart button').forEach(b => b.classList.toggle('on', b.dataset.k === chart));
+  const box = document.getElementById('mvTable');
+  box.innerHTML = '<section class="card rounded-xl p-10 text-center text-[13px] muted mv-wide"><i class="fa-solid fa-circle-notch fa-spin mr-2 text-indigo-400"></i>데이터 읽는 중…</section>';
+  await Promise.all([mvDatesLoad('gp', c), mvDatesLoad('ios', c)]);
+  const all = mvAllDates();
+  if(!mvState.date || !all.includes(mvState.date)) mvState.date = all.at(-1) || '';
+  const date = mvState.date;
+  document.getElementById('mvDate').innerHTML = `<i class="fa-regular fa-calendar mr-1.5 text-slate-400"></i>일간, ${date || '-'}`;
+  document.querySelectorAll('.mv-date .cal-navbtn').forEach((b, i) => b.disabled = i === 0 ? all.indexOf(date) <= 0 : all.indexOf(date) >= all.length - 1);
+  const [g, a] = await Promise.all([mvRowsLoad('gp', c, chart, date), mvRowsLoad('ios', c, chart, date)]);
+  if(mvState.c !== c || mvState.chart !== chart || mvState.date !== date || currentView !== 'market') return;
+  const item = (r, st) => {
+    let ic = String(r[9] || '').trim(); if(ic.startsWith("'")) ic = ic.slice(1);
+    const nm = gameName(r), pkg = String(r[4] || '').replace(/^'/, '').trim(), meta = rankRowMeta(r), q = v => escapeAttr(v).replace(/&#039;/g, "\\'");
+    return `<li class="mv-c" role="button" tabindex="0" onclick="mvOpen('${st}', '${c}', '${q(nm)}', '${q(pkg)}')">
+      <span class="mv-rk">${rankOf(r)}</span>
+      ${/^https?:/.test(ic) ? `<img src="${escapeAttr(ic)}" alt="" loading="lazy" class="mv-ic" onerror="this.style.visibility='hidden'">` : '<span class="mv-ic"></span>'}
+      <div class="min-w-0 flex-1"><div class="mv-nm" title="${escapeAttr(nm)}">${escapeHtml(nm)}</div><div class="mv-pub">${escapeHtml(meta.publisher || '-')}${meta.genre ? ` · ${escapeHtml(meta.genre)}` : ''}</div></div>
+      <span class="shrink-0">${rankChangeBadge(String(r[2] || '-'))}</span></li>`;
+  };
+  /* 스토어마다 카드 하나 (그날 수집하지 않았으면 안내) */
+  const card = (st, rows) => `<section class="card rounded-xl overflow-hidden">
+    <div class="mv-hd">${STORES[st].icon}<span>${STORES[st].name}</span><span class="text-[11px] font-normal muted ml-auto">${COUNTRIES[c].name} · ${chart === 'sales' ? '매출' : '인기'}${rows ? ` · ${rows.length}개` : ''}</span></div>
+    ${rows && rows.length ? `<ul>${rows.map(r => item(r, st)).join('')}</ul>` : `<div class="p-10 text-center text-[13px] muted">${rows ? '데이터 없음' : '이 날짜는 수집 전입니다'}</div>`}
+  </section>`;
+  box.innerHTML = card('gp', g) + card('ios', a);
+}
+/* 게임 클릭: 지금 스토어면 그 나라 기준 상세, 다른 스토어면 그 스토어로 바꾼 뒤 상세 (마켓별 순위 화면 그대로) */
+function mvOpen(st, c, name, pkg){
+  if(st === STORE){ openGameDetail(name, { pkg, country: c }); return; }
+  try{ sessionStorage.setItem('gmi.openDetail', JSON.stringify({ name, pkg, c })); }catch(e){}
+  setScope(COUNTRY, st, 'market');
+}
+
 function renderWatchPage(){
   const box = document.getElementById('wlList');
   if(!box) return;
@@ -6775,7 +6934,7 @@ async function rankCacheSet(c, v){
 async function fetchAllData(){
   const status=document.getElementById('syncStatus');
   if(fetchBusy) return; fetchBusy = true;
-  status.className='text-indigo-300'; status.textContent='● Google Play 동기화 중'; status.title=''; status.onclick=null; status.style.cursor='';
+  status.className='text-indigo-300'; status.textContent=`● ${STORES[STORE].name} 동기화 중`; status.title=''; status.onclick=null; status.style.cursor='';
   try{
     const today = new Date();
     const ty=today.getFullYear(), tm=today.getMonth()+1;
@@ -6793,7 +6952,7 @@ async function fetchAllData(){
     ]).finally(() => { netDone = true; });
     /* 처음 열 때: 이 나라를 전에 본 적 있으면 저장해 둔 데이터로 먼저 그리고, 새 데이터가 오면 다시 그림 */
     if(!lastSyncAt && !needNews){
-      const cached = await rankCacheGet(COUNTRY);
+      const cached = await rankCacheGet(COUNTRY + SSFX);
       if(cached && cached.start === salesPopularStart && !netDone){
         applyRankData(cached.sales, cached.popular, ty, tm);
         status.textContent = '● 저장된 데이터 표시 중 · 갱신 중'; status.title = `저장 시각 ${new Date(cached.at).toLocaleString('ko-KR')}`;
@@ -6803,7 +6962,7 @@ async function fetchAllData(){
     const [sales, popular] = await rankP;
     if(needNews) rawStore.newReleases = await newsP;
     applyRankData(sales, popular, ty, tm);
-    rankCacheSet(COUNTRY, { start: salesPopularStart, sales, popular, at: Date.now() });
+    rankCacheSet(COUNTRY + SSFX, { start: salesPopularStart, sales, popular, at: Date.now() });
     if(!needNews) newsP.then(n => { rawStore.newReleases = n; onNewsLoaded(); }).catch(e => console.warn('신작 정보를 불러오지 못했습니다', e));
     lastSyncAt = Date.now();
     const syncTime = new Date(lastSyncAt).toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' });
@@ -6814,14 +6973,14 @@ async function fetchAllData(){
       status.className='text-amber-300'; status.textContent='● 수집 지연';
       status.title=`${lag}일 전 데이터 · 최신 수집일 ${latest} (기대 수집일 ${expected}, KST ${CRAWL_READY_HOUR_KST}시 기준). 크롤러 실행 상태를 확인하세요. 마지막 동기화 ${syncTime}`;
     }else{
-      status.className='text-emerald-400'; status.textContent='● Google Play 정상 동기화';
+      status.className='text-emerald-400'; status.textContent=`● ${STORES[STORE].name} 정상 동기화`;
       status.title=`마지막 동기화 ${syncTime} · 최신 수집일 ${latest}`;
     }
     updateReportBadge();
   }catch(err){
     console.error(err);
-    status.className='text-rose-300'; status.textContent='● Google Play 동기화 실패'; status.title=err.message || '';
-    status.textContent='● Google Play 동기화 실패 · 다시 시도'; status.style.cursor='pointer'; status.onclick=fetchAllData;
+    status.className='text-rose-300'; status.title=err.message || '';
+    status.textContent=`● ${STORES[STORE].name} 동기화 실패 · 다시 시도`; status.style.cursor='pointer'; status.onclick=fetchAllData;
     clearDashboardSkeletons();
   }finally{fetchBusy = false;}
 }
@@ -6837,21 +6996,20 @@ window.addEventListener('DOMContentLoaded', async () => {
     currentView = initial === 'monthly' ? 'business' : initial;
     if(initial === 'monthly') mkSection = 'monthly';
     document.getElementById('view-dashboard').classList.add('hidden');
-    document.getElementById('bootLoading').classList.remove('hidden');
     document.querySelectorAll('.sb-item').forEach(x => x.classList.toggle('active', x.dataset.view === currentView));
   }
   document.documentElement.dataset.view = currentView;
   sbSync();
-  if(initial === 'global'){ document.getElementById('bootLoading').classList.add('hidden'); switchView('global'); }   /* 4개국 차트는 따로 읽으므로 기다릴 필요 없음 */
+  if(initial === 'global') switchView('global');   /* 4개국 차트는 따로 읽으므로 기다릴 필요 없음 (덮개는 그 화면이 다 그려지면 끔) */
   bootReveal = () => {   /* 데이터가 처음 준비되는 순간(저장 데이터든 새 데이터든) 한 번만 */
     bootReveal = null;
-    document.getElementById('bootLoading').classList.add('hidden');
     if(initial !== 'dashboard' && initial !== 'global') switchView(initial);
+    else if(initial === 'dashboard') viewBusy(false);
   };
   await fetchAllData();
   if(bootReveal) bootReveal();
   /* 글로벌 순위에서 다른 나라 게임을 눌러 넘어온 경우: 그 게임 상세를 바로 */
-  try{ const g = sessionStorage.getItem('gmi.openDetail'); if(g){ sessionStorage.removeItem('gmi.openDetail'); openGameDetail(g); } }catch(e){}
+  try{ const g = sessionStorage.getItem('gmi.openDetail'); if(g){ sessionStorage.removeItem('gmi.openDetail'); let o = null; try{ o = JSON.parse(g); }catch(e){} if(o && o.name) { if(o.c) mvState.c = o.c; openGameDetail(o.name, { pkg: o.pkg, country: o.c }); } else openGameDetail(g); } }catch(e){}
 });
 /* ⓘ 아이콘을 누르면 설명 말풍선 (마우스가 없는 휴대폰용, 다른 곳을 누르면 닫힘) */
 document.addEventListener('click', e => {
