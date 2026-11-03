@@ -38,7 +38,7 @@ const COUNTRY = (() => {
 })();
 const CSFX = COUNTRIES[COUNTRY].sfx;
 /* 스토어: 주소 ?s=ios → 없으면 마지막 선택 → 기본 구글 플레이. 앱스토어 시트는 '_iOS' 가 나라 접미사 앞에 붙음 (DB_매출순위_iOS_US) */
-const STORES = { gp:{ name:'Google Play', sfx:'', icon:'<i class="fa-brands fa-google-play text-emerald-400"></i>' }, ios:{ name:'App Store', sfx:'_iOS', icon:'<i class="fa-brands fa-app-store-ios text-sky-400"></i>' } };
+const STORES = { gp:{ name:'Google Play', sfx:'', icon:'<i class="fa-brands fa-google-play text-emerald-400"></i>' }, ios:{ name:'App Store', sfx:'_iOS', icon:'<i class="fa-brands fa-apple text-slate-100"></i>' } };
 const STORE = (() => {
   const q = new URLSearchParams(location.search).get('s'); let v = q;
   if(!v){ try{ v = localStorage.getItem('gmi.store'); }catch(e){} }
@@ -240,11 +240,17 @@ html[data-view="global"] .tb-cty, html[data-view="watch"] .tb-cty, html[data-vie
 .gd-ctab tbody tr:hover { background:#2b3034; }
 .gd-ctab tbody tr.on { background:#302d4d; box-shadow:inset 3px 0 0 #6257e8; }
 .gd-ctab2 tbody tr { cursor:default; } .gd-ctab2 tbody tr:hover { background:none; }
-.gd-ctab2 th { text-align:center; } .gd-ctab2 th:first-child { text-align:left; }
+.gd-ctab2 th { text-align:center; }
 .gd-ctab2 th.gd-sh { font-size:12px; color:#dfe1e3; border-left:1px solid rgba(52,58,62,.6); }
 .gd-ctab2 thead tr:nth-child(2) th:nth-child(odd) { border-left:1px solid rgba(52,58,62,.6); }
 .gd-ctab2 td { text-align:center; }
-.gd-ctab2 td:first-child { text-align:left; }
+.gd-ctab2 th:first-child, .gd-ctab2 td:first-child { width:96px; padding-left:8px; padding-right:8px; }
+.gd-ctab2 tr.gd-mrow td { font-size:12.5px; color:#c3c7ca; padding-top:8px; padding-bottom:8px; }
+.gd-ctab2 tr.gd-mrow td:first-child { font-size:11.5px; color:#a0a7ad; font-weight:600; }
+.gd-ctab2 tr.gd-mrow td + td { border-left:1px solid rgba(52,58,62,.45); }
+.gd-ctab2 tr.gd-mfirst td { border-top:1px solid rgba(52,58,62,.9); }
+.gd-pub { display:inline-block; max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; vertical-align:bottom; }
+.gd-golink { margin-left:8px; font-size:11px; color:#a0a7ad; } .gd-golink:hover { color:#a59aff; }
 .gd-ctab2 td:nth-child(even) { border-left:1px solid rgba(52,58,62,.45); }
 .gd-ctab2 td.gd-cc[onclick] { cursor:pointer; } .gd-ctab2 td.gd-cc[onclick]:hover { background:#2b3034; }
 .gd-ctab2 td.on { background:#302d4d; }
@@ -924,7 +930,7 @@ html.panel-lock { overflow: hidden; }
   <div id="tbCrumb" class="tb-crumb"></div>
   <div class="tb-right">
     <div class="tb-store mk-seg" role="group" aria-label="스토어">
-      <button type="button" data-s="gp" onclick="setStore('gp')" title="Google Play"><i class="fa-brands fa-google-play"></i><span>Google Play</span></button><button type="button" data-s="ios" onclick="setStore('ios')" title="App Store"><i class="fa-brands fa-app-store-ios"></i><span>App Store</span></button>
+      <button type="button" data-s="gp" onclick="setStore('gp')" title="Google Play"><i class="fa-brands fa-google-play"></i><span>Google Play</span></button><button type="button" data-s="ios" onclick="setStore('ios')" title="App Store"><i class="fa-brands fa-apple"></i><span>App Store</span></button>
     </div>
     <select id="tbScope" class="tb-scope mk-sel" aria-label="나라·스토어" onchange="const [c, st] = this.value.split(':'); setScope(c, st)"></select>
     <div class="tb-cty mk-seg" role="group" aria-label="국가">
@@ -1657,11 +1663,6 @@ document.getElementById('tbScope').innerHTML = Object.keys(STORES).flatMap(st =>
           <div id="gdRate" class="gd-rate"></div>
         </section>
       </div>
-      <!-- 마켓 정보: 스토어별 한 줄 (스토어 바로가기는 여기에만) -->
-      <section>
-        <h4 class="gd-h">마켓 정보</h4>
-        <div id="gdMarket" class="gd-mkt"></div>
-      </section>
     </div>
     <section id="gdRank" class="gd-page hidden">
       <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
@@ -4077,8 +4078,7 @@ function renderGameDetail(){
   const fKey = meta.appId ? `id:${meta.appId}` : `nm:${k}`;
   const firstAny = local ? ['sales', 'popular'].map(st => mkFirstChartDate(mkFirstSeenCache[st], fKey, name)).filter(Boolean).sort()[0] : X.first;
   if(local) ['sales', 'popular'].forEach(st => { if(!mkFirstSeenCache[st] && !mkFirstSeenInFlight[st]) mkLoadFirstSeen(st).then(() => { if(detailCurrentName === name) renderGameDetail(); }).catch(() => {}); });
-  gdMarketCur = { genre, pub, first: firstAny || (local && mkFirstSeenCache.sales ? '수집 시작 전부터' : '-') };
-  gdRenderMarket();
+  gdMarketCur = { genre, pub };
   /* 평점 카드: 지금 · 7일 전 · 30일 전 */
   const scAt = n => { const d = scDates.filter(x => x <= mkAddDays(scDates.at(-1) || '2000-01-01', -n)).at(-1); return d ? score.get(d) : null; };
   const s7 = scAt(7), s30 = scAt(30), delta = (a, b) => { if(a == null || b == null) return '<span class="muted">-</span>'; const v = Math.round((a - b) * 10) / 10; return v ? `<span class="${v > 0 ? 'rank-up' : 'rank-down'} font-semibold">${v > 0 ? '▲' : '▼'}${Math.abs(v).toFixed(1)}</span>` : '<span class="muted">변동 없음</span>'; };
@@ -4389,6 +4389,8 @@ function gdBusy(on, c, st = detailStore){
 /* ── 상세의 나라·스토어: 사이트와 같으면 불러온 데이터로, 다르면 이 게임 기록만 그 시트에서 따로 받아 그림 ──
    같은 게임의 구글 패키지명·애플 번들 ID 는 detailIds 에 (같은 패키지명일 때만 연결) */
 let detailCountry = COUNTRY, detailStore = STORE, detailPkg = '', detailLinked = false;
+/* 시트 조회 (12초 넘으면 포기 → 빈 결과로 처리) */
+function gvizText(url, ms = 12000){ const ac = new AbortController(), t = setTimeout(() => ac.abort(), ms); return fetch(url, { cache: 'no-store', signal: ac.signal }).then(r => r.ok ? r.text() : Promise.reject(new Error(`HTTP ${r.status}`))).finally(() => clearTimeout(t)); }
 const detailIds = { gp: '', ios: '' };
 const gdPkgCache = new Map(), gdPkgData = new Map(), gdDatesCache = {}, gdDatesData = {}, gdLinkCache = new Map();
 const gdOtherGlobal = { data: null, loading: null };
@@ -4399,7 +4401,7 @@ function gdPkgLoad(pkg, st = detailStore){
     const out = {};
     await Promise.all(GL_ORDER.flatMap(c => GL_CHARTS.map(async ([k, base]) => {
       try{
-        const { cols, rows } = parseGviz(await (await fetch(gvizUrl(rkSheet(base, c, st), 1, `E = '${pkg}'`), { cache: 'no-store' })).text());
+        const { cols, rows } = parseGviz(await gvizText(gvizUrl(rkSheet(base, c, st), 1, `E = '${pkg}'`)));
         /* 조건 조회는 머리글 없이 올 수 있어 첫 줄도 함께 보고, 이 패키지 줄만 */
         (out[c] ||= {})[k] = [cols, ...rows].filter(r => Array.isArray(r) && String(r[4] || '').replace(/^'/, '').trim() === pkg).sort((a, b) => String(a[0]).localeCompare(String(b[0])));
       }catch(e){ (out[c] ||= {})[k] = []; }
@@ -4428,7 +4430,7 @@ function gdGlobalData(st){
     const out = {}, since = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
     await Promise.all(GL_ORDER.flatMap(c => GL_CHARTS.map(async ([k, base]) => {
       try{
-        const { rows } = parseGviz(await (await fetch(gvizUrl(rkSheet(base, c, st), 1, `A >= date '${since}' order by A desc limit 100`), { cache: 'no-store' })).text());
+        const { rows } = parseGviz(await gvizText(gvizUrl(rkSheet(base, c, st), 1, `A >= date '${since}' order by A desc limit 100`)));
         const latest = rows.reduce((m, r) => String(r[0]) > m ? String(r[0]) : m, '');
         (out[c] ||= {})[k] = { date: latest, rows: rows.filter(r => String(r[0]) === latest).sort((a, b) => Number(a[1]) - Number(b[1])) };
       }catch(e){ (out[c] ||= {})[k] = { date: '', rows: [], err: e.message }; }
@@ -4453,7 +4455,7 @@ function gdRecentApps(st){
       const m = (out[c] ||= new Map());
       try{
         const params = new URLSearchParams({ tqx: 'out:json;headers:1', sheet: rkSheet(base, c, st), t: String(Date.now()), tq: `select E, max(D), max(G) where A >= date '${since}' group by E` });
-        const { cols, rows } = parseGviz(await (await fetch(`https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?${params}`, { cache: 'no-store' })).text());
+        const { cols, rows } = parseGviz(await gvizText(`https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?${params}`));
         [cols, ...rows].forEach(r => { const id = String(r?.[0] || '').replace(/^'/, '').trim(); if(id.includes('.')) m.set(id, { key: getGameKey(String(r[1] || '')), pub: pubKey(r[2]) }); });
       }catch(e){}
     })));
@@ -4464,15 +4466,18 @@ function gdRecentApps(st){
 function gdLink(st, id){
   const other = st === 'gp' ? 'ios' : 'gp', key = `${st}:${id}`;
   if(!gdLinkCache.has(key)) gdLinkCache.set(key, (async () => {
-    const PO = await gdPkgLoad(id, other);
-    if(PO && GL_ORDER.some(c => (PO[c]?.sales?.length || 0) + (PO[c]?.popular?.length || 0))) return id;
+    const cands = await gdRecentApps(other);   /* 반대 스토어 최근 30일 목록 (세션에 한 번만 받음) */
+    if(GL_ORDER.some(c => cands[c]?.has(id))) return id;
     const P = await gdPkgLoad(id, st);
     /* 이 게임의 나라별 (가장 최근) 이름·퍼블리셔 */
     const mine = GL_ORDER.map(c => { const r = [...(P?.[c]?.sales || []), ...(P?.[c]?.popular || [])].sort((a, b) => rowDate(a).localeCompare(rowDate(b))).at(-1); return r ? { c, key: getGameKey(r), pub: pubKey(rankRowMeta(r).publisher) } : null; }).filter(x => x && x.key !== '-');
-    if(!mine.length) return '';
-    const cands = await gdRecentApps(other), votes = new Map();
+    const votes = new Map();
     mine.forEach(m => (cands[m.c] || new Map()).forEach((v, oid) => { if(v.key === m.key && pubSame(v.pub, m.pub)) votes.set(oid, (votes.get(oid) || 0) + 1); }));
-    return [...votes.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || '';
+    const best = [...votes.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
+    if(best) return best;
+    /* 최근 30일엔 없지만 예전에 같은 ID 로 차트에 있었던 경우 */
+    const PO = await gdPkgLoad(id, other);
+    return PO && GL_ORDER.some(c => (PO[c]?.sales?.length || 0) + (PO[c]?.popular?.length || 0)) ? id : '';
   })());
   return gdLinkCache.get(key);
 }
@@ -4485,7 +4490,7 @@ async function gdResolveLink(){
   if(oid) await Promise.all([gdPkgLoad(oid, other), gdGlobalData(other), gdGlobalData(st), gdCountryDates(detailCountry, other)]);
   if(detailIds[st] !== id) return;
   detailLinked = true;
-  gdRenderCountryTable(); gdRenderMarket();
+  gdRenderCountryTable();
 }
 async function gdSetScope(c, st = detailStore){
   if(!COUNTRIES[c] || !STORES[st] || !detailIds[st]) return;
@@ -4521,12 +4526,14 @@ function gdFirstLabel(first, st, c, D){
   return D && first === D[0] ? `${mkShort(first)} (수집 시작)` : first;
 }
 /* 국가 × 스토어 표: 오늘 매출·인기 (칸을 누르면 그 나라·스토어 기준으로) */
+/* 상세 패널의 스토어 아이콘 (아이콘만 나오는 곳이라 애플은 사과 로고) */
+const GD_STORE_ICON = { gp: '<i class="fa-brands fa-google-play text-emerald-400"></i>', ios: '<i class="fa-brands fa-apple text-slate-100"></i>' };
 function gdHas(st, c){ const P = gdPkgOf(st); return !!P && (P[c]?.sales?.length || 0) + (P[c]?.popular?.length || 0) > 0; }
 function gdCountryTableHtml(){
   const Pm = gdPkgOf(detailStore), Gm = gdGlobalSync(detailStore);
   if(!Pm || !Gm) return '';
   /* 머리 버튼: 스토어 · 나라 */
-  document.getElementById('gdCty').innerHTML = `<span class="mk-seg">${['gp', 'ios'].map(st => `<button type="button" class="${st === detailStore ? 'on' : ''}" ${detailIds[st] ? `onclick="gdSetScope('${detailCountry}', '${st}')"` : 'disabled'} title="${STORES[st].name}">${STORES[st].icon.replace('"></i>', ' text-[12px]"></i>')}</button>`).join('')}</span>`
+  document.getElementById('gdCty').innerHTML = `<span class="mk-seg">${['gp', 'ios'].map(st => `<button type="button" class="${st === detailStore ? 'on' : ''}" ${detailIds[st] ? `onclick="gdSetScope('${detailCountry}', '${st}')"` : 'disabled'} title="${STORES[st].name}">${GD_STORE_ICON[st].replace('"></i>', ' text-[13px]"></i>')}</button>`).join('')}</span>`
     + `<span class="mk-seg">${GL_ORDER.map(c => `<button type="button" class="${c === detailCountry ? 'on' : ''}" ${gdHas(detailStore, c) ? `onclick="gdSetScope('${c}')"` : 'disabled'} title="${COUNTRIES[c].name}${gdHas(detailStore, c) ? '' : ' · 차트에 오른 기록 없음'}">${COUNTRIES[c].code}</button>`).join('')}</span>`;
   const cell = (st, c, k) => {
     const cls = k === 'sales' ? 't-sales' : 't-pop', on = c === detailCountry && st === detailStore ? ' on' : '';
@@ -4540,10 +4547,14 @@ function gdCountryTableHtml(){
   };
   /* 연결된 스토어만 열로 (반대 스토어를 못 찾으면 그 열은 아예 없음) */
   const sts = ['gp', 'ios'].filter(st => detailIds[st] && gdPkgOf(st) && gdGlobalSync(st));
-  const head = st => `<th colspan="2" class="gd-sh">${STORES[st].icon}<span class="ml-1.5">${STORES[st].name}</span></th>`;
+  /* 스토어 제목 옆 링크 아이콘 = 그 스토어 페이지 (지금 보는 나라) */
+  const M = Object.fromEntries(sts.map(st => [st, gdStoreMeta(st)]));
+  const head = st => `<th colspan="2" class="gd-sh">${GD_STORE_ICON[st]}<span class="ml-1.5">${STORES[st].name}</span><a id="gdLink-${st}" class="gd-golink" href="${escapeAttr(M[st].url)}" target="_blank" rel="noopener" title="${STORES[st].name}에서 보기" aria-label="${STORES[st].name}에서 보기"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></th>`;
+  setTimeout(() => { if(detailIds.ios && sts.includes('ios')) iosStoreUrl(detailIds.ios, detailCountry).then(u => { const a = document.getElementById('gdLink-ios'); if(u && a) a.href = u; }); }, 0);
   return `<table class="gd-ctab gd-ctab2"><thead><tr><th rowspan="2">국가</th>${sts.map(head).join('')}</tr>
       <tr>${sts.map(() => '<th><i class="fa-solid fa-coins t-sales mr-1"></i>매출</th><th><i class="fa-solid fa-fire t-pop mr-1"></i>인기</th>').join('')}</tr></thead>
-    <tbody>${GL_ORDER.map(c => `<tr><td><span class="inline-flex items-center gap-2">${glFlag(c, 'sm')}<b>${COUNTRIES[c].name}</b></span></td>${sts.map(st => cell(st, c, 'sales') + cell(st, c, 'popular')).join('')}</tr>`).join('')}</tbody></table>`;
+    <tbody>${GL_ORDER.map(c => `<tr><td><span class="inline-flex items-center gap-1.5">${glFlag(c, 'sm')}<b>${COUNTRIES[c].name}</b></span></td>${sts.map(st => cell(st, c, 'sales') + cell(st, c, 'popular')).join('')}</tr>`).join('')}
+</tbody></table>`;
 }
 async function gdRenderCountryTable(){
   const pkg = detailPkg, el = document.getElementById('detailKpis');
@@ -4556,30 +4567,19 @@ async function gdRenderCountryTable(){
   if(pkg === detailPkg) el.innerHTML = gdCountryTableHtml();
   return true;
 }
-/* 마켓 정보: 스토어마다 한 줄 (장르 · 퍼블리셔 · 첫 차트인 · 정보 갱신 · 바로가기) */
-let gdMarketCur = null;   /* 지금 보는 나라·스토어 줄 (renderGameDetail 이 채움) */
-function gdRenderMarket(){
-  const el = document.getElementById('gdMarket'); if(!el) return;
-  const c = detailCountry, name = detailCurrentName;
-  const rowFor = st => {
-    if(!detailIds[st]) return null;
-    const id = detailIds[st];
-    if(st === detailStore && gdMarketCur) return { st, id, ...gdMarketCur };
-    const P = gdPkgOf(st); if(!P) return { st, id, genre: '', pub: '', first: '' };
-    const rows = [...(P[c]?.sales || []), ...(P[c]?.popular || [])], any = GL_ORDER.flatMap(x => [...(P[x]?.sales || []), ...(P[x]?.popular || [])]);
+/* 스토어별 장르 · 퍼블리셔 · 스토어 주소 (통합표 아래 줄) */
+let gdMarketCur = null;   /* 지금 보는 나라·스토어의 장르·퍼블리셔 (renderGameDetail 이 채움) */
+function gdStoreMeta(st){
+  const c = detailCountry, id = detailIds[st];
+  let genre = '', pub = '';
+  if(st === detailStore && gdMarketCur) ({ genre, pub } = gdMarketCur);
+  else{
+    const P = gdPkgOf(st), rows = [...(P?.[c]?.sales || []), ...(P?.[c]?.popular || [])], any = GL_ORDER.flatMap(x => [...(P?.[x]?.sales || []), ...(P?.[x]?.popular || [])]);
     const last = (rows.length ? rows : any).reduce((b, r) => !b || rowDate(r) > rowDate(b) ? r : b, null), meta = last ? rankRowMeta(last) : {};
-    const first = rows.map(rowDate).filter(Boolean).sort()[0] || '', D = gdDatesData[`${st}:${c}`];
-    return { st, id, genre: meta.genre || '', pub: meta.publisher || '', first: gdFirstLabel(first, st, c, D), date: '' };
-  };
-  const rows = ['gp', 'ios'].map(rowFor).filter(Boolean);
-  el.className = 'gd-mkt';
-  el.innerHTML = ['마켓', '장르', '퍼블리셔', '첫 차트인', '정보 갱신', '스토어'].map(h => `<div class="h">${h}</div>`).join('')
-    + rows.map(r => {
-      const url = r.st === 'ios' ? `https://apps.apple.com/${c}/search?term=${encodeURIComponent(name)}` : `https://play.google.com/store/apps/details?id=${encodeURIComponent(r.id)}${c !== 'kr' ? `&gl=${c}` : ''}`;
-      const cur = r.st === detailStore;
-      return `<div class="${cur ? 'gd-mkt-on' : ''}">${STORES[r.st].icon}<span class="ml-1">${STORES[r.st].name}</span></div><div>${escapeHtml(r.genre || '-')}</div><div title="${escapeAttr(r.pub || '')}">${escapeHtml(r.pub || '-')}</div><div>${escapeHtml(r.first || '-')}</div><div${cur ? ' id="gdMktDate"' : ''}>${escapeHtml(cur ? (gdInfoCache.get(`${r.st}:${c}:${r.id}`)?.date || '-') : '-')}</div><div><a id="gdLink-${r.st}" href="${escapeAttr(url)}" target="_blank" rel="noopener">바로가기 ›</a></div>`;
-    }).join('');
-  rows.filter(r => r.st === 'ios').forEach(r => iosStoreUrl(r.id, c).then(u => { const a = document.getElementById('gdLink-ios'); if(u && a && detailIds.ios === r.id) a.href = u; }));
+    genre = meta.genre || ''; pub = meta.publisher || '';
+  }
+  const url = st === 'ios' ? `https://apps.apple.com/${c}/search?term=${encodeURIComponent(detailCurrentName)}` : `https://play.google.com/store/apps/details?id=${encodeURIComponent(id)}${c !== 'kr' ? `&gl=${c}` : ''}`;
+  return { genre, pub, url };
 }
 
 function closeGameDetail() {
