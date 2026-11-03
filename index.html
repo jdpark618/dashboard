@@ -90,18 +90,61 @@ function initialRankStart(today){
   const monthStartStr = ymdStr(ty, tm, 1), rollingLookbackStr = dateMinusDaysStr(ty, tm, today.getDate(), DETAIL_LOOKBACK_DAYS - 1);
   return rollingLookbackStr < monthStartStr ? rollingLookbackStr : monthStartStr;
 }
+/* 시트 응답 캐시: 순위·앱정보 시트는 수집기가 하루 한 번만 바꾸므로, 수집기가 올리는 version.json 값이 같으면
+   브라우저(IndexedDB)에 저장해 둔 응답을 그대로 쓴다. 값이 바뀌면 통째로 비움. version.json 을 못 받으면 캐시 없이 평소대로
+   (신작DB 는 다른 수집기가 바꾸므로 대상 아님) */
+const DATA_BASE = 'https://jdpark618.github.io/gchart/data/';
+const dataVersion = (() => {
+  const ac = new AbortController(), t = setTimeout(() => ac.abort(), 4000);
+  return fetch(DATA_BASE + 'version.json', { cache:'no-store', signal: ac.signal }).then(r => r.ok ? r.json() : null).then(j => j?.v || null).catch(() => null).finally(() => clearTimeout(t));
+})();
+function idbReq(rq){ return new Promise(res => { rq.onsuccess = () => res(rq.result); rq.onerror = () => res(null); }); }
+const gvReady = Promise.all([dataVersion, new Promise(res => {
+  try{ const rq = indexedDB.open('gmi-gviz', 1); rq.onupgradeneeded = () => rq.result.createObjectStore('r'); rq.onsuccess = () => res(rq.result); rq.onerror = () => res(null); }catch(e){ res(null); }
+})]).then(async ([v, db]) => {
+  if(!v || !db) return null;
+  let old = null; try{ old = localStorage.getItem('gmi.gviz.ver'); }catch(e){}
+  if(old !== v){ await idbReq(db.transaction('r', 'readwrite').objectStore('r').clear()); try{ localStorage.setItem('gmi.gviz.ver', v); }catch(e){} }
+  return { v, db };
+}).catch(() => null);
+function gvGet(ctx, key){ try{ return idbReq(ctx.db.transaction('r').objectStore('r').get(key)).then(h => h && h.v === ctx.v ? h.data : null); }catch(e){ return Promise.resolve(null); } }
+function gvPut(ctx, key, data){ try{ ctx.db.transaction('r', 'readwrite').objectStore('r').put({ v: ctx.v, data }, key); }catch(e){} }
+const GV_SHEETS = /^DB_(매출순위|인기순위|앱정보)/;
+function gvKey(url){
+  try{ const u = new URL(url); if(!u.pathname.endsWith('/gviz/tq') || !GV_SHEETS.test(u.searchParams.get('sheet') || '')) return null; u.searchParams.delete('t'); return u.toString(); }catch(e){ return null; }
+}
+/* 사이트 곳곳의 시트 조회가 모두 fetch 를 쓰므로 여기 한 곳에서 가로챔 (성공 응답만 저장) */
+const netFetch = window.fetch.bind(window);
+window.fetch = async function(input, init){
+  const key = typeof input === 'string' ? gvKey(input) : null;
+  if(!key) return netFetch(input, init);
+  const ctx = await gvReady, hit = ctx && await gvGet(ctx, key);
+  if(hit != null) return new Response(hit, { status: 200, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+  const res = await netFetch(input, init);
+  if(ctx && res.ok) res.clone().text().then(text => { if(text.includes('"status":"ok"')) gvPut(ctx, key, text); }).catch(() => {});
+  return res;
+};
+/* 수집기가 만든 최신 스냅샷 (4개국 × 2스토어 최신 차트 + 최근 앱 목록). 같은 버전이면 저장본을 씀. 못 받으면 null → 시트 조회로 */
+let snapPromise = null;
+function snapLoad(){
+  return snapPromise ||= gvReady.then(async ctx => {
+    if(!ctx) return null;
+    const hit = await gvGet(ctx, 'snapshot'); if(hit) return hit;
+    const j = await netFetch(DATA_BASE + 'snapshot.json?v=' + encodeURIComponent(ctx.v)).then(r => r.ok ? r.json() : null);
+    if(j && j.v === ctx.v) gvPut(ctx, 'snapshot', j);
+    return j;
+  }).catch(() => null);
+}
 const bootFetch = (() => {
   const start = initialRankStart(new Date());
   const get = (sheet, where) => { const pr = fetch(gvizUrl(sheet, 1, where), { cache:'no-store' }).then(r => r.ok ? r.text() : null); pr.catch(() => {}); return pr; };
   return { start, used:false, sales: get(SHEETS.sales, `A >= date '${start}'`), popular: get(SHEETS.popular, `A >= date '${start}'`), newReleases: get(SHEETS.newReleases, '') };
 })();
-/* 글로벌 순위: 시트마다 최신일 100행만 (날짜 내림차순 100행). 그 화면 주소로 들어오면 첫 요청과 함께 미리 보냄 */
+/* 글로벌 순위: 나라·스토어별 최신일 차트. 스냅샷에 있으면 그걸, 없는 칸만 시트에서 최신일 100행 (날짜 내림차순 100행) */
 const GL_ORDER = ['kr', 'us', 'jp', 'tw'], GL_CHARTS = [['sales', 'DB_매출순위'], ['popular', 'DB_인기순위']];
-function glQueryUrl(base, c){ const since = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10); return gvizUrl(rkSheet(base, c), 1, `A >= date '${since}' order by A desc limit 100`); }
-function glFetchText(base, c){ return fetch(glQueryUrl(base, c), { cache:'no-store' }).then(r => r.ok ? r.text() : Promise.reject(new Error(`HTTP ${r.status}`))); }
-const glBoot = location.hash.startsWith('#global')
-  ? Object.fromEntries(GL_ORDER.flatMap(c => GL_CHARTS.map(([k, base]) => { const pr = glFetchText(base, c); pr.catch(() => {}); return [`${c}:${k}`, pr]; })))
-  : null;
+function glQueryUrl(base, c, st = STORE){ const since = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10); return gvizUrl(rkSheet(base, c, st), 1, `A >= date '${since}' order by A desc limit 100`); }
+function glFetchText(base, c, st = STORE){ return fetch(glQueryUrl(base, c, st), { cache:'no-store' }).then(r => r.ok ? r.text() : Promise.reject(new Error(`HTTP ${r.status}`))); }
+if(location.hash.startsWith('#global')) snapLoad();   /* 그 화면 주소로 들어오면 첫 요청과 함께 미리 받음 */
 </script>
 <script src="https://cdn.tailwindcss.com"></script>
 <!-- 색 체계: 블루 네이비 → 차콜. slate 계열을 뉴트럴 그레이로 바꿔 화면 전체 회색 톤을 한 번에 맞춤 -->
@@ -4426,17 +4469,7 @@ function gdEnsureGlobal(){
 /* 다른 스토어의 4개국 최신 차트 (글로벌 순위와 같은 요청, 상세에서만 씀) */
 function gdGlobalData(st){
   if(st === STORE) return gdEnsureGlobal().then(() => glState.data);
-  gdOtherGlobal.loading ||= (async () => {
-    const out = {}, since = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
-    await Promise.all(GL_ORDER.flatMap(c => GL_CHARTS.map(async ([k, base]) => {
-      try{
-        const { rows } = parseGviz(await gvizText(gvizUrl(rkSheet(base, c, st), 1, `A >= date '${since}' order by A desc limit 100`)));
-        const latest = rows.reduce((m, r) => String(r[0]) > m ? String(r[0]) : m, '');
-        (out[c] ||= {})[k] = { date: latest, rows: rows.filter(r => String(r[0]) === latest).sort((a, b) => Number(a[1]) - Number(b[1])) };
-      }catch(e){ (out[c] ||= {})[k] = { date: '', rows: [], err: e.message }; }
-    })));
-    return (gdOtherGlobal.data = out);
-  })();
+  gdOtherGlobal.loading ||= glChartsLoad(st).then(out => (gdOtherGlobal.data = out));
   return gdOtherGlobal.loading;
 }
 function gdGlobalSync(st){ return st === STORE ? glState.data : gdOtherGlobal.data; }
@@ -4446,12 +4479,14 @@ function gdGlobalSync(st){ return st === STORE ? glState.data : gdOtherGlobal.da
 const PUB_STOP = new Set(['corp', 'corporation', 'co', 'ltd', 'limited', 'inc', 'pte', 'company', 'llc', 'gmbh', 'sa', 'ag', 'kk', '주식회사', '株式会社']);
 function pubKey(v){ return String(v || '').replace(/^'/, '').toLowerCase().split(/[^0-9a-z가-힣ぁ-んァ-ヶ一-龥]+/).filter(t => t && !PUB_STOP.has(t)).join(''); }
 function pubSame(a, b){ return !!a && !!b && (a === b || (a.length >= 4 && b.length >= 4 && (a.startsWith(b) || b.startsWith(a)))); }
-/* 다른 스토어의 나라별 최근 30일 앱 목록: 패키지명 → 이름·퍼블리셔 (스토어마다 한 번) */
+/* 다른 스토어의 나라별 최근 앱 목록: 패키지명 → 이름·퍼블리셔 (스토어마다 한 번)
+   스냅샷(최근 14일)에 있으면 그걸, 없는 나라만 시트에서 최근 30일 */
 const gdRecentCache = {};
 function gdRecentApps(st){
   gdRecentCache[st] ||= (async () => {
-    const out = {}, since = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10);
-    await Promise.all(GL_ORDER.flatMap(c => GL_CHARTS.map(async ([, base]) => {
+    const out = {}, since = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10), S = (await snapLoad())?.apps?.[st];
+    GL_ORDER.forEach(c => { if(S?.[c]) out[c] = new Map(Object.entries(S[c]).map(([id, [name, pub]]) => [id, { key: getGameKey(name), pub: pubKey(pub) }])); });
+    await Promise.all(GL_ORDER.filter(c => !out[c]).flatMap(c => GL_CHARTS.map(async ([, base]) => {
       const m = (out[c] ||= new Map());
       try{
         const params = new URLSearchParams({ tqx: 'out:json;headers:1', sheet: rkSheet(base, c, st), t: String(Date.now()), tq: `select E, max(D), max(G) where A >= date '${since}' group by E` });
@@ -6177,17 +6212,22 @@ function watchSpark(sv, pv){
 const glState = { chart: 'sales', data: null, loading: null, fresh: false };
 const GL_CACHE_KEY = 'gmi.global.v1' + SSFX;
 function glSetChart(k){ glState.chart = k; document.querySelectorAll('#glChart button').forEach(b => b.classList.toggle('on', b.dataset.k === k)); renderGlobalView(); }
-async function glLoad(){
-  const one = async (c, k, base) => {
-    const boot = glBoot && glBoot[`${c}:${k}`]; if(boot) delete glBoot[`${c}:${k}`];   /* 미리 보낸 요청은 한 번만 */
-    const { rows } = parseGviz(await (boot || glFetchText(base, c)));
-    const latest = rows.reduce((m, r) => String(r[0]) > m ? String(r[0]) : m, '');
-    return { date: latest, rows: rows.filter(r => String(r[0]) === latest).sort((a, b) => Number(a[1]) - Number(b[1])) };
-  };
-  const out = {};
+/* 한 스토어의 4개국 최신 차트 (글로벌 순위 · 상세의 다른 스토어 공용). 행은 시트 조회와 같은 모양(글자 10칸) */
+async function glChartsLoad(st){
+  const S = (await snapLoad())?.charts?.[st], out = {};
   await Promise.all(GL_ORDER.flatMap(c => GL_CHARTS.map(async ([k, base]) => {
-    try{ (out[c] ||= {})[k] = await one(c, k, base); }catch(e){ (out[c] ||= {})[k] = { date: '', rows: [], err: e.message }; }
+    const snap = S?.[c]?.[k];
+    if(snap?.rows?.length){ (out[c] ||= {})[k] = { date: snap.date, rows: snap.rows.map(r => r.map(String)) }; return; }
+    try{
+      const { rows } = parseGviz(await glFetchText(base, c, st));
+      const latest = rows.reduce((m, r) => String(r[0]) > m ? String(r[0]) : m, '');
+      (out[c] ||= {})[k] = { date: latest, rows: rows.filter(r => String(r[0]) === latest).sort((a, b) => Number(a[1]) - Number(b[1])) };
+    }catch(e){ (out[c] ||= {})[k] = { date: '', rows: [], err: e.message }; }
   })));
+  return out;
+}
+async function glLoad(){
+  const out = await glChartsLoad(STORE);
   glState.data = out; glState.fresh = true;
   if(GL_ORDER.every(c => GL_CHARTS.every(([k]) => !out[c][k].err))){ try{ localStorage.setItem(GL_CACHE_KEY, JSON.stringify(out)); }catch(e){} }
 }
