@@ -3,24 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Game Market Intelligence</title>
+<title>ChartDeck</title>
 <!-- 링크 미리보기 (카카오톡·슬랙·트위터 등): 이미지는 절대 주소, 바꿀 때는 ?v= 숫자를 올려 캐시 갱신 -->
 <meta name="description" content="Google Play 매출·인기 순위, 신작 달력, 시장 분석을 매일 아침 한눈에.">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="Game Market Intelligence">
-<meta property="og:title" content="Game Market Intelligence">
+<meta property="og:site_name" content="ChartDeck">
+<meta property="og:title" content="ChartDeck">
 <meta property="og:description" content="Google Play 매출·인기 순위, 신작 달력, 시장 분석을 매일 아침 한눈에.">
 <meta property="og:url" content="https://jdpark618.github.io/dashboard/">
-<meta property="og:image" content="https://jdpark618.github.io/dashboard/og-image.png?v=1">
+<meta property="og:image" content="https://jdpark618.github.io/dashboard/og-image.png?v=2">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Game Market Intelligence - 매출·인기 순위, 신작 달력, 시장 분석">
+<meta property="og:image:alt" content="ChartDeck - 매출·인기 순위, 신작 달력, 시장 분석">
 <meta property="og:locale" content="ko_KR">
 <meta name="twitter:card" content="summary_large_image">
 <!-- 브라우저 탭 아이콘: SVG 우선, 안 되는 브라우저는 PNG, 아이폰 홈 화면은 apple-touch-icon -->
-<link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="favicon.svg?v=2" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png?v=2" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=2">
 <meta name="theme-color" content="#191d20">
 <script>
 /* 첫 진입 속도: 시트 3개 요청을 Tailwind 등 외부 스크립트보다 먼저 보내 응답 대기를 스크립트 로딩과 겹치게 함.
@@ -169,10 +169,11 @@ body { background:var(--bg); font-family:'Pretendard Variable',Pretendard,-apple
 @media (min-width:1024px){ html.sb-mini { --sb-w:64px; } }
 .side-nav { position:fixed; top:0; left:0; bottom:0; width:var(--sb-w); z-index:45; display:flex; flex-direction:column; background:#191d20; border-right:1px solid var(--line); transition:width .18s, transform .2s; overflow:hidden; }
 .side-nav svg { width:20px; height:20px; stroke-width:2; flex:none; }
-.sb-head { height:52px; flex:none; display:flex; align-items:center; padding:0 10px 0 22px; border-bottom:1px solid var(--line); }
+.sb-head { height:52px; flex:none; display:flex; align-items:center; padding:0 10px 0 17px; border-bottom:1px solid var(--line); }
 .sb-brand { display:flex; align-items:center; gap:10px; height:36px; }
-.sb-logo { position:relative; display:inline-flex; flex:none; color:#a59aff; }
-.sb-brand b { font-size:14px; font-weight:800; line-height:1.25; color:#e8eaed; white-space:nowrap; }
+.sb-logo { position:relative; display:inline-flex; align-items:center; justify-content:center; flex:none; width:30px; height:30px; border-radius:50%; background:#e6e3ff; color:#3d3690; }
+.side-nav .sb-logo svg { width:17px; height:17px; stroke-width:2.6; }   /* 메뉴 아이콘(회색 선)과 구분: 원형 채운 타일 + 순위 막대 */
+.sb-brand b { font-size:16px; font-weight:800; letter-spacing:-.02em; color:#f7f8f8; white-space:nowrap; }
 .sb-scroll { flex:1; overflow-y:auto; overflow-x:hidden; padding:6px 10px 8px; }
 /* 그룹 제목 줄: 펼침은 글자, 접힘은 가운데 선 (높이는 같음). .raw(분석·RAW DATA)는 위에 선을 하나 더 두고 여백도 넓게 */
 .sb-group { position:relative; height:32px; display:flex; align-items:flex-end; padding:0 0 7px 12px; font-size:10.5px; font-weight:700; letter-spacing:.08em; color:#8a9298; white-space:nowrap; }
@@ -944,7 +945,7 @@ html.panel-lock { overflow: hidden; }
 <!-- 왼쪽 사이드바: 서비스명 / 분석 · 일정 · RAW DATA 메뉴 (시장 분석은 하위 메뉴) / 아래 접기 -->
 <aside id="sideNav" class="side-nav" aria-label="메뉴">
   <div class="sb-head">
-    <div class="sb-brand"><span class="sb-logo"><i data-lucide="chart-line"></i></span><b>Game Market<br>Intelligence</b></div>
+    <div class="sb-brand"><span class="sb-logo"><i data-lucide="chart-no-axes-column"></i></span><b>ChartDeck</b></div>
   </div>
   <nav class="sb-scroll thin-scroll">
     <div class="sb-group">모니터링</div>
@@ -952,7 +953,7 @@ html.panel-lock { overflow: hidden; }
     <button class="sb-item" data-view="global" onclick="switchView('global')" data-tip="글로벌 순위"><i data-lucide="globe"></i><span class="sb-tx">글로벌 순위</span></button>
     <button class="sb-item" data-view="watch" onclick="switchView('watch')" data-tip="관심 게임"><i data-lucide="star"></i><span class="sb-tx">관심 게임</span><span id="sbWatchN" class="sb-tx sb-cnt"></span></button>
     <div class="sb-group raw">분석</div>
-    <button class="sb-item" data-view="dashboard" onclick="switchView('dashboard')" data-tip="일간 브리핑"><i data-lucide="gauge"></i><span class="sb-tx">일간 브리핑</span></button>
+    <button class="sb-item" data-view="dashboard" onclick="switchView('dashboard')" data-tip="일간 요약"><i data-lucide="gauge"></i><span class="sb-tx">일간 요약</span></button>
     <div class="sb-wrap" id="sbRank">
       <button class="sb-item" data-view="ranking" onclick="sbGroupClick('sbRank')" aria-expanded="false"><i data-lucide="list-ordered"></i><span class="sb-tx">전체 순위</span><span class="sb-tx sb-chev"><i data-lucide="chevron-down"></i></span></button>
       <div class="sb-sub"><button type="button" data-go="ranking" onclick="sbGo('ranking')">일간 순위</button><button type="button" data-go="market" onclick="sbGo('market')">일간 마켓별 순위</button><button type="button" data-go="monthly" onclick="sbGo('monthly')">월간/주간 순위</button></div>
@@ -6936,7 +6937,7 @@ function rpPubClean(p){
 function rpRender(D){
   const S = D.S, R = v => Math.round(v), esc = escapeHtml, cut = (t, n) => t.length > n ? t.slice(0, n) + '…' : t;
   const relPages = rpRelPaginate(D), isFirst = f => f && f >= D.pmon, PAGES = 4 + relPages.length, period = rpWeekRange(D.mon);
-  const run = n => `<div class="rp-run"><span><b>Game Market Intelligence</b> · 주간 리포트</span><span>${period} · ${n}/${PAGES}</span></div>`;
+  const run = n => `<div class="rp-run"><span><b>ChartDeck</b> · 주간 리포트</span><span>${period} · ${n}/${PAGES}</span></div>`;
   const foot = `<div class="rp-foot"><span>Google Play 국내 매출·인기 순위(일별 TOP100) 기준</span><span>발행 ${D.issue}</span></div>`;
   /* 1쪽 분석: 고정 질문 4개에 결론 한 줄 + 근거 한 줄. 맨 위 한 문장은 질문들의 판정을 이어 붙임.
      게임명은 굵게, 조사를 바로 붙이지 않음 */
