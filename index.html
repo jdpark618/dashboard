@@ -4387,7 +4387,7 @@ function gdBusy(on, c, st = detailStore){
   document.getElementById('gdBusy').classList.toggle('hidden', !on);
 }
 /* ── 상세의 나라·스토어: 사이트와 같으면 불러온 데이터로, 다르면 이 게임 기록만 그 시트에서 따로 받아 그림 ──
-   같은 게임의 구글 패키지명·애플 번들 ID 는 detailIds 에 (같은 ID → 없으면 이름으로 찾음) */
+   같은 게임의 구글 패키지명·애플 번들 ID 는 detailIds 에 (같은 패키지명일 때만 연결) */
 let detailCountry = COUNTRY, detailStore = STORE, detailPkg = '', detailLinked = false;
 const detailIds = { gp: '', ios: '' };
 const gdPkgCache = new Map(), gdPkgData = new Map(), gdDatesCache = {}, gdDatesData = {}, gdLinkCache = new Map();
@@ -4438,32 +4438,48 @@ function gdGlobalData(st){
   return gdOtherGlobal.loading;
 }
 function gdGlobalSync(st){ return st === STORE ? glState.data : gdOtherGlobal.data; }
-/* 다른 스토어의 같은 게임 찾기: ① 같은 ID 로 기록이 있으면 그대로 ② 없으면 이 게임의 나라별 이름으로 (가장 많이 맞는 ID) */
-function gdLink(st, id, names){
-  const other = st === 'gp' ? 'ios' : 'gp', key = `${st}:${id}`;
-  if(!gdLinkCache.has(key)) gdLinkCache.set(key, (async () => {
-    const P = await gdPkgLoad(id, other);
-    if(P && GL_ORDER.some(c => (P[c]?.sales?.length || 0) + (P[c]?.popular?.length || 0))) return id;
-    const nm = [...new Set(names.filter(n => n && !n.includes('"')))];
-    if(!nm.length) return '';
-    const cond = nm.map(n => `D = "${n}"`).join(' or '), cnt = new Map();
+/* 다른 스토어의 같은 게임 (조건부 하이브리드)
+   ① 같은 패키지명(번들 ID)으로 기록이 있으면 연결
+   ② 없으면 '같은 나라' 차트에서 이름(정규화)과 퍼블리셔(정규화)가 둘 다 같은 앱만 연결 — 하나라도 다르면 연결하지 않음 */
+const PUB_STOP = new Set(['corp', 'corporation', 'co', 'ltd', 'limited', 'inc', 'pte', 'company', 'llc', 'gmbh', 'sa', 'ag', 'kk', '주식회사', '株式会社']);
+function pubKey(v){ return String(v || '').replace(/^'/, '').toLowerCase().split(/[^0-9a-z가-힣ぁ-んァ-ヶ一-龥]+/).filter(t => t && !PUB_STOP.has(t)).join(''); }
+function pubSame(a, b){ return !!a && !!b && (a === b || (a.length >= 4 && b.length >= 4 && (a.startsWith(b) || b.startsWith(a)))); }
+/* 다른 스토어의 나라별 최근 30일 앱 목록: 패키지명 → 이름·퍼블리셔 (스토어마다 한 번) */
+const gdRecentCache = {};
+function gdRecentApps(st){
+  gdRecentCache[st] ||= (async () => {
+    const out = {}, since = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10);
     await Promise.all(GL_ORDER.flatMap(c => GL_CHARTS.map(async ([, base]) => {
+      const m = (out[c] ||= new Map());
       try{
-        const params = new URLSearchParams({ tqx: 'out:json;headers:1', sheet: rkSheet(base, c, other), t: String(Date.now()), tq: `select E, count(A) where ${cond} group by E` });
+        const params = new URLSearchParams({ tqx: 'out:json;headers:1', sheet: rkSheet(base, c, st), t: String(Date.now()), tq: `select E, max(D), max(G) where A >= date '${since}' group by E` });
         const { cols, rows } = parseGviz(await (await fetch(`https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?${params}`, { cache: 'no-store' })).text());
-        [cols, ...rows].forEach(r => { const e = String(r?.[0] || '').replace(/^'/, '').trim(), n = Number(r?.[1]); if(e.includes('.') && n > 0) cnt.set(e, (cnt.get(e) || 0) + n); });
+        [cols, ...rows].forEach(r => { const id = String(r?.[0] || '').replace(/^'/, '').trim(); if(id.includes('.')) m.set(id, { key: getGameKey(String(r[1] || '')), pub: pubKey(r[2]) }); });
       }catch(e){}
     })));
-    return [...cnt.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || '';
+    return out;
+  })();
+  return gdRecentCache[st];
+}
+function gdLink(st, id){
+  const other = st === 'gp' ? 'ios' : 'gp', key = `${st}:${id}`;
+  if(!gdLinkCache.has(key)) gdLinkCache.set(key, (async () => {
+    const PO = await gdPkgLoad(id, other);
+    if(PO && GL_ORDER.some(c => (PO[c]?.sales?.length || 0) + (PO[c]?.popular?.length || 0))) return id;
+    const P = await gdPkgLoad(id, st);
+    /* 이 게임의 나라별 (가장 최근) 이름·퍼블리셔 */
+    const mine = GL_ORDER.map(c => { const r = [...(P?.[c]?.sales || []), ...(P?.[c]?.popular || [])].sort((a, b) => rowDate(a).localeCompare(rowDate(b))).at(-1); return r ? { c, key: getGameKey(r), pub: pubKey(rankRowMeta(r).publisher) } : null; }).filter(x => x && x.key !== '-');
+    if(!mine.length) return '';
+    const cands = await gdRecentApps(other), votes = new Map();
+    mine.forEach(m => (cands[m.c] || new Map()).forEach((v, oid) => { if(v.key === m.key && pubSame(v.pub, m.pub)) votes.set(oid, (votes.get(oid) || 0) + 1); }));
+    return [...votes.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || '';
   })());
   return gdLinkCache.get(key);
 }
 async function gdResolveLink(){
   const st = detailStore, id = detailIds[st], other = st === 'gp' ? 'ios' : 'gp';
   if(!id){ detailLinked = true; return; }
-  const P = await gdPkgLoad(id, st);
-  const names = [detailCurrentName, ...GL_ORDER.map(c => [...(P?.[c]?.sales || []), ...(P?.[c]?.popular || [])].sort((a, b) => rowDate(a).localeCompare(rowDate(b))).at(-1)).filter(Boolean).map(gameName)];
-  const oid = await gdLink(st, id, names);
+  const oid = await gdLink(st, id);
   if(detailIds[st] !== id) return;   /* 그새 다른 게임을 열었음 */
   detailIds[other] = oid;
   if(oid) await Promise.all([gdPkgLoad(oid, other), gdGlobalData(other), gdGlobalData(st), gdCountryDates(detailCountry, other)]);
@@ -4510,11 +4526,10 @@ function gdCountryTableHtml(){
   const Pm = gdPkgOf(detailStore), Gm = gdGlobalSync(detailStore);
   if(!Pm || !Gm) return '';
   /* 머리 버튼: 스토어 · 나라 */
-  document.getElementById('gdCty').innerHTML = `<span class="mk-seg">${['gp', 'ios'].map(st => `<button type="button" class="${st === detailStore ? 'on' : ''}" ${detailIds[st] ? `onclick="gdSetScope('${detailCountry}', '${st}')"` : 'disabled'} title="${STORES[st].name}${detailIds[st] ? '' : (detailLinked ? ' · 같은 게임을 찾지 못함' : ' · 찾는 중')}">${STORES[st].icon.replace('"></i>', ' text-[12px]"></i>')}</button>`).join('')}</span>`
+  document.getElementById('gdCty').innerHTML = `<span class="mk-seg">${['gp', 'ios'].map(st => `<button type="button" class="${st === detailStore ? 'on' : ''}" ${detailIds[st] ? `onclick="gdSetScope('${detailCountry}', '${st}')"` : 'disabled'} title="${STORES[st].name}">${STORES[st].icon.replace('"></i>', ' text-[12px]"></i>')}</button>`).join('')}</span>`
     + `<span class="mk-seg">${GL_ORDER.map(c => `<button type="button" class="${c === detailCountry ? 'on' : ''}" ${gdHas(detailStore, c) ? `onclick="gdSetScope('${c}')"` : 'disabled'} title="${COUNTRIES[c].name}${gdHas(detailStore, c) ? '' : ' · 차트에 오른 기록 없음'}">${COUNTRIES[c].code}</button>`).join('')}</span>`;
   const cell = (st, c, k) => {
     const cls = k === 'sales' ? 't-sales' : 't-pop', on = c === detailCountry && st === detailStore ? ' on' : '';
-    if(!detailIds[st]) return `<td class="muted text-[12px]${on}">${detailLinked ? '-' : '…'}</td>`;
     const P = gdPkgOf(st), G = gdGlobalSync(st);
     if(!P || !G) return `<td class="muted text-[12px]">…</td>`;
     const click = gdHas(st, c) ? ` onclick="gdSetScope('${c}', '${st}')" title="${COUNTRIES[c].name} · ${STORES[st].name} 기준으로 보기"` : '';
@@ -4523,10 +4538,12 @@ function gdCountryTableHtml(){
     const last = rows.map(rowDate).filter(Boolean).at(-1);
     return `<td class="gd-cc muted text-[12px]${on}${gdHas(st, c) ? '' : ' off'}"${click}>${last ? `밖 · ${mkShort(last)}` : gdHas(st, c) ? '밖' : '-'}</td>`;
   };
-  const head = st => `<th colspan="2" class="gd-sh">${STORES[st].icon}<span class="ml-1.5">${STORES[st].name}</span>${detailIds[st] ? '' : `<span class="ml-2 text-[11px] font-normal muted">${detailLinked ? '같은 게임 없음' : '찾는 중…'}</span>`}</th>`;
-  return `<table class="gd-ctab gd-ctab2"><thead><tr><th rowspan="2">국가</th>${head('gp')}${head('ios')}</tr>
-      <tr><th><i class="fa-solid fa-coins t-sales mr-1"></i>매출</th><th><i class="fa-solid fa-fire t-pop mr-1"></i>인기</th><th><i class="fa-solid fa-coins t-sales mr-1"></i>매출</th><th><i class="fa-solid fa-fire t-pop mr-1"></i>인기</th></tr></thead>
-    <tbody>${GL_ORDER.map(c => `<tr><td><span class="inline-flex items-center gap-2">${glFlag(c, 'sm')}<b>${COUNTRIES[c].name}</b></span></td>${cell('gp', c, 'sales')}${cell('gp', c, 'popular')}${cell('ios', c, 'sales')}${cell('ios', c, 'popular')}</tr>`).join('')}</tbody></table>`;
+  /* 연결된 스토어만 열로 (반대 스토어를 못 찾으면 그 열은 아예 없음) */
+  const sts = ['gp', 'ios'].filter(st => detailIds[st] && gdPkgOf(st) && gdGlobalSync(st));
+  const head = st => `<th colspan="2" class="gd-sh">${STORES[st].icon}<span class="ml-1.5">${STORES[st].name}</span></th>`;
+  return `<table class="gd-ctab gd-ctab2"><thead><tr><th rowspan="2">국가</th>${sts.map(head).join('')}</tr>
+      <tr>${sts.map(() => '<th><i class="fa-solid fa-coins t-sales mr-1"></i>매출</th><th><i class="fa-solid fa-fire t-pop mr-1"></i>인기</th>').join('')}</tr></thead>
+    <tbody>${GL_ORDER.map(c => `<tr><td><span class="inline-flex items-center gap-2">${glFlag(c, 'sm')}<b>${COUNTRIES[c].name}</b></span></td>${sts.map(st => cell(st, c, 'sales') + cell(st, c, 'popular')).join('')}</tr>`).join('')}</tbody></table>`;
 }
 async function gdRenderCountryTable(){
   const pkg = detailPkg, el = document.getElementById('detailKpis');
