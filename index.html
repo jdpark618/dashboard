@@ -6041,10 +6041,32 @@ function watchSeenLoad(ids){
   })());
   return watchSeenCache.get(key);
 }
+/* 예전(이름으로 저장된) 관심 게임: 지금 나라에 없는 이름도 4개국 시트에서 이름으로 패키지를 찾아 채움 (한 번) */
+let watchIdTry = null;
+function watchResolveMissing(){
+  const miss = watchEntries().filter(e => !e.id).map(e => e.name).filter(n => n && !n.includes('"'));
+  if(!miss.length) return Promise.resolve(false);
+  watchIdTry ||= (async () => {
+    const found = new Map(), cond = miss.map(n => `D = "${n}"`).join(' or ');
+    await Promise.all(GL_ORDER.flatMap(c => GL_CHARTS.map(async ([, base]) => {
+      try{
+        const params = new URLSearchParams({ tqx: 'out:json;headers:1', sheet: base + COUNTRIES[c].sfx, t: String(Date.now()), tq: `select D, max(E) where ${cond} group by D` });
+        const { cols, rows } = parseGviz(await (await fetch(`https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?${params}`, { cache: 'no-store' })).text());
+        [cols, ...rows].forEach(r => { const n = String(r?.[0] || '').trim(), id = String(r?.[1] || '').replace(/^'/, '').trim(); if(miss.includes(n) && id.includes('.')) found.set(n, id); });
+      }catch(e){}
+    })));
+    const list = watchEntries(); let changed = false;
+    list.forEach(e => { if(!e.id && found.get(e.name)){ e.id = found.get(e.name); changed = true; } });
+    if(changed) watchSave(list);
+    return changed;
+  })();
+  return watchIdTry;
+}
 function renderWatchPage(){
   const box = document.getElementById('wlList');
   if(!box) return;
   const list = watchResolved();
+  if(list.some(e => !e.id)) watchResolveMissing().then(ch => { if(ch && currentView === 'watch') renderWatchPage(); });
   setText('sbWatchN', list.length || '');
   document.getElementById('wlSort').value = watchState.sort;
   if(!list.length){
