@@ -77,6 +77,13 @@ const bootFetch = (() => {
   const get = (sheet, where) => { const pr = fetch(gvizUrl(sheet, 1, where), { cache:'no-store' }).then(r => r.ok ? r.text() : null); pr.catch(() => {}); return pr; };
   return { start, used:false, sales: get(SHEETS.sales, `A >= date '${start}'`), popular: get(SHEETS.popular, `A >= date '${start}'`), newReleases: get(SHEETS.newReleases, '') };
 })();
+/* 글로벌 순위: 시트마다 최신일 100행만 (날짜 내림차순 100행). 그 화면 주소로 들어오면 첫 요청과 함께 미리 보냄 */
+const GL_ORDER = ['kr', 'us', 'jp', 'tw'], GL_CHARTS = [['sales', 'DB_매출순위'], ['popular', 'DB_인기순위']];
+function glQueryUrl(base, c){ const since = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10); return gvizUrl(base + COUNTRIES[c].sfx, 1, `A >= date '${since}' order by A desc limit 100`); }
+function glFetchText(base, c){ return fetch(glQueryUrl(base, c), { cache:'no-store' }).then(r => r.ok ? r.text() : Promise.reject(new Error(`HTTP ${r.status}`))); }
+const glBoot = location.hash.startsWith('#global')
+  ? Object.fromEntries(GL_ORDER.flatMap(c => GL_CHARTS.map(([k, base]) => { const pr = glFetchText(base, c); pr.catch(() => {}); return [`${c}:${k}`, pr]; })))
+  : null;
 </script>
 <script src="https://cdn.tailwindcss.com"></script>
 <!-- 색 체계: 블루 네이비 → 차콜. slate 계열을 뉴트럴 그레이로 바꿔 화면 전체 회색 톤을 한 번에 맞춤 -->
@@ -1121,14 +1128,17 @@ html.panel-lock { overflow: hidden; }
 
   <!-- 월간/주간 순위 -->
   <div id="mkSecMonthly" class="hidden space-y-4">
+    <!-- 왼쪽: 기간(날짜) 선택 · 오른쪽: 월간/주간 -->
     <div class="flex flex-wrap items-center justify-between gap-2">
-      <div class="mk-asof-slot"></div>
+      <div class="flex flex-wrap items-center gap-3">
+        <select id="mkMonthlySel" class="mk-sel" onchange="mkMonthly[mkMonthly.period === 'week' ? 'wk' : 'ym'] = this.value; mkMonthly.all = false; mkRender()" aria-label="기간 선택"></select>
+        <div class="mk-asof-slot"></div>
+      </div>
       <div class="flex flex-wrap items-center gap-2">
         <div class="mk-seg" id="mkRankPeriod">
           <button type="button" data-v="month" onclick="mkRankPeriodSet('month')">월간</button>
           <button type="button" data-v="week" onclick="mkRankPeriodSet('week')">주간</button>
         </div>
-        <select id="mkMonthlySel" class="mk-sel" onchange="mkMonthly[mkMonthly.period === 'week' ? 'wk' : 'ym'] = this.value; mkMonthly.all = false; mkRender()" aria-label="기간 선택"></select>
         <div class="mk-tabs" data-tab="monthly"></div>
       </div>
     </div>
@@ -5775,24 +5785,27 @@ function watchSpark(sv, pv){
   return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" class="block" role="img" aria-label="최근 30일 매출·인기 순위 추이"><line x1="0" x2="${w}" y1="${y(10).toFixed(1)}" y2="${y(10).toFixed(1)}" stroke="rgba(160,167,173,.18)" stroke-dasharray="2 3"/>${line(pv, '#2dd4bf')}${line(sv, '#fbbf24')}</svg>`;
 }
 /* ── 글로벌 순위: 나라별 최신일 차트 (나라마다 시트를 따로 읽음, 처음 열 때 한 번) ── */
-const GL_ORDER = ['kr', 'us', 'jp', 'tw'];
-const glState = { chart: 'sales', data: null, loading: null };
+const glState = { chart: 'sales', data: null, loading: null, fresh: false };
+const GL_CACHE_KEY = 'gmi.global.v1';
 function glSetChart(k){ glState.chart = k; document.querySelectorAll('#glChart button').forEach(b => b.classList.toggle('on', b.dataset.k === k)); renderGlobalView(); }
 async function glLoad(){
-  const since = mkAddDays(kstTodayStr(), -6);
-  const one = async (c, base) => {
-    const { rows } = parseGviz(await (await fetch(gvizUrl(base + COUNTRIES[c].sfx, 1, `A >= date '${since}'`), { cache: 'no-store' })).text());
+  const one = async (c, k, base) => {
+    const boot = glBoot && glBoot[`${c}:${k}`]; if(boot) delete glBoot[`${c}:${k}`];   /* 미리 보낸 요청은 한 번만 */
+    const { rows } = parseGviz(await (boot || glFetchText(base, c)));
     const latest = rows.reduce((m, r) => String(r[0]) > m ? String(r[0]) : m, '');
     return { date: latest, rows: rows.filter(r => String(r[0]) === latest).sort((a, b) => Number(a[1]) - Number(b[1])) };
   };
   const out = {};
-  await Promise.all(GL_ORDER.flatMap(c => [['sales', 'DB_매출순위'], ['popular', 'DB_인기순위']].map(async ([k, base]) => {
-    try{ (out[c] ||= {})[k] = await one(c, base); }catch(e){ (out[c] ||= {})[k] = { date: '', rows: [], err: e.message }; }
+  await Promise.all(GL_ORDER.flatMap(c => GL_CHARTS.map(async ([k, base]) => {
+    try{ (out[c] ||= {})[k] = await one(c, k, base); }catch(e){ (out[c] ||= {})[k] = { date: '', rows: [], err: e.message }; }
   })));
-  glState.data = out;
+  glState.data = out; glState.fresh = true;
+  if(GL_ORDER.every(c => GL_CHARTS.every(([k]) => !out[c][k].err))){ try{ localStorage.setItem(GL_CACHE_KEY, JSON.stringify(out)); }catch(e){} }
 }
+/* 저장해 둔 지난 결과가 있으면 먼저 그리고, 새 데이터가 오면 다시 그림 */
 async function openGlobalView(){
-  if(!glState.data){ glState.loading ||= glLoad(); await glState.loading; }
+  if(!glState.data){ try{ glState.data = JSON.parse(localStorage.getItem(GL_CACHE_KEY) || 'null'); }catch(e){} if(glState.data) renderGlobalView(); }
+  if(!glState.fresh){ glState.loading ||= glLoad(); await glState.loading; }
   renderGlobalView();
 }
 /* 게임 줄: 지금 나라면 바로 상세, 다른 나라면 그 나라로 바꾼 뒤(새로 불러옴) 글로벌 순위 위에 상세를 띄움 */
@@ -6566,9 +6579,10 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
   document.documentElement.dataset.view = currentView;
   sbSync();
+  if(initial === 'global'){ document.getElementById('bootLoading').classList.add('hidden'); switchView('global'); }   /* 4개국 차트는 따로 읽으므로 기다릴 필요 없음 */
   await fetchAllData();
   document.getElementById('bootLoading').classList.add('hidden');
-  if(initial !== 'dashboard') switchView(initial);
+  if(initial !== 'dashboard' && initial !== 'global') switchView(initial);
   /* 글로벌 순위에서 다른 나라 게임을 눌러 넘어온 경우: 그 게임 상세를 바로 */
   try{ const g = sessionStorage.getItem('gmi.openDetail'); if(g){ sessionStorage.removeItem('gmi.openDetail'); openGameDetail(g); } }catch(e){}
 });
