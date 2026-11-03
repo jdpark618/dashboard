@@ -182,6 +182,8 @@ html.sb-mini .sb-rep .hd-new { position:absolute; top:3px; right:2px; margin:0; 
 /* 국가 선택 (상단바) · 한국 전용 메뉴 */
 .tb-right { display:flex; align-items:center; gap:14px; }
 html[data-view="global"] .tb-cty { visibility:hidden; }   /* 글로벌 순위는 항상 4개국이라 국가 선택이 의미 없음 */
+.gl-flag { width:22px; height:16.5px; border-radius:3px; object-fit:cover; flex:none; box-shadow:0 0 0 1px rgba(255,255,255,.12); }
+.gl-flag.sm { width:16px; height:12px; border-radius:2px; }
 .gl-cc { display:inline-flex; align-items:center; justify-content:center; min-width:28px; height:20px; padding:0 6px; border-radius:6px; font-size:11px; font-weight:800; letter-spacing:.03em; background:#302d4d; color:#d2ccff; }
 .tb-cty button { min-width:34px; justify-content:center; padding:0 8px; font-size:11.5px; letter-spacing:.02em; }
 /* 휴대폰: 제목 자리를 지키도록 국가 버튼을 좁히고 동기화 상태는 점(●)만 */
@@ -5815,6 +5817,8 @@ function glOpenGame(c, name){
   try{ sessionStorage.setItem('gmi.openDetail', name); }catch(e){}
   setCountry(c, 'global');
 }
+/* 국기: 윈도우는 국기 이모지가 글자(KR)로 보여서 그림으로 (flag-icons) */
+function glFlag(c, size){ return `<img src="https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/flags/4x3/${c}.svg" class="gl-flag${size ? ' ' + size : ''}" alt="" aria-hidden="true">`; }
 function glIcon(r){ let u = String(r[9] || '').trim(); if(u.startsWith("'")) u = u.slice(1); return /^https?:/.test(u) ? u : ''; }
 function renderGlobalView(){
   const D = glState.data; if(!D) return;
@@ -5833,7 +5837,7 @@ function renderGlobalView(){
     }).join('');
     return `<section class="card rounded-xl p-4">
       <div class="flex items-center justify-between gap-2 pb-3 mb-1 border-b border-slate-800">
-        <h3 class="text-sm font-bold flex items-center gap-2"><span class="gl-cc">${C.code}</span>${C.name}</h3>
+        <h3 class="text-sm font-bold flex items-center gap-2">${glFlag(c)}${C.name}<span class="text-[11px] font-semibold muted">${C.code}</span></h3>
         <button type="button" class="more-btn" onclick="setCountry('${c}', 'ranking')">전체 순위<i class="fa-solid fa-chevron-right ml-1 text-[11px]"></i></button>
       </div>
       <ul>${list || `<li class="text-xs muted py-6 text-center">${d.err ? '불러오지 못했습니다' : '데이터 없음'}</li>`}</ul>
@@ -5854,7 +5858,7 @@ function renderGlobalView(){
   setText('glCommonSub', `${k === 'sales' ? '매출' : '인기'} TOP 100 기준 · 2개국 이상 ${[...by.values()].filter(g => Object.keys(g.ranks).length >= 2).length}개 중 상위 ${common.length}개`);
   const cell = n => n ? `<td class="py-2 px-3 text-center tabular ${n <= 10 ? 'text-slate-100 font-bold' : 'text-slate-400'}">${n}</td>` : '<td class="py-2 px-3 text-center text-slate-700">-</td>';
   document.getElementById('glCommon').innerHTML = common.length ? `<table class="w-full text-[13px] min-w-[560px]">
-    <thead><tr class="text-[11px] muted border-b border-slate-800"><th class="py-2 px-2 text-left font-semibold">게임</th><th class="py-2 px-2 text-left font-semibold">장르</th>${GL_ORDER.map(c => `<th class="py-2 px-3 text-center font-semibold">${COUNTRIES[c].code}</th>`).join('')}</tr></thead>
+    <thead><tr class="text-[11px] muted border-b border-slate-800"><th class="py-2 px-2 text-left font-semibold">게임</th><th class="py-2 px-2 text-left font-semibold">장르</th>${GL_ORDER.map(c => `<th class="py-2 px-3 text-center font-semibold"><span class="inline-flex items-center gap-1.5">${glFlag(c, 'sm')}${COUNTRIES[c].code}</span></th>`).join('')}</tr></thead>
     <tbody>${common.map(g => `<tr class="border-b border-slate-900/70">
       <td class="py-2 px-2"><div class="flex items-center gap-2.5 min-w-0">${g.icon ? `<img src="${escapeAttr(g.icon)}" class="w-7 h-7 rounded-lg object-cover bg-slate-800 shrink-0" alt="" loading="lazy" onerror="this.style.visibility='hidden'">` : '<span class="w-7 h-7 rounded-lg bg-slate-800 shrink-0"></span>'}<span class="truncate">${escapeHtml(g.names.kr || g.names.us || Object.values(g.names)[0])}</span></div></td>
       <td class="py-2 px-2 text-[12px] muted whitespace-nowrap">${escapeHtml(g.genre || '-')}</td>${GL_ORDER.map(c => cell(g.ranks[c])).join('')}</tr>`).join('')}</tbody></table>`
@@ -6512,6 +6516,43 @@ function rpRender(D){
   return cover + p1 + p2 + p3 + p4;  /* 표지 TOP5 → 1 분석 → 2 포지션·장르 → 3 순위표 → 4~ 신작 */
 }
 
+/* 순위 데이터를 화면에 반영 (저장 데이터 → 새 데이터로 두 번 불릴 수 있음) */
+function applyRankData(sales, popular, ty, tm){
+  rawStore.sales = sales; rawStore.popular = popular;
+  loadedMonths.sales = new Set([ymKey(ty,tm)]);
+  loadedMonths.popular = new Set([ymKey(ty,tm)]);
+  rebuildLookupIndices();
+  currentCalYear = ty; currentCalMonth = tm;
+  renderToday(); clearDashboardSkeletons(); resetGameIndex(); mkMonthsReady = false; mkFirstSeenCache.sales = mkFirstSeenCache.popular = null;
+  if(currentView==='sales'||currentView==='popular'||currentView==='newReleases')renderDatabase(currentView);
+  if(currentView==='search')openSearchView();
+  if(currentView==='ranking')renderRanking();
+  if(currentView==='calendar')ensureCalendarMonthLoaded();
+  if(currentView==='business')openBusinessAnalysis();
+  if(currentView==='watch')renderWatchPage();
+  if(currentView==='dashboard') document.getElementById('view-dashboard').classList.remove('hidden');
+}
+/* 신작DB가 늦게 도착했을 때, 그걸 쓰는 화면이면 다시 그림 */
+const NEWS_VIEWS = ['calendar', 'newReleases', 'report'];
+function onNewsLoaded(){
+  renderUpcoming();
+  if(currentView==='calendar') ensureCalendarMonthLoaded();
+  if(currentView==='newReleases') renderDatabase('newReleases');
+  if(currentView==='report') openReportView();
+  if(currentView==='business' && mkSection==='releases') mkRender();
+}
+/* 나라별 마지막 순위 데이터 저장 (IndexedDB: 한국은 1,500행×2라 localStorage 로는 부족) */
+let bootReveal = null;
+function rankDb(){
+  return new Promise((ok, no) => { const q = indexedDB.open('gmi', 1); q.onupgradeneeded = () => q.result.createObjectStore('rank'); q.onsuccess = () => ok(q.result); q.onerror = () => no(q.error); });
+}
+async function rankCacheGet(c){
+  try{ const db = await rankDb(); return await new Promise(ok => { const r = db.transaction('rank').objectStore('rank').get(c); r.onsuccess = () => ok(r.result || null); r.onerror = () => ok(null); }); }
+  catch(e){ return null; }
+}
+async function rankCacheSet(c, v){
+  try{ const db = await rankDb(); db.transaction('rank', 'readwrite').objectStore('rank').put(v, c); }catch(e){}
+}
 async function fetchAllData(){
   const status=document.getElementById('syncStatus');
   if(fetchBusy) return; fetchBusy = true;
@@ -6523,25 +6564,28 @@ async function fetchAllData(){
     /* 첫 로딩만 head에서 미리 보낸 요청을 씀 (그사이 날짜가 바뀌어 조회 범위가 다르면 새로 요청) */
     const boot = !bootFetch.used && bootFetch.start === salesPopularStart ? bootFetch : null; bootFetch.used = true;
 
-    const [sales,popular,news]=await Promise.all([
+    /* 신작DB(가장 느린 요청, 나라와 무관)는 순위 화면을 기다리게 하지 않음. 신작 화면에서 열 때만 함께 기다림 */
+    const newsP = fetchSheetData(SHEETS.newReleases,1, '', boot?.newReleases); newsP.catch(() => {});
+    const needNews = NEWS_VIEWS.includes(currentView);
+    let netDone = false;
+    const rankP = Promise.all([
       fetchSheetData(SHEETS.sales,1, `A >= date '${salesPopularStart}'`, boot?.sales),
-      fetchSheetData(SHEETS.popular,1, `A >= date '${salesPopularStart}'`, boot?.popular),
-      fetchSheetData(SHEETS.newReleases,1, '', boot?.newReleases)
-    ]);
-    rawStore.sales=sales; rawStore.popular=popular; rawStore.newReleases=news;
-
-    loadedMonths.sales = new Set([ymKey(ty,tm)]);
-    loadedMonths.popular = new Set([ymKey(ty,tm)]);
-
-    rebuildLookupIndices();
-    currentCalYear = ty; currentCalMonth = tm;
-    renderToday(); clearDashboardSkeletons(); resetGameIndex(); mkMonthsReady = false; mkFirstSeenCache.sales = mkFirstSeenCache.popular = null;
-    if(currentView==='sales'||currentView==='popular'||currentView==='newReleases')renderDatabase(currentView);
-    if(currentView==='search')openSearchView();
-    if(currentView==='ranking')renderRanking();
-    if(currentView==='calendar')ensureCalendarMonthLoaded();
-    if(currentView==='business')openBusinessAnalysis();
-    if(currentView==='dashboard') document.getElementById('view-dashboard').classList.remove('hidden');
+      fetchSheetData(SHEETS.popular,1, `A >= date '${salesPopularStart}'`, boot?.popular)
+    ]).finally(() => { netDone = true; });
+    /* 처음 열 때: 이 나라를 전에 본 적 있으면 저장해 둔 데이터로 먼저 그리고, 새 데이터가 오면 다시 그림 */
+    if(!lastSyncAt && !needNews){
+      const cached = await rankCacheGet(COUNTRY);
+      if(cached && cached.start === salesPopularStart && !netDone){
+        applyRankData(cached.sales, cached.popular, ty, tm);
+        status.textContent = '● 저장된 데이터 표시 중 · 갱신 중'; status.title = `저장 시각 ${new Date(cached.at).toLocaleString('ko-KR')}`;
+        if(bootReveal) bootReveal();
+      }
+    }
+    const [sales, popular] = await rankP;
+    if(needNews) rawStore.newReleases = await newsP;
+    applyRankData(sales, popular, ty, tm);
+    rankCacheSet(COUNTRY, { start: salesPopularStart, sales, popular, at: Date.now() });
+    if(!needNews) newsP.then(n => { rawStore.newReleases = n; onNewsLoaded(); }).catch(e => console.warn('신작 정보를 불러오지 못했습니다', e));
     lastSyncAt = Date.now();
     const syncTime = new Date(lastSyncAt).toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' });
     /* 수집 파이프라인 지연 감지: 최신 데이터 날짜가 기대 수집일(KST 08시 기준)보다 이전이면 경고 표시 */
@@ -6580,9 +6624,13 @@ window.addEventListener('DOMContentLoaded', async () => {
   document.documentElement.dataset.view = currentView;
   sbSync();
   if(initial === 'global'){ document.getElementById('bootLoading').classList.add('hidden'); switchView('global'); }   /* 4개국 차트는 따로 읽으므로 기다릴 필요 없음 */
+  bootReveal = () => {   /* 데이터가 처음 준비되는 순간(저장 데이터든 새 데이터든) 한 번만 */
+    bootReveal = null;
+    document.getElementById('bootLoading').classList.add('hidden');
+    if(initial !== 'dashboard' && initial !== 'global') switchView(initial);
+  };
   await fetchAllData();
-  document.getElementById('bootLoading').classList.add('hidden');
-  if(initial !== 'dashboard' && initial !== 'global') switchView(initial);
+  if(bootReveal) bootReveal();
   /* 글로벌 순위에서 다른 나라 게임을 눌러 넘어온 경우: 그 게임 상세를 바로 */
   try{ const g = sessionStorage.getItem('gmi.openDetail'); if(g){ sessionStorage.removeItem('gmi.openDetail'); openGameDetail(g); } }catch(e){}
 });
