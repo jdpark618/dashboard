@@ -1,0 +1,92 @@
+"""index.html(다크) → light.html(라이트) 자동 생성. 직접 light.html 을 고치지 말고 여기 색 표를 고친다.
+커밋할 때 .git/hooks/pre-commit 이 실행해 light.html 을 함께 커밋한다.
+방식: 다크 전용으로 박힌 색(CSS·스크립트·Tailwind 설정)을 라이트 값으로 일괄 치환 — 다크 화면은 전혀 건드리지 않음.
+실행: python tools/build_light.py  (저장소 루트에서)"""
+import re, os, sys
+root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+src, dst = os.path.join(root, 'index.html'), os.path.join(root, 'light.html')
+s = open(src, encoding='utf-8').read()
+
+def once(a, b):
+    global s
+    assert s.count(a) == 1, f'build_light: 찾을 수 없음 → {a[:60]}'
+    s = s.replace(a, b)
+
+# 0) 이 파일은 라이트
+once("const PAGE_THEME = 'dark';", "const PAGE_THEME = 'light';")
+once('<head>', '<head>\n<!-- 자동 생성 파일: tools/build_light.py 가 index.html 에서 만듦. 직접 고치지 말 것 -->')
+
+# 1) Tailwind 색: slate(뉴트럴)는 밝기를 뒤집고, 다크에서 글자용으로 쓰던 밝은 의미색(200~400)은 진하게
+once("slate: { 50:'#f7f8f8', 100:'#e8eaed', 200:'#dfe1e3', 300:'#c3c7ca', 400:'#a0a7ad', 500:'#6f767b', 600:'#50575c', 700:'#343a3e', 800:'#292f33', 900:'#202428', 950:'#16191c' }",
+     "slate: { 50:'#111315', 100:'#1d2125', 200:'#2a2f33', 300:'#3f454a', 400:'#5f666c', 500:'#8a9097', 600:'#b6bcc2', 700:'#dcdfe3', 800:'#eef0f2', 900:'#ffffff', 950:'#f3f4f6' }, " + ", ".join(
+         f"{k}: {{ 200:'{a}', 300:'{a}', 400:'{b}' }}" for k, a, b in [
+             ('amber', '#b45309', '#d97706'), ('emerald', '#047857', '#059669'), ('rose', '#be123c', '#e11d48'), ('red', '#b91c1c', '#dc2626'),
+             ('sky', '#0369a1', '#0284c7'), ('teal', '#0f766e', '#0d9488'), ('violet', '#6d28d9', '#7c3aed'), ('blue', '#1d4ed8', '#2563eb'),
+             ('green', '#15803d', '#16a34a'), ('yellow', '#a16207', '#ca8a04'), ('orange', '#c2410c', '#ea580c'), ('cyan', '#0e7490', '#0891b2'), ('pink', '#be185d', '#db2777')]))
+once("indigo: { 100:'#e6e3ff', 200:'#d2ccff', 300:'#bdb5ff', 400:'#a59aff', 500:'#7d72f0', 600:'#6257e8', 700:'#5046c8', 800:'#3d3690', 900:'#302d4d' }",
+     "indigo: { 100:'#2e2878', 200:'#3d3690', 300:'#4b40c8', 400:'#5b4fe0', 500:'#6257e8', 600:'#6257e8', 700:'#5046c8', 800:'#ddd8ff', 900:'#ece9ff' }")
+
+# 1-1) 주간 리포트 결과물(A4 쪽)은 인쇄·PDF로 나가므로 다크 버전과 똑같이 — 색 변환에서 빼 두었다가 마지막에 되돌림
+#      · CSS: '.rp-' 규칙 줄 (불러오는 중 표시 .rp-load 는 화면 일부라 변환)
+#      · 스크립트: 리포트 그리는 부분 (RP_CLASSES ~ applyRankData 앞)
+KEEP = []
+def keep(m):
+    KEEP.append(m.group(0)); return f'\x00KEEP{len(KEEP) - 1}\x00'
+s = re.sub(r'^[^\n]*(?:\.rp-(?!load)|#reportPages|#rpPrintPages)[^\n]*$', keep, s, flags=re.M)   # 리포트 색 변수(--ink·--mute 등) 줄 포함
+s = re.sub(r"const RP_CLASSES = .*?(?=function applyRankData\()", keep, s, flags=re.S)
+assert len(KEEP) > 40, f'build_light: 리포트 보호 구간이 너무 적음 ({len(KEEP)})'
+
+# 2) 직접 쓴 색 (CSS · 스크립트 안 인라인 색 모두)
+HEX = {
+    # 뉴트럴: 배경 → 흰/연회색, 글자 → 진회색
+    '#15191c': '#f1f2f4', '#16191c': '#e9ecef', '#191d20': '#f3f4f6', '#1b1f22': '#f6f7f8', '#1b2024': '#ffffff', '#1e2327': '#f8f9fa',
+    '#202428': '#ffffff', '#202529': '#ffffff', '#22272b': '#f6f7f9', '#25292d': '#f6f7f9', '#292e32': '#f1f2f4', '#292f33': '#eef0f2',
+    '#2b3034': '#e9ebee', '#2b3236': '#e3e6e9', '#343a3e': '#dcdfe3', '#50575c': '#b6bcc2', '#6f767b': '#8a9097', '#8a9298': '#6b7177',
+    '#929ba1': '#6b7177', '#a0a7ad': '#5f666c', '#c3c7ca': '#3f454a', '#dfe1e3': '#2a2f33', '#e8eaed': '#1d2125', '#f7f8f8': '#111315',
+    # 보라: 다크 바탕 위 밝은 보라 글자 → 진한 보라, 보라 틴트 바탕 → 연보라
+    '#a59aff': '#5b4fe0', '#d2ccff': '#4b40c8', '#bdb5ff': '#4b40c8', '#302d4d': '#ece9ff',
+    # 의미색 (매출·인기·상승·하락·신작 등): 흰 바탕에서 읽히는 진한 값
+    '#fbbf24': '#d97706', '#2dd4bf': '#0d9488', '#f87171': '#dc2626', '#60a5fa': '#2563eb', '#a78bfa': '#7c3aed', '#fb7185': '#e11d48',
+    '#34d399': '#059669', '#86efac': '#15803d', '#fcd34d': '#b45309', '#fde68a': '#92400e', '#93c5fd': '#1d4ed8', '#fca5a5': '#b91c1c',
+    '#c4b5fd': '#6d28d9', '#99f6e4': '#0f766e', '#38bdf8': '#0284c7', '#22d3ee': '#0891b2', '#f59e0b': '#d97706', '#a3e635': '#4d7c0f',
+}
+s = re.sub(r'#[0-9a-fA-F]{6}\b', lambda m: HEX.get(m.group(0).lower(), m.group(0)), s)
+RGBA = {
+    '52,58,62': '203,208,214', '41,47,51': '238,240,242', '32,36,40': '255,255,255', '80,87,92': '176,182,188', '160,167,173': '95,102,108',
+    '25,29,32': '243,244,246', '111,118,123': '138,144,151',
+    '251,191,36': '217,119,6', '45,212,191': '13,148,136', '248,113,113': '220,38,38', '96,165,250': '37,99,235', '167,139,250': '124,58,237',
+    '165,154,255': '91,79,224', '189,181,255': '91,79,224', '245,158,11': '217,119,6',
+}
+s = re.sub(r'rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)', lambda m: 'rgba(' + RGBA.get(f'{m.group(1)},{m.group(2)},{m.group(3)}', f'{m.group(1)},{m.group(2)},{m.group(3)}'), s)
+
+# 2-1) 흰 글자: 흰 바탕에서 안 보이는 곳만 진하게 (빨강 배지 위 흰 글자 · 주간 리포트는 그대로)
+s = s.replace('color:#ffffff', 'color:#2e2878')
+s = '\n'.join(l if ('hd-new' in l or 'rp-' in l) else re.sub(r'color:#fff\b', 'color:#111315', l) for l in s.split('\n'))
+s = s.replace('hover:text-white', 'hover:text-slate-50')
+once("ctx.fillStyle = p.hl ? '#ffffff'", "ctx.fillStyle = p.hl ? '#111315'")
+s = re.sub(r'\x00KEEP(\d+)\x00', lambda m: KEEP[int(m.group(1))], s)   # 리포트 구간 원래대로
+
+# 3) 그 밖의 다크 전용 설정
+once('color-scheme: dark;', 'color-scheme: light;')
+once('<meta name="theme-color" content="#f3f4f6">', '<meta name="theme-color" content="#ffffff">')
+once("return localStorage.getItem('gmi.evTheme') || 'dark';", "return localStorage.getItem('gmi.evTheme') || 'light';")   # 행사 달력은 원본 색
+once('title="라이트 모드로"', 'title="다크 모드로"')
+# 그림자는 흰 바탕에서 훨씬 옅게 · 로고 타일은 원래 연보라 · 애플 아이콘은 선택된(보라) 버튼 위에서 흰색
+once('</head>', """<style>/* 라이트 보정 (tools/build_light.py) */
+.sb-logo { background:#ece9ff !important; color:#3d3690 !important; }
+.side-nav { background:#fafafb; }
+.top-bar { background:rgba(255,255,255,.92) !important; }
+.card, #detailPanel, #releaseDetailPanel { box-shadow:0 1px 2px rgba(16,24,40,.04); }
+#detailPanel:not(.translate-x-full) { box-shadow:-12px 0 32px rgba(16,24,40,.12) !important; }
+.mk-seg button.on .fa-apple, .mk-seg button.on .text-slate-100 { color:#fff !important; }
+/* 게임 상세 국가 × 스토어 표: 흰 표 + 회색 머리글 + 또렷한 칸 구분 (다크의 톤온톤을 그대로 뒤집으면 머리글·본문이 같은 회색이 됨) */
+:is(#detailPanel) .gd-ctab { background:#fff !important; box-shadow:0 0 0 1px #e3e6e9; }
+.gd-ctab thead th { background:#f6f7f9; color:#5f666c; }
+.gd-ctab2 th.gd-sh { color:#1d2125; }
+.gd-ctab2 tbody td { border-top:1px solid #eef0f2; }
+.gd-ctab2 td:first-child { background:#fafbfc; }
+.gd-ctab2 td.on { background:#f1efff !important; }
+</style>
+</head>""")
+open(dst, 'w', encoding='utf-8', newline='\n').write(s)
+print(f'light.html 생성 ({len(s):,}자)')

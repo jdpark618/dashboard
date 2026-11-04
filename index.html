@@ -23,6 +23,13 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=2">
 <meta name="theme-color" content="#191d20">
 <script>
+/* 테마: 이 파일은 다크. 라이트는 tools/build_light.py 가 이 파일에서 색만 바꿔 light.html 로 만든다 (커밋할 때 자동)
+   고른 테마가 이 파일과 다르면 그리기 전에 그쪽 파일로 (주소 뒤 ?·# 는 그대로) */
+const PAGE_THEME = 'dark';
+function themeUrl(t){ const u = new URL(location.href); u.pathname = u.pathname.replace(/(index\.html|light\.html)?$/, t === 'light' ? 'light.html' : ''); return u.toString(); }
+(() => { let t = 'dark'; try{ t = localStorage.getItem('gmi.theme') || 'dark'; }catch(e){} if(t !== PAGE_THEME) location.replace(themeUrl(t)); })();
+document.documentElement.dataset.theme = PAGE_THEME;
+function setTheme(t){ try{ localStorage.setItem('gmi.theme', t); }catch(e){} location.replace(themeUrl(t)); }
 /* 첫 진입 속도: 시트 3개 요청을 Tailwind 등 외부 스크립트보다 먼저 보내 응답 대기를 스크립트 로딩과 겹치게 함.
    결과는 fetchAllData가 첫 로딩에만 씀 (새로고침·자동 갱신은 매번 새로 요청). 실패하면 그때 다시 요청 */
 const SPREADSHEET_ID = '1CW7Xr3eWBUKBPC0DXRDsqqrx2itUlzZfXPVF2hUoMAw';
@@ -815,6 +822,8 @@ html.panel-lock { overflow: hidden; }
 .hd-btn { height:32px; display:inline-flex; align-items:center; gap:6px; padding:0 11px; border-radius:10px; font-size:12px; font-weight:600; border:1px solid #343a3e; background:#202428; color:#c3c7ca; transition:background .15s, border-color .15s, color .15s; }
 .hd-btn:hover { border-color:rgba(165,154,255,.6); color:#fff; }
 .hd-icon { width:32px; padding:0; justify-content:center; color:#a0a7ad; }
+/* 테마 전환 버튼: 지금 테마의 반대 아이콘 */
+html[data-theme="dark"] .tb-theme .th-moon, html[data-theme="light"] .tb-theme .th-sun { display:none; }
 .hd-icon.fail { color:#fca5a5; border-color:rgba(248,113,113,.5); }
 .hd-report { background:rgba(98,87,232,.1); border-color:rgba(165,154,255,.55); color:#d2ccff; }
 .hd-report.fresh { background:#5046c8; border-color:#6257e8; color:#e6e3ff; }
@@ -1019,6 +1028,7 @@ html.panel-lock { overflow: hidden; }
   <div id="tbCrumb" class="tb-crumb"></div>
   <script>try{ const [h, html] = JSON.parse(sessionStorage.getItem('gmi.crumb') || '[]'); if(h === location.hash.split('?')[0] && html) document.getElementById('tbCrumb').innerHTML = html; }catch(e){}</script>
   <div class="tb-right">
+    <button type="button" id="themeBtn" class="hd-btn hd-icon tb-theme" onclick="setTheme(PAGE_THEME === 'dark' ? 'light' : 'dark')" aria-label="라이트/다크 전환" title="라이트 모드로"><i data-lucide="sun" class="th-sun"></i><i data-lucide="moon" class="th-moon"></i></button>
     <span id="tbStat" class="tb-stat" title="확인 중"><span id="syncStatus" class="sync-dot" data-s="busy" role="img" aria-label="동기화 확인 중"></span><span id="todayLabel" class="tb-date"></span></span>
   </div>
 </div>
