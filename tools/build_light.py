@@ -59,6 +59,11 @@ RGBA = {
 }
 s = re.sub(r'rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)', lambda m: 'rgba(' + RGBA.get(f'{m.group(1)},{m.group(2)},{m.group(3)}', f'{m.group(1)},{m.group(2)},{m.group(3)}'), s)
 
+# 2-0) 그림자: 다크용 진한 검정 그림자(rgba(0,0,0,.3~.6))는 흰 바탕에서 얼룩처럼 보이므로 남색 계열로 1/5 세기
+def soft(m):
+    return re.sub(r'rgba\(0,\s*0,\s*0,\s*([.\d]+)\)', lambda a: f'rgba(15,23,42,{round(float(a.group(1)) * .2, 3)})', m.group(0))
+s = re.sub(r'box-shadow:[^;}]*', soft, s)
+
 # 2-1) 흰 글자: 흰 바탕에서 안 보이는 곳만 진하게 (빨강 배지 위 흰 글자 · 주간 리포트는 그대로)
 s = s.replace('color:#ffffff', 'color:#2e2878')
 s = '\n'.join(l if ('hd-new' in l or 'rp-' in l) else re.sub(r'color:#fff\b', 'color:#0f172a', l) for l in s.split('\n'))
@@ -69,8 +74,6 @@ s = re.sub(r'\x00KEEP(\d+)\x00', lambda m: KEEP[int(m.group(1))], s)   # 리포�
 # 3) 그 밖의 다크 전용 설정
 once('color-scheme: dark;', 'color-scheme: light;')
 once('<meta name="theme-color" content="#f7f8fa">', '<meta name="theme-color" content="#ffffff">')
-once("return localStorage.getItem('gmi.evTheme') || 'dark';", "return localStorage.getItem('gmi.evTheme') || 'light';")   # 행사 달력은 원본 색
-once('title="라이트 모드로"', 'title="다크 모드로"')
 # 그림자는 흰 바탕에서 훨씬 옅게 · 로고 타일은 원래 연보라 · 애플 아이콘은 선택된(보라) 버튼 위에서 흰색
 once('</head>', """<style>/* 라이트 보정 (tools/build_light.py) */
 .sb-logo { background:#ece9ff !important; color:#3d3690 !important; }
@@ -79,6 +82,11 @@ once('</head>', """<style>/* 라이트 보정 (tools/build_light.py) */
 .top-bar { background:#ffffff !important; }
 .card { background:#ffffff; border:1px solid #e8ecf2; box-shadow:0 1px 2px rgba(15,23,42,.03); }
 #detailPanel, #releaseDetailPanel { box-shadow:0 1px 2px rgba(15,23,42,.03); }
+/* Tailwind 그림자(shadow-lg · shadow-black/30 등)도 옅게 — 일간 순위 필터바 등 */
+.shadow-lg { box-shadow:0 1px 2px rgba(15,23,42,.03) !important; }
+#rankTools { border:1px solid #e8ecf2; }
+/* 테마 스위치: 밝은 바탕 위 흰 캡슐 */
+.theme-seg { background:#eef2f6; border-color:#e2e8f0; } .theme-seg .ts-knob { background:#ffffff; box-shadow:0 1px 2px rgba(15,23,42,.12); }
 #detailPanel:not(.translate-x-full) { box-shadow:-12px 0 32px rgba(16,24,40,.12) !important; }
 .mk-seg button.on .fa-apple, .mk-seg button.on .text-slate-100 { color:#fff !important; }
 /* 게임 상세 국가 × 스토어 표: 흰 표 + 회색 머리글 + 또렷한 칸 구분 (다크의 톤온톤을 그대로 뒤집으면 머리글·본문이 같은 회색이 됨) */

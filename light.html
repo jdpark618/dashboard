@@ -6,16 +6,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ChartDeck</title>
 <!-- 링크 미리보기 (카카오톡·슬랙·트위터 등): 이미지는 절대 주소, 바꿀 때는 ?v= 숫자를 올려 캐시 갱신 -->
-<meta name="description" content="Google Play 매출·인기 순위, 신작 달력, 시장 분석을 매일 아침 한눈에.">
+<meta name="description" content="구글 플레이·애플 앱스토어 글로벌 게임 순위를 매일 한눈에. 한국·미국·일본·대만 매출·인기 차트와 신작 달력, 시장 분석까지.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="ChartDeck">
 <meta property="og:title" content="ChartDeck">
-<meta property="og:description" content="Google Play 매출·인기 순위, 신작 달력, 시장 분석을 매일 아침 한눈에.">
+<meta property="og:description" content="구글 플레이·애플 앱스토어 글로벌 게임 순위를 매일 한눈에. 한국·미국·일본·대만 매출·인기 차트와 신작 달력, 시장 분석까지.">
 <meta property="og:url" content="https://jdpark618.github.io/dashboard/">
 <meta property="og:image" content="https://jdpark618.github.io/dashboard/og-image.png?v=2">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="ChartDeck - 매출·인기 순위, 신작 달력, 시장 분석">
+<meta property="og:image:alt" content="ChartDeck - 구글 플레이·애플 앱스토어 글로벌 게임 순위">
 <meta property="og:locale" content="ko_KR">
 <meta name="twitter:card" content="summary_large_image">
 <!-- 브라우저 탭 아이콘: SVG 우선, 안 되는 브라우저는 PNG, 아이폰 홈 화면은 apple-touch-icon -->
@@ -31,6 +31,12 @@ function themeUrl(t){ const u = new URL(location.href); u.pathname = u.pathname.
 (() => { let t = 'dark'; try{ t = localStorage.getItem('gmi.theme') || 'dark'; }catch(e){} if(t !== PAGE_THEME) location.replace(themeUrl(t)); })();
 document.documentElement.dataset.theme = PAGE_THEME;
 function setTheme(t){ try{ localStorage.setItem('gmi.theme', t); }catch(e){} location.replace(themeUrl(t)); }
+/* 스위치: 캡슐을 먼저 옮기고(0.18초) 그 테마 파일로 */
+function themeSlide(t){
+  if(t === PAGE_THEME) return;
+  const seg = document.getElementById('themeSeg'); seg.classList.add(t === 'dark' ? 'to-dark' : 'to-light');
+  setTimeout(() => setTheme(t), 190);
+}
 /* 첫 진입 속도: 시트 3개 요청을 Tailwind 등 외부 스크립트보다 먼저 보내 응답 대기를 스크립트 로딩과 겹치게 함.
    결과는 fetchAllData가 첫 로딩에만 씀 (새로고침·자동 갱신은 매번 새로 요청). 실패하면 그때 다시 요청 */
 const SPREADSHEET_ID = '1CW7Xr3eWBUKBPC0DXRDsqqrx2itUlzZfXPVF2hUoMAw';
@@ -217,7 +223,7 @@ html.no-anim .side-nav, html.no-anim .side-nav *, html.no-anim .sb-main, html.no
 .sb-sub button:hover, .sb-fly button:hover { color:#1e293b; }
 .sb-sub button.on, .sb-fly button.on { color:#2e2878; font-weight:700; border-left-color:#6257e8; }
 /* 접힌 상태에서 시장 분석에 마우스를 올리면 오른쪽에 하위 메뉴 */
-.sb-fly { position:fixed; z-index:60; min-width:170px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:8px 10px 8px 0; box-shadow:0 10px 28px rgba(0,0,0,.5); display:none; }
+.sb-fly { position:fixed; z-index:60; min-width:170px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:8px 10px 8px 0; box-shadow:0 10px 28px rgba(15,23,42,0.1); display:none; }
 .sb-fly.on { display:block; }
 .sb-fly .t { font-size:11px; font-weight:700; color:#94a3b8; padding:2px 0 6px 18px; }
 .sb-fly .l { border-left:1px solid #f1f5f9; margin-left:10px; } .sb-fly button { padding-left:14px; }
@@ -232,7 +238,7 @@ html.sb-mini .sb-fold:hover { background:#f1f5f9; color:#0f172a; }
 /* 접고 펼칠 때 글자는 폭 변화(0.18초)와 함께 흐려지고 잘림 */
 .sb-tx, .sb-brand b { transition:opacity .15s; } .sb-group { transition:color .15s; }
 @media (prefers-reduced-motion:reduce){ .side-nav, .sb-main, .sb-tx, .sb-brand b, .sb-group { transition:none !important; } }
-.sb-tip { position:fixed; z-index:60; transform:translateY(-50%); pointer-events:none; opacity:0; transition:opacity .1s; max-width:320px; background:#f1f5f9; color:#1e293b; border:1px solid #e2e8f0; border-radius:7px; padding:5px 9px; font-size:12px; font-weight:600; white-space:nowrap; box-shadow:0 6px 18px rgba(0,0,0,.45); }
+.sb-tip { position:fixed; z-index:60; transform:translateY(-50%); pointer-events:none; opacity:0; transition:opacity .1s; max-width:320px; background:#f1f5f9; color:#1e293b; border:1px solid #e2e8f0; border-radius:7px; padding:5px 9px; font-size:12px; font-weight:600; white-space:nowrap; box-shadow:0 6px 18px rgba(15,23,42,0.09); }
 .sb-tip.on { opacity:1; }
 /* 접힌 상태: 글자만 숨김 (위치·높이는 그대로) */
 @media (min-width:1024px){
@@ -350,7 +356,7 @@ html.sb-mini .sb-rep .hd-new { position:absolute; top:3px; right:2px; margin:0; 
 .sb-dim { display:none; }
 @media (max-width:1023px){
   .sb-main { padding-left:0; }
-  .side-nav { width:248px; transform:translateX(-100%); box-shadow:0 0 40px rgba(0,0,0,.6); }
+  .side-nav { width:248px; transform:translateX(-100%); box-shadow:0 0 40px rgba(15,23,42,0.12); }
   html.sb-open .side-nav { transform:none; }
   html.sb-open .sb-dim { display:block; position:fixed; inset:0; z-index:44; background:rgba(0,0,0,.5); }
   #sbFold { display:none; }
@@ -369,7 +375,7 @@ html.sb-mini .sb-rep .hd-new { position:absolute; top:3px; right:2px; margin:0; 
 .scrollbar::-webkit-scrollbar { height:7px; width:7px; }
 .scrollbar::-webkit-scrollbar-thumb { background:#e2e8f0; border-radius:8px; }
 .summary-card-hover { cursor:pointer; transition: all 0.2s ease; }
-.summary-card-hover:hover { background:rgba(241,245,249,.9); transform: translateY(-2px); border-color: rgba(98,87,232, 0.4); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+.summary-card-hover:hover { background:rgba(241,245,249,.9); transform: translateY(-2px); border-color: rgba(98,87,232, 0.4); box-shadow: 0 4px 12px rgba(15,23,42,0.04); }
 select option { background-color: #ffffff; color: #1e293b; }
 .rank-chip { font-size:11px; font-weight:700; color:#334155; background:rgba(226,232,240,.5); border:1px solid rgba(203,213,225,.5); border-radius:4px; padding:1px 5px; flex-shrink:0; font-variant-numeric:tabular-nums; white-space:nowrap; }
 .rank-chip:empty { display:none; }
@@ -405,7 +411,7 @@ select option { background-color: #ffffff; color: #1e293b; }
 .cal-fbtn:hover { color:#0f172a; background:#eef2f6; }
 .cal-fbtn b { font-weight:700; }
 .cal-fbtn.act { color:#0f172a; background:#ece9ff; }
-.cal-fpop { position:absolute; right:0; top:calc(100% + 6px); z-index:30; width:280px; padding:6px 14px 14px; border-radius:12px; background:#f8fafc; border:1px solid #e2e8f0; box-shadow:0 12px 32px rgba(0,0,0,.45);
+.cal-fpop { position:absolute; right:0; top:calc(100% + 6px); z-index:30; width:280px; padding:6px 14px 14px; border-radius:12px; background:#f8fafc; border:1px solid #e2e8f0; box-shadow:0 12px 32px rgba(15,23,42,0.09);
   opacity:0; visibility:hidden; transform:translateY(-4px); transition:opacity .15s, transform .15s, visibility 0s linear .15s; }
 .cal-filt.open .cal-fpop { opacity:1; visibility:visible; transform:none; transition:opacity .15s, transform .15s, visibility 0s; }
 .cal-fh { font-size:11px; font-weight:700; color:#64748b; margin:12px 0 7px; }
@@ -487,20 +493,20 @@ select option { background-color: #ffffff; color: #1e293b; }
 .cal-row img, .cal-row .ph { width:32px; height:32px; border-radius:8px; object-fit:cover; flex-shrink:0; background:#f1f5f9; }
 
 /* 일정 미리보기 카드 (마우스가 있는 기기) */
-#calHover { position:fixed; z-index:70; width:290px; pointer-events:none; background:#ffffff; border:1px solid rgba(98,87,232,.45); border-radius:10px; padding:10px 12px; box-shadow:0 12px 30px -6px rgba(0,0,0,.75); }
+#calHover { position:fixed; z-index:70; width:290px; pointer-events:none; background:#ffffff; border:1px solid rgba(98,87,232,.45); border-radius:10px; padding:10px 12px; box-shadow:0 12px 30px -6px rgba(15,23,42,0.15); }
 
 /* 커스텀 툴팁 스타일 */
 .custom-tooltip-wrap { position: relative; display: inline-block; }
 .custom-tooltip-content {
   visibility: hidden; position: absolute; z-index: 100; left: 0; top: 110%;
   background-color: #ffffff; color: #1e293b; text-align: left; padding: 10px 14px;
-  border-radius: 8px; border: 1px solid rgba(98,87,232, 0.5); box-shadow: 0 10px 25px -3px rgba(0,0,0,0.8);
+  border-radius: 8px; border: 1px solid rgba(98,87,232, 0.5); box-shadow: 0 10px 25px -3px rgba(15,23,42,0.16);
   font-size: 11px; line-height: 1.5; white-space: nowrap; opacity: 0; transition: opacity 0.15s ease; pointer-events: none;
 }
 .custom-tooltip-wrap:hover .custom-tooltip-content { visibility: visible; opacity: 1; }
 /* 순위 추이 자동완성 */
 .gs-wrap { position:relative; display:flex; align-items:center; }
-.gs-dd { position:absolute; left:0; right:0; top:calc(100% + 4px); z-index:60; background:#ffffff; border:1px solid rgba(203,213,225,.7); border-radius:10px; box-shadow:0 12px 28px rgba(0,0,0,.45); max-height:440px; overflow-y:auto; padding:4px 0; }
+.gs-dd { position:absolute; left:0; right:0; top:calc(100% + 4px); z-index:60; background:#ffffff; border:1px solid rgba(203,213,225,.7); border-radius:10px; box-shadow:0 12px 28px rgba(15,23,42,0.09); max-height:440px; overflow-y:auto; padding:4px 0; }
 .gs-sec { font-size:11px; font-weight:600; color:#64748b; padding:8px 12px 4px; display:flex; align-items:center; gap:6px; }
 .gs-it { display:flex; align-items:center; gap:10px; padding:6px 12px; cursor:pointer; }
 .gs-it.on { background:rgba(98,87,232,.18); }
@@ -613,14 +619,14 @@ html.panel-lock { overflow: hidden; }
 .filter-l { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
 .filter-row .mk-asof-slot, .filter-row .asof { margin-left:auto; text-align:right; }
 .asof { font-size:12px; color:rgba(91,79,224,.9); }
-/* 행사 달력: 구글 캘린더 임베드 (밝은 화면이라 '어둡게'는 색 반전 + 색상 회전으로 사이트 톤에 맞춤) */
+/* 행사 달력: 구글 캘린더 임베드 (원래 밝은 화면이라 다크 테마에서는 색 반전 + 색상 회전으로 사이트 톤에 맞춤) */
 #view-events { max-width:1180px; margin:0 auto; }   /* 넓은 화면에서도 가로 1180px 가운데 (인벤 게임 캘린더 크기) */
 .ev-frame { height:clamp(620px, calc(100vh - 200px), 800px); background:#fff; }   /* 한 화면 안, 최대 800px */
 @media (max-width:767px){ .ev-frame { height:760px; } }
 .ev-frame iframe { width:100%; height:100%; border:0; display:block; }
 .ev-frame.dark { background:#ffffff; } .ev-frame.dark iframe { filter:invert(.9) hue-rotate(180deg) brightness(1.05); }
 .ev-empty { height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; font-size:13px; color:#64748b; background:#ffffff; text-align:center; padding:24px; }
-.toast { position:fixed; left:50%; bottom:28px; z-index:80; transform:translate(-50%, 8px); opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; background:#f1f5f9; color:#1e293b; border:1px solid #e2e8f0; border-radius:10px; padding:9px 14px; font-size:13px; font-weight:600; box-shadow:0 8px 24px rgba(0,0,0,.45); }
+.toast { position:fixed; left:50%; bottom:28px; z-index:80; transform:translate(-50%, 8px); opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; background:#f1f5f9; color:#1e293b; border:1px solid #e2e8f0; border-radius:10px; padding:9px 14px; font-size:13px; font-weight:600; box-shadow:0 8px 24px rgba(15,23,42,0.09); }
 .toast.on { opacity:1; transform:translate(-50%, 0); }
 .page-head { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 16px; }
 .page-head.end { justify-content:flex-end; }
@@ -756,7 +762,7 @@ html.panel-lock { overflow: hidden; }
 .gd-mkt a { color:#5b4fe0; font-weight:600; } .gd-mkt a:hover { color:#e6e3ff; }
 @media (max-width:767px){ .gd-mkt { grid-template-columns:repeat(3, minmax(0,1fr)); } .gd-mkt > div:nth-child(3n+1) { border-left:0; } }
 .gd-shots-wrap { position:relative; }
-.gd-sh-nav { position:absolute; top:50%; transform:translateY(-50%); z-index:2; width:38px; height:38px; border-radius:50%; background:rgba(255,255,255,.9); border:1px solid #e2e8f0; color:#334155; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 14px rgba(0,0,0,.4); }
+.gd-sh-nav { position:absolute; top:50%; transform:translateY(-50%); z-index:2; width:38px; height:38px; border-radius:50%; background:rgba(255,255,255,.9); border:1px solid #e2e8f0; color:#334155; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 14px rgba(15,23,42,0.08); }
 .gd-sh-nav:hover { background:#f1f5f9; color:#0f172a; } .gd-sh-nav.l { left:-14px; } .gd-sh-nav.r { right:-14px; }
 .gd-sh-nav[disabled] { opacity:0; pointer-events:none; }
 .gd-desc-box { max-height:260px; overflow:auto; border:1px solid var(--line); border-radius:12px; padding:14px 16px; background:rgba(255,255,255,.6); font-size:13px; line-height:1.75; color:#334155; white-space:pre-line; }
@@ -778,11 +784,11 @@ html.panel-lock { overflow: hidden; }
 @media (prefers-reduced-motion:reduce){ #detailPanel, #detailOverlay, #releaseDetailPanel, #releaseDetailOverlay { transition:none !important; } }
 @media (min-width:1024px){
   #detailPanel { max-width:none; width:min(calc(100vw - var(--sb-w) - 24px), 1200px); top:52px; height:calc(100vh - 52px); border-top-left-radius:14px; border:1px solid #e2e8f0; border-right:0; border-bottom:0; }
-  #detailPanel:not(.translate-x-full) { box-shadow:-18px 0 48px rgba(0,0,0,.5), -2px 0 0 rgba(98,87,232,.06); }
+  #detailPanel:not(.translate-x-full) { box-shadow:-18px 0 48px rgba(15,23,42,0.1), -2px 0 0 rgba(98,87,232,.06); }
   #detailPanel .gd-hd { border-top-left-radius:14px; }
   /* 신작 상세도 같은 팝업 크기·모양 (내용 배치는 그대로) */
   #releaseDetailPanel { max-width:none; width:min(calc(100vw - var(--sb-w) - 24px), 1080px); top:52px; height:calc(100vh - 52px); border-top-left-radius:14px; border:1px solid #e2e8f0; border-right:0; border-bottom:0; }
-  #releaseDetailPanel:not(.translate-x-full) { box-shadow:-18px 0 48px rgba(0,0,0,.5); }
+  #releaseDetailPanel:not(.translate-x-full) { box-shadow:-18px 0 48px rgba(15,23,42,0.1); }
   #releaseDetailPanel .gd-hd { border-top-left-radius:14px; padding:16px 28px; flex-wrap:nowrap; column-gap:16px; }
   #releaseDetailPanel .gd-hd-ic { width:56px; height:56px; border-radius:14px; }
   #releaseDetailPanel .gd-hd-nm { font-size:20px; }
@@ -823,8 +829,15 @@ html.panel-lock { overflow: hidden; }
 .hd-btn { height:32px; display:inline-flex; align-items:center; gap:6px; padding:0 11px; border-radius:10px; font-size:12px; font-weight:600; border:1px solid #e2e8f0; background:#ffffff; color:#334155; transition:background .15s, border-color .15s, color .15s; }
 .hd-btn:hover { border-color:rgba(91,79,224,.6); color:#0f172a; }
 .hd-icon { width:32px; padding:0; justify-content:center; color:#64748b; }
-/* 테마 전환 버튼: 지금 테마의 반대 아이콘 */
-html[data-theme="dark"] .tb-theme .th-moon, html[data-theme="light"] .tb-theme .th-sun { display:none; }
+/* 테마 스위치(해·달): 캡슐이 고른 쪽으로 미끄러지고(0.18초) 아이콘은 밝기만 바뀜 */
+.theme-seg { position:relative; display:inline-flex; padding:3px; border-radius:10px; background:#eef2f6; border:1px solid #f1f5f9; }
+.theme-seg button { position:relative; z-index:1; width:32px; height:26px; display:inline-flex; align-items:center; justify-content:center; color:#94a3b8; transition:color .18s cubic-bezier(.4,0,.2,1); }
+.theme-seg button svg { width:15px; height:15px; stroke-width:2.2; }
+.theme-seg button:hover { color:#334155; }
+.theme-seg .ts-knob { position:absolute; top:3px; left:3px; width:32px; height:26px; border-radius:7px; background:#e8ecf2; box-shadow:0 1px 2px rgba(15,23,42,0.08); transition:transform .18s cubic-bezier(.4,0,.2,1); }
+html[data-theme="dark"] .theme-seg:not(.to-light) .ts-knob, .theme-seg.to-dark .ts-knob { transform:translateX(32px); }
+html[data-theme="light"] .theme-seg:not(.to-dark) .ts-knob, .theme-seg.to-light .ts-knob { transform:none; }
+html[data-theme="light"] .theme-seg:not(.to-dark) button[data-t="light"], html[data-theme="dark"] .theme-seg:not(.to-light) button[data-t="dark"], .theme-seg.to-dark button[data-t="dark"], .theme-seg.to-light button[data-t="light"] { color:#1e293b; }
 .hd-icon.fail { color:#b91c1c; border-color:rgba(220,38,38,.5); }
 .hd-report { background:rgba(98,87,232,.1); border-color:rgba(91,79,224,.55); color:#4b40c8; }
 .hd-report.fresh { background:#5046c8; border-color:#6257e8; color:#e6e3ff; }
@@ -974,7 +987,7 @@ html[data-theme="dark"] .tb-theme .th-moon, html[data-theme="light"] .tb-theme .
 }
 #rpPrintRoot { display:none; }
 @media print { body.rp-printing #rpPrintRoot { display:block; } }
-.tap-tip { position:fixed; z-index:200; max-width:280px; background:#ffffff; color:#273449; border:1px solid rgba(98,87,232,.5); border-radius:8px; padding:8px 10px; font-size:12px; line-height:1.55; box-shadow:0 10px 25px -3px rgba(0,0,0,.7); }
+.tap-tip { position:fixed; z-index:200; max-width:280px; background:#ffffff; color:#273449; border:1px solid rgba(98,87,232,.5); border-radius:8px; padding:8px 10px; font-size:12px; line-height:1.55; box-shadow:0 10px 25px -3px rgba(15,23,42,0.14); }
 </style>
 <style>/* 라이트 보정 (tools/build_light.py) */
 .sb-logo { background:#ece9ff !important; color:#3d3690 !important; }
@@ -983,6 +996,11 @@ html[data-theme="dark"] .tb-theme .th-moon, html[data-theme="light"] .tb-theme .
 .top-bar { background:#ffffff !important; }
 .card { background:#ffffff; border:1px solid #e8ecf2; box-shadow:0 1px 2px rgba(15,23,42,.03); }
 #detailPanel, #releaseDetailPanel { box-shadow:0 1px 2px rgba(15,23,42,.03); }
+/* Tailwind 그림자(shadow-lg · shadow-black/30 등)도 옅게 — 일간 순위 필터바 등 */
+.shadow-lg { box-shadow:0 1px 2px rgba(15,23,42,.03) !important; }
+#rankTools { border:1px solid #e8ecf2; }
+/* 테마 스위치: 밝은 바탕 위 흰 캡슐 */
+.theme-seg { background:#eef2f6; border-color:#e2e8f0; } .theme-seg .ts-knob { background:#ffffff; box-shadow:0 1px 2px rgba(15,23,42,.12); }
 #detailPanel:not(.translate-x-full) { box-shadow:-12px 0 32px rgba(16,24,40,.12) !important; }
 .mk-seg button.on .fa-apple, .mk-seg button.on .text-slate-100 { color:#fff !important; }
 /* 게임 상세 국가 × 스토어 표: 흰 표 + 회색 머리글 + 또렷한 칸 구분 (다크의 톤온톤을 그대로 뒤집으면 머리글·본문이 같은 회색이 됨) */
@@ -1046,7 +1064,11 @@ html[data-theme="dark"] .tb-theme .th-moon, html[data-theme="light"] .tb-theme .
   <div id="tbCrumb" class="tb-crumb"></div>
   <script>try{ const [h, html] = JSON.parse(sessionStorage.getItem('gmi.crumb') || '[]'); if(h === location.hash.split('?')[0] && html) document.getElementById('tbCrumb').innerHTML = html; }catch(e){}</script>
   <div class="tb-right">
-    <button type="button" id="themeBtn" class="hd-btn hd-icon tb-theme" onclick="setTheme(PAGE_THEME === 'dark' ? 'light' : 'dark')" aria-label="라이트/다크 전환" title="다크 모드로"><i data-lucide="sun" class="th-sun"></i><i data-lucide="moon" class="th-moon"></i></button>
+    <div id="themeSeg" class="theme-seg" role="group" aria-label="테마">
+      <span class="ts-knob" aria-hidden="true"></span>
+      <button type="button" data-t="light" onclick="themeSlide('light')" aria-label="라이트 모드" title="라이트 모드"><i data-lucide="sun"></i></button>
+      <button type="button" data-t="dark" onclick="themeSlide('dark')" aria-label="다크 모드" title="다크 모드"><i data-lucide="moon"></i></button>
+    </div>
     <span id="tbStat" class="tb-stat" title="확인 중"><span id="syncStatus" class="sync-dot" data-s="busy" role="img" aria-label="동기화 확인 중"></span><span id="todayLabel" class="tb-date"></span></span>
   </div>
 </div>
@@ -1475,12 +1497,6 @@ document.querySelectorAll('.sc-store button').forEach(b => { const on = b.datase
 <!-- 행사 달력: 직접 관리하는 구글 캘린더(게임쇼·e스포츠·비즈니스 행사)를 그대로 끼워 넣음. 나라·스토어와 무관 -->
 <div id="view-events" class="hidden space-y-4">
   <div class="filter-row">
-    <div class="filter-l">
-      <div class="mk-seg" id="evTheme" aria-label="달력 색">
-        <button type="button" data-v="dark" onclick="evSetTheme('dark')">어둡게</button>
-        <button type="button" data-v="light" onclick="evSetTheme('light')">원본 색</button>
-      </div>
-    </div>
     <a id="evOpen" class="asof hover:underline" href="#" target="_blank" rel="noopener">구글 캘린더에서 열기 ›</a>
   </div>
   <section class="card rounded-xl overflow-hidden"><div id="evFrame" class="ev-frame"></div></section>
@@ -2761,16 +2777,13 @@ function switchView(view){
    country = 국가만(두 스토어를 나란히 보는 일간 마켓별 순위). 신작 달력 · 신작 DB · 신작 동향 · 주간 리포트는 없음 */
 /* 행사 달력: 공개 구글 캘린더를 처음 열 때만 불러옴 (월 보기 · 월요일 시작 · 서울 시간) */
 const EVENT_CAL_ID = 'c_58bf32be64488847f1007ad21615b0fcdf767a96764ea45106af7b5b75974456@group.calendar.google.com';   /* 구글 캘린더 설정 > 캘린더 통합 > '캘린더 ID' (공개 캘린더여야 보임) */
-function evTheme(){ try{ return localStorage.getItem('gmi.evTheme') || 'light'; }catch(e){ return 'dark'; } }
-function evSetTheme(v){ try{ localStorage.setItem('gmi.evTheme', v); }catch(e){} evApplyTheme(); }
-function evApplyTheme(){ const v = evTheme(); document.getElementById('evFrame').classList.toggle('dark', v === 'dark'); document.querySelectorAll('#evTheme button').forEach(b => b.classList.toggle('on', b.dataset.v === v)); }
 function openEventsView(){
   const box = document.getElementById('evFrame'), a = document.getElementById('evOpen');
-  evApplyTheme();
+  box.classList.toggle('dark', PAGE_THEME === 'dark');   /* 사이트 테마를 따름 */
   if(!EVENT_CAL_ID){ box.innerHTML = '<div class="ev-empty"><i class="fa-regular fa-calendar text-2xl text-slate-500"></i>행사 캘린더가 아직 연결되지 않았습니다<span class="text-[12px] text-slate-500">구글 캘린더 ID 를 넣으면 여기에 표시됩니다</span></div>'; a.classList.add('hidden'); return; }
   a.classList.remove('hidden'); a.href = `https://calendar.google.com/calendar/u/0?cid=${encodeURIComponent(EVENT_CAL_ID)}`;
   if(box.querySelector('iframe')) return;
-  const q = new URLSearchParams({ src: EVENT_CAL_ID, ctz: 'Asia/Seoul', hl: 'ko', mode: 'MONTH', wkst: '2', showTitle: '0', showPrint: '0', showTz: '0', showCalendars: '0', bgcolor: '#ffffff', color: '#BEB8FA' });   /* 일정 막대 색: '어둡게'(반전 필터)를 거치면 #514C83 으로 보이도록 역산한 값 */
+  const q = new URLSearchParams({ src: EVENT_CAL_ID, ctz: 'Asia/Seoul', hl: 'ko', mode: 'MONTH', wkst: '2', showTitle: '0', showPrint: '0', showTz: '0', showCalendars: '0', bgcolor: '#ffffff', color: PAGE_THEME === 'dark' ? '#BEB8FA' : '#514C83' });   /* 일정 막대 색 #514C83 (다크는 반전 필터를 거치면 그 색이 되도록 역산한 값) */
   box.innerHTML = `<iframe src="https://calendar.google.com/calendar/embed?${q}" title="행사 달력"></iframe>`;
 }
 /* 스토어·국가 전환: 새로고침 없이 이 자리에서. 메뉴·상단바·필터 줄은 그대로 두고 필터 줄 아래 본문만 '읽는 중'
