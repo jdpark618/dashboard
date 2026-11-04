@@ -604,7 +604,8 @@ html.panel-lock { overflow: hidden; }
 .filter-row .mk-asof-slot, .filter-row .asof { margin-left:auto; text-align:right; }
 .asof { font-size:12px; color:rgba(189,181,255,.9); }
 /* 행사 달력: 구글 캘린더 임베드 (밝은 화면이라 '어둡게'는 색 반전 + 색상 회전으로 사이트 톤에 맞춤) */
-.ev-frame { height:1180px; background:#fff; }   /* 주마다 일정 4~5줄이 보이는 높이 (낮으면 1줄 + "N개 더보기") */
+#view-events { max-width:1180px; margin:0 auto; }   /* 넓은 화면에서도 가로 1180px 가운데 (인벤 게임 캘린더 크기) */
+.ev-frame { height:clamp(620px, calc(100vh - 200px), 800px); background:#fff; }   /* 한 화면 안, 최대 800px */
 @media (max-width:767px){ .ev-frame { height:760px; } }
 .ev-frame iframe { width:100%; height:100%; border:0; display:block; }
 .ev-frame.dark { background:#202428; } .ev-frame.dark iframe { filter:invert(.9) hue-rotate(180deg) brightness(1.05); }
