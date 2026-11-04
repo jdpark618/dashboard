@@ -5,7 +5,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <!-- 이 페이지가 직접 다크를 지원한다고 브라우저에 먼저 알림 → 모바일 브라우저 '강제 다크모드'가 색·아이콘을 한 번 더 뒤집지 않음 -->
-<meta name="color-scheme" content="light">
+<meta name="color-scheme" content="only light">
+<style>/* 삼성 인터넷 등: 이 규칙이 있으면 사이트가 다크를 직접 지원한다고 보고 강제 다크모드를 적용하지 않음 */ @media (prefers-color-scheme: dark) { :root { --os-dark: 1; } }</style>
 <title>ChartDeck</title>
 <!-- 링크 미리보기 (카카오톡·슬랙·트위터 등): 이미지는 절대 주소, 바꿀 때는 ?v= 숫자를 올려 캐시 갱신 -->
 <meta name="description" content="구글 플레이·애플 앱스토어 글로벌 게임 순위를 매일 한눈에. 한국·미국·일본·대만 매출·인기 차트와 신작 달력, 시장 분석까지.">
@@ -30,11 +31,15 @@
    고른 테마가 이 파일과 다르면 그리기 전에 그쪽 파일로 (주소 뒤 ?·# 는 그대로) */
 const PAGE_THEME = 'light';
 function themeUrl(t){ const u = new URL(location.href); u.pathname = u.pathname.replace(/(index\.html|light\.html)?$/, t === 'light' ? 'light.html' : ''); return u.toString(); }
-/* 고른 적이 없으면 기기(OS) 설정을 따름. 토글로 고르면 그 선택이 우선 */
+/* 기본은 항상 기기(OS) 설정. 토글로 바꾼 건 그 탭에서만 유지(sessionStorage) — 새로 열면 다시 기기 설정 */
 function osTheme(){ try{ return matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; }catch(e){ return 'dark'; } }
-(() => { let t = null; try{ t = localStorage.getItem('gmi.theme'); }catch(e){} t = t || osTheme(); if(t !== PAGE_THEME) location.replace(themeUrl(t)); })();
+function pickedTheme(){ try{ return sessionStorage.getItem('gmi.theme'); }catch(e){ return null; } }
+try{ localStorage.removeItem('gmi.theme'); }catch(e){}   /* 예전 버전이 남긴 저장값 정리 */
+(() => { const t = pickedTheme() || osTheme(); if(t !== PAGE_THEME) location.replace(themeUrl(t)); })();
+/* 페이지를 연 채로 기기 설정이 바뀌면 따라감 (토글로 고른 탭은 제외) */
+try{ matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if(!pickedTheme() && osTheme() !== PAGE_THEME) location.replace(themeUrl(osTheme())); }); }catch(e){}
 document.documentElement.dataset.theme = PAGE_THEME;
-function setTheme(t){ try{ localStorage.setItem('gmi.theme', t); }catch(e){} location.replace(themeUrl(t)); }
+function setTheme(t){ try{ sessionStorage.setItem('gmi.theme', t); }catch(e){} location.replace(themeUrl(t)); }
 /* 스위치: 캡슐을 먼저 옮기고(0.18초) 그 테마 파일로 */
 function themeSlide(t){
   if(t === PAGE_THEME) return;
@@ -179,7 +184,7 @@ if(location.hash.startsWith('#global')) snapLoad();   /* 그 화면 주소로 �
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
-:root { color-scheme: light;
+:root { color-scheme: only light;
   /* 배경 → 카드 3단계 톤 */
   --bg:#f7f8fa; --surface:#ffffff; --surface-2:#f1f5f9; --line:rgba(226,232,240,.7);
   /* 의미색: 색 하나에 의미 하나 */
