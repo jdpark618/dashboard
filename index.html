@@ -603,6 +603,12 @@ html.panel-lock { overflow: hidden; }
 .filter-l { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
 .filter-row .mk-asof-slot, .filter-row .asof { margin-left:auto; text-align:right; }
 .asof { font-size:12px; color:rgba(189,181,255,.9); }
+/* 행사 달력: 구글 캘린더 임베드 (밝은 화면이라 '어둡게'는 색 반전 + 색상 회전으로 사이트 톤에 맞춤) */
+.ev-frame { height:1180px; background:#fff; }   /* 주마다 일정 4~5줄이 보이는 높이 (낮으면 1줄 + "N개 더보기") */
+@media (max-width:767px){ .ev-frame { height:760px; } }
+.ev-frame iframe { width:100%; height:100%; border:0; display:block; }
+.ev-frame.dark { background:#202428; } .ev-frame.dark iframe { filter:invert(.9) hue-rotate(180deg) brightness(1.05); }
+.ev-empty { height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; font-size:13px; color:#a0a7ad; background:#202428; text-align:center; padding:24px; }
 .page-head { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 16px; }
 .page-head.end { justify-content:flex-end; }
 .page-head h2 { font-size:18px; font-weight:700; display:flex; align-items:center; gap:8px; }
@@ -981,6 +987,7 @@ html.panel-lock { overflow: hidden; }
     <button class="sb-item" data-view="search" onclick="switchView('search')" data-tip="순위 비교"><i data-lucide="chart-no-axes-combined"></i><span class="sb-tx">순위 비교</span></button>
     <div class="sb-group">일정</div>
     <button class="sb-item" data-view="calendar" onclick="switchView('calendar')" data-tip="신작 달력"><i data-lucide="calendar-days"></i><span class="sb-tx">신작 달력</span></button>
+    <button class="sb-item" data-view="events" onclick="switchView('events')" data-tip="행사 달력"><i data-lucide="calendar-range"></i><span class="sb-tx">행사 달력</span></button>
     <!-- DB 메뉴: 원본 데이터가 필요할 때만 쓰는 메뉴라 맨 아래 묶음으로 -->
     <div class="sb-group raw">RAW DATA</div>
     <button class="sb-item" data-view="sales" onclick="switchView('sales')" data-tip="매출 DB"><i data-lucide="database"></i><span class="sb-tx">매출 DB</span></button>
@@ -1425,6 +1432,20 @@ document.querySelectorAll('.sc-store button').forEach(b => { const on = b.datase
 </div>
 
 <!-- CALENDAR VIEW -->
+<!-- 행사 달력: 직접 관리하는 구글 캘린더(게임쇼·e스포츠·비즈니스 행사)를 그대로 끼워 넣음. 나라·스토어와 무관 -->
+<div id="view-events" class="hidden space-y-4">
+  <div class="filter-row">
+    <div class="filter-l">
+      <div class="mk-seg" id="evTheme" aria-label="달력 색">
+        <button type="button" data-v="dark" onclick="evSetTheme('dark')">어둡게</button>
+        <button type="button" data-v="light" onclick="evSetTheme('light')">원본 색</button>
+      </div>
+    </div>
+    <a id="evOpen" class="asof hover:underline" href="#" target="_blank" rel="noopener">구글 캘린더에서 열기 ›</a>
+  </div>
+  <section class="card rounded-xl overflow-hidden"><div id="evFrame" class="ev-frame"></div></section>
+</div>
+
 <div id="view-calendar" class="hidden space-y-3">
   <!-- 이번 주 신작: 앞으로 7일 모바일 신작 한 줄 (이번 달 · 달력 보기에서만, 넘치면 옆으로) -->
   <section id="upcomingSection" class="card rounded-xl px-4 py-3">
@@ -2682,7 +2703,7 @@ function switchView(view){
   sbDrawer(false); sbSync();
   if(!document.getElementById('detailPanel').classList.contains('translate-x-full')) closeGameDetail();
   document.documentElement.dataset.view = view;
-  ['dashboard','global','watch','ranking','market','business','search','calendar','database','report'].forEach(v => {
+  ['dashboard','global','watch','ranking','market','business','search','calendar','events','database','report'].forEach(v => {
     const el = document.getElementById(`view-${v}`);
     if(el) el.classList.toggle('hidden', v==='database' ? !(view==='sales'||view==='popular'||view==='newReleases') : view!==v);
   });
@@ -2692,6 +2713,7 @@ function switchView(view){
   if(view==='business')work.push(openBusinessAnalysis());
   if(view==='search')work.push(openSearchView());
   if(view==='calendar')work.push(ensureCalendarMonthLoaded());
+  if(view==='events')openEventsView();
   /* 현재 탭을 URL 해시에 기록: 새로고침·링크 공유 시 같은 탭으로 열림 (리포트는 ?w= 주를 유지) */
   history.replaceState(null, '', view === 'dashboard' ? location.pathname + location.search : view === 'report' && location.hash.startsWith('#report') ? location.hash : view === 'business' && mkSection === 'monthly' ? '#monthly' : `#${view}`);
   if(view==='watch')renderWatchPage();
@@ -2703,6 +2725,20 @@ function switchView(view){
 }
 /* 스토어·국가 선택을 지금 페이지 칸으로: both = 스토어+국가, store = 스토어만(4개국을 함께 보는 화면)
    일간 마켓별 순위(자체 국가 선택) · 신작 달력 · 신작 DB · 신작 동향 · 주간 리포트는 없음 */
+/* 행사 달력: 공개 구글 캘린더를 처음 열 때만 불러옴 (월 보기 · 월요일 시작 · 서울 시간) */
+const EVENT_CAL_ID = 'c_58bf32be64488847f1007ad21615b0fcdf767a96764ea45106af7b5b75974456@group.calendar.google.com';   /* 구글 캘린더 설정 > 캘린더 통합 > '캘린더 ID' (공개 캘린더여야 보임) */
+function evTheme(){ try{ return localStorage.getItem('gmi.evTheme') || 'dark'; }catch(e){ return 'dark'; } }
+function evSetTheme(v){ try{ localStorage.setItem('gmi.evTheme', v); }catch(e){} evApplyTheme(); }
+function evApplyTheme(){ const v = evTheme(); document.getElementById('evFrame').classList.toggle('dark', v === 'dark'); document.querySelectorAll('#evTheme button').forEach(b => b.classList.toggle('on', b.dataset.v === v)); }
+function openEventsView(){
+  const box = document.getElementById('evFrame'), a = document.getElementById('evOpen');
+  evApplyTheme();
+  if(!EVENT_CAL_ID){ box.innerHTML = '<div class="ev-empty"><i class="fa-regular fa-calendar text-2xl text-slate-500"></i>행사 캘린더가 아직 연결되지 않았습니다<span class="text-[12px] text-slate-500">구글 캘린더 ID 를 넣으면 여기에 표시됩니다</span></div>'; a.classList.add('hidden'); return; }
+  a.classList.remove('hidden'); a.href = `https://calendar.google.com/calendar/u/0?cid=${encodeURIComponent(EVENT_CAL_ID)}`;
+  if(box.querySelector('iframe')) return;
+  const q = new URLSearchParams({ src: EVENT_CAL_ID, ctz: 'Asia/Seoul', hl: 'ko', mode: 'MONTH', wkst: '2', showTitle: '0', showPrint: '0', showTz: '0', showCalendars: '0', bgcolor: '#ffffff', color: '#BEB8FA' });   /* 일정 막대 색: '어둡게'(반전 필터)를 거치면 #514C83 으로 보이도록 역산한 값 */
+  box.innerHTML = `<iframe src="https://calendar.google.com/calendar/embed?${q}" title="행사 달력"></iframe>`;
+}
 /* 스토어·국가 전환: 새로고침 없이 이 자리에서. 메뉴·상단바·필터 줄은 그대로 두고 필터 줄 아래 본문만 '읽는 중'
    나라·스토어에 묶인 데이터·캐시만 비우고 지금 화면을 다시 그림 (패키지·시트 이름으로 키를 둔 캐시는 그대로 재사용) */
 async function scopeSwitch(c, st, view){
@@ -2779,7 +2815,7 @@ async function snapEl(btn, name){
 }
 
 
-const VALID_VIEWS = ['dashboard','global','watch','ranking','market','monthly','business','calendar','sales','popular','newReleases','search','report'];
+const VALID_VIEWS = ['dashboard','global','watch','ranking','market','monthly','business','calendar','events','sales','popular','newReleases','search','report'];
 function viewFromHash(){ const v = decodeURIComponent(location.hash.slice(1)).split('?')[0]; return VALID_VIEWS.includes(v) && !((COUNTRY !== 'kr' || STORE !== 'gp') && KR_ONLY_VIEWS.includes(v)) ? v : 'dashboard'; }
 /* 다른 나라에서 한국 전용 메뉴를 누르면 한국으로 바꿔 그 화면을 연다 */
 document.addEventListener('click', e => {
@@ -5140,7 +5176,7 @@ function mkTypeButtons(elId, tabKey, items){
 
 function mkRenderDaily(){
   const S = mkDailyBase('sales'), P = mkDailyBase('popular');
-  setText('mkAsOf', S.base ? `기준일 ${S.base} · 전일(${S.prev || '-'}) 대비` : '데이터 없음');
+  setText('mkAsOf', S.base ? `기준일 ${S.base}` : '데이터 없음');
   const B = { sales: S, popular: P };
 
   /* KPI: 오늘 값 + 최근 7일 미니 막대 + 평소 대비 태그 */
@@ -5245,7 +5281,7 @@ function mkRenderWeekly(){
   const mon = mkTargetWeekMonday();
   if(!mon){ setText('mkAsOf', '데이터 없음'); return; }
   const prevMon = mkAddDays(mon, -7);
-  setText('mkAsOf', `지난주 ${mkWeekLabel(mon)}(월~일) · 전주 ${mkWeekLabel(prevMon)} 대비`);
+  setText('mkAsOf', `기준 주 ${mkWeekLabel(mon)}`);
   const I = { sales: mkGetIndex('sales'), popular: mkGetIndex('popular') };
 
   /* KPI 1: 주간 차트인 */
@@ -5757,7 +5793,7 @@ function mkRenderStructure(){
   const base = I.sales.dates.at(-1);
   if(!mon || !base){ setText('mkAsOf', '데이터 없음'); return; }
   const D = mkRenderPosition();
-  setText('mkAsOf', `포지션 맵 ${D ? D.W.label : '-'} · 장르·퍼블리셔 지난주 ${mkWeekLabel(mon)}(월~일)`);
+  setText('mkAsOf', `기준일 ${base}`);
 
   /* 장르 비중 8주 */
   const gIdx = I[mkTabs.wGenre];
@@ -5950,7 +5986,7 @@ function mkRenderMonthly(){
   setText('mkRankTitle', `${P.unit} 순위표`);
   document.getElementById('mkMonthlySel').innerHTML = P.keys.slice().reverse().map(k => `<option value="${k}" ${k === ym ? 'selected' : ''}>${P.option(k)}</option>`).join('');
   const stores = wide ? ['sales', 'popular'] : [mkTabs.monthly];
-  setText('mkAsOf', `${wide ? '' : MK_STORE_LABEL[mkTabs.monthly] + ' '}${P.unit} 순위 · ${mLabel(ym)}${pym ? ` vs ${mLabel(pym)}` : ''} · 기준일 ${base}`);
+  setText('mkAsOf', mkMonthly.period === 'week' ? `기준 주 ${mkWeekLabel(ym)}` : `기준 월 ${ym}`);
   setText('mkMonthlyDesc', `${mLabel(ym)}${pym ? ` vs ${mLabel(pym)}` : ` · 비교할 ${P.prevWord} 데이터 없음`} · 관측 ${P.cur.length}일 · 행을 누르면 게임 상세`);
   const tag = s => `<span class="text-[11px] font-semibold px-2 py-0.5 rounded ${s === 'sales' ? 't-sales bg-amber-400/15' : 't-pop bg-teal-400/15'}">${MK_STORE_LABEL[s]}</span>`;
   const T = stores.map(s => ({ s, ...mkRankTable(s, s === 'sales' ? P : mkRankPeriods(mkGetIndex(s)), wide ? n => `<span class="inline-flex items-center gap-2">${tag(s)}<span class="text-[11px] muted">${n}개</span></span>` : null) }));
@@ -6050,7 +6086,7 @@ function mkRenderDebut(){
   mkRenderRetention(store);
   const { list, base, windowStart } = R;
   const judgeStart = windowStart > R.pkgStart ? windowStart : mkAddDays(R.pkgStart, 1); /* 실제 판정이 가능한 첫날 */
-  setText('mkAsOf', `${label} 순위 · ${mkShort(judgeStart)}~${mkShort(base)} 첫 차트인${windowStart > R.pkgStart ? ` (최근 ${MK_DEBUT_WEEKS}주)` : ' (판정 가능한 전체 기간)'} · 기준일 ${base}`);
+  setText('mkAsOf', `기준일 ${base}`);
   setText('mkDebutDesc', `${label} TOP100에 처음 나타난 게임 ${list.length}개 · 최신 차트인순 · 행을 누르면 게임 상세`);
   const kept = list.filter(x => x.now != null).length, top10 = list.filter(x => x.best <= 10).length;
   const weeks = Array.from({ length: MK_DEBUT_WEEKS }, (_, i) => mkAddDays(windowStart, 7 * i));
@@ -6141,7 +6177,7 @@ function mkRenderReleases(){
   const rows = (data?.rows || []).map(r => ({ d: rowDate(r), name: String(r[1] || '').trim(), platform: String(r[2] || ''), publisher: String(r[3] || '').trim() || '미상', type: mkRelType(r[4]) }))
     .filter(x => /^\d{4}-\d{2}-\d{2}$/.test(x.d) && x.name && (!mobileOnly || x.platform.replace(/\s+/g, '').includes('모바일')));
   const today = kstTodayStr(), ym = today.slice(0, 7), [ty, tm] = ym.split('-').map(Number), prevYm = ymKey(addMonthsYM(ty, tm, -1).y, addMonthsYM(ty, tm, -1).m);
-  setText('mkAsOf', `신작 정보 ${rows.length}건 ${mobileOnly ? '(모바일 포함 게임만)' : '(전체 플랫폼)'} · 오늘 ${today}`);
+  setText('mkAsOf', `기준일 ${today}`);
   if(!rows.length){ ['mkRelKpis', 'mkRelPub', 'mkRelDow'].forEach(id => { document.getElementById(id).innerHTML = mkEmpty('신작 데이터가 없습니다.'); }); ['mkHlRelWeek', 'mkHlRelPub', 'mkHlRelDow'].forEach(id => mkHeadline(id, '')); return; }
 
   const thisM = rows.filter(x => x.d.startsWith(ym)), prevM = rows.filter(x => x.d.startsWith(prevYm));
@@ -6355,7 +6391,7 @@ function glIcon(r){ let u = String(r[9] || '').trim(); if(u.startsWith("'")) u =
 function renderGlobalView(){
   const D = glState.data; if(!D) return;
   const k = glState.chart, dates = GL_ORDER.map(c => D[c]?.[k]?.date).filter(Boolean);
-  setText('glSub', `기준일 ${dates.length ? dates.sort().at(-1) : '-'} · 나라별 ${k === 'sales' ? '매출' : '인기'} TOP 10 · 앱이름은 현지 스토어 표기`);
+  setText('glSub', `기준일 ${dates.length ? dates.sort().at(-1) : '-'}`);
   document.getElementById('glGrid').innerHTML = GL_ORDER.map(c => {
     const d = D[c]?.[k] || { rows: [] }, C = COUNTRIES[c];
     const list = d.rows.slice(0, 10).map((r, i) => {
@@ -6530,7 +6566,7 @@ function renderWatchPage(){
   const by = { event: (a, b) => (b.ev?.p || 0) - (a.ev?.p || 0) || a.sr - b.sr || a.pr - b.pr, sales: (a, b) => a.sr - b.sr || a.pr - b.pr, popular: (a, b) => a.pr - b.pr || a.sr - b.sr, added: (a, b) => a.order - b.order };
   rows.sort(by[watchState.sort] || by.event);
   const evN = rows.filter(r => r.ev).length, dates = GL_ORDER.map(c => G[c]?.sales?.date).filter(Boolean).sort();
-  setText('wlSub', `${rows.length}개 · 오늘 변동 ${evN}개${dates.length ? ` · 기준일 ${dates.at(-1)}` : ''}`);
+  setText('wlSub', dates.length ? `기준일 ${dates.at(-1)}` : '');
   const line = (x, k) => {
     const lab = k === 'sales' ? '매출' : '인기', cls = k === 'sales' ? 't-sales' : 't-pop';
     if(x.t[k]) return `<div class="wl-rk"><span class="wl-lb ${cls}">${lab}</span><b class="${cls}">${rankOf(x.t[k])}위</b>${rankChangeBadge(String(x.t[k][2] || '-'))}</div>`;
