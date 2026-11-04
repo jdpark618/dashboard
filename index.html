@@ -295,13 +295,13 @@ html.sb-mini .sb-rep .hd-new { position:absolute; top:3px; right:2px; margin:0; 
 .gd-ctab tbody tr.on { background:#302d4d; box-shadow:inset 3px 0 0 #6257e8; }
 .gd-ctab2 tbody tr { cursor:default; } .gd-ctab2 tbody tr:hover { background:none; }
 .gd-ctab2 th { text-align:center; vertical-align:middle; }
-.gd-ctab2 { max-width:900px; margin-inline:auto; } .gd-ctab2.one { max-width:620px; }
+.gd-ctab2 { max-width:900px; margin-inline:auto; table-layout:fixed; } .gd-ctab2.one { max-width:620px; }   /* 국가 칸 96px, 나머지 칸은 같은 폭 */
 .gd-ctab2 td:first-child > span { justify-content:center; }
 #detailContext { text-align:center; }
 .gd-ctab2 th.gd-sh { font-size:12px; color:#dfe1e3; border-left:1px solid rgba(52,58,62,.6); }
 .gd-ctab2 thead tr:nth-child(2) th:nth-child(odd) { border-left:1px solid rgba(52,58,62,.6); }
 .gd-ctab2 td { text-align:center; }
-.gd-ctab2 th:first-child, .gd-ctab2 td:first-child { width:96px; padding-left:8px; padding-right:8px; }
+.gd-ctab2 thead tr:first-child th:first-child, .gd-ctab2 td:first-child { width:96px; padding-left:8px; padding-right:8px; }   /* 국가 칸만 (둘째 머리글 줄 첫 칸 '매출'은 제외) */
 .gd-ctab2 tr.gd-mrow td { font-size:12.5px; color:#c3c7ca; padding-top:8px; padding-bottom:8px; }
 .gd-ctab2 tr.gd-mrow td:first-child { font-size:11.5px; color:#a0a7ad; font-weight:600; }
 .gd-ctab2 tr.gd-mrow td + td { border-left:1px solid rgba(52,58,62,.45); }
@@ -4529,7 +4529,13 @@ function gdShotFit(){
   const strip = document.getElementById('gdShots'), img = strip.querySelector('img');
   strip.style.removeProperty('--shot-h');   /* 이전 게임 높이가 남지 않게 */
   if(!img) return;
-  const fit = () => { if(!img.naturalWidth) return; const w = (strip.clientWidth - 30) / 4 - 3; strip.style.setProperty('--shot-h', `${Math.floor(Math.min(300, Math.max(96, w * img.naturalHeight / img.naturalWidth)))}px`);   /* 간격 10px × 3, 테두리 여유 */ setTimeout(gdShotNav, 0); };
+  const fit = () => {
+    if(!img.naturalWidth) return;
+    /* 한 줄 장수: 가로형 4장, 세로형은 전부(최대 6장) — 마지막 장이 반쯤 잘리지 않게 딱 맞는 높이로 (간격 10px, 테두리 여유 3px) */
+    const total = strip.querySelectorAll('.shot').length, portrait = img.naturalHeight > img.naturalWidth;
+    const n = portrait ? Math.min(Math.max(total, 4), 6) : 4, w = (strip.clientWidth - 10 * (n - 1)) / n - 3;
+    strip.style.setProperty('--shot-h', `${Math.floor(Math.min(300, Math.max(96, w * img.naturalHeight / img.naturalWidth)))}px`); setTimeout(gdShotNav, 0);
+  };
   if(img.complete) fit(); else img.addEventListener('load', fit, { once: true });
 }
 /* 스크린샷 줄 좌우 버튼: 한 화면 폭만큼 이동, 끝에 닿으면 그쪽 버튼 숨김 */
