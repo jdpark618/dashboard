@@ -28,7 +28,7 @@
 const SPREADSHEET_ID = '1CW7Xr3eWBUKBPC0DXRDsqqrx2itUlzZfXPVF2hUoMAw';
 /* 국가: 주소 ?c=us|jp|tw → 없으면 마지막 선택 → 기본 한국. 순위·앱정보 시트만 나라별(접미사), 신작(WAME)은 한국 전용 */
 const COUNTRIES = { kr:{ code:'KR', name:'한국', sfx:'' }, us:{ code:'US', name:'미국', sfx:'_US' }, jp:{ code:'JP', name:'일본', sfx:'_JP' }, tw:{ code:'TW', name:'대만', sfx:'_TW' } };
-const COUNTRY = (() => {
+let COUNTRY = (() => {
   const q = new URLSearchParams(location.search).get('c'); let c = q;
   if(!c){ try{ c = localStorage.getItem('gmi.country'); }catch(e){} }
   c = String(c || '').toLowerCase(); if(!COUNTRIES[c]) c = 'kr';
@@ -36,10 +36,10 @@ const COUNTRY = (() => {
   document.documentElement.dataset.country = c;
   return c;
 })();
-const CSFX = COUNTRIES[COUNTRY].sfx;
+let CSFX = COUNTRIES[COUNTRY].sfx;
 /* 스토어: 주소 ?s=ios → 없으면 마지막 선택 → 기본 구글 플레이. 앱스토어 시트는 '_iOS' 가 나라 접미사 앞에 붙음 (DB_매출순위_iOS_US) */
 const STORES = { gp:{ name:'Google Play', sfx:'', icon:'<i class="fa-brands fa-google-play text-emerald-400"></i>' }, ios:{ name:'App Store', sfx:'_iOS', icon:'<i class="fa-brands fa-apple text-slate-100"></i>' } };
-const STORE = (() => {
+let STORE = (() => {
   const q = new URLSearchParams(location.search).get('s'); let v = q;
   if(!v){ try{ v = localStorage.getItem('gmi.store'); }catch(e){} }
   v = String(v || '').toLowerCase(); if(!STORES[v]) v = 'gp';
@@ -47,7 +47,8 @@ const STORE = (() => {
   document.documentElement.dataset.store = v;
   return v;
 })();
-const SSFX = STORES[STORE].sfx;
+let SSFX = STORES[STORE].sfx;
+let scopeSeq = 0;   /* 전환할 때마다 +1: 이전 나라·스토어로 보낸 요청이 늦게 와도 버리기 위한 번호 */
 document.documentElement.classList.add('no-anim');   /* 첫 그림 동안 메뉴 펼침 애니메이션 끔 (새로고침·전환 때 메뉴가 흔들리지 않게) */
 /* 나라·스토어별 순위 시트 이름 */
 function rkSheet(base, c = COUNTRY, st = STORE){ return base + STORES[st].sfx + COUNTRIES[c].sfx; }
@@ -56,6 +57,7 @@ const KR_ONLY_VIEWS = ['report'];   /* 구글 순위 시트로 만드는 리포�
 function setScope(c, st, view){
   if(!COUNTRIES[c] || !STORES[st] || (c === COUNTRY && st === STORE && !view)) return;
   try{ localStorage.setItem('gmi.country', c); localStorage.setItem('gmi.store', st); }catch(e){}
+  if(typeof scopeSwitch === 'function') return scopeSwitch(c, st, view);   /* 보통은 새로고침 없이 이 자리에서 (아래는 화면 스크립트가 아직 없을 때만) */
   const u = new URL(location.href);
   if(c === 'kr') u.searchParams.delete('c'); else u.searchParams.set('c', c);
   if(st === 'gp') u.searchParams.delete('s'); else u.searchParams.set('s', st);
@@ -2049,6 +2051,7 @@ async function ensureMonthLoaded(storeKey, y, m){
   const endExclusive = ymdStr(nextYM.y, nextYM.m, 1);
   const whereClause = `A >= date '${start}' and A < date '${endExclusive}'`;
 
+  const seq = scopeSeq;
   const promise = (async () => {
     try{
       /* 이번 달 이전 데이터는 캐시 우선 */
@@ -2060,6 +2063,7 @@ async function ensureMonthLoaded(storeKey, y, m){
         ({ rows } = await fetchSheetData(SHEETS[storeKey], 1, whereClause));
         if(isPast) monthCacheSet(cacheKey, { rows, savedAt: Date.now() }); /* 수집 전이라 빈 달도 저장 */
       }
+      if(seq !== scopeSeq) return;   /* 그사이 나라·스토어가 바뀜 */
       mergeRowsIntoStore(storeKey, rows);
       loadedMonths[storeKey].add(key);
       if(storeKey === 'sales' || storeKey === 'popular') rebuildLookupIndices();
@@ -2067,7 +2071,7 @@ async function ensureMonthLoaded(storeKey, y, m){
       console.error(`${storeKey} ${key} 데이터 로드 실패`, e);
       throw e;
     }finally{
-      delete monthFetchInFlight[inFlightKey];
+      if(monthFetchInFlight[inFlightKey] === promise) delete monthFetchInFlight[inFlightKey];
     }
   })();
   monthFetchInFlight[inFlightKey] = promise;
@@ -2190,7 +2194,7 @@ function scoreOf(row) {
   return (!isNaN(num) && num >= 0 && num <= 5) ? num.toFixed(1) : ((str && str !== '-' && str !== '0') ? str : '-');
 }
 
-function setText(id,v){const el=document.getElementById(id); if(el)el.textContent=v;}
+function setText(id,v){const el=document.getElementById(id); if(el && el.textContent !== String(v)) el.textContent=v;}   /* 같은 값이면 건드리지 않음 (메뉴 숫자 등 깜빡임 방지) */
 
 /* ---------- 스켈레톤: 첫 로딩 동안 자리 표시, 렌더 함수가 내용을 덮어쓴다 ---------- */
 function skBar(w, h = 'h-3'){ return `<span class="sk ${h} ${w}"></span>`; }
@@ -2699,6 +2703,38 @@ function switchView(view){
 }
 /* 스토어·국가 선택을 지금 페이지 칸으로: both = 스토어+국가, store = 스토어만(4개국을 함께 보는 화면)
    일간 마켓별 순위(자체 국가 선택) · 신작 달력 · 신작 DB · 신작 동향 · 주간 리포트는 없음 */
+/* 스토어·국가 전환: 새로고침 없이 이 자리에서. 메뉴·상단바·필터 줄은 그대로 두고 필터 줄 아래 본문만 '읽는 중'
+   나라·스토어에 묶인 데이터·캐시만 비우고 지금 화면을 다시 그림 (패키지·시트 이름으로 키를 둔 캐시는 그대로 재사용) */
+async function scopeSwitch(c, st, view){
+  const seq = ++scopeSeq;
+  COUNTRY = c; STORE = st; CSFX = COUNTRIES[c].sfx; SSFX = STORES[st].sfx;
+  SHEETS.sales = rkSheet('DB_매출순위'); SHEETS.popular = rkSheet('DB_인기순위');
+  GL_CACHE_KEY = 'gmi.global.v1' + SSFX;
+  document.documentElement.dataset.country = c; document.documentElement.dataset.store = st;
+  document.querySelectorAll('.sc-cty button').forEach(b => { const on = b.dataset.c === c; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+  document.querySelectorAll('.sc-store button').forEach(b => { const on = b.dataset.s === st; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+  let target = view || (currentView === 'business' && mkSection === 'monthly' ? 'monthly' : currentView);
+  if((c !== 'kr' || st !== 'gp') && KR_ONLY_VIEWS.includes(target)) target = 'dashboard';
+  const u = new URL(location.href);
+  if(c === 'kr') u.searchParams.delete('c'); else u.searchParams.set('c', c);
+  if(st === 'gp') u.searchParams.delete('s'); else u.searchParams.set('s', st);
+  history.replaceState(null, '', u);
+  if(!document.getElementById('detailPanel').classList.contains('translate-x-full')) closeGameDetail();
+  viewBusy(true, `${COUNTRIES[c].name} · ${STORES[st].name} 데이터 읽는 중…`);
+  /* 나라·스토어에 묶인 것 비우기 */
+  rawStore.sales = rawStore.popular = null; availableDatesCache.sales = availableDatesCache.popular = null;
+  Object.keys(monthFetchInFlight).forEach(k => delete monthFetchInFlight[k]);
+  Object.keys(mkFirstSeenInFlight).forEach(k => delete mkFirstSeenInFlight[k]);
+  mkIndexCache.sales = mkIndexCache.popular = null; mkRankWideLast = null;
+  glState.data = null; glState.fresh = false; glState.loading = null;
+  gdOtherGlobal.data = null; gdOtherGlobal.loading = null;
+  watchSeenCache.clear();
+  lastSyncAt = 0; fetchBusy = false;
+  await fetchAllData();   /* 이 나라를 전에 봤으면 저장 데이터로 먼저, 이어서 새 데이터 */
+  if(seq !== scopeSeq) return;
+  switchView(target);
+  openPendingDetail();
+}
 const SCOPE_VIEWS = { dashboard:'both', ranking:'both', business:'both', search:'both', sales:'both', popular:'both', global:'store', watch:'store' };
 function scopeSlotKey(v){ return v === 'sales' || v === 'popular' ? 'db' : v === 'business' ? `biz-${mkSection}` : v; }
 function scopePlace(){
@@ -3180,7 +3216,8 @@ function loadGameIndex(){
   if(!gameIndex) gameIndex = buildIndexFromLoadedRows(); /* 집계 도착 전까지 임시로 사용 */
   gameIndexPromise = (async () => {
     try{
-      const [sales, popular] = await Promise.all([fetchNameSummary(SHEETS.sales), fetchNameSummary(SHEETS.popular)]);
+      const seq = scopeSeq, [sales, popular] = await Promise.all([fetchNameSummary(SHEETS.sales), fetchNameSummary(SHEETS.popular)]);
+      if(seq !== scopeSeq) return;
       const map = buildIndexFromLoadedRows();
       sales.forEach(x => gsUpsert(map, x.name, x.lastSeen, 'salesDays', x.days));
       popular.forEach(x => gsUpsert(map, x.name, x.lastSeen, 'popDays', x.days));
@@ -4537,7 +4574,8 @@ function gdEnsureGlobal(){
 /* 다른 스토어의 4개국 최신 차트 (글로벌 순위와 같은 요청, 상세에서만 씀) */
 function gdGlobalData(st){
   if(st === STORE) return gdEnsureGlobal().then(() => glState.data);
-  gdOtherGlobal.loading ||= glChartsLoad(st).then(out => (gdOtherGlobal.data = out));
+  const seq = scopeSeq;
+  gdOtherGlobal.loading ||= glChartsLoad(st).then(out => (seq === scopeSeq ? (gdOtherGlobal.data = out) : out));
   return gdOtherGlobal.loading;
 }
 function gdGlobalSync(st){ return st === STORE ? glState.data : gdOtherGlobal.data; }
@@ -5949,7 +5987,7 @@ async function mkGvizRows(sheetName, tq){
 function mkLoadFirstSeen(store){
   if(mkFirstSeenCache[store]) return Promise.resolve(mkFirstSeenCache[store]);
   if(mkFirstSeenInFlight[store]) return mkFirstSeenInFlight[store];
-  const sheet = SHEETS[store];
+  const sheet = SHEETS[store], seq = scopeSeq;
   mkFirstSeenInFlight[store] = (async () => {
     try{
       const [pk, nm] = await Promise.all([
@@ -5960,8 +5998,9 @@ function mkLoadFirstSeen(store){
       pk.forEach(c => { const p = String(c[0]?.v || '').trim(), d = gsCellDate(c[1]); if(p.includes('.') && d) pkgFirst.set(p, d); });
       nm.forEach(c => { const k = getGameKey(cleanValue(c[0])), d = gsCellDate(c[1]); if(k !== '-' && d && (!nameFirst.has(k) || d < nameFirst.get(k))) nameFirst.set(k, d); });
       const pkgStart = [...pkgFirst.values()].sort()[0] || '', nameStart = [...nameFirst.values()].sort()[0] || '';
-      return (mkFirstSeenCache[store] = { pkgFirst, nameFirst, pkgStart, nameStart });
-    }finally{ delete mkFirstSeenInFlight[store]; }
+      const fs = { pkgFirst, nameFirst, pkgStart, nameStart };
+      return seq === scopeSeq ? (mkFirstSeenCache[store] = fs) : fs;
+    }finally{ if(seq === scopeSeq) delete mkFirstSeenInFlight[store]; }
   })();
   return mkFirstSeenInFlight[store];
 }
@@ -6278,7 +6317,7 @@ function watchSpark(sv, pv){
 }
 /* ── 글로벌 순위: 나라별 최신일 차트 (나라마다 시트를 따로 읽음, 처음 열 때 한 번) ── */
 const glState = { chart: 'sales', data: null, loading: null, fresh: false };
-const GL_CACHE_KEY = 'gmi.global.v1' + SSFX;
+let GL_CACHE_KEY = 'gmi.global.v1' + SSFX;
 function glSetChart(k){ glState.chart = k; document.querySelectorAll('#glChart button').forEach(b => b.classList.toggle('on', b.dataset.k === k)); renderGlobalView(); }
 /* 한 스토어의 4개국 최신 차트 (글로벌 순위 · 상세의 다른 스토어 공용). 행은 시트 조회와 같은 모양(글자 10칸) */
 async function glChartsLoad(st){
@@ -6295,7 +6334,8 @@ async function glChartsLoad(st){
   return out;
 }
 async function glLoad(){
-  const out = await glChartsLoad(STORE);
+  const seq = scopeSeq, out = await glChartsLoad(STORE);
+  if(seq !== scopeSeq) return;
   glState.data = out; glState.fresh = true;
   if(GL_ORDER.every(c => GL_CHARTS.every(([k]) => !out[c][k].err))){ try{ localStorage.setItem(GL_CACHE_KEY, JSON.stringify(out)); }catch(e){} }
 }
@@ -7174,6 +7214,7 @@ function syncSet(s, label, detail){
 }
 async function fetchAllData(){
   if(fetchBusy) return; fetchBusy = true;
+  const seq = scopeSeq;
   syncSet('busy', '동기화 중');
   todayLabelEarly();
   try{
@@ -7194,7 +7235,7 @@ async function fetchAllData(){
     /* 처음 열 때: 이 나라를 전에 본 적 있으면 저장해 둔 데이터로 먼저 그리고, 새 데이터가 오면 다시 그림 */
     if(!lastSyncAt && !needNews){
       const cached = await rankCacheGet(COUNTRY + SSFX);
-      if(cached && cached.start === salesPopularStart && !netDone){
+      if(cached && cached.start === salesPopularStart && !netDone && seq === scopeSeq){
         applyRankData(cached.sales, cached.popular, ty, tm);
         syncSet('busy', '동기화 중', `저장된 데이터 먼저 표시 중 (저장 시각 ${new Date(cached.at).toLocaleString('ko-KR')})`);
         if(bootReveal) bootReveal();
@@ -7202,6 +7243,7 @@ async function fetchAllData(){
     }
     const [sales, popular] = await rankP;
     if(needNews) rawStore.newReleases = await newsP;
+    if(seq !== scopeSeq) return;   /* 그사이 나라·스토어가 바뀜 */
     applyRankData(sales, popular, ty, tm);
     rankCacheSet(COUNTRY + SSFX, { start: salesPopularStart, sales, popular, at: Date.now() });
     if(!needNews) newsP.then(n => { rawStore.newReleases = n; onNewsLoaded(); }).catch(e => console.warn('신작 정보를 불러오지 못했습니다', e));
@@ -7218,9 +7260,8 @@ async function fetchAllData(){
     updateReportBadge();
   }catch(err){
     console.error(err);
-    syncSet('fail', '동기화 실패', `${err.message || ''} · 누르면 다시 시도`);
-    clearDashboardSkeletons();
-  }finally{fetchBusy = false;}
+    if(seq === scopeSeq){ syncSet('fail', '동기화 실패', `${err.message || ''} · 누르면 다시 시도`); clearDashboardSkeletons(); }
+  }finally{ if(seq === scopeSeq) fetchBusy = false; }
 }
 
 let lastSyncAt = 0, fetchBusy = false;
@@ -7251,9 +7292,12 @@ window.addEventListener('DOMContentLoaded', async () => {
   };
   await fetchAllData();
   if(bootReveal) bootReveal();
-  /* 글로벌 순위에서 다른 나라 게임을 눌러 넘어온 경우: 그 게임 상세를 바로 */
-  try{ const g = sessionStorage.getItem('gmi.openDetail'); if(g){ sessionStorage.removeItem('gmi.openDetail'); let o = null; try{ o = JSON.parse(g); }catch(e){} if(o && o.name) { if(o.c) mvState.c = o.c; openGameDetail(o.name, { pkg: o.pkg, country: o.c }); } else openGameDetail(g); } }catch(e){}
+  openPendingDetail();
 });
+/* 글로벌 순위에서 다른 나라 게임을 눌러 넘어온 경우: 그 게임 상세를 바로 */
+function openPendingDetail(){
+  try{ const g = sessionStorage.getItem('gmi.openDetail'); if(g){ sessionStorage.removeItem('gmi.openDetail'); let o = null; try{ o = JSON.parse(g); }catch(e){} if(o && o.name) { if(o.c) mvState.c = o.c; openGameDetail(o.name, { pkg: o.pkg, country: o.c }); } else openGameDetail(g); } }catch(e){}
+}
 /* ⓘ 아이콘을 누르면 설명 말풍선 (마우스가 없는 휴대폰용, 다른 곳을 누르면 닫힘) */
 document.addEventListener('click', e => {
   document.querySelectorAll('.tap-tip').forEach(t => t.remove());
