@@ -4,8 +4,8 @@
 <!-- 자동 생성 파일: tools/build_light.py 가 index.html 에서 만듦. 직접 고치지 말 것 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- 이 페이지가 직접 다크를 지원한다고 브라우저에 먼저 알림 → 모바일 브라우저 '강제 다크모드'가 색·아이콘을 한 번 더 뒤집지 않음 -->
-<meta name="color-scheme" content="only light">
+<!-- 라이트·다크를 둘 다 직접 지원한다고 브라우저에 알림 (삼성 인터넷은 'light dark' 선언을 봐야 강제 다크 대신 사이트 테마를 씀) → 테마 파일은 위 스크립트가 기기 설정대로 고름 -->
+<meta name="color-scheme" content="light dark">
 <style>/* 삼성 인터넷 등: 이 규칙이 있으면 사이트가 다크를 직접 지원한다고 보고 강제 다크모드를 적용하지 않음 */ @media (prefers-color-scheme: dark) { :root { --os-dark: 1; } }</style>
 <title>ChartDeck</title>
 <!-- 링크 미리보기 (카카오톡·슬랙·트위터 등): 이미지는 절대 주소, 바꿀 때는 ?v= 숫자를 올려 캐시 갱신 -->
@@ -184,7 +184,7 @@ if(location.hash.startsWith('#global')) snapLoad();   /* 그 화면 주소로 �
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
-:root { color-scheme: only light;
+:root { color-scheme: light;
   /* 배경 → 카드 3단계 톤 */
   --bg:#f7f8fa; --surface:#ffffff; --surface-2:#f1f5f9; --line:rgba(226,232,240,.7);
   /* 의미색: 색 하나에 의미 하나 */
@@ -1004,6 +1004,8 @@ html[data-theme="light"] .theme-seg:not(.to-dark) button[data-t="light"], html[d
 .tap-tip { position:fixed; z-index:200; max-width:280px; background:#ffffff; color:#273449; border:1px solid rgba(98,87,232,.5); border-radius:8px; padding:8px 10px; font-size:12px; line-height:1.55; box-shadow:0 10px 25px -3px rgba(15,23,42,0.14); }
 </style>
 <style>/* 라이트 보정 (tools/build_light.py) */
+#gdCty .mk-seg button i.fa-brands { color:inherit !important; }   /* 상세 패널 스토어 버튼 아이콘 = 대시보드 스토어 선택과 같은 색 (선택 흰색 · 기본 회색) */
+.gl-flag { box-shadow:0 0 0 1px rgba(15,23,42,.10), 0 1px 2px rgba(15,23,42,.14); }   /* 흰 바탕 국기(일본 등)가 배경에 묻히지 않게 */
 .sb-logo { background:#ece9ff !important; color:#3d3690 !important; }
 :root { --line:#e8ecf2; }
 .side-nav { background:#fafafc; }

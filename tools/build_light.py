@@ -72,11 +72,12 @@ once("ctx.fillStyle = p.hl ? '#ffffff'", "ctx.fillStyle = p.hl ? '#0f172a'")
 s = re.sub(r'\x00KEEP(\d+)\x00', lambda m: KEEP[int(m.group(1))], s)   # 리포트 구간 원래대로
 
 # 3) 그 밖의 다크 전용 설정
-once('color-scheme: only dark;', 'color-scheme: only light;')
-once('<meta name="color-scheme" content="only dark">', '<meta name="color-scheme" content="only light">')
+once('color-scheme: dark;', 'color-scheme: light;')
 once('<meta name="theme-color" content="#f7f8fa">', '<meta name="theme-color" content="#ffffff">')
 # 그림자는 흰 바탕에서 훨씬 옅게 · 로고 타일은 원래 연보라 · 애플 아이콘은 선택된(보라) 버튼 위에서 흰색
 once('</head>', """<style>/* 라이트 보정 (tools/build_light.py) */
+#gdCty .mk-seg button i.fa-brands { color:inherit !important; }   /* 상세 패널 스토어 버튼 아이콘 = 대시보드 스토어 선택과 같은 색 (선택 흰색 · 기본 회색) */
+.gl-flag { box-shadow:0 0 0 1px rgba(15,23,42,.10), 0 1px 2px rgba(15,23,42,.14); }   /* 흰 바탕 국기(일본 등)가 배경에 묻히지 않게 */
 .sb-logo { background:#ece9ff !important; color:#3d3690 !important; }
 :root { --line:#e8ecf2; }
 .side-nav { background:#fafafc; }
