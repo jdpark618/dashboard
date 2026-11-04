@@ -973,9 +973,9 @@ html.panel-lock { overflow: hidden; }
     <div class="sb-group">모니터링</div>
     <button class="sb-item" data-view="dashboard" onclick="switchView('dashboard')" data-tip="일간 요약"><i data-lucide="gauge"></i><span class="sb-tx">일간 요약</span></button>
     <button id="reportBtn" class="sb-item sb-rep kr-only" data-view="report" onclick="openReport()" data-tip="주간 리포트"><i data-lucide="file-chart-column"></i><span class="sb-tx">주간 리포트</span><span id="reportNew" class="hd-new hidden">NEW</span></button>
-    <button class="sb-item" data-view="global" onclick="switchView('global')" data-tip="글로벌 순위"><i data-lucide="globe"></i><span class="sb-tx">글로벌 순위</span></button>
     <button class="sb-item" data-view="watch" onclick="switchView('watch')" data-tip="관심 게임"><i data-lucide="star"></i><span class="sb-tx">관심 게임</span><span id="sbWatchN" class="sb-tx sb-cnt"></span></button>
     <div class="sb-group raw">분석</div>
+    <button class="sb-item" data-view="global" onclick="switchView('global')" data-tip="글로벌 순위"><i data-lucide="globe"></i><span class="sb-tx">글로벌 순위</span></button>
     <div class="sb-wrap" id="sbRank">
       <button class="sb-item" data-view="ranking" onclick="sbGroupClick('sbRank')" aria-expanded="false"><i data-lucide="list-ordered"></i><span class="sb-tx">전체 순위</span><span class="sb-tx sb-chev"><i data-lucide="chevron-down"></i></span></button>
       <div class="sb-sub"><button type="button" data-go="ranking" onclick="sbGo('ranking')">일간 순위</button><button type="button" data-go="market" onclick="sbGo('market')">일간 마켓별 순위</button><button type="button" data-go="monthly" onclick="sbGo('monthly')">월간/주간 순위</button></div>
