@@ -294,7 +294,10 @@ html.sb-mini .sb-rep .hd-new { position:absolute; top:3px; right:2px; margin:0; 
 .gd-ctab tbody tr:hover { background:#2b3034; }
 .gd-ctab tbody tr.on { background:#302d4d; box-shadow:inset 3px 0 0 #6257e8; }
 .gd-ctab2 tbody tr { cursor:default; } .gd-ctab2 tbody tr:hover { background:none; }
-.gd-ctab2 th { text-align:center; }
+.gd-ctab2 th { text-align:center; vertical-align:middle; }
+.gd-ctab2 { max-width:900px; margin-inline:auto; } .gd-ctab2.one { max-width:620px; }
+.gd-ctab2 td:first-child > span { justify-content:center; }
+#detailContext { text-align:center; }
 .gd-ctab2 th.gd-sh { font-size:12px; color:#dfe1e3; border-left:1px solid rgba(52,58,62,.6); }
 .gd-ctab2 thead tr:nth-child(2) th:nth-child(odd) { border-left:1px solid rgba(52,58,62,.6); }
 .gd-ctab2 td { text-align:center; }
@@ -761,11 +764,12 @@ html.panel-lock { overflow: hidden; }
 :is(#detailPanel, #releaseDetailPanel) .gd-mkt > .h { background:#292e32; border-bottom-color:transparent; }
 :is(#detailPanel, #releaseDetailPanel) .gd-shots .shot { border-color:transparent; }
 @media (min-width:1600px){ .gd-shots img { height:240px; } }
+#gdShots img { height:var(--shot-h, 200px); }
 
 /* 열고 닫는 움직임은 신작 상세와 같음 (오른쪽에서 0.3초 슬라이드, Tailwind duration-300) */
 @media (prefers-reduced-motion:reduce){ #detailPanel, #detailOverlay, #releaseDetailPanel, #releaseDetailOverlay { transition:none !important; } }
 @media (min-width:1024px){
-  #detailPanel { max-width:none; width:min(calc(100vw - var(--sb-w) - 24px), 1080px); top:52px; height:calc(100vh - 52px); border-top-left-radius:14px; border:1px solid #343a3e; border-right:0; border-bottom:0; }
+  #detailPanel { max-width:none; width:min(calc(100vw - var(--sb-w) - 24px), 1200px); top:52px; height:calc(100vh - 52px); border-top-left-radius:14px; border:1px solid #343a3e; border-right:0; border-bottom:0; }
   #detailPanel:not(.translate-x-full) { box-shadow:-18px 0 48px rgba(0,0,0,.5), -2px 0 0 rgba(98,87,232,.06); }
   #detailPanel .gd-hd { border-top-left-radius:14px; }
   /* 신작 상세도 같은 팝업 크기·모양 (내용 배치는 그대로) */
@@ -4481,12 +4485,13 @@ async function gdLoadInfo(pkg, c = COUNTRY, st = STORE){
     setText('gdMktDate', info?.date || '-');
     if(info){
       /* 신작 상세와 같은 부품: 마우스를 올리면 어둡게 + 돋보기, 누르면 크게 보기(좌우 이동·닫기·장수) */
-      document.getElementById('gdShots').innerHTML = info.shots.map((u, i) => `<div class="shot group" onclick="gdOpenShot(${i})" title="스크린샷 ${i + 1} 크게 보기"><img src="${escapeAttr(u.replace(/=[whs]\d+[^/]*$/, '') + '=h480')}" data-o="${escapeAttr(u)}" alt="스크린샷 ${i + 1}" onerror="if(!this.dataset.f){ this.dataset.f = 1; this.src = this.dataset.o; } else this.closest('.shot').remove()">
+      document.getElementById('gdShots').innerHTML = info.shots.map((u, i) => `<div class="shot group" onclick="gdOpenShot(${i})" title="스크린샷 ${i + 1} 크게 보기"><img src="${escapeAttr(shotSrc(u, 480))}" data-o="${escapeAttr(u)}" alt="스크린샷 ${i + 1}" onerror="if(!this.dataset.f){ this.dataset.f = 1; this.src = this.dataset.o; } else this.closest('.shot').remove()">
         <div class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center pointer-events-none"><i class="fa-solid fa-magnifying-glass-plus text-white text-base opacity-0 group-hover:opacity-100 transition-opacity"></i></div></div>`).join('');
       setText('gdShotCount', info.shots.length ? `${info.shots.length}장 · 눌러서 크게 보기` : '');
       gdShotList = info.shots;
       const d = document.getElementById('gdDesc'); d.textContent = info.desc || ''; d.scrollTop = 0;
       document.getElementById('gdShots').scrollLeft = 0; setTimeout(gdShotNav, 0);
+      gdShotFit();
     }
     gdSpy();
   };
@@ -4513,10 +4518,19 @@ async function gdLoadInfo(pkg, c = COUNTRY, st = STORE){
 }
 /* 게임 상세 스크린샷 크게 보기: 신작 상세의 확대 창을 그대로 씀. 큰 이미지는 고해상도 주소, 실패하면 원래 주소 */
 let gdShotList = [];
+/* 스크린샷 주소를 원하는 높이로: 구글 =h{높이}, 애플은 '/{가로}x{세로}bb.jpg' 상자 크기 (비율 유지) */
+function shotSrc(u, h){ return /mzstatic\.com/.test(u) ? u.replace(/\/[^/]+$/, `/4000x${h}bb.jpg`) : u.replace(/=[whs]\d+[^/]*$/, '') + '=h' + h; }
 function gdOpenShot(i){
-  currentShotList = gdShotList.map(u => u.replace(/=[whs]\d+[^/]*$/, '') + '=h1080');
+  currentShotList = gdShotList.map(u => shotSrc(u, 1080));
   currentShotFallback = gdShotList.slice();
   openLightbox(i);
+}
+function gdShotFit(){
+  const strip = document.getElementById('gdShots'), img = strip.querySelector('img');
+  strip.style.removeProperty('--shot-h');   /* 이전 게임 높이가 남지 않게 */
+  if(!img) return;
+  const fit = () => { if(!img.naturalWidth) return; const w = (strip.clientWidth - 30) / 4 - 3; strip.style.setProperty('--shot-h', `${Math.floor(Math.min(300, Math.max(96, w * img.naturalHeight / img.naturalWidth)))}px`);   /* 간격 10px × 3, 테두리 여유 */ setTimeout(gdShotNav, 0); };
+  if(img.complete) fit(); else img.addEventListener('load', fit, { once: true });
 }
 /* 스크린샷 줄 좌우 버튼: 한 화면 폭만큼 이동, 끝에 닿으면 그쪽 버튼 숨김 */
 function gdShotScroll(dir){ const el = document.getElementById('gdShots'); el.scrollBy({ left: dir * el.clientWidth * .85 }); setTimeout(gdShotNav, 350); }
@@ -4739,7 +4753,7 @@ function gdCountryTableHtml(){
   const M = Object.fromEntries(sts.map(st => [st, gdStoreMeta(st)]));
   const head = st => `<th colspan="2" class="gd-sh">${GD_STORE_ICON[st]}<span class="ml-1.5">${STORES[st].name}</span><a id="gdLink-${st}" class="gd-golink" href="${escapeAttr(M[st].url)}" target="_blank" rel="noopener" title="${STORES[st].name}에서 보기" aria-label="${STORES[st].name}에서 보기"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></th>`;
   setTimeout(() => { if(detailIds.ios && sts.includes('ios')) iosStoreUrl(detailIds.ios, detailCountry).then(u => { const a = document.getElementById('gdLink-ios'); if(u && a) a.href = u; }); }, 0);
-  return `<table class="gd-ctab gd-ctab2"><thead><tr><th rowspan="2">국가</th>${sts.map(head).join('')}</tr>
+  return `<table class="gd-ctab gd-ctab2${sts.length < 2 ? ' one' : ''}"><thead><tr><th rowspan="2">국가</th>${sts.map(head).join('')}</tr>
       <tr>${sts.map(() => '<th><i class="fa-solid fa-coins t-sales mr-1"></i>매출</th><th><i class="fa-solid fa-fire t-pop mr-1"></i>인기</th>').join('')}</tr></thead>
     <tbody>${GL_ORDER.map(c => `<tr><td><span class="inline-flex items-center gap-1.5">${glFlag(c, 'sm')}<b>${COUNTRIES[c].name}</b></span></td>${sts.map(st => cell(st, c, 'sales') + cell(st, c, 'popular')).join('')}</tr>`).join('')}
 </tbody></table>`;
