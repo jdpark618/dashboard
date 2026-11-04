@@ -891,9 +891,9 @@ html[data-theme="light"] .theme-seg:not(.to-dark) button[data-t="light"], html[d
 .rp-q .e { font-size:8pt; color:var(--sub); line-height:1.5; margin-top:1mm; }
 .rp-q .b { margin:1mm 0 0; padding:0; list-style:none; font-size:8pt; color:var(--sub); line-height:1.55; } .rp-q .b li::before { content:'· '; }
 .rp-q .i { font-size:8.5pt; font-weight:600; color:var(--ink); line-height:1.5; margin-top:1mm; } .rp-q .i b { font-weight:800; }
-.rp-sum { margin-top:4mm; border:1px solid var(--line); border-radius:2.5mm; padding:3mm 4.5mm; background:var(--soft); }
+.rp-sum { border:1px solid var(--line); border-radius:2.5mm; padding:3mm 4.5mm; background:var(--soft); }
 .rp-sum .h { font-size:8.5pt; font-weight:800; color:var(--brand); margin-bottom:1.2mm; }
-.rp-sum ul { margin:0; padding:0; list-style:none; } .rp-sum li { font-size:9pt; line-height:1.65; } .rp-sum li b.k { color:var(--brand); margin-right:2mm; font-weight:800; }
+.rp-sum ul { margin:0; padding:0; list-style:none; } .rp-sum li { display:grid; grid-template-columns:22mm 1fr; font-size:9pt; line-height:1.65; } .rp-sum li b.k { color:var(--brand); font-weight:800; }
 .rp-t4s { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:3mm; }
 .rp-t4 { border:1px solid var(--line); border-radius:2.5mm; padding:3mm 3.5mm; }
 .rp-t4 .l { font-size:8pt; color:var(--sub); font-weight:600; }
@@ -7137,9 +7137,9 @@ function rpRender(D){
   const relPt = `신작(모바일·PC): 이 주 <b>${D.relLast.length}개</b> 출시 · 다음 주(${rpDot(D.issue)} – ${rpDot(mkAddDays(D.issue, 6))}) <b>${D.relNext.length}개</b> 예정 → 4쪽`;
   /* 정리: 주목 · 흐름 주의 · 다음 주 관찰 (해당 없는 줄은 뺌) */
   const watch = [nS30[0] ? `${nm(nS30[0].n)} 매출 30위 유지 여부` : nP30[0] ? `${nm(nP30[0].n)} 등 인기 상위권 신작의 매출 진입 여부` : '', q4o ? `${nm(q4o.n)} TOP5 복귀 여부` : ''].filter(Boolean);
-  const sum = [sv[0] ? `<li><b class="k">주목</b>${bn(sv[0].n)} ${rv(sv[0].a)}→${sv[0].b}, 이번 주 매출 상승 폭 최대</li>` : '',
-    dp ? `<li><b class="k">흐름 주의</b>${bn(dp.n)} ${dp.a}→${rv(dp.b)}, ${dpSurge || dp.after ? '업데이트 효과 이후 하락 폭 큼' : dp.sharp ? '단기간 급락' : '완만한 하락 지속'}</li>` : '',
-    watch.length ? `<li><b class="k">다음 주 관찰</b>${watch.join(', ')}</li>` : ''].join('');
+  const sum = [sv[0] ? `<li><b class="k">주목</b><span>${bn(sv[0].n)} ${rv(sv[0].a)}→${sv[0].b}, 이번 주 매출 상승 폭 최대</span></li>` : '',
+    dp ? `<li><b class="k">흐름 주의</b><span>${bn(dp.n)} ${dp.a}→${rv(dp.b)}, ${dpSurge || dp.after ? '업데이트 효과 이후 하락 폭 큼' : dp.sharp ? '단기간 급락' : '완만한 하락 지속'}</span></li>` : '',
+    watch.length ? `<li><b class="k">다음 주 관찰</b><span>${watch.join(', ')}</span></li>` : ''].join('');
   const qb = (no, t, c, b, i) => `<div class="rp-q"><div class="t">${no} · ${t}</div><div class="c">${c}</div>${b.filter(Boolean).length ? `<ul class="b">${b.filter(Boolean).map(x => `<li>${x}</li>`).join('')}</ul>` : ''}${i ? `<div class="i">${i}</div>` : ''}</div>`;
   const p1 = `<section class="rp-page">${run(2)}
     <h2 class="first">이번 주 분석 <small>${rpWeekName(D.mon)} · ${period} · 전주 대비</small></h2>
@@ -7153,7 +7153,7 @@ function rpRender(D){
     <h2>유형 흐름 <small>매출 30위 안 게임 수 · 전주 대비</small></h2>
     <div class="rp-t4s">${t4}</div>
     <div class="rp-rel-line">${relPt}</div>
-    ${sum ? `<div class="rp-sum"><div class="h">정리</div><ul>${sum}</ul></div>` : ''}
+    ${sum ? `<h2>정리 <small>이번 주 핵심 · 다음 주 체크 포인트</small></h2><div class="rp-sum"><ul>${sum}</ul></div>` : ''}
     ${foot}</section>`;
 
   /* 3쪽 순위표: # · 게임(아이콘 + 이름 한 줄) · 순위(7일 평균) · 증감 */
