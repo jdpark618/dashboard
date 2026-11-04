@@ -182,7 +182,7 @@ body { background:var(--bg); font-family:'Pretendard Variable',Pretendard,-apple
 .sb-brand b { font-size:16px; font-weight:800; letter-spacing:-.02em; color:#f7f8f8; white-space:nowrap; }
 .sb-scroll { flex:1; overflow-y:auto; overflow-x:hidden; padding:6px 10px 8px; }
 /* 그룹 제목 줄: 펼침은 글자, 접힘은 가운데 선 (높이는 같음). .raw(분석·RAW DATA)는 위에 선을 하나 더 두고 여백도 넓게 */
-.sb-group { position:relative; height:32px; display:flex; align-items:flex-end; padding:0 0 7px 12px; font-size:10.5px; font-weight:700; letter-spacing:.08em; color:#8a9298; white-space:nowrap; }
+.sb-group { position:relative; height:32px; display:flex; align-items:flex-end; padding:0 0 7px 12px; font-size:11px; font-weight:800; letter-spacing:.06em; color:#e8eaed; white-space:nowrap; }   /* 그룹 제목은 메뉴(#c3c7ca)보다 밝게 */
 .sb-group.raw { height:44px; }
 .sb-group.raw::before { content:''; position:absolute; left:12px; right:12px; top:8px; border-top:1px solid #292f33; }
 .sb-item { display:flex; align-items:center; gap:12px; width:100%; height:38px; padding:0 0 0 12px; border-radius:9px; font-size:13px; font-weight:600; color:#c3c7ca; text-align:left; white-space:nowrap; position:relative; }
@@ -971,11 +971,11 @@ html.panel-lock { overflow: hidden; }
   </div>
   <nav class="sb-scroll thin-scroll">
     <div class="sb-group">모니터링</div>
+    <button class="sb-item" data-view="dashboard" onclick="switchView('dashboard')" data-tip="일간 요약"><i data-lucide="gauge"></i><span class="sb-tx">일간 요약</span></button>
     <button id="reportBtn" class="sb-item sb-rep kr-only" data-view="report" onclick="openReport()" data-tip="주간 리포트"><i data-lucide="file-chart-column"></i><span class="sb-tx">주간 리포트</span><span id="reportNew" class="hd-new hidden">NEW</span></button>
     <button class="sb-item" data-view="global" onclick="switchView('global')" data-tip="글로벌 순위"><i data-lucide="globe"></i><span class="sb-tx">글로벌 순위</span></button>
     <button class="sb-item" data-view="watch" onclick="switchView('watch')" data-tip="관심 게임"><i data-lucide="star"></i><span class="sb-tx">관심 게임</span><span id="sbWatchN" class="sb-tx sb-cnt"></span></button>
     <div class="sb-group raw">분석</div>
-    <button class="sb-item" data-view="dashboard" onclick="switchView('dashboard')" data-tip="일간 요약"><i data-lucide="gauge"></i><span class="sb-tx">일간 요약</span></button>
     <div class="sb-wrap" id="sbRank">
       <button class="sb-item" data-view="ranking" onclick="sbGroupClick('sbRank')" aria-expanded="false"><i data-lucide="list-ordered"></i><span class="sb-tx">전체 순위</span><span class="sb-tx sb-chev"><i data-lucide="chevron-down"></i></span></button>
       <div class="sb-sub"><button type="button" data-go="ranking" onclick="sbGo('ranking')">일간 순위</button><button type="button" data-go="market" onclick="sbGo('market')">일간 마켓별 순위</button><button type="button" data-go="monthly" onclick="sbGo('monthly')">월간/주간 순위</button></div>
