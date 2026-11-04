@@ -18,7 +18,7 @@ once('<head>', '<head>\n<!-- 자동 생성 파일: tools/build_light.py 가 inde
 
 # 1) Tailwind 색: slate(뉴트럴)는 밝기를 뒤집고, 다크에서 글자용으로 쓰던 밝은 의미색(200~400)은 진하게
 once("slate: { 50:'#f7f8f8', 100:'#e8eaed', 200:'#dfe1e3', 300:'#c3c7ca', 400:'#a0a7ad', 500:'#6f767b', 600:'#50575c', 700:'#343a3e', 800:'#292f33', 900:'#202428', 950:'#16191c' }",
-     "slate: { 50:'#111315', 100:'#1d2125', 200:'#2a2f33', 300:'#3f454a', 400:'#5f666c', 500:'#8a9097', 600:'#b6bcc2', 700:'#dcdfe3', 800:'#eef0f2', 900:'#ffffff', 950:'#f3f4f6' }, " + ", ".join(
+     "slate: { 50:'#0f172a', 100:'#1e293b', 200:'#273449', 300:'#334155', 400:'#64748b', 500:'#94a3b8', 600:'#cbd5e1', 700:'#e2e8f0', 800:'#f1f5f9', 900:'#ffffff', 950:'#f7f8fa' }, " + ", ".join(
          f"{k}: {{ 200:'{a}', 300:'{a}', 400:'{b}' }}" for k, a, b in [
              ('amber', '#b45309', '#d97706'), ('emerald', '#047857', '#059669'), ('rose', '#be123c', '#e11d48'), ('red', '#b91c1c', '#dc2626'),
              ('sky', '#0369a1', '#0284c7'), ('teal', '#0f766e', '#0d9488'), ('violet', '#6d28d9', '#7c3aed'), ('blue', '#1d4ed8', '#2563eb'),
@@ -39,10 +39,10 @@ assert len(KEEP) > 40, f'build_light: 리포트 보호 구간이 너무 적음 (
 # 2) 직접 쓴 색 (CSS · 스크립트 안 인라인 색 모두)
 HEX = {
     # 뉴트럴: 배경 → 흰/연회색, 글자 → 진회색
-    '#15191c': '#f1f2f4', '#16191c': '#e9ecef', '#191d20': '#f3f4f6', '#1b1f22': '#f6f7f8', '#1b2024': '#ffffff', '#1e2327': '#f8f9fa',
-    '#202428': '#ffffff', '#202529': '#ffffff', '#22272b': '#f6f7f9', '#25292d': '#f6f7f9', '#292e32': '#f1f2f4', '#292f33': '#eef0f2',
-    '#2b3034': '#e9ebee', '#2b3236': '#e3e6e9', '#343a3e': '#dcdfe3', '#50575c': '#b6bcc2', '#6f767b': '#8a9097', '#8a9298': '#6b7177',
-    '#929ba1': '#6b7177', '#a0a7ad': '#5f666c', '#c3c7ca': '#3f454a', '#dfe1e3': '#2a2f33', '#e8eaed': '#1d2125', '#f7f8f8': '#111315',
+    '#15191c': '#f1f5f9', '#16191c': '#eef2f6', '#191d20': '#f7f8fa', '#1b1f22': '#f8fafc', '#1b2024': '#ffffff', '#1e2327': '#fafbfc',
+    '#202428': '#ffffff', '#202529': '#ffffff', '#22272b': '#f8fafc', '#25292d': '#f8fafc', '#292e32': '#f8fafc', '#292f33': '#f1f5f9',
+    '#2b3034': '#eef2f6', '#2b3236': '#e8ecf2', '#343a3e': '#e2e8f0', '#50575c': '#cbd5e1', '#6f767b': '#94a3b8', '#8a9298': '#64748b',
+    '#929ba1': '#64748b', '#a0a7ad': '#64748b', '#c3c7ca': '#334155', '#dfe1e3': '#273449', '#e8eaed': '#1e293b', '#f7f8f8': '#0f172a',
     # 보라: 다크 바탕 위 밝은 보라 글자 → 진한 보라, 보라 틴트 바탕 → 연보라
     '#a59aff': '#5b4fe0', '#d2ccff': '#4b40c8', '#bdb5ff': '#4b40c8', '#302d4d': '#ece9ff',
     # 의미색 (매출·인기·상승·하락·신작 등): 흰 바탕에서 읽히는 진한 값
@@ -52,8 +52,8 @@ HEX = {
 }
 s = re.sub(r'#[0-9a-fA-F]{6}\b', lambda m: HEX.get(m.group(0).lower(), m.group(0)), s)
 RGBA = {
-    '52,58,62': '203,208,214', '41,47,51': '238,240,242', '32,36,40': '255,255,255', '80,87,92': '176,182,188', '160,167,173': '95,102,108',
-    '25,29,32': '243,244,246', '111,118,123': '138,144,151',
+    '52,58,62': '226,232,240', '41,47,51': '241,245,249', '32,36,40': '255,255,255', '80,87,92': '203,213,225', '160,167,173': '100,116,139',
+    '25,29,32': '247,248,250', '111,118,123': '148,163,184',
     '251,191,36': '217,119,6', '45,212,191': '13,148,136', '248,113,113': '220,38,38', '96,165,250': '37,99,235', '167,139,250': '124,58,237',
     '165,154,255': '91,79,224', '189,181,255': '91,79,224', '245,158,11': '217,119,6',
 }
@@ -61,30 +61,32 @@ s = re.sub(r'rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)', lambda m: 'rgba(' + RGBA.g
 
 # 2-1) 흰 글자: 흰 바탕에서 안 보이는 곳만 진하게 (빨강 배지 위 흰 글자 · 주간 리포트는 그대로)
 s = s.replace('color:#ffffff', 'color:#2e2878')
-s = '\n'.join(l if ('hd-new' in l or 'rp-' in l) else re.sub(r'color:#fff\b', 'color:#111315', l) for l in s.split('\n'))
+s = '\n'.join(l if ('hd-new' in l or 'rp-' in l) else re.sub(r'color:#fff\b', 'color:#0f172a', l) for l in s.split('\n'))
 s = s.replace('hover:text-white', 'hover:text-slate-50')
-once("ctx.fillStyle = p.hl ? '#ffffff'", "ctx.fillStyle = p.hl ? '#111315'")
+once("ctx.fillStyle = p.hl ? '#ffffff'", "ctx.fillStyle = p.hl ? '#0f172a'")
 s = re.sub(r'\x00KEEP(\d+)\x00', lambda m: KEEP[int(m.group(1))], s)   # 리포트 구간 원래대로
 
 # 3) 그 밖의 다크 전용 설정
 once('color-scheme: dark;', 'color-scheme: light;')
-once('<meta name="theme-color" content="#f3f4f6">', '<meta name="theme-color" content="#ffffff">')
+once('<meta name="theme-color" content="#f7f8fa">', '<meta name="theme-color" content="#ffffff">')
 once("return localStorage.getItem('gmi.evTheme') || 'dark';", "return localStorage.getItem('gmi.evTheme') || 'light';")   # 행사 달력은 원본 색
 once('title="라이트 모드로"', 'title="다크 모드로"')
 # 그림자는 흰 바탕에서 훨씬 옅게 · 로고 타일은 원래 연보라 · 애플 아이콘은 선택된(보라) 버튼 위에서 흰색
 once('</head>', """<style>/* 라이트 보정 (tools/build_light.py) */
 .sb-logo { background:#ece9ff !important; color:#3d3690 !important; }
-.side-nav { background:#fafafb; }
-.top-bar { background:rgba(255,255,255,.92) !important; }
-.card, #detailPanel, #releaseDetailPanel { box-shadow:0 1px 2px rgba(16,24,40,.04); }
+:root { --line:#e8ecf2; }
+.side-nav { background:#fafafc; }
+.top-bar { background:#ffffff !important; }
+.card { background:#ffffff; border:1px solid #e8ecf2; box-shadow:0 1px 2px rgba(15,23,42,.03); }
+#detailPanel, #releaseDetailPanel { box-shadow:0 1px 2px rgba(15,23,42,.03); }
 #detailPanel:not(.translate-x-full) { box-shadow:-12px 0 32px rgba(16,24,40,.12) !important; }
 .mk-seg button.on .fa-apple, .mk-seg button.on .text-slate-100 { color:#fff !important; }
 /* 게임 상세 국가 × 스토어 표: 흰 표 + 회색 머리글 + 또렷한 칸 구분 (다크의 톤온톤을 그대로 뒤집으면 머리글·본문이 같은 회색이 됨) */
-:is(#detailPanel) .gd-ctab { background:#fff !important; box-shadow:0 0 0 1px #e3e6e9; }
-.gd-ctab thead th { background:#f6f7f9; color:#5f666c; }
-.gd-ctab2 th.gd-sh { color:#1d2125; }
-.gd-ctab2 tbody td { border-top:1px solid #eef0f2; }
-.gd-ctab2 td:first-child { background:#fafbfc; }
+:is(#detailPanel) .gd-ctab { background:#fff !important; box-shadow:0 0 0 1px #e8ecf2; }
+.gd-ctab thead th { background:#f8fafc; color:#64748b; }
+.gd-ctab2 th.gd-sh { color:#1e293b; }
+.gd-ctab2 tbody td { border-top:1px solid #eef2f6; }
+.gd-ctab2 td:first-child { background:#fbfcfd; }
 .gd-ctab2 td.on { background:#f1efff !important; }
 </style>
 </head>""")
