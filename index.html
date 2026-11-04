@@ -273,7 +273,7 @@ html.sb-mini .sb-rep .hd-new { position:absolute; top:3px; right:2px; margin:0; 
 .mv-bar { display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
 .mv-date { display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; color:#e8eaed; }
 .mv-date .cal-navbtn[disabled] { opacity:.35; pointer-events:none; }
-#mvCty button { display:inline-flex; align-items:center; }
+#scopeBox[data-mode="country"] .sc-store { display:none; }
 .mv-cards { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:16px; align-items:start; }
 .mv-wide { grid-column:1 / -1; }
 .mv-hd { display:flex; align-items:center; gap:8px; padding:14px 18px; font-size:14px; font-weight:700; color:#e8eaed; border-bottom:1px solid var(--line); }
@@ -324,7 +324,6 @@ html.sb-mini .sb-rep .hd-new { position:absolute; top:3px; right:2px; margin:0; 
   .tb-right { gap:6px; }
 }
 .tb-stat { font-size:12px; color:#e8eaed; font-weight:600; display:inline-flex; align-items:center; gap:8px; margin-right:6px; white-space:nowrap; cursor:default; }
-.tb-stat .tb-date > span { color:#a0a7ad; font-weight:500; }   /* 'Today ·' 는 한 단계 흐리게 */
 /* 동기화 상태는 글자 없이 점 색으로 (구글·애플을 함께 받으므로 스토어 이름을 붙이지 않음). 자세한 내용은 마우스를 올리면 */
 .sync-dot { width:8px; height:8px; border-radius:50%; flex:none; background:#6f767b; }
 .sync-dot[data-s="busy"] { background:#a59aff; animation:syncPulse 1.1s ease-in-out infinite; }
@@ -610,6 +609,8 @@ html.panel-lock { overflow: hidden; }
 .ev-frame iframe { width:100%; height:100%; border:0; display:block; }
 .ev-frame.dark { background:#202428; } .ev-frame.dark iframe { filter:invert(.9) hue-rotate(180deg) brightness(1.05); }
 .ev-empty { height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; font-size:13px; color:#a0a7ad; background:#202428; text-align:center; padding:24px; }
+.toast { position:fixed; left:50%; bottom:28px; z-index:80; transform:translate(-50%, 8px); opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; background:#292f33; color:#e8eaed; border:1px solid #343a3e; border-radius:10px; padding:9px 14px; font-size:13px; font-weight:600; box-shadow:0 8px 24px rgba(0,0,0,.45); }
+.toast.on { opacity:1; transform:translate(-50%, 0); }
 .page-head { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 16px; }
 .page-head.end { justify-content:flex-end; }
 .page-head h2 { font-size:18px; font-weight:700; display:flex; align-items:center; gap:8px; }
@@ -1370,7 +1371,7 @@ document.querySelectorAll('.sc-store button').forEach(b => { const on = b.datase
         <span class="inline-flex items-center gap-1.5"><span class="w-4 h-0 border-t-2 border-sky-400"></span><b class="text-sky-300">매출 = 인기</b><span class="muted">대각선 · 아래 오른쪽은 매출 우위, 위 왼쪽은 인기 우위</span></span>
         <span class="muted md:ml-auto"><span class="t-sales font-semibold">가로 → 매출 순위</span> · <span class="t-pop font-semibold">세로 ↑ 인기 순위</span> · 로그 눈금</span>
       </div>
-      <p class="text-[12px] text-slate-300 mb-2">※ 매출·인기 모두 TOP100인 게임만 찍습니다. 아이콘이나 표에 마우스를 올리면 날짜별 이동 경로가 보입니다.</p>
+      <p class="text-[12px] text-slate-300 mb-2">매출·인기 모두 TOP100인 게임만 · 마우스를 올리면 이동 경로</p>
       <div class="relative h-[420px] md:h-[500px]"><canvas id="mkPosChart"></canvas></div>
       <div id="mkPosViewTable" class="mt-4 hidden"></div>
     </section>
@@ -1410,6 +1411,7 @@ document.querySelectorAll('.sc-store button').forEach(b => { const on = b.datase
   <div id="mkSecReleases" class="hidden space-y-4">
     <div class="filter-row">
       <div class="filter-l">
+      <span class="text-[12px] muted"><i class="fa-solid fa-circle-info mr-1.5"></i>한국 신작 기준 (국가·스토어와 무관)</span>
       <label class="cal-toggle"><input type="checkbox" id="mkRelMobileOnly" checked onchange="mkRender()"><span class="knob"></span>모바일(멀티 플랫폼)만 보기</label>
       </div>
       <div class="mk-asof-slot"></div>
@@ -1541,11 +1543,11 @@ document.querySelectorAll('.sc-store button').forEach(b => { const on = b.datase
 <div id="view-market" class="hidden space-y-4">
   <div class="mv-bar">
     <div class="mv-date"><button type="button" class="cal-navbtn" onclick="mvStep(-1)" aria-label="이전 날"><i class="fa-solid fa-chevron-left"></i></button><span id="mvDate"><i class="fa-regular fa-calendar mr-1.5 text-slate-400"></i>-</span><button type="button" class="cal-navbtn" onclick="mvStep(1)" aria-label="다음 날"><i class="fa-solid fa-chevron-right"></i></button></div>
-    <div class="mk-seg" id="mvCty"></div>
+    <div class="scope-slot" data-for="market"></div>
     <div class="mk-seg" id="mvChart"><button type="button" data-k="sales" onclick="mvSet({ chart: 'sales' })">매출</button><button type="button" data-k="popular" onclick="mvSet({ chart: 'popular' })">인기</button></div>
   </div>
   <div id="mvTable" class="mv-cards"></div>
-  <p class="text-[11px] muted px-1">같은 날 각 스토어 순위 · 앱스토어는 2026-11-03부터 수집 · 게임을 누르면 그 스토어·나라 기준 상세</p>
+  <p class="text-[11px] muted px-1">게임을 누르면 그 스토어·나라 기준 상세<i class="fa-regular fa-circle-question mk-info" title="같은 날 각 스토어 순위 · 앱스토어는 2026-11-03부터 수집"></i></p>
 </div>
 
 <div id="view-watch" class="hidden space-y-4">
@@ -1560,7 +1562,7 @@ document.querySelectorAll('.sc-store button').forEach(b => { const on = b.datase
     <p class="asof" id="wlSub">-</p>
   </div>
   <section id="wlList" class="card rounded-xl overflow-hidden"></section>
-  <p class="text-[11px] muted px-1">목록은 이 브라우저에만 저장됩니다 · 나라별 순위는 각 나라 최신 수집일, 변동은 전일 대비 · '밖 · 날짜'는 TOP100 밖(마지막으로 오른 날) · 빈칸은 그 나라 차트에 오른 기록 없음 (해외는 11/03부터 수집)</p>
+  <p class="text-[11px] muted px-1">이 브라우저에만 저장 · '밖'은 TOP100 밖(마지막 날) · 빈칸은 기록 없음<i class="fa-regular fa-circle-question mk-info" title="나라별 순위는 각 나라 최신 수집일, 변동은 전일 대비 · 해외는 11/03부터 수집"></i></p>
 </div>
 
 <div id="view-ranking" class="hidden space-y-4">
@@ -2460,7 +2462,7 @@ function renderToday(){
   const p = buildSnapshotFallback(rawStore.sales, rawStore.popular);
   if(!p) return;
   const displayDate = p.asOfDate || latestDate(rawStore.sales) || new Date().toISOString().slice(0, 10);
-  const tl = document.getElementById('todayLabel'); if(tl) tl.innerHTML = `<span class="hidden sm:inline">Today · </span>${escapeHtml(displayDate)}`; /* 휴대폰은 날짜만 */
+  const tl = document.getElementById('todayLabel'); if(tl) tl.textContent = displayDate; tl.title = '데이터 기준일';
   try{ localStorage.setItem('gmi.asof', displayDate); }catch(e){}
   setText('snapshotDate', displayDate);
 
@@ -2724,7 +2726,7 @@ function switchView(view){
   if(!bootReveal) viewBusyUntil(work);   /* 첫 로딩 중이면 덮개는 첫 로딩이 끔 */
 }
 /* 스토어·국가 선택을 지금 페이지 칸으로: both = 스토어+국가, store = 스토어만(4개국을 함께 보는 화면)
-   일간 마켓별 순위(자체 국가 선택) · 신작 달력 · 신작 DB · 신작 동향 · 주간 리포트는 없음 */
+   country = 국가만(두 스토어를 나란히 보는 일간 마켓별 순위). 신작 달력 · 신작 DB · 신작 동향 · 주간 리포트는 없음 */
 /* 행사 달력: 공개 구글 캘린더를 처음 열 때만 불러옴 (월 보기 · 월요일 시작 · 서울 시간) */
 const EVENT_CAL_ID = 'c_58bf32be64488847f1007ad21615b0fcdf767a96764ea45106af7b5b75974456@group.calendar.google.com';   /* 구글 캘린더 설정 > 캘린더 통합 > '캘린더 ID' (공개 캘린더여야 보임) */
 function evTheme(){ try{ return localStorage.getItem('gmi.evTheme') || 'dark'; }catch(e){ return 'dark'; } }
@@ -2765,13 +2767,15 @@ async function scopeSwitch(c, st, view){
   glState.data = null; glState.fresh = false; glState.loading = null;
   gdOtherGlobal.data = null; gdOtherGlobal.loading = null;
   watchSeenCache.clear();
+  /* 순위 비교: 고른 게임은 나라마다 이름이 달라 그대로 두면 빈 표 → 새 나라의 매출 TOP3로 다시 */
+  searchSelected = []; Object.keys(searchColorOf).forEach(k => delete searchColorOf[k]); searchDefaultApplied = false; searchHashApplied = true;
   lastSyncAt = 0; fetchBusy = false;
   await fetchAllData();   /* 이 나라를 전에 봤으면 저장 데이터로 먼저, 이어서 새 데이터 */
   if(seq !== scopeSeq) return;
   switchView(target);
   openPendingDetail();
 }
-const SCOPE_VIEWS = { dashboard:'both', ranking:'both', business:'both', search:'both', sales:'both', popular:'both', global:'store', watch:'store' };
+const SCOPE_VIEWS = { market:'country', dashboard:'both', ranking:'both', business:'both', search:'both', sales:'both', popular:'both', global:'store', watch:'store' };
 function scopeSlotKey(v){ return v === 'sales' || v === 'popular' ? 'db' : v === 'business' ? `biz-${mkSection}` : v; }
 function scopePlace(){
   const box = document.getElementById('scopeBox'), v = currentView;
@@ -2815,6 +2819,14 @@ async function snapEl(btn, name){
 }
 
 
+/* 잠깐 뜨는 안내 (화면 아래 가운데, 2.5초) */
+let toastTimer = null;
+function showToast(msg){
+  let t = document.getElementById('toast');
+  if(!t){ t = document.createElement('div'); t.id = 'toast'; t.className = 'toast'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
+  t.textContent = msg; t.classList.add('on');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('on'), 2500);
+}
 const VALID_VIEWS = ['dashboard','global','watch','ranking','market','monthly','business','calendar','events','sales','popular','newReleases','search','report'];
 function viewFromHash(){ const v = decodeURIComponent(location.hash.slice(1)).split('?')[0]; return VALID_VIEWS.includes(v) && !((COUNTRY !== 'kr' || STORE !== 'gp') && KR_ONLY_VIEWS.includes(v)) ? v : 'dashboard'; }
 /* 다른 나라에서 한국 전용 메뉴를 누르면 한국으로 바꿔 그 화면을 연다 */
@@ -2822,6 +2834,7 @@ document.addEventListener('click', e => {
   const b = (COUNTRY !== 'kr' || STORE !== 'gp') && e.target.closest('.kr-only[data-view]');
   if(!b) return;
   e.preventDefault(); e.stopImmediatePropagation();
+  showToast('주간 리포트는 한국 · Google Play 기준이라 전환했습니다');
   setScope('kr', 'gp', b.dataset.view);
 }, true);
 
@@ -3623,7 +3636,7 @@ function renderSearchSummary(stats, dates){
       <td class="py-2.5 px-2 text-right whitespace-nowrap">${s.sales.top10 || s.popular.top10 ? `${s.sales.top10} · ${s.popular.top10}<span class="muted">일</span>` : '<span class="muted">-</span>'}</td>
       <td class="py-2.5 pr-1 pl-2 text-right whitespace-nowrap">${scoreHtml(s)}</td>
     </tr>`).join('')}</tbody></table></div>
-    <p class="text-[11px] muted mt-2">기간 변화는 조회 시작일 대비 마지막 날 순위입니다. 행을 누르면 게임 상세가 열립니다.</p>`;
+    <p class="text-[11px] muted mt-2">기간 변화 = 시작일 대비 마지막 날 · 행을 누르면 게임 상세</p>`;
 }
 
 /* ---------- 순위 차트 (로그 눈금 · 범위 자동 · 100위 밖 띠) ---------- */
@@ -5868,7 +5881,7 @@ function mkRenderStructure(){
       <span class="w-9 text-right text-[11px] text-indigo-300 font-semibold">${Math.round(x.score / pub.total * 100)}%</span>
       <span class="w-[72px] text-right text-[11px] muted whitespace-nowrap">TOP100 ${x.games.size}개</span>
     </div>`).join('')}</div>
-    <p class="text-[11px] muted mt-3 pt-3 border-t border-slate-800">점유 % = 퍼블리셔 점수 ÷ 전체 점수. 상위권 게임일수록 점수가 커서, 게임 수보다 실제 상위권 점유에 가깝습니다.</p>` : mkEmpty('지난주 데이터가 없습니다.');
+    <p class="text-[11px] muted mt-3 pt-3 border-t border-slate-800">점유 % = 퍼블리셔 점수 ÷ 전체 점수<i class="fa-regular fa-circle-question mk-info" title="상위권 게임일수록 점수가 커서, 게임 수보다 실제 상위권 점유에 가깝습니다"></i></p>` : mkEmpty('지난주 데이터가 없습니다.');
 }
 function mkRenderStructureSkeleton(){
   setText('mkAsOf', '지난 기간 데이터를 불러오는 중...');
@@ -5991,7 +6004,7 @@ function mkRenderMonthly(){
   const more = Math.max(...T.map(t => t.n)) > 30;
   document.getElementById('mkMonthlyTable').innerHTML = `<div class="grid ${wide ? 'grid-cols-2' : 'grid-cols-1 max-w-[760px]'}">${T.map((t, i) => `<div class="min-w-0 ${wide ? (i ? 'pl-7 border-l border-slate-700/70' : 'pr-7') : ''}">${t.html}</div>`).join('')}</div>
     ${more ? `<button type="button" id="mkRankMore" data-nosnap onclick="mkRankToggleAll()" class="mt-3 w-full flex items-center justify-center gap-2 py-2 rounded-lg border border-slate-700 bg-slate-800/40 hover:bg-slate-800 hover:border-slate-600 text-[12px] font-medium text-slate-300">${mkMonthly.all ? '30위까지만 보기 <i class="fa-solid fa-chevron-up text-[11px]"></i>' : `전체 보기 (${T.map(t => (wide ? MK_STORE_LABEL[t.s] + ' ' : '') + t.n + '개').join(' · ')}) <i class="fa-solid fa-chevron-down text-[11px]"></i>`}</button>` : ''}
-    <p class="text-[11px] muted mt-3">순위 칸 색은 ${P.prevWord} 평균보다 좋아졌으면 빨강, 나빠졌으면 파랑입니다. 추세는 ${P.unit} 순위표 안에서의 자리 변화이고, 흐름은 최근 8주의 주간 평균 순위입니다(위로 갈수록 상위 · 빨강 상승, 파랑 하락 · 끊긴 곳은 그 주 TOP100 밖 · 선에 마우스를 올리면 주별 순위). <span class="mk-lbl first">첫 차트인</span> 수집 기록상 ${P.prevWord}부터 처음 TOP100에 든 게임 · <span class="mk-lbl re">재진입</span> 예전에 TOP100에 있다가 빠진 뒤 다시 들어온 게임 · <span class="mk-lbl part">비교 제외</span> ${P.prevWord}에 80% 미만의 날만 TOP100이라 평균 비교가 맞지 않는 게임(이전 칸에 일수 표시). 신규 출시 여부는 판단하지 않습니다. 평균 순위는 반올림해 표시하고, #은 소수점까지 비교해 줄 세운 자리입니다(같으면 TOP100 일수 → 최고 순위 → 이름순).</p>`;
+    <p class="text-[11px] muted mt-3">순위 칸: 빨강 ${P.prevWord}보다 상승 · 파랑 하락 · <span class="mk-lbl first">첫 차트인</span> <span class="mk-lbl re">재진입</span> <span class="mk-lbl part">비교 제외</span><i class="fa-regular fa-circle-question mk-info" title="추세: ${P.unit} 순위표 안 자리 변화 · 흐름: 최근 8주 주간 평균 순위(끊긴 곳은 TOP100 밖) · 첫 차트인: 수집 기록상 ${P.prevWord}부터 처음 TOP100 · 재진입: 빠졌다가 다시 들어온 게임 · 비교 제외: ${P.prevWord}에 80% 미만의 날만 TOP100 · 평균 순위는 반올림, #은 소수점까지 비교한 자리"></i></p>`;
 }
 /* 전체 보기 펼침/접기: 접을 때 페이지가 짧아지므로 버튼이 화면에 보이도록 */
 function mkRankToggleAll(){
@@ -6108,7 +6121,7 @@ function mkRenderDebut(){
       <td class="py-2 px-2 text-right muted">${x.days}<span class="text-[11px]"> / ${x.span}일</span></td>
       <td class="py-2 pl-3 pr-1">${mkRankSpark(x.series)}</td>
     </tr>`).join('')}</tbody></table>
-    <p class="text-[11px] muted mt-3">패키지 수집 시작일(${mkShort(R.pkgStart)})에 이미 TOP100에 있던 게임과, 같은 이름으로 그 전부터 TOP100에 있던 게임은 제외했습니다. 추이 그래프는 게임마다 자기 최고 순위~100위 범위로 그려 움직임을 보기 쉽게 했고(점선은 10위), 끊긴 구간은 TOP100 밖입니다.</p>` : mkEmpty(`최근 ${MK_DEBUT_WEEKS}주 동안 첫 차트인한 게임이 없습니다.`);
+    <p class="text-[11px] muted mt-3">수집 전부터 TOP100에 있던 게임은 제외<i class="fa-regular fa-circle-question mk-info" title="패키지 수집 시작일(${mkShort(R.pkgStart)})에 이미 있던 게임과 같은 이름으로 그 전부터 있던 게임 제외 · 추이 그래프는 게임마다 최고 순위~100위 범위(점선 10위), 끊긴 구간은 TOP100 밖"></i></p>` : mkEmpty(`최근 ${MK_DEBUT_WEEKS}주 동안 첫 차트인한 게임이 없습니다.`);
 }
 /* 차트 잔존율: 전주 TOP100에 없다가 들어온 게임이 n주 뒤 그 주에 하루라도 TOP100이면 '남음' */
 const MK_RET_STEPS = [1, 2, 4], MK_RET_MIN = 8;
@@ -6270,7 +6283,7 @@ function mkRenderRating(){
       <div><div class="text-[11px] font-semibold rank-down mb-1">평점 하락</div>${rows(down)}</div>
       <div><div class="text-[11px] font-semibold rank-up mb-1">평점 상승</div>${rows(up)}</div>
     </div>
-    <p class="text-[11px] muted mt-3">Google Play에 표시되는 평점(소수점 한 자리) 기준이라 0.1 변화도 의미가 있습니다. 평점은 9/8부터 수집됐습니다.</p>`;
+    <p class="text-[11px] muted mt-3">스토어 표시 평점(소수점 한 자리) 기준 · 9/8부터 수집</p>`;
 }
 
 /* ---------- 관심 게임 (이 브라우저에만 저장) ---------- */
@@ -6491,8 +6504,8 @@ function mvRowsLoad(st, c, chart, date){
   return mvState.rows.get(k);
 }
 async function openMarketView(){
+  if(mvState.c !== COUNTRY){ mvState.c = COUNTRY; mvState.date = ''; }   /* 나라는 사이트 공용 선택을 따름 */
   const { c, chart } = mvState;
-  document.getElementById('mvCty').innerHTML = GL_ORDER.map(x => `<button type="button" class="${x === c ? 'on' : ''}" onclick="mvSet({ c: '${x}' })">${glFlag(x, 'sm')}<span class="ml-1.5">${COUNTRIES[x].name}</span></button>`).join('');
   document.querySelectorAll('#mvChart button').forEach(b => b.classList.toggle('on', b.dataset.k === chart));
   const box = document.getElementById('mvTable');
   box.innerHTML = '<section class="card rounded-xl p-10 text-center text-[13px] muted mv-wide"><i class="fa-solid fa-circle-notch fa-spin mr-2 text-indigo-400"></i>데이터 읽는 중…</section>';
@@ -7229,14 +7242,14 @@ async function rankCacheSet(c, v){
    날짜 칸 폭은 한 번 재서 고정 (상단바가 흔들리지 않게) */
 function todayLabelEarly(){
   const tl = document.getElementById('todayLabel');
-  if(tl && !tl.textContent){ let d = ''; try{ d = localStorage.getItem('gmi.asof') || ''; }catch(e){} tl.innerHTML = `<span class="hidden sm:inline">Today · </span>${escapeHtml(d || kstTodayStr())}`; }
+  if(tl && !tl.textContent){ let d = ''; try{ d = localStorage.getItem('gmi.asof') || ''; }catch(e){} tl.textContent = d || kstTodayStr(); }
   if(!tbMeasured){ tbMeasured = true; tbMeasure(); document.fonts?.ready.then(tbMeasure); }   /* 웹폰트가 늦게 오면 한 번 더 */
 }
 let tbMeasured = false;
 function tbMeasure(){
   const root = document.documentElement.style;
   const tl = document.getElementById('todayLabel'), probe = tl.cloneNode(); probe.removeAttribute('id'); probe.style.cssText = 'position:absolute;visibility:hidden;display:inline-block'; tl.parentNode.appendChild(probe);
-  probe.innerHTML = '<span>Today · </span>0000-00-00'; root.setProperty('--tb-date-w', Math.ceil(probe.getBoundingClientRect().width) + 'px');
+  probe.textContent = '0000-00-00'; root.setProperty('--tb-date-w', Math.ceil(probe.getBoundingClientRect().width) + 'px');
   probe.remove();
 }
 /* 상단바 동기화 상태: 점 색(busy·ok·lag·fail) + 마우스를 올리면 설명. 실패면 누르면 다시 시도 */
