@@ -48,6 +48,7 @@ const STORE = (() => {
   return v;
 })();
 const SSFX = STORES[STORE].sfx;
+document.documentElement.classList.add('no-anim');   /* 첫 그림 동안 메뉴 펼침 애니메이션 끔 (새로고침·전환 때 메뉴가 흔들리지 않게) */
 /* 나라·스토어별 순위 시트 이름 */
 function rkSheet(base, c = COUNTRY, st = STORE){ return base + STORES[st].sfx + COUNTRIES[c].sfx; }
 /* 한국 구글 전용 화면: 다른 나라·스토어에서 누르면 한국 구글로 전환해서 연다 */
@@ -60,8 +61,11 @@ function setScope(c, st, view){
   if(st === 'gp') u.searchParams.delete('s'); else u.searchParams.set('s', st);
   const cur = location.hash.slice(1).split('?')[0];
   u.hash = view ? view : ((c !== 'kr' || st !== 'gp') && KR_ONLY_VIEWS.includes(cur) ? '' : location.hash);
-  const ld = document.getElementById('viewLoading');   /* 새 화면이 뜰 때까지 이전 화면 대신 '읽는 중' */
-  if(ld){ document.getElementById('viewLoadingTx').textContent = `${COUNTRIES[c].name} · ${STORES[st].name} 데이터 읽는 중…`; ld.classList.remove('hidden'); }
+  document.querySelectorAll('.sc-cty button').forEach(b => b.classList.toggle('on', b.dataset.c === c));
+  document.querySelectorAll('.sc-store button').forEach(b => b.classList.toggle('on', b.dataset.s === st));
+  try{ if(typeof mkSection !== 'undefined') sessionStorage.setItem('gmi.mkSection', mkSection); }catch(e){}
+  const ld = document.getElementById('viewLoading');   /* 새 화면이 뜰 때까지 본문(필터 줄 아래)만 '읽는 중' */
+  if(ld){ document.getElementById('viewLoadingTx').textContent = `${COUNTRIES[c].name} · ${STORES[st].name} 데이터 읽는 중…`; if(typeof vlPlace === 'function') vlPlace(); ld.classList.remove('hidden'); }
   location.href = u.toString();   /* 화면 곳곳의 캐시가 섞이지 않게 새로 불러온다 */
 }
 function setCountry(c, view){ setScope(c, STORE, view); }
@@ -198,6 +202,7 @@ body { background:var(--bg); font-family:'Pretendard Variable',Pretendard,-apple
 .sb-wrap.open .sb-sub { max-height:200px; opacity:1; visibility:visible; margin:4px 0 6px 21px;
   transition:max-height .22s ease, opacity .22s ease .04s, margin .22s ease, visibility 0s; }
 .sb-wrap + .sb-item { margin-top:2px; }
+html.no-anim .side-nav, html.no-anim .side-nav *, html.no-anim .sb-main, html.no-anim .sb-fold { transition:none !important; }
 .sb-sub button, .sb-fly button { display:block; width:100%; text-align:left; height:32px; padding:0 0 0 17px; margin-left:-1px; border-left:2px solid transparent; font-size:12.5px; font-weight:500; color:#a0a7ad; white-space:nowrap; }
 .sb-sub button:hover, .sb-fly button:hover { color:#e8eaed; }
 .sb-sub button.on, .sb-fly button.on { color:#ffffff; font-weight:700; border-left-color:#6257e8; }
@@ -981,6 +986,14 @@ html.panel-lock { overflow: hidden; }
     <button class="sb-item" data-view="newReleases" onclick="switchView('newReleases')" data-tip="신작 DB"><i data-lucide="table-properties"></i><span class="sb-tx">신작 DB</span></button>
   </nav>
 </aside>
+<script>(() => {   /* 첫 그림부터 메뉴 상태를 맞춤 (sbSync 는 데이터를 읽기 시작할 때 다시 맞춤) */
+  const h = location.hash.slice(1).split('?')[0] || 'dashboard', nav = document.querySelector('.side-nav');
+  const sub = h === 'business' ? nav.querySelector('#sbBiz .sb-sub button') : nav.querySelector(`.sb-sub [data-go="${h}"]`);
+  const wrap = sub && sub.closest('.sb-wrap');
+  if(wrap){ wrap.classList.add('open'); wrap.firstElementChild.classList.add('active'); if(h !== 'business') sub.classList.add('on'); }
+  else nav.querySelector(`.sb-item[data-view="${h}"]`)?.classList.add('active');
+  try{ const n = (JSON.parse(localStorage.getItem('gmi.watchlist.v2') || '[]') || []).length; if(n) document.getElementById('sbWatchN').textContent = n; }catch(e){}
+})();</script>
 <button id="sbFold" type="button" onclick="sbFold()" class="sb-fold" aria-label="메뉴 접기·펼치기"><i class="fa-solid fa-caret-left fold-l"></i><i class="fa-solid fa-caret-right fold-r"></i></button>
 <div id="sbFly" class="sb-fly" role="menu"><div class="t"></div><div class="l"></div></div>
 <div class="sb-dim" onclick="sbDrawer(false)"></div>
@@ -989,6 +1002,7 @@ html.panel-lock { overflow: hidden; }
 <div id="topBar" class="top-bar">
   <button type="button" onclick="sbDrawer(true)" class="tb-menu hd-btn hd-icon" aria-label="메뉴 열기"><i data-lucide="menu"></i></button>
   <div id="tbCrumb" class="tb-crumb"></div>
+  <script>try{ const [h, html] = JSON.parse(sessionStorage.getItem('gmi.crumb') || '[]'); if(h === location.hash.split('?')[0] && html) document.getElementById('tbCrumb').innerHTML = html; }catch(e){}</script>
   <div class="tb-right">
     <span id="tbStat" class="tb-stat" title="확인 중"><span id="syncStatus" class="sync-dot" data-s="busy" role="img" aria-label="동기화 확인 중"></span><span id="todayLabel" class="tb-date"></span></span>
   </div>
@@ -2614,6 +2628,7 @@ function sbSync(){
     crumb = crumb.replace(/<b>(.*?)<\/b>/, '<span class="tb-par">$1</span>') + `${chev}<b>${escapeHtml(detailCurrentName)}</b>`;
   document.getElementById('tbCrumb').innerHTML = `<span class="tb-ic">${icon}</span>` + crumb;
   if(currentView === 'business') history.replaceState(null, '', key === 'monthly' ? '#monthly' : '#business');
+  try{ sessionStorage.setItem('gmi.crumb', JSON.stringify([location.hash.split('?')[0], document.getElementById('tbCrumb').innerHTML])); }catch(e){}
 }
 /* 접힌 상태 플라이아웃: 마우스를 올린 그룹의 하위 메뉴를 오른쪽에 */
 let sbFlyTimer = null;
@@ -2636,9 +2651,15 @@ document.getElementById('sbFly').addEventListener('mouseenter', () => clearTimeo
 document.addEventListener('keydown', e => { if(e.key === 'Escape') sbDrawer(false); });
 
 let viewBusyToken = 0;
+function vlPlace(){
+  const el = document.getElementById('viewLoading'), box = document.getElementById('scopeBox');
+  const row = box && !box.hidden && box.closest('.filter-row, #rankTools, #dbScopeRow, .page-head');
+  const top = document.getElementById('topBar').getBoundingClientRect().bottom, b = row ? row.getBoundingClientRect().bottom : 0;
+  el.style.top = `${Math.round(b > top ? b + 8 : top)}px`;
+}
 function viewBusy(on, text){
   const el = document.getElementById('viewLoading'); if(!el) return;
-  if(on) setText('viewLoadingTx', text || '데이터 읽는 중…');
+  if(on){ setText('viewLoadingTx', text || '데이터 읽는 중…'); vlPlace(); }
   el.classList.toggle('hidden', !on);
 }
 function viewBusyUntil(work){
@@ -7212,11 +7233,16 @@ window.addEventListener('DOMContentLoaded', async () => {
   if(initial !== 'dashboard'){
     currentView = initial === 'monthly' ? 'business' : initial;
     if(initial === 'monthly') mkSection = 'monthly';
+    else if(initial === 'business'){ try{ const s = sessionStorage.getItem('gmi.mkSection'); if(s && s !== 'monthly' && MK_SECTION_EL[s]) mkSection = s; }catch(e){} }
     document.getElementById('view-dashboard').classList.add('hidden');
+    document.getElementById(`view-${['sales', 'popular', 'newReleases'].includes(currentView) ? 'database' : currentView}`)?.classList.remove('hidden');
+    if(currentView === 'business') Object.entries(MK_SECTION_EL).forEach(([k, id]) => document.getElementById(id)?.classList.toggle('hidden', k !== mkSection));
     document.querySelectorAll('.sb-item').forEach(x => x.classList.toggle('active', x.dataset.view === currentView));
   }
+  try{ sessionStorage.removeItem('gmi.mkSection'); }catch(e){}
   document.documentElement.dataset.view = currentView;
-  sbSync(); scopePlace();   /* 첫 화면(일간 요약)은 switchView 를 거치지 않으므로 선택 줄을 여기서 놓음 */
+  sbSync(); scopePlace(); vlPlace();   /* 첫 화면(일간 요약)은 switchView 를 거치지 않으므로 선택 줄을 여기서 놓음 */
+  setTimeout(() => document.documentElement.classList.remove('no-anim'), 400);
   if(initial === 'global') switchView('global');   /* 4개국 차트는 따로 읽으므로 기다릴 필요 없음 (덮개는 그 화면이 다 그려지면 끔) */
   bootReveal = () => {   /* 데이터가 처음 준비되는 순간(저장 데이터든 새 데이터든) 한 번만 */
     bootReveal = null;
