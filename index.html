@@ -883,13 +883,18 @@ html[data-theme="light"] .theme-seg:not(.to-dark) button[data-t="light"], html[d
 .rp-cv-note { font-size:7.6pt; color:var(--mute); margin-bottom:2mm; }
 /* 1쪽 분석: 맨 위 한 문장 · 고정 질문 4개(결론 + 근거) · 유형 흐름 */
 .rp-hl { margin-top:7mm; font-size:12pt; font-weight:700; line-height:1.55; background:var(--soft); border-left:1.2mm solid var(--brand); padding:4mm 5mm; }
-.rp-qs { display:flex; flex-direction:column; gap:7mm; }
+.rp-qs { display:flex; flex-direction:column; gap:4.5mm; }
 .rp-q { border-left:.8mm solid #d2ccff; padding:.5mm 0 .5mm 4mm; }
 .rp-q .t { font-size:8pt; font-weight:700; color:var(--brand); }
 .rp-q .c { font-size:10pt; font-weight:600; line-height:1.5; margin-top:1mm; }
 .rp-q .c b { font-weight:800; }
 .rp-q .e { font-size:8pt; color:var(--sub); line-height:1.5; margin-top:1mm; }
-.rp-t4s { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:3mm; }
+.rp-q .b { margin:1mm 0 0; padding:0; list-style:none; font-size:8pt; color:var(--sub); line-height:1.55; } .rp-q .b li::before { content:'· '; }
+.rp-q .i { font-size:8.5pt; font-weight:600; color:var(--ink); line-height:1.5; margin-top:1mm; } .rp-q .i b { font-weight:800; }
+.rp-sum { margin-top:4mm; border:1px solid var(--line); border-radius:2.5mm; padding:3mm 4.5mm; background:var(--soft); }
+.rp-sum .h { font-size:8.5pt; font-weight:800; color:var(--brand); margin-bottom:1.2mm; }
+.rp-sum ul { margin:0; padding:0; list-style:none; } .rp-sum li { font-size:9pt; line-height:1.65; } .rp-sum li b.k { color:var(--brand); margin-right:2mm; font-weight:800; }
+.rp-t4s { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:3mm; }
 .rp-t4 { border:1px solid var(--line); border-radius:2.5mm; padding:3mm 3.5mm; }
 .rp-t4 .l { font-size:8pt; color:var(--sub); font-weight:600; }
 .rp-t4 .v { font-size:15pt; font-weight:800; margin-top:1mm; }
@@ -6863,13 +6868,13 @@ window.addEventListener('afterprint', rpCleanupPrint);
 
 /* ---- 리포트 데이터 ---- */
 /* 1쪽 유형 4분류. 구글 장르는 판매자가 정해서(복수 지정 가능) 이름·장르로 대략 나누고, 틀리는 게임은 RP_CLASS_FIX로 고침 */
-const RP_CLASSES = ['하이퍼 캐주얼', '캐주얼', '미드코어', '기타·웹보드'];
+const RP_CLASSES = ['하이퍼 캐주얼', '캐주얼', '키우기·방치형', '미드코어', '기타·웹보드'];   /* 키우기·방치형: 국내는 IAA → IAP 중심으로 옮겨 캐주얼과 미드코어 사이 (해외 정통 idle 과 다름) */
 const RP_CLASS_FIX = { '우마무스메': '미드코어', '꿈의 정원': '하이퍼 캐주얼', '테이스티 트레블': '하이퍼 캐주얼' };
 function rpClass(name, genre){
   const n = String(name || ''), g = String(genre || '').trim();
   for(const [k, v] of Object.entries(RP_CLASS_FIX)) if(n.includes(k)) return v;
   if(/포커|맞고|섯다|홀덤|바카라|슬롯|카지노|고스톱/.test(n) || g === '카지노') return '기타·웹보드';
-  if(/키우기|방치/.test(n)) return '캐주얼';
+  if(/키우기|방치/.test(n)) return '키우기·방치형';
   if(/^(퍼즐|보드|단어)$/.test(g)) return '하이퍼 캐주얼';
   if(/^(캐주얼|시뮬레이션|음악|아케이드|카드|교육|퀴즈)$/.test(g)) return '캐주얼';
   return '미드코어';
@@ -7077,57 +7082,78 @@ function rpRender(D){
   const A = rpAnalyze(D), bn = n => `<b>${esc(cut(n, 22))}</b>`, nm = n => esc(cut(n, 18)), rv = v => v > 100 ? '밖' : v;
   const lst = (arr, f, n = 4) => arr.length ? arr.slice(0, n).map(f).join(' · ') + (arr.length > n ? ` 외 ${arr.length - n}개` : '') : '없음';
   const major = arr => { const c = {}; arr.forEach(x => { c[x.cls] = (c[x.cls] || 0) + 1; }); const t = Object.entries(c).sort((a, b) => b[1] - a[1])[0]; return t && t[1] * 2 > arr.length ? t : null; };
+  /* 질문마다: 굵은 결론 한 줄(개조식) → 근거 줄(숫자) → '→' 해석(~로 보임). 사실과 해석을 나눔
+     인기 변화가 없으면 마케팅을 끌어오지 않고 데이터가 보여주는 것만 씀 */
   /* ① 신작 · 재진입 */
   const nS30 = A.nw.filter(x => x.sb <= 30).sort((a, b) => a.sb - b.sb), nS = A.nw.filter(x => x.sb <= 100).sort((a, b) => a.sb - b.sb), nP30 = A.nw.filter(x => x.pb <= 30).sort((a, b) => a.pb - b.pb), mP = major(nP30);
-  const q1c = (!A.nw.length ? '이번 주 새로 차트에 든 신작은 없습니다.'
-      : nS30.length ? `신작 ${A.nw.length}개 중 ${bn(nS30[0].n)} 매출 ${nS30[0].sb}위까지 오르며 상위권에 들었습니다.`
-      : nS.length ? `신작 ${A.nw.length}개 중 매출로 이어진 게임은 ${nS.length}개이고, 가장 높은 ${bn(nS[0].n)} 매출 ${nS[0].sb}위입니다.`
-      : `신작 ${A.nw.length}개 모두 매출 TOP100 밖으로, 아직 매출 성과는 없습니다.`)
-    + (nP30.length ? ` 인기 30위 안에 든 ${nP30.length}개는 ${mP ? `${mP[0]} 장르 중심의 ` : ''}UA 집행입니다.` : '');
-  const q1e = `인기 30위 안: ${lst(nP30, x => `${nm(x.n)} ${x.pb}위`)} / 재진입: ${lst(A.re, x => `${nm(x.n)} ${x.sb <= 100 ? `매출 ${x.sb}위` : `인기 ${x.pb}위`}`, 3)}`;
+  const q1c = !A.nw.length ? '이번 주 새로 차트에 든 신작 없음'
+    : nS30.length ? `신작 ${A.nw.length}개 중 ${bn(nS30[0].n)}${nS30.length > 1 ? ` 외 ${nS30.length - 1}개` : '만'} 매출 30위권 진입${nP30.length > nS30.length ? ', 나머지는 인기 상위권에 머묾' : ''}`
+    : nS.length ? `신작 ${A.nw.length}개 중 매출 TOP100 진입 ${nS.length}개, 최고 ${bn(nS[0].n)} 매출 ${nS[0].sb}위`
+    : `신작 ${A.nw.length}개 모두 매출 TOP100 밖, 아직 매출 성과 없음`;
+  const q1b = [nP30.length ? `인기 30위 안 신작 ${nP30.length}개${mP ? `(${mP[0]} 장르 중심)` : ''}: ${lst(nP30, x => `${nm(x.n)} ${x.pb}위`)}` : '',
+    A.re.length ? `재진입 ${A.re.length}개: ${lst(A.re, x => `${nm(x.n)} ${x.sb <= 100 ? `매출 ${x.sb}위` : `인기 ${x.pb}위`}`, 3)}` : ''];
+  const q1i = !A.nw.length ? ''
+    : nS30.length && nP30.length > nS30.length ? `→ 출시 초기 인기 상위권 진입 후 매출로 이어진 건 ${nS30.length}개뿐. 나머지는 2주 차 매출 순위를 봐야 안착 여부 판단 가능`
+    : nS30.length ? '→ 매출 30위권 첫 주 진입. 2주 차에도 유지하는지가 안착 판단 기준'
+    : nP30.length ? '→ 인기 상위권 진입 후 아직 매출로 이어지지 않음. 2주 차 매출 순위로 안착 여부 판단 필요' : '';
   /* ② 매출 급등 */
-  const sv = A.surge, sF = sv.filter(x => x.flat).length, mS = major(sv);
-  const q2c = !sv.length ? '매출 30위 안으로 급등한 게임은 없었습니다.'
-    : sv.length === 1 ? `${bn(sv[0].n)} 매출 ${rv(sv[0].a)}→${sv[0].b}위로 급등했습니다. ${sv[0].flat ? '인기 변화가 없어 업데이트 반응입니다.' : '인기도 함께 올라 업데이트와 마케팅이 겹친 경우입니다.'}`
-    : (sF === sv.length ? `${sv.length}개 모두 인기 변화 없이 매출만 올라 신규 콘텐츠·픽업 업데이트 반응입니다.`
-      : !sF ? `${sv.length}개 모두 인기도 함께 올라 업데이트와 마케팅이 겹친 급등입니다.`
-      : `${sv.length}개 중 ${sF}개는 인기 변화 없는 업데이트 반응, ${sv.length - sF}개는 인기도 함께 오른 업데이트·마케팅 동반 급등입니다.`)
-      + (!mS ? '' : mS[1] === sv.length ? ` 모두 ${mS[0]} 장르입니다.` : ` 이 중 ${mS[0]} 장르가 ${mS[1]}개입니다.`);
-  const q2e = lst(sv, x => `${nm(x.n)} ${rv(x.a)}→${x.b}`, 5);
+  const sv = A.surge.filter(x => !A.nw.some(w => w.n === x.n)), sF = sv.filter(x => x.flat).length, mS = major(sv), lowP = sv.filter(x => x.flat && x.pb > 30).length === sF;
+  const flatTxt = `${lowP ? '인기 순위는 하위권이나' : '인기 순위 변화 없이'} 꾸준한 업데이트로 매출 유지·상승 흐름`;
+  const q2c = !sv.length ? '매출 30위 안으로 급등한 게임 없음'
+    : sv.length === 1 ? `${bn(sv[0].n)} 매출 ${rv(sv[0].a)}→${sv[0].b}위 급등, ${sv[0].flat ? flatTxt : '인기도 함께 상승'}`
+    : `급등 ${sv.length}개${!mS ? '' : mS[1] === sv.length ? ` 모두 ${mS[0]} 장르` : ` 중 ${mS[0]} 장르 ${mS[1]}개`}, ${sF === sv.length ? flatTxt : !sF ? '인기·매출 동반 상승' : `${sF}개는 ${flatTxt}`}`;
+  const q2b = !sv.length ? [] : [sv.length > 1 && sF === sv.length ? `${sv.length}개 모두 인기 순위 변화 없이 매출만 상승` : sv.length > 1 && sF ? `인기 동반 상승: ${lst(sv.filter(x => !x.flat), x => `${nm(x.n)} 인기 ${rv(x.pa)}→${rv(x.pb)}`, 2)}` : '',
+    lst(sv, x => `${nm(x.n)} ${rv(x.a)}→${x.b}`, 5)];
+  const q2i = !sv.length ? '' : sF === sv.length ? '→ 신규 유입보다 기존 유저의 업데이트 결제가 매출을 끌어올린 주로 보임'
+    : !sF ? '→ 업데이트와 함께 신규 유입도 늘며 매출이 오른 것으로 보임'
+    : '→ 대부분 기존 유저의 업데이트 결제로 보이며, 인기 동반 상승 게임은 신규 유입도 함께 늘어난 것으로 보임';
   /* ③ 안정 유지 · 하락 */
-  const st = A.stable, dp = A.drops[0];
-  const q3c = !A.hasPrev ? '전주 수집 기록이 없어 판단할 수 없습니다.'
-    : `2주 내내 매출 30위 안을 지킨 게임은 ${st.length}개입니다.`
-      + (st.length ? ` 순위 변동이 가장 적은 ${bn(st[0].n)} ${st[0].lo === st[0].hi ? `${st[0].lo}위를 그대로` : `${st[0].lo}–${st[0].hi}위를`} 지켰습니다.` : '')
-      + (dp ? ` 반면 ${bn(dp.n)} 매출 ${dp.a}→${rv(dp.b)}위로 ${dp.after ? '내려왔습니다. 직전 업데이트 효과가 끝나 급등 전 순위로 돌아가고 있습니다.' : dp.sharp ? '급락했습니다. 밸런스·콘텐츠 등 게임 내 문제 가능성이 있습니다.' : '완만하게 내려가고 있습니다. 다음 업데이트 전 일시적으로 매출이 감소하는 시기입니다.'}` : '');
-  const q3e = `${lst(st, x => `${nm(x.n)} ${x.lo === x.hi ? x.lo : `${x.lo}–${x.hi}`}위`)}${A.drops.length ? ` / 하락: ${lst(A.drops, x => `${nm(x.n)} ${x.a}→${rv(x.b)}`, 2)}` : ''}`;
+  const st = A.stable, dp = A.drops[0], dpSurge = dp && sv.find(x => x.n === dp.n);
+  const q3c = !A.hasPrev ? '전주 수집 기록이 없어 판단 불가'
+    : `${st.length}개가 2주 연속 매출 30위 안 유지${st.length >= 15 ? ', 상위권은 견고' : st.length < 8 ? ', 상위권 변동 큼' : ''}`;
+  const q3b = !A.hasPrev ? [] : [st.length ? lst(st, x => `${nm(x.n)} ${x.lo === x.hi ? `${x.lo}위` : `${x.lo}–${x.hi}위`}`) + (st[0].lo === st[0].hi ? ` (${nm(st[0].n)} 변동 없음)` : '') : '',
+    A.drops.length ? `하락: ${lst(A.drops, x => `${nm(x.n)} ${x.a}→${rv(x.b)}`, 3)}` : ''];
+  const q3i = !A.hasPrev ? '' : !dp ? '→ 하락한 게임 없이 상위권 구도 유지'
+    : dpSurge ? `→ ${bn(dp.n)} 주 초 업데이트로 급등(${rv(dpSurge.a)}→${dpSurge.b})한 뒤 급등 전 순위로 돌아가는 흐름으로 보임`
+    : dp.after ? `→ ${bn(dp.n)} 직전 업데이트 효과가 끝나 급등 전 순위로 돌아가는 흐름으로 보임`
+    : dp.sharp ? `→ ${bn(dp.n)} 단기간 급락, 밸런스·콘텐츠 등 게임 내 문제 가능성 확인 필요`
+    : `→ ${bn(dp.n)} 완만한 하락, 다음 업데이트 전 일시적으로 매출이 감소하는 시기로 보임`;
   /* ④ TOP5 */
   const t5 = A.top5, inn = t5.filter(x => x.prevPos == null || x.prevPos > 5), mv = t5.filter(x => x.prevPos != null && x.prevPos !== x.pos).sort((a, b) => Math.abs(b.prevPos - b.pos) - Math.abs(a.prevPos - a.pos))[0];
-  const q4c = !A.hasPrev ? '전주 수집 기록이 없어 비교할 수 없습니다.'
-    : inn.length ? `${inn.map(x => bn(x.n)).join(', ')} TOP5에 새로 들어왔습니다.${A.outs.length ? ` 대신 ${A.outs.map(o => `${bn(o.n)} ${o.pos ? `${o.pos}위` : '순위권 밖'}`).join(', ')}${A.outs.at(-1).pos ? '로' : '으로'} 밀렸습니다.` : ''}`
-    : !mv ? 'TOP5 구성과 순서 모두 전주와 같습니다.'
-    : `구성은 같고 순서만 바뀌었습니다. ${bn(mv.n)} ${mv.prevPos}위에서 ${mv.pos}위로 ${mv.prevPos > mv.pos ? '올랐습니다' : '내려왔습니다'}.`;
-  const q4e = `주 평균 ${t5.map(x => `${x.pos} ${nm(x.n)}${x.prevPos !== x.pos ? ` (${x.prevPos ?? '밖'}→${x.pos})` : ''}`).join(' · ')}`;
-  /* 맨 위 한 문장: 차트를 움직인 것 · 신작 상태 · 상위권 */
-  const headline = `이번 주는 ${sv.length >= 2 ? '업데이트를 통한 매출 급등이 차트 변화를 이끌었고' : sv.length ? '업데이트 급등 한 건 외에는 차트 변화가 크지 않았고' : '차트 변화가 크지 않았고'}, `
-    + (!A.nw.length ? '새로 차트에 든 신작은 없었습니다.' : nS30.length ? '신작이 매출 30위 안까지 올라섰습니다.' : nP30.length ? '신작은 인기 진입에 그쳐 아직 매출 안착 전입니다.' : '신작은 인기 상위권에도 들지 못했습니다.')
-    + (!A.hasPrev ? '' : inn.length ? ` 상위 5위 중 ${inn.length}자리가 바뀌었습니다.` : ' 상위권 게임들은 매출을 견고하게 유지하고 있습니다.');
+  const q4c = !A.hasPrev ? '전주 수집 기록이 없어 비교 불가'
+    : inn.length ? `${inn.length}자리 교체: ${inn.map(x => `${bn(x.n)} ${x.prevPos ?? '밖'}→${x.pos}위`).join(', ')} 진입${A.outs.length ? `, ${A.outs.map(o => `${bn(o.n)} ${o.pos ? `${o.pos}위로` : '순위권 밖으로'}`).join(', ')}` : ''}`
+    : !mv ? 'TOP5 구성·순서 모두 전주와 동일'
+    : `구성 동일, 순서만 변동: ${bn(mv.n)} ${mv.prevPos}→${mv.pos}위`;
+  const q4b = [`주 평균 TOP5: ${t5.map(x => `${x.pos} ${nm(x.n)}`).join(' · ')}`];
+  const q4o = A.outs.find(o => o.pos);
+  const q4i = !A.hasPrev ? '' : q4o ? `→ ${bn(q4o.n)} 다음 업데이트 시점에 TOP5로 돌아오는지 확인 필요` : !inn.length && !mv ? '→ 상위권 구도 변화 없음' : '';
+  /* 맨 위 두 줄 요약: 1) 차트를 움직인 것 2) 상위권 · 신작 상태 */
+  const hl1 = sv.length >= 2 ? `업데이트에 반응한 ${mS ? `${mS[0]} 장르가` : '게임들이'} 매출 차트를 움직인 한 주` : sv.length ? '업데이트 급등 1건 외에는 차트 변화가 크지 않은 한 주' : '차트 변화가 크지 않은 한 주';
+  const hl2 = [!A.hasPrev ? '' : inn.length ? `상위 5위 중 ${inn.length}자리 교체` : '상위권은 큰 변화 없이 유지',
+    !A.nw.length ? '새로 차트에 든 신작 없음' : nS30.length ? `신작은 ${bn(nS30[0].n)}${nS30.length > 1 ? ` 외 ${nS30.length - 1}개` : ' 1개만'} 매출 30위권 진입` : nP30.length ? '신작은 인기 진입에 그쳐 아직 매출 안착 전' : '신작은 인기 상위권에도 들지 못함'].filter(Boolean).join(', ');
+  const headline = `${hl1}.<br>${hl2}.`;
   const t4 = RP_CLASSES.map(c => { const n = A.types[c], p = A.prevTypes?.[c], d = p == null ? null : n - p;
     return `<div class="rp-t4"><div class="l">${c}</div><div class="v">${n}<span class="${d > 0 ? 'u' : d < 0 ? 'd' : ''}">${d == null ? '' : d ? `${d > 0 ? '▲' : '▼'}${Math.abs(d)}` : '유지'}</span></div></div>`; }).join('');
   const relPt = `신작(모바일·PC): 이 주 <b>${D.relLast.length}개</b> 출시 · 다음 주(${rpDot(D.issue)} – ${rpDot(mkAddDays(D.issue, 6))}) <b>${D.relNext.length}개</b> 예정 → 4쪽`;
-  const qb = (no, t, c, e) => `<div class="rp-q"><div class="t">${no} · ${t}</div><div class="c">${c}</div><div class="e">${e}</div></div>`;
+  /* 정리: 주목 · 흐름 주의 · 다음 주 관찰 (해당 없는 줄은 뺌) */
+  const watch = [nS30[0] ? `${nm(nS30[0].n)} 매출 30위 유지 여부` : nP30[0] ? `${nm(nP30[0].n)} 등 인기 상위권 신작의 매출 진입 여부` : '', q4o ? `${nm(q4o.n)} TOP5 복귀 여부` : ''].filter(Boolean);
+  const sum = [sv[0] ? `<li><b class="k">주목</b>${bn(sv[0].n)} ${rv(sv[0].a)}→${sv[0].b}, 이번 주 매출 상승 폭 최대</li>` : '',
+    dp ? `<li><b class="k">흐름 주의</b>${bn(dp.n)} ${dp.a}→${rv(dp.b)}, ${dpSurge || dp.after ? '업데이트 효과 이후 하락 폭 큼' : dp.sharp ? '단기간 급락' : '완만한 하락 지속'}</li>` : '',
+    watch.length ? `<li><b class="k">다음 주 관찰</b>${watch.join(', ')}</li>` : ''].join('');
+  const qb = (no, t, c, b, i) => `<div class="rp-q"><div class="t">${no} · ${t}</div><div class="c">${c}</div>${b.filter(Boolean).length ? `<ul class="b">${b.filter(Boolean).map(x => `<li>${x}</li>`).join('')}</ul>` : ''}${i ? `<div class="i">${i}</div>` : ''}</div>`;
   const p1 = `<section class="rp-page">${run(2)}
     <h2 class="first">이번 주 분석 <small>${rpWeekName(D.mon)} · ${period} · 전주 대비</small></h2>
-    <div class="rp-hl" style="margin:1mm 0 6mm">${headline}</div>
+    <div class="rp-hl" style="margin:1mm 0 5mm">${headline}</div>
     <div class="rp-qs">
-      ${qb(1, '신작, 차트 재진입한 게임들의 성적은?', q1c, q1e)}
-      ${qb(2, '매출이 급등한 게임은?', q2c, q2e)}
-      ${qb(3, '안정적인 흐름으로 유지되고 있는 게임은?', q3c, q3e)}
-      ${qb(4, 'TOP5 내 변경점이 있는지?', q4c, q4e)}
+      ${qb(1, '신작, 차트 재진입한 게임들의 성적은?', q1c, q1b, q1i)}
+      ${qb(2, '매출이 급등한 게임은?', q2c, q2b, q2i)}
+      ${qb(3, '안정적인 흐름으로 유지되고 있는 게임은?', q3c, q3b, q3i)}
+      ${qb(4, 'TOP5 내 변경점이 있는지?', q4c, q4b, q4i)}
     </div>
     <h2>유형 흐름 <small>매출 30위 안 게임 수 · 전주 대비</small></h2>
     <div class="rp-t4s">${t4}</div>
     <div class="rp-rel-line">${relPt}</div>
+    ${sum ? `<div class="rp-sum"><div class="h">정리</div><ul>${sum}</ul></div>` : ''}
     ${foot}</section>`;
 
   /* 3쪽 순위표: # · 게임(아이콘 + 이름 한 줄) · 순위(7일 평균) · 증감 */
