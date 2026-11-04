@@ -73,6 +73,7 @@ s = re.sub(r'\x00KEEP(\d+)\x00', lambda m: KEEP[int(m.group(1))], s)   # 리포�
 
 # 3) 그 밖의 다크 전용 설정
 once('color-scheme: dark;', 'color-scheme: light;')
+once('<meta name="color-scheme" content="dark">', '<meta name="color-scheme" content="light">')
 once('<meta name="theme-color" content="#f7f8fa">', '<meta name="theme-color" content="#ffffff">')
 # 그림자는 흰 바탕에서 훨씬 옅게 · 로고 타일은 원래 연보라 · 애플 아이콘은 선택된(보라) 버튼 위에서 흰색
 once('</head>', """<style>/* 라이트 보정 (tools/build_light.py) */

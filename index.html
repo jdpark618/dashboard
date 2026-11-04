@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- 이 페이지가 직접 다크를 지원한다고 브라우저에 먼저 알림 → 모바일 브라우저 '강제 다크모드'가 색·아이콘을 한 번 더 뒤집지 않음 -->
+<meta name="color-scheme" content="dark">
 <title>ChartDeck</title>
 <!-- 링크 미리보기 (카카오톡·슬랙·트위터 등): 이미지는 절대 주소, 바꿀 때는 ?v= 숫자를 올려 캐시 갱신 -->
 <meta name="description" content="구글 플레이·애플 앱스토어 글로벌 게임 순위를 매일 한눈에. 한국·미국·일본·대만 매출·인기 차트와 신작 달력, 시장 분석까지.">
@@ -27,7 +29,9 @@
    고른 테마가 이 파일과 다르면 그리기 전에 그쪽 파일로 (주소 뒤 ?·# 는 그대로) */
 const PAGE_THEME = 'dark';
 function themeUrl(t){ const u = new URL(location.href); u.pathname = u.pathname.replace(/(index\.html|light\.html)?$/, t === 'light' ? 'light.html' : ''); return u.toString(); }
-(() => { let t = 'dark'; try{ t = localStorage.getItem('gmi.theme') || 'dark'; }catch(e){} if(t !== PAGE_THEME) location.replace(themeUrl(t)); })();
+/* 고른 적이 없으면 기기(OS) 설정을 따름. 토글로 고르면 그 선택이 우선 */
+function osTheme(){ try{ return matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; }catch(e){ return 'dark'; } }
+(() => { let t = null; try{ t = localStorage.getItem('gmi.theme'); }catch(e){} t = t || osTheme(); if(t !== PAGE_THEME) location.replace(themeUrl(t)); })();
 document.documentElement.dataset.theme = PAGE_THEME;
 function setTheme(t){ try{ localStorage.setItem('gmi.theme', t); }catch(e){} location.replace(themeUrl(t)); }
 /* 스위치: 캡슐을 먼저 옮기고(0.18초) 그 테마 파일로 */
