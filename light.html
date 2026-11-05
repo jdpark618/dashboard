@@ -332,6 +332,11 @@ html.sb-mini .sb-rep .hd-new { position:absolute; top:3px; right:2px; margin:0; 
 .gd-ctab2 td.gd-cc[onclick] { cursor:pointer; } .gd-ctab2 td.gd-cc[onclick]:hover { background:#eef2f6; }
 .gd-ctab2 td.on { background:#ece9ff; }
 .gd-ctab2 td.off { opacity:.55; }
+/* 국가 × 스토어 표 높이 압축 (11/05 A2): 머리글 2줄은 유지하고 여백만 줄임 + 스토어 이름 줄과 매출·인기 줄 사이 구분선 */
+.gd-ctab2 thead tr:first-child th { padding-top:6px; padding-bottom:6px; }
+.gd-ctab2 thead tr:nth-child(2) th { padding-top:4px; padding-bottom:4px; font-size:11px; }
+.gd-ctab2 thead tr:first-child th.gd-sh { border-bottom:1px solid rgba(203,213,225,.55); }
+.gd-ctab2 tbody td { padding-top:6px; padding-bottom:6px; }
 #gdCty { display:inline-flex; gap:6px; }
 #gdCty .mk-seg button { min-width:32px; justify-content:center; padding:0 8px; font-size:11.5px; }
 #gdCty .mk-seg button[disabled] { opacity:.35; cursor:not-allowed; }
@@ -1030,6 +1035,8 @@ body, main { background:#f6f7f9 !important; }
 .card { background:#ffffff !important; border-color:#e6e8ed !important; box-shadow:none !important; transition:box-shadow .15s; }
 .card:hover { box-shadow:0 2px 8px rgba(15,23,42,.05) !important; }   /* 그림자는 마우스를 올렸을 때만 약하게 */
 .card thead.bg-slate-900 { background:#ffffff !important; }   /* 카드 안 고정 표 머리 = 카드 색 */
+.gd-ctab2 thead tr:first-child th.gd-sh { border-bottom-color:#e3e5ea !important; }   /* 상세 표: 스토어 이름 줄 ↔ 매출·인기 줄 구분선 */
+.gs-tab.on { background:#5046c8 !important; color:#ffffff !important; }   /* 순위 비교 검색 드롭다운 탭: 다른 선택 버튼과 같은 진한 보라 + 흰 글자 (다크용 흰 글자가 연보라 위에서 안 보이던 것) */
 .rank-chip { background:#f6f7f9 !important; border-color:#e6e8ed !important; color:#37352f !important; }   /* 흰 카드 안 순위 칩: 연회색 칩 */
 .summary-card-hover:hover, .wl-row:hover, .cal-row:hover, [class*="hover:bg-slate-8"]:hover { background:#f8f9fb !important; }   /* 행 Hover */
 :root { --line:#e6e8ed !important; }
@@ -1676,7 +1683,7 @@ document.querySelectorAll('.sc-store button').forEach(b => { const on = b.datase
   <section class="card rounded-xl p-5 space-y-3">
     <div class="gs-wrap">
       <i class="fa-solid fa-magnifying-glass srch-ic" aria-hidden="true"></i>
-      <input id="searchQuery" placeholder="게임 검색 · 비워 두고 누르면 TOP 10" autocomplete="off" class="srch-in">
+      <input id="searchQuery" placeholder="게임 검색" autocomplete="off" class="srch-in">
       <span class="gs-clear hidden" data-for="searchQuery" title="검색어 지우기"><i class="fa-solid fa-xmark"></i></span>
     </div>
     <div id="searchChips" class="gs-chips"></div>
@@ -2947,7 +2954,6 @@ function daysBetween(a, b){ return Math.round((dateValue(b) - dateValue(a)) / 86
 async function openSearchView(){
   searchApplyHashOnce(); /* #search?g=...&p=... 링크로 들어온 경우 */
   loadGameIndex(); /* 전체 기간 게임명 인덱스는 백그라운드로 준비 (차트 렌더를 막지 않음) */
-  gsApplyDefaultSelection();
   await ensureSearchRangeLoaded();
 }
 
@@ -3370,7 +3376,7 @@ const SEARCH_MAX_GAMES = 5;
 const SEARCH_CHIP_PALETTE = ['#c084fc', '#f472b6', '#0891b2', '#4d7c0f', '#fb923c']; /* 매출·인기·상승·하락 색과 겹치지 않게 */
 let searchSelected = [];          /* 선택한 게임명 (칩 순서 = 차트 순서) */
 const searchColorOf = {};         /* gameKey -> 고정 색상 */
-let searchDefaultApplied = false; /* 최초 진입 시 매출 TOP3 기본 선택은 한 번만 */
+let searchDefaultApplied = false; /* (예전 기본 선택용 표시, 지금은 처음에 아무것도 선택하지 않음) */
 let gsTab = 'sales';              /* 드롭다운 기본 탭: 매출 TOP 10 */
 let gsOpen = false;
 let gsItems = [];
@@ -3393,19 +3399,6 @@ function gsToggle(name){
   gsRenderChips();
   if(gsOpen) gsRender();
   ensureSearchRangeLoaded(); /* 칩이 바뀔 때만 차트 갱신 (필요하면 과거 월 로드) */
-}
-
-function gsApplyDefaultSelection(){
-  if(searchDefaultApplied || searchSelected.length) return;
-  const top = gsTopList('sales', 3);
-  if(!top.length) return; /* 데이터 도착 전이면 다음 진입 때 적용 */
-  searchDefaultApplied = true;
-  top.forEach(n => {
-    const used = new Set(Object.values(searchColorOf));
-    searchColorOf[getGameKey(n)] = SEARCH_CHIP_PALETTE.find(c => !used.has(c));
-    searchSelected.push(n);
-  });
-  gsRenderChips();
 }
 
 function gsRenderChips(){
@@ -3458,7 +3451,7 @@ function gsRender(limitHit = false){
   /* 안내 문구는 상단 고정 헤더에 둔다 (스크롤 없이 바로 보이도록). 5개 제한 경고도 같은 자리 */
   const hint = full
     ? `<div class="gs-hint${limitHit ? ' warn' : ''}"><i class="fa-solid fa-circle-info mr-1"></i>최대 ${SEARCH_MAX_GAMES}개까지 선택됨 · 칩을 빼고 추가하세요</div>`
-    : `<div class="gs-hint">${raw ? '여러 개 체크 가능 · Esc로 닫기' : '여러 개 체크 가능 · 다른 게임은 이름을 입력해 검색 (과거 100위권 포함)'}</div>`;
+    : `<div class="gs-hint">${raw ? '여러 개 체크 가능 · Esc로 닫기' : '게임 이름 검색 시 자동완성 지원 (과거 TOP100위 이력이 있는 게임만)'}</div>`;
 
   if(!raw){
     const list = gsTopList(gsTab === 'sales' ? 'sales' : 'popular', 10);
@@ -3648,6 +3641,10 @@ function searchSort(key){
 }
 function renderSearchSummary(stats, dates){
   const box = document.getElementById('searchSummary');
+  if(!box.dataset.bound){   /* 게임 줄(표·모바일 카드)을 누르면 게임 상세 — 정렬 머리글 클릭은 제외 */
+    box.dataset.bound = '1';
+    box.addEventListener('click', e => { const g = e.target.closest('[data-game]'); if(g && box.contains(g)) openGameDetail(g.dataset.game); });
+  }
   if(!stats.length){
     box.innerHTML = `<div class="py-6 text-center"><div class="text-xs muted mb-3">비교할 게임을 검색하거나 바로 골라 보세요</div>
       <div class="flex flex-wrap justify-center gap-2">
