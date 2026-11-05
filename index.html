@@ -3617,6 +3617,9 @@ function renderSearchSummary(stats, dates){
   const list = stats.slice().sort((a, b) => dir * sorters[key](a, b));
   const dot = s => `<span class="inline-block w-2.5 h-2.5 rounded-full shrink-0" style="background:${s.color}"></span>`;
   const scoreHtml = s => s.score != null ? `<span class="text-slate-200">★ ${s.score.toFixed(1)}</span>${s.scoreChange ? ` <span class="text-[11px] ${s.scoreChange > 0 ? 'rank-up' : 'rank-down'}">${s.scoreChange > 0 ? '▲' : '▼'}${Math.abs(s.scoreChange).toFixed(1)}</span>` : ''}` : '<span class="muted">-</span>';
+  /* 일수 칸: '매출 N일 · 인기 N일' — 0일은 흐리게 */
+  const dayOne = (v, cls, lb) => `<span class="text-[11px] muted">${lb}</span> ${v ? `<b class="${cls}">${v}</b><span class="text-[11px] muted">일</span>` : '<span class="muted">0일</span>'}`;
+  const dayPair = (a, b) => `${dayOne(a, 't-sales', '매출')}<span class="muted mx-1.5">·</span>${dayOne(b, 't-pop', '인기')}`;
   const best = x => x.best != null ? `${x.best}위<div class="text-[11px] muted">${mkShort(x.bestDate)}</div>` : '<span class="muted">-</span>';
   if(innerWidth < 640){
     box.innerHTML = `<div class="space-y-2">${list.map(s => `
@@ -3631,15 +3634,15 @@ function renderSearchSummary(stats, dates){
   }
   const th = (label, k, cls = '') => `<th class="py-2 px-2 ${cls} cursor-pointer select-none hover:text-slate-200 ${key === k ? 'text-indigo-300' : ''}" onclick="searchSort('${k}')" aria-sort="${key === k ? (dir > 0 ? 'ascending' : 'descending') : 'none'}">${label}${key === k ? `<i class="fa-solid fa-sort-${dir > 0 ? 'up' : 'down'} ml-1 text-[9px]"></i>` : ''}</th>`;
   box.innerHTML = `<div class="overflow-x-auto scrollbar"><table class="w-full min-w-[800px] text-left text-xs">
-    <thead><tr class="border-b border-slate-800 text-[11px] muted">${th('게임', 'name', 'pl-1')}${th('매출 (기간 변화)', 'sales', 'text-right')}${th('인기 (기간 변화)', 'popular', 'text-right')}${th('최고 매출', 'bestS', 'text-right')}${th('최고 인기', 'bestP', 'text-right')}${th('TOP100 일수 매출·인기', 'days', 'text-right')}${th('TOP10 일수 매출·인기', 'top10', 'text-right')}${th('평점', 'score', 'text-right pr-1')}</tr></thead>
+    <thead><tr class="border-b border-slate-800 text-[11px] muted">${th('게임', 'name', 'pl-1')}${th('매출 (기간 변화)', 'sales', 'text-right')}${th('인기 (기간 변화)', 'popular', 'text-right')}${th('최고 매출', 'bestS', 'text-right')}${th('최고 인기', 'bestP', 'text-right')}${th(`TOP100 일수 <span class="font-normal">(${dates.length}일 중)</span>`, 'days', 'text-right')}${th('TOP10 일수', 'top10', 'text-right')}${th('평점', 'score', 'text-right pr-1')}</tr></thead>
     <tbody>${list.map(s => `<tr class="border-b border-slate-900 hover:bg-slate-800/50 cursor-pointer" data-game="${escapeAttr(s.name)}">
       <td class="py-2.5 pl-1 pr-2"><div class="flex items-center gap-2 min-w-0">${dot(s)}${mkIcon(s.name)}<span class="font-medium text-slate-100 truncate">${escapeHtml(s.name)}</span></div></td>
       <td class="py-2.5 px-2 text-right whitespace-nowrap">${searchRankCell(s.sales, 't-sales')}</td>
       <td class="py-2.5 px-2 text-right whitespace-nowrap">${searchRankCell(s.popular, 't-pop')}</td>
       <td class="py-2.5 px-2 text-right">${best(s.sales)}</td>
       <td class="py-2.5 px-2 text-right">${best(s.popular)}</td>
-      <td class="py-2.5 px-2 text-right whitespace-nowrap">${s.sales.days} · ${s.popular.days}<span class="muted"> / ${dates.length}일</span></td>
-      <td class="py-2.5 px-2 text-right whitespace-nowrap">${s.sales.top10 || s.popular.top10 ? `${s.sales.top10} · ${s.popular.top10}<span class="muted">일</span>` : '<span class="muted">-</span>'}</td>
+      <td class="py-2.5 px-2 text-right whitespace-nowrap">${dayPair(s.sales.days, s.popular.days)}</td>
+      <td class="py-2.5 px-2 text-right whitespace-nowrap">${s.sales.top10 || s.popular.top10 ? dayPair(s.sales.top10, s.popular.top10) : '<span class="muted">-</span>'}</td>
       <td class="py-2.5 pr-1 pl-2 text-right whitespace-nowrap">${scoreHtml(s)}</td>
     </tr>`).join('')}</tbody></table></div>
     <p class="text-[11px] muted mt-2">기간 변화 = 시작일 대비 마지막 날 · 행을 누르면 게임 상세</p>`;
@@ -4143,7 +4146,7 @@ function filterCurrentTable(){
         <td class="px-4 py-2.5 whitespace-nowrap">${escapeHtml(rDate)}</td>
         <td class="px-4 py-2.5 whitespace-nowrap">${escapeHtml(rRank)}</td>
         <td class="px-4 py-2.5 whitespace-nowrap">${escapeHtml(rChange)}</td>
-        <td class="px-4 py-2.5 whitespace-nowrap">${rScore !== '-' ? `<span class="text-amber-400 font-semibold"><i class="fa-solid fa-star text-[11px] mr-1"></i>${escapeHtml(rScore)}</span>` : '-'}</td>
+        <td class="px-4 py-2.5 whitespace-nowrap">${rScore !== '-' ? `<span><i class="fa-solid fa-star text-[11px] mr-1 muted"></i>${escapeHtml(rScore)}</span>` : '-'}</td>
         <td class="px-4 py-2.5 whitespace-nowrap">${escapeHtml(gName)}</td>
         <td class="px-4 py-2.5 whitespace-nowrap">${escapeHtml(String(isNew ? (r[5]||'') : (r[4]||'')))}</td>
         <td class="px-4 py-2.5 whitespace-nowrap">${escapeHtml(String(isNew ? (r[6]||'') : (r[5]||'')))}</td>
