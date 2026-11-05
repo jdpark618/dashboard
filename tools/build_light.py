@@ -69,7 +69,6 @@ s = s.replace('color:#ffffff', 'color:#2e2878')
 s = '\n'.join(l if ('hd-new' in l or 'rp-' in l) else re.sub(r'color:#fff\b', 'color:#0f172a', l) for l in s.split('\n'))
 s = s.replace('hover:text-white', 'hover:text-slate-50')
 once("ctx.fillStyle = p.hl ? '#ffffff'", "ctx.fillStyle = p.hl ? '#0f172a'")
-s = re.sub(r'\x00KEEP(\d+)\x00', lambda m: KEEP[int(m.group(1))], s)   # 리포트 구간 원래대로
 
 # 3) 그 밖의 다크 전용 설정
 once('color-scheme: dark;', 'color-scheme: light;')
@@ -100,5 +99,32 @@ once('</head>', """<style>/* 라이트 보정 (tools/build_light.py) */
 .gd-ctab2 td.on { background:#f1efff !important; }
 </style>
 </head>""")
+# 4) 노션풍 따뜻한 회색 (2026-11-04): 위에서 만든 차가운 slate 뉴트럴 → 따뜻한 회색, 상단·우측 페이지 흰색 + 사이드바·카드는 연회색 면
+WARM = {
+    '#0f172a': '#37352f', '#1e293b': '#37352f', '#273449': '#45433d', '#334155': '#55534e', '#64748b': '#787774', '#94a3b8': '#a5a4a0',
+    '#cbd5e1': '#dad9d6', '#e2e8f0': '#e9e9e7', '#e8ecf2': '#ececea', '#eef2f6': '#f1f1ef', '#f1f5f9': '#f1f1ef', '#f7f8fa': '#f7f7f5',
+    '#f8fafc': '#fafaf9', '#fafafc': '#f7f7f5', '#fbfcfd': '#fbfbfa', '#fafbfc': '#fbfbfa',
+}
+s = re.sub(r'#[0-9a-fA-F]{6}\b', lambda m: WARM.get(m.group(0).lower(), m.group(0)), s)
+WARM_RGBA = {'226,232,240': '233,233,231', '241,245,249': '241,241,239', '203,213,225': '218,217,214', '100,116,139': '120,119,116',
+             '247,248,250': '247,247,245', '148,163,184': '165,164,160', '15,23,42': '15,15,15', '16,24,40': '15,15,15'}
+s = re.sub(r'rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)', lambda m: 'rgba(' + WARM_RGBA.get(f'{m.group(1)},{m.group(2)},{m.group(3)}', f'{m.group(1)},{m.group(2)},{m.group(3)}'), s)
+s = s.replace('border-bottom:1px solid rgba(241,241,239,.8)', 'border-bottom:1px solid #e6e5e1')   # 카드 머리·달력 행 구분선: 회색 카드 위에서도 보이게
+once('</head>', """<style>/* 노션풍 프레임 (tools/build_light.py) — 상단 + 우측 페이지 흰색, 사이드바·카드 따뜻한 연회색 */
+body, main { background:#ffffff !important; }
+.top-bar { background:#ffffff !important; }
+.side-nav { background:#f7f7f5 !important; }
+.card { background:#f7f7f5 !important; border-color:#e6e5e1 !important; box-shadow:none !important; }
+.card thead.bg-slate-900 { background:#f7f7f5 !important; }
+.rank-chip { background:#ffffff !important; border-color:#e3e2de !important; color:#37352f !important; }   /* 회색 카드 안 순위 칩: 흰 칩 + 옅은 테두리로 또렷하게 */   /* 카드 안 고정 표 머리(순위 변동 등)가 흰 띠로 뜨지 않게 */
+:root { --line:#e6e5e1 !important; }
+/* 선: 원래 라이트에서 안 보이던 흰 선은 계속 안 보이게, 보이던 선만 같은 대비로 */
+[class*="border-slate-9"] { border-color:transparent !important; }
+[class*="divide-slate-9"] > :not(:first-child) { border-color:transparent !important; }
+[class*="border-slate-8"] { border-color:#ebeae6 !important; }
+[class*="border-slate-7"] { border-color:#e3e2de !important; }
+</style>
+</head>""")
+s = re.sub(r'\x00KEEP(\d+)\x00', lambda m: KEEP[int(m.group(1))], s)   # 리포트 구간 원래대로 (모든 변환이 끝난 뒤)
 open(dst, 'w', encoding='utf-8', newline='\n').write(s)
 print(f'light.html 생성 ({len(s):,}자)')
