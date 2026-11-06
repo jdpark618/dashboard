@@ -3642,13 +3642,30 @@ async function openAdsView(){
   if(!adsSel){ try{ const v = JSON.parse(sessionStorage.getItem('gmi.ads') || 'null'); if(v?.pkg && adsIndex.some(x => x.pkg === v.pkg)){ adsSel = v.pkg; adsMedia = v.media || null; } }catch(e){} }
   if(adsSel) return adsOpen(adsSel);
   D.classList.add('hidden'); L.classList.remove('hidden');
-  L.innerHTML = !adsIndex.length ? mkEmpty('아직 추적한 게임이 없습니다.') : `<div class="card rounded-xl p-5">
-    <div class="mk-card-head"><div><h3 class="font-semibold text-sm">추적한 게임</h3><p class="text-[11px] muted mt-1">한국 · Meta 광고 라이브러리 · Google 광고 투명성 센터 · 게임을 누르면 상세</p></div></div>
-    <div class="grid gap-3" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr))">${adsIndex.map(x => `
+  if(!adsIndex.length){ L.innerHTML = mkEmpty('아직 추적한 게임이 없습니다.'); return; }
+  L.innerHTML = `<div class="card rounded-xl p-5">
+    <div class="mk-card-head flex-wrap gap-3"><div><h3 class="font-semibold text-sm">추적한 게임 <span class="muted font-normal" id="adsListN"></span></h3><p class="text-[11px] muted mt-1">한국 · Meta 광고 라이브러리 · Google 광고 투명성 센터 · 게임을 누르면 상세</p></div>
+      <div class="flex flex-wrap items-center gap-2"><input id="adsListQ" type="search" placeholder="게임 이름 · 패키지 검색" value="${escapeAttr(adsListQ)}" oninput="adsListQ=this.value;adsListShow=ADS_LIST_PAGE;adsRenderList()" class="h-8 w-56 rounded-md border border-slate-800 bg-slate-900 px-2.5 text-xs">
+        <div class="mk-seg" role="group" aria-label="정렬">${[['recent', '최근 추적'], ['name', '이름순'], ['ads', '소재 많은 순']].map(([k, lb]) => `<button type="button" data-k="${k}" onclick="adsListSort='${k}';adsRenderList()">${lb}</button>`).join('')}</div></div></div>
+    <div id="adsListGrid"></div></div>`;
+  adsRenderList();
+}
+/* 추적한 게임 목록 (11/06): 매일 추적하면 계속 쌓이므로 검색 · 정렬 · 24개씩 더 보기 */
+const ADS_LIST_PAGE = 24;
+let adsListQ = '', adsListSort = 'recent', adsListShow = ADS_LIST_PAGE;
+function adsRenderList(){
+  const G = document.getElementById('adsListGrid'); if(!G || !adsIndex) return;
+  document.querySelectorAll('#adsList .mk-seg button').forEach(b => { const on = b.dataset.k === adsListSort; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+  const nz = v => String(v || '').replace(/[\s:：·\-]/g, '').toLowerCase(), q = nz(adsListQ);
+  let L = adsIndex.filter(x => !q || nz(x.name).includes(q) || nz(x.pkg).includes(q));
+  L = L.slice().sort(adsListSort === 'name' ? (a, b) => a.name.localeCompare(b.name, 'ko') : adsListSort === 'ads' ? (a, b) => (b.meta + b.google) - (a.meta + a.google) : (a, b) => b.tracked_at.localeCompare(a.tracked_at));
+  document.getElementById('adsListN').textContent = q ? `${L.length} / ${adsIndex.length}개` : `${adsIndex.length}개`;
+  if(!L.length){ G.innerHTML = `<div class="text-xs muted py-6 text-center">'${escapeHtml(adsListQ)}'에 맞는 게임이 없습니다.</div>`; return; }
+  G.innerHTML = `<div class="grid gap-3" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr))">${L.slice(0, adsListShow).map(x => `
       <button type="button" class="text-left rounded-xl border border-slate-800 bg-slate-900/40 hover:bg-slate-800/60 p-3.5 min-w-0" onclick="adsOpen('${escapeAttr(x.pkg)}')">
         <div class="flex items-center gap-2.5 min-w-0">${mkIcon(x.name)}<div class="min-w-0"><div class="text-[13px] font-semibold text-slate-100 truncate">${escapeHtml(x.name)}</div><div class="text-[11px] muted truncate">${escapeHtml(x.pkg)}</div></div></div>
         <div class="flex items-center gap-3 mt-3 text-xs"><span><span class="muted">Meta</span> <b class="rk-v">${x.meta}</b><span class="muted">${x.meta_total > x.meta ? ` / ${x.meta_total}` : ''}</span></span><span><span class="muted">Google</span> <b class="rk-v">${x.google}</b></span><span class="ml-auto text-[11px] muted">${x.tracked_at.slice(5, 10).replace('-', '/')} 추적</span></div>
-      </button>`).join('')}</div></div>`;
+      </button>`).join('')}</div>${L.length > adsListShow ? `<div class="text-center mt-4"><button type="button" class="more-btn" onclick="adsListShow+=ADS_LIST_PAGE;adsRenderList()">더 보기 (${L.length - adsListShow}개 남음)</button></div>` : ''}`;
 }
 async function adsOpen(pkg){
   if(adsSel !== pkg) adsMedia = null;
@@ -3801,7 +3818,7 @@ function adsRenderDetail(R){
   const ma = (M.ads || []).filter(x => adsDay(x.start) <= T), ga = (G.ads || []).filter(x => adsDay(x.first) <= T);
   /* 매체별 소재 정리 (개요 · Meta · Google 탭이 같이 씀) */
   const tpl = v => /\{\{.*\}\}/.test(v || '');   /* 카탈로그(DCO) 광고의 {{product.name}} 같은 틀 문구는 실제 문구가 아님 */
-  const mItems = ma.map(x => { const a0 = adsDay(x.start), seenD = x.seen ? adsDay(x.seen) : tk, act = x.active && seenD >= tk - 1, e = act ? tk : x.active ? seenD : adsDay(x.end || x.start),   /* 마지막 추적에서 다시 확인된 활성 소재만 집행 중 (seen 없으면 예전 데이터라 추적일로 봄) */ a1 = Math.min(e, T), live = e >= T, dur = a1 - a0 + 1, real = !tpl(x.body) && !tpl(x.title);
+  const mItems = ma.map(x => { const a0 = adsDay(x.start), seenD = x.seen ? adsDay(x.seen) : tk, act = x.active && seenD >= tk - 2, e = act ? tk : x.active ? seenD : adsDay(x.end || x.start),   /* 최근 3일 안의 추적에서 다시 확인된 활성 소재만 집행 중 (Google 과 같은 3일 여유 · 30개 한도로 하루 빠지는 소재 보호 · seen 없으면 예전 데이터라 추적일로 봄) */ a1 = Math.min(e, T), live = e >= T, dur = a1 - a0 + 1, real = !tpl(x.body) && !tpl(x.title);
     return { a0, a1, dur, live, win: live && dur >= ADS_WIN, fmtL: x.fmt === 'VIDEO' ? '영상' : x.fmt === 'DCO' ? '카탈로그' : '이미지', storeL: x.store === 'Play' ? 'Android' : x.store === 'iOS' ? 'iOS' : '', key: real ? x.body + '\u0001' + x.title : '', copy: real ? [x.title || x.body, x.title ? x.body : ''].filter(Boolean) : [],
       thumb: img(x.thumb), url: `https://www.facebook.com/ads/library/?id=${x.id}`, badges: [x.store, live ? null : '관측 종료'].filter(Boolean), dt: `${adsKst(x.start)}~`, sub: live ? `최근 확인 · ${dur}일` : `${dur}일` }; });
   /* Google 문구 정리: 게임 이름(또는 이름이 두 줄로 쪼개진 조각) · 스토어 카드 라벨 · 깨진 HTML 문자(x22, x26quot; 등) 제거 → 실제 광고 문구만.
