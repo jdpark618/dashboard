@@ -212,7 +212,7 @@ body { background:var(--bg); font-family:'Pretendard Variable',Pretendard,-apple
 /* 하위 메뉴 (시장 분석): 아이콘 중심선 위치에 세로선, 선택 항목은 보라 글자 + 굵은 선 */
 /* 주간 리포트: 메뉴와 같은 모양, 새 리포트면 NEW (접힘 상태는 아이콘 모서리) */
 .sb-rep { margin-top:4px; }
-.sb-rep .hd-new { margin-left:auto; margin-right:10px; }
+.sb-rep .hd-new, .sb-hot .hd-new { margin-left:auto; margin-right:10px; }   /* 마케팅 추적 HOT: 신규 기능이라 당분간 고정 표시 (11/06) */
 .sb-cnt { margin-left:auto; margin-right:12px; font-size:11px; font-weight:600; color:#6f767b; }
 .sb-chev { margin-left:auto; margin-right:10px; display:inline-flex; }
 .sb-chev svg { width:15px; height:15px; transition:transform .22s ease; }
@@ -252,7 +252,7 @@ html.sb-mini .sb-wrap .sb-sub { display:none; }
 html.sb-mini .sb-group { color:transparent; }
 html.sb-mini .sb-group:not(:first-child)::after { content:''; position:absolute; left:8px; right:8px; top:50%; border-top:1px solid #292f33; }
 html.sb-mini .sb-group.raw::before { display:none; }
-html.sb-mini .sb-rep .hd-new { position:absolute; top:3px; right:2px; margin:0; padding:0 3px; font-size:9px; line-height:14px; }
+html.sb-mini .sb-rep .hd-new, html.sb-mini .sb-hot .hd-new { position:absolute; top:3px; right:2px; margin:0; padding:0 3px; font-size:9px; line-height:14px; }
 /* 넓은 화면은 사이드바가 시장 분석 섹션 메뉴 역할 → 페이지 안 탭은 숨김 (좁은 화면은 그대로) */
 #mkSectionTabs { display:none; }
 /* 섹션이 다른 화면처럼 위 바 바로 아래(같은 간격)에서 시작 */
@@ -1035,6 +1035,7 @@ html[data-theme="light"] .theme-seg:not(.to-dark) button[data-t="light"], html[d
     <div class="sb-group">모니터링</div>
     <button class="sb-item" data-view="dashboard" onclick="switchView('dashboard')" data-tip="일간 요약"><i data-lucide="gauge"></i><span class="sb-tx">일간 요약</span></button>
     <button id="reportBtn" class="sb-item sb-rep kr-only" data-view="report" onclick="openReport()" data-tip="주간 리포트"><i data-lucide="file-chart-column"></i><span class="sb-tx">주간 리포트</span><span id="reportNew" class="hd-new hidden">NEW</span></button>
+    <button class="sb-item sb-hot" data-view="ads" onclick="switchView('ads')" data-tip="마케팅 추적"><i data-lucide="megaphone"></i><span class="sb-tx">마케팅 추적</span><span class="hd-new">HOT</span></button>
     <button class="sb-item" data-view="watch" onclick="switchView('watch')" data-tip="관심 게임"><i data-lucide="star"></i><span class="sb-tx">관심 게임</span><span id="sbWatchN" class="sb-tx sb-cnt"></span></button>
     <div class="sb-group raw">분석</div>
     <button class="sb-item" data-view="global" onclick="switchView('global')" data-tip="글로벌 순위"><i data-lucide="globe"></i><span class="sb-tx">글로벌 순위</span></button>
@@ -1047,7 +1048,6 @@ html[data-theme="light"] .theme-seg:not(.to-dark) button[data-t="light"], html[d
       <div class="sb-sub"><button type="button" data-go="biz:structure" onclick="sbGo('biz:structure')">시장 구조</button><button type="button" data-go="biz:change" onclick="sbGo('biz:change')">변동 추적</button><button type="button" data-go="biz:debut" onclick="sbGo('biz:debut')">매출 패턴</button><button type="button" data-go="biz:releases" onclick="sbGo('biz:releases')">신작 동향</button></div>
     </div>
     <button class="sb-item" data-view="search" onclick="switchView('search')" data-tip="순위 비교"><i data-lucide="chart-no-axes-combined"></i><span class="sb-tx">순위 비교</span></button>
-    <button class="sb-item" data-view="ads" onclick="switchView('ads')" data-tip="마케팅 추적"><i data-lucide="megaphone"></i><span class="sb-tx">마케팅 추적</span></button>
     <div class="sb-group">일정</div>
     <button class="sb-item" data-view="calendar" onclick="switchView('calendar')" data-tip="신작 달력"><i data-lucide="calendar-days"></i><span class="sb-tx">신작 달력</span></button>
     <button class="sb-item" data-view="events" onclick="switchView('events')" data-tip="행사 달력"><i data-lucide="calendar-range"></i><span class="sb-tx">행사 달력</span></button>
@@ -1780,6 +1780,7 @@ document.querySelectorAll('.sc-store button').forEach(b => { const on = b.datase
     <button type="button" data-sec="gdRank" onclick="gdGo('gdRank')">순위 추이</button>
     <button type="button" data-sec="gdScore" onclick="gdGo('gdScore')">평점 추이</button>
     <button type="button" data-sec="gdStats" onclick="gdGo('gdStats')">기간 분석</button>
+    <button type="button" data-sec="gdAds" onclick="gdGo('gdAds')" hidden>마케팅 추적</button>
     <button type="button" data-sec="gdPub" onclick="gdGo('gdPub')">같은 퍼블리셔</button>
   </nav>
   <div class="gd-main p-5">
@@ -1834,6 +1835,7 @@ document.querySelectorAll('.sc-store button').forEach(b => { const on = b.datase
       <h4 class="text-sm font-semibold mb-2">기간 분석 <span id="detailRangeLabel" class="text-[11px] muted font-normal ml-1">-</span></h4>
       <div id="detailStats"></div>
     </section>
+    <section id="gdAds" class="gd-page hidden"><div id="gdAdsBody"></div></section>
     <section id="gdPub" class="gd-page hidden"><div id="detailPubWrap" class="hidden">
       <h4 class="text-sm font-semibold mb-2">같은 퍼블리셔의 TOP100 게임 <span id="detailPubName" class="text-[11px] muted font-normal ml-1"></span></h4>
       <div id="detailPubList" class="space-y-1"></div>
@@ -3772,9 +3774,9 @@ function adsJump(k, url){
 }
 function adsSetMedia(m){ adsMedia = m; adsKeep(); if(adsSel && adsCache[adsSel]) adsRenderDetail(adsCache[adsSel]); }
 function adsSetAsOf(v){ const k = v ? Math.floor(Date.parse(v) / 86400000) : NaN, R = adsCache[adsSel], tk = Math.min(adsDay(Date.now() / 1000), R ? adsDay(Date.parse(R.tracked_at) / 1000) : 1e9); adsAsOf = isNaN(k) || k >= tk ? null : k; if(adsSel && adsCache[adsSel]) adsRenderDetail(adsCache[adsSel]); }
-function adsRenderDetail(R){
-  const D = document.getElementById('adsDetail'), now = adsDay(Date.now() / 1000), tk = Math.min(now, adsDay(Date.parse(R.tracked_at) / 1000)), T = adsAsOf ?? tk, past = adsAsOf != null, img = f => f ? `${ADS_BASE}img/${encodeURIComponent(R.pkg)}/${f}` : '';
-  const cnt = (arr, f) => arr.reduce((m, x) => { const k = f(x); m[k] = (m[k] || 0) + 1; return m; }, {});
+/* 소재 정리 (마케팅 추적 화면 · 앱 상세 패널이 같이 씀) */
+function adsBuild(R, asOf = null){
+  const now = adsDay(Date.now() / 1000), tk = Math.min(now, adsDay(Date.parse(R.tracked_at) / 1000)), T = asOf ?? tk, past = asOf != null, img = f => f ? `${ADS_BASE}img/${encodeURIComponent(R.pkg)}/${f}` : '';
   const M = R.meta || {}, G = R.google || {};
   /* 기본 기준일 = 마지막 추적일(tk): 추적이 며칠 밀려도 집행 중인 소재가 '관측 종료'로 보이지 않게 (11/06)
      기준일 T 로 자르기: T 이후 시작한 소재 제외, 끝은 T 까지 */
@@ -3799,6 +3801,11 @@ function adsRenderDetail(R){
     if(th === -3){ const top = items.filter(c => c.live).sort((x, y) => y.dur - x.dur || (!!y.thumb - !!x.thumb)).slice(0, 3); items.forEach(c => { c.win = top.includes(c); }); th = top.length ? top.at(-1).dur : Infinity; }
     else items.forEach(c => { c.win = c.live && c.dur >= th; }); const wc = items.filter(c => c.key), life = adsLife(wc, c => c.key, c => c.a0, c => c.a1, c => c.live, th); return { items, wc, life, th, win: adsWinList(items, life) }; };
   const P = { meta: pack(mItems), google: pack(gItems) };
+  return { now, tk, T, past, img, M, G, ma, ga, P };
+}
+function adsRenderDetail(R){
+  const D = document.getElementById('adsDetail'), { now, tk, T, past, img, M, G, ma, ga, P } = adsBuild(R, adsAsOf);
+  const cnt = (arr, f) => arr.reduce((m, x) => { const k = f(x); m[k] = (m[k] || 0) + 1; return m; }, {});
   if(!['overview', 'meta', 'google'].includes(adsMedia)) adsMedia = 'overview';
   const t0 = Math.min(...[...(M.ads || []).map(x => adsDay(x.start)), ...(G.ads || []).map(x => adsDay(x.first))].filter(Number.isFinite), now);
   let h = `<div class="flex flex-wrap items-center gap-3"><button type="button" class="more-btn h-8" onclick="adsBack()"><i class="fa-solid fa-chevron-left mr-1.5"></i>목록</button>
@@ -4906,8 +4913,45 @@ function gdShotNav(){
 document.getElementById('gdShots').addEventListener('scroll', () => gdShotNav(), { passive: true });
 /* 게임 상세 메뉴: 누르면 그 페이지만 보임 (처음은 요약). 차트는 보일 때 크기를 다시 잡음 */
 let gdPage = 'gdPgSum';
+/* 앱 상세 패널 '마케팅 추적' (11/06): 추적한 적 있는 게임만 왼쪽 메뉴에 보이고, 개요와 같은 계산을 패널 폭으로 요약 */
+let gdAdsPkg = '';
+async function gdAdsCheck(name){
+  try{ if(!adsIndex) adsIndex = await (await fetch(ADS_BASE + 'index.json?t=' + Date.now())).json(); }catch(e){ return; }
+  const nz = v => String(v || '').replace(/[\s:：·\-]/g, '').toLowerCase(), gp = (typeof detailIds !== 'undefined' && detailIds?.gp) || (detailStore === 'gp' ? detailPkg : '');
+  const hit = (adsIndex || []).find(x => (gp && x.pkg === gp) || nz(x.name) === nz(name));
+  if(detailCurrentName !== name) return;   /* 그 사이 다른 게임을 열었으면 무시 */
+  gdAdsPkg = hit ? hit.pkg : ''; gdSpy();
+}
+async function gdAdsRender(){
+  const B = document.getElementById('gdAdsBody'); if(!B || !gdAdsPkg) return;
+  const pkg = gdAdsPkg; B.innerHTML = skBlocks(3);
+  try{ adsCache[pkg] = adsCache[pkg] || await (await fetch(`${ADS_BASE}${encodeURIComponent(pkg)}.json?t=${Date.now()}`)).json(); }
+  catch(e){ B.innerHTML = mkEmpty('마케팅 추적 결과를 불러오지 못했습니다.'); return; }
+  if(gdAdsPkg !== pkg) return;
+  const R = adsCache[pkg], { T, P, ma, ga } = adsBuild(R), LB = { meta: 'Meta', google: 'Google' };
+  const card = k => { const p = adsProfile(P[k], T, k), icon = `<i class="fa-brands fa-${k} mr-1.5 ${k === 'meta' ? 'text-sky-400' : 'text-emerald-400'}"></i>`;
+    if(!p) return `<div class="rounded-xl border border-slate-800 bg-slate-900/40 p-4 min-w-0 flex flex-col"><div class="text-[13px] font-semibold">${icon}${LB[k]}</div><div class="text-[14px] font-semibold mt-3">${LB[k]} 광고 확인 안 됨</div><div class="text-xs muted mt-1">소액 집행이거나 다른 매체(네이버·카카오 등) 위주일 수 있음</div></div>`;
+    const cyc = adsCycle(P[k].items, T), live = P[k].items.filter(c => c.live), mid = Math.max(0, p.live - p.r6 - p.long), rgb = k === 'meta' ? '37,137,232' : '32,201,151';
+    const parts = [['6주 내', p.r6, 1], ['6주~90일', mid, .6], ['90일+', p.long, .32]];
+    const top = live.slice().sort((a, b) => b.dur - a.dur || (!!b.thumb - !!a.thumb)).slice(0, 3);
+    const stat = (lb, v) => `<div class="rounded-md bg-slate-900/60 px-2 py-1.5 min-w-0"><div class="text-[10px] muted truncate">${lb}</div><div class="text-[14px] font-semibold rk-v leading-tight mt-0.5 truncate">${v}</div></div>`;
+    return `<div class="rounded-xl border border-slate-800 bg-slate-900/40 p-4 min-w-0 flex flex-col">
+      <div class="flex items-center justify-between gap-2"><div class="text-[13px] font-semibold">${icon}${LB[k]}</div><span class="ads-badge-${k} text-[11px] font-semibold px-2 py-0.5 rounded">${p.badge}</span></div>
+      <div class="border-l-[3px] pl-2.5 mt-2.5" style="border-left-color:${k === 'meta' ? '#2589E8' : '#20C997'}"><div class="text-[14px] font-semibold leading-snug">${p.head}</div><div class="text-[11px] muted mt-0.5">최근 6주 신규 ${p.trend} · ${p.p6} → ${p.n6}개</div></div>
+      <div class="grid grid-cols-4 gap-1.5 mt-3">${stat('집행 중', p.live)}${stat('위닝', p.win)}${stat('평균 유지', cyc[2][1] === '–' ? '–' : Math.round(parseFloat(cyc[2][1])) + '일')}${stat('교체 주기', cyc[0][1] === '–' ? '–' : String(cyc[0][1]).replace('약 ', '') + '일')}</div>
+      <div class="text-[11px] muted mt-3">집행 중 소재 나이</div>
+      <div class="flex gap-[2px] h-2 rounded-sm overflow-hidden mt-1.5">${p.live ? parts.filter(x => x[1]).map(x => `<div title="${x[0]} ${x[1]}개" style="width:${x[1] / p.live * 100}%;background:rgba(${rgb},${x[2]})"></div>`).join('') : '<div class="flex-1 bg-slate-800/60"></div>'}</div>
+      <div class="text-[11px] muted mt-1">${parts.map(x => `${x[0]} <b class="rk-v">${x[1]}</b>`).join(' · ')}</div>
+      ${top.length ? `<div class="text-[11px] muted mt-3">오래 집행 중인 소재</div><div class="grid grid-cols-3 gap-1.5 mt-1.5">${top.map(c => `<a href="${c.url}" target="_blank" rel="noopener" class="relative block aspect-square rounded-md bg-slate-950 overflow-hidden" ${c.thumb ? `style="background:url('${c.thumb}') center/cover no-repeat"` : ''} title="${escapeAttr(c.copy[0] || '')}">${c.thumb ? '' : '<span class="absolute inset-0 flex items-center justify-center text-[10px] muted">미리보기 없음</span>'}<span class="absolute left-1 bottom-1 text-[10px] font-semibold px-1.5 rounded bg-black/65 text-white">${c.dur.toLocaleString()}일</span></a>`).join('')}</div>` : ''}
+      ${p.latestTop ? `<div class="text-xs muted mt-3 truncate" title="${escapeAttr(p.latestTop)}">${p.rich ? '최근 문구' : '대표 문구'} · <span class="rk-v">${escapeHtml(p.latestTop)}</span></div>` : ''}</div>`; };
+  B.innerHTML = `<div class="flex flex-wrap items-baseline justify-between gap-2"><div><h4 class="text-sm font-semibold">마케팅 추적</h4><div class="text-[11px] muted mt-0.5">한국 · Meta ${ma.length} · Google ${ga.length} · ${R.tracked_at.slice(5, 10).replace('-', '/')} 추적</div></div>
+    <button type="button" class="text-[13px] font-bold ads-new hover:underline" onclick="gdAdsOpen('${escapeAttr(pkg)}')">상세 보기 &gt;</button></div>
+    <div class="grid gap-3 md:grid-cols-2 mt-3">${card('meta')}${card('google')}</div>`;
+}
+function gdAdsOpen(pkg){ try{ closeGameDetail(); }catch(e){} adsSel = pkg; adsMedia = 'overview'; try{ sessionStorage.setItem('gmi.ads', JSON.stringify({ pkg, media: 'overview' })); }catch(e){} switchView('ads'); }
 function gdGo(id){
   gdPage = id;
+  if(id === 'gdAds') gdAdsRender();
   document.querySelectorAll('#detailPanel .gd-page').forEach(pg => pg.classList.toggle('hidden', pg.id !== id));
   document.getElementById('detailPanel').scrollTop = 0;
   gdSpy();
@@ -4917,15 +4961,16 @@ function gdSpy(){
   const panel = document.getElementById('detailPanel');
   panel.style.setProperty('--gd-hd', `${panel.querySelector('.sticky.top-0').offsetHeight}px`);  /* 목차는 머리 바로 아래에 고정 */
   const pubEmpty = document.getElementById('detailPubWrap').classList.contains('hidden');
-  document.querySelectorAll('#gdToc button').forEach(b => { b.classList.toggle('on', b.dataset.sec === gdPage); b.hidden = b.dataset.sec === 'gdPub' && pubEmpty; });
+  document.querySelectorAll('#gdToc button').forEach(b => { b.classList.toggle('on', b.dataset.sec === gdPage); b.hidden = (b.dataset.sec === 'gdPub' && pubEmpty) || (b.dataset.sec === 'gdAds' && !gdAdsPkg); });
 }
 /* opts.pkg: 패키지명(없으면 이름으로 찾음) · opts.country: 그 나라 기준으로 열기 (사이트 나라는 그대로) */
 function openGameDetail(targetName, opts = {}) {
-  detailCurrentName = targetName; gdPage = 'gdPgSum';
+  detailCurrentName = targetName; gdPage = 'gdPgSum'; gdAdsPkg = '';
   detailStore = opts.store && STORES[opts.store] ? opts.store : STORE; detailCountry = COUNTRY;
   detailIds.gp = detailIds.ios = ''; detailLinked = false;
   detailIds[detailStore] = opts.pkg || (detailStore === STORE ? pkgOfName(targetName) : '');
   detailPkg = detailIds[detailStore];
+  gdAdsCheck(targetName);
   document.querySelectorAll('#detailPanel .gd-page').forEach(pg => pg.classList.toggle('hidden', pg.id !== 'gdPgSum'));
   syncDetailWatchBtn(targetName);
   document.querySelectorAll('#rkCols li[data-key]').forEach(li => li.classList.toggle('bg-indigo-500/15', li.dataset.key === getGameKey(targetName)));
