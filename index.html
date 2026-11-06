@@ -3668,7 +3668,7 @@ function adsTimeline(items, T, kind){
   let h = `<div class="flex items-baseline justify-between gap-2 mb-2"><div class="text-xs font-semibold">교체 이력 <span class="muted font-normal">최근 ${ADS_WEEKS}주 · 같은 주 투입 = 1세트</span></div>
     <div class="text-[11px] muted shrink-0"><span class="inline-block w-2 h-2 rounded-sm align-middle ads-on mr-1"></span>최근 확인 <span class="inline-block w-2 h-2 rounded-sm align-middle ads-off ml-2 mr-1"></span>관측 종료</div></div>
     <div class="ads-tl mb-1"><div class="ads-ml">${months.slice(1).map(o => `<span style="left:${o.i / ADS_WEEKS * 100}%"></span>`).join('')}<i class="ads-today" style="left:${X(T + 1)}%"></i></div>
-    <div class="ads-row" style="min-height:14px"><span></span><div class="relative h-[14px]"><span class="ads-today-lb" style="right:${100 - X(T + 1)}%">${adsDk(T)} ${T >= now ? '오늘' : '기준일'}</span></div></div>
+    <div class="ads-row" style="min-height:14px"><span></span><div class="relative h-[14px]"><span class="ads-today-lb" style="right:${100 - X(T + 1)}%">${adsDk(T)} ${adsAsOf != null ? '기준일' : T >= now ? '오늘' : '마지막 추적'}</span></div></div>
     <div class="ads-row"><span></span><div class="grid text-[11px] font-semibold" style="grid-template-columns:repeat(${ADS_WEEKS},minmax(0,1fr))">${months.map(o => `<span style="grid-column:span ${o.n}" class="pl-1">${o.m + 1}월</span>`).join('')}</div></div>
     <div class="ads-row"><span class="muted">주 (월요일 날짜)</span><div class="grid text-[10px] muted" style="grid-template-columns:repeat(${ADS_WEEKS},minmax(0,1fr))">${weeks.map(w => `<span class="pl-1 truncate">${adsDk(w)}주</span>`).join('')}</div></div>
     <div class="ads-row border-b border-slate-800 pb-1 mb-1"><span><span class="ads-new font-semibold">신규</span> <span class="muted">/ 관측 종료</span></span><div class="grid" style="grid-template-columns:repeat(${ADS_WEEKS},minmax(0,1fr))">${weeks.map(w => {
@@ -3725,18 +3725,19 @@ function adsGridHead(items, note){
   return `<div class="flex items-center justify-between mb-2"><div class="text-xs font-semibold">소재 <span class="muted font-normal">${note}</span></div>${n ? `<label class="text-[11px] muted flex items-center gap-1.5 cursor-pointer shrink-0"><input type="checkbox" onchange="this.closest('section').querySelector('.ads-grid').classList.toggle('ads-winonly',this.checked)">위닝만 보기 (${n})</label>` : ''}</div>`;
 }
 function adsSetMedia(m){ adsMedia = m; if(adsSel && adsCache[adsSel]) adsRenderDetail(adsCache[adsSel]); }
-function adsSetAsOf(v){ const k = v ? Math.floor(Date.parse(v) / 86400000) : NaN; adsAsOf = isNaN(k) || k >= adsDay(Date.now() / 1000) ? null : k; if(adsSel && adsCache[adsSel]) adsRenderDetail(adsCache[adsSel]); }
+function adsSetAsOf(v){ const k = v ? Math.floor(Date.parse(v) / 86400000) : NaN, R = adsCache[adsSel], tk = Math.min(adsDay(Date.now() / 1000), R ? adsDay(Date.parse(R.tracked_at) / 1000) : 1e9); adsAsOf = isNaN(k) || k >= tk ? null : k; if(adsSel && adsCache[adsSel]) adsRenderDetail(adsCache[adsSel]); }
 function adsRenderDetail(R){
-  const D = document.getElementById('adsDetail'), now = adsDay(Date.now() / 1000), T = adsAsOf ?? now, past = T < now, img = f => f ? `${ADS_BASE}img/${encodeURIComponent(R.pkg)}/${f}` : '';
+  const D = document.getElementById('adsDetail'), now = adsDay(Date.now() / 1000), tk = Math.min(now, adsDay(Date.parse(R.tracked_at) / 1000)), T = adsAsOf ?? tk, past = adsAsOf != null, img = f => f ? `${ADS_BASE}img/${encodeURIComponent(R.pkg)}/${f}` : '';
   const cnt = (arr, f) => arr.reduce((m, x) => { const k = f(x); m[k] = (m[k] || 0) + 1; return m; }, {});
   const M = R.meta || {}, G = R.google || {};
-  /* 기준일 T 로 자르기: T 이후 시작한 소재 제외, 끝은 T 까지 */
+  /* 기본 기준일 = 마지막 추적일(tk): 추적이 며칠 밀려도 집행 중인 소재가 '관측 종료'로 보이지 않게 (11/06)
+     기준일 T 로 자르기: T 이후 시작한 소재 제외, 끝은 T 까지 */
   const ma = (M.ads || []).filter(x => adsDay(x.start) <= T), ga = (G.ads || []).filter(x => adsDay(x.first) <= T);
   if(!adsMedia) adsMedia = ma.length || !ga.length ? 'meta' : 'google';
   const t0 = Math.min(...[...(M.ads || []).map(x => adsDay(x.start)), ...(G.ads || []).map(x => adsDay(x.first))].filter(Number.isFinite), now);
   let h = `<div class="flex flex-wrap items-center gap-3"><button type="button" class="more-btn h-8" onclick="adsBack()"><i class="fa-solid fa-chevron-left mr-1.5"></i>목록</button>
     <div class="flex items-center gap-2.5 min-w-0">${mkIcon(R.name)}<div class="min-w-0"><div class="text-[15px] font-semibold truncate">${escapeHtml(R.name)}</div><div class="text-[11px] muted">${escapeHtml(R.pkg)} · ${R.tracked_at.slice(0, 10)} 추적 · 한국</div></div></div>
-    <div class="flex flex-wrap items-center gap-1.5 ml-auto"><label class="text-[11px] muted flex items-center gap-1.5 mr-1">기준일<input type="date" class="h-8 rounded-md border border-slate-800 bg-slate-900 px-2 text-xs" value="${adsIso(T)}" min="${adsIso(t0)}" max="${adsIso(now)}" onchange="adsSetAsOf(this.value)"></label>${past ? `<button type="button" class="cal-chip" onclick="adsSetAsOf('')">오늘로</button>` : ''}
+    <div class="flex flex-wrap items-center gap-1.5 ml-auto"><label class="text-[11px] muted flex items-center gap-1.5 mr-1">기준일<input type="date" class="h-8 rounded-md border border-slate-800 bg-slate-900 px-2 text-xs" value="${adsIso(T)}" min="${adsIso(t0)}" max="${adsIso(tk)}" onchange="adsSetAsOf(this.value)"></label>${past ? `<button type="button" class="cal-chip" onclick="adsSetAsOf('')">오늘로</button>` : ''}
     ${[['meta', 'fa-meta', 'Meta', ma.length, '#60a5fa'], ['google', 'fa-google', 'Google', ga.length, '#34d399']].map(([k, ic, lb, n, c]) =>
       `<button type="button" onclick="adsSetMedia('${k}')" class="cal-chip${adsMedia === k ? ' on' : ''}" style="${adsMedia === k ? `border-color:${c};color:${c}` : ''}"><i class="fa-brands ${ic}"></i>${lb} <span class="muted">${n}</span></button>`).join('')}</div></div>`;
   if(past) h += `<div class="rounded-lg border border-indigo-500 bg-slate-900/40 px-3 py-2 text-[11px]"><b class="rk-v">${adsDkY(T, now)} 기준</b><span class="muted"> · 그날 기준으로 다시 계산</span></div>`;
@@ -3745,13 +3746,13 @@ function adsRenderDetail(R){
     if(!ma.length) h += mkEmpty(past ? '기준일까지 시작한 Meta 광고가 없습니다.' : '이 게임의 Meta 광고를 찾지 못했습니다.');
     else{
       const tpl = v => /\{\{.*\}\}/.test(v || '');   /* 카탈로그(DCO) 광고의 {{product.name}} 같은 틀 문구는 실제 문구가 아님 */
-      const items = ma.map(x => { const a0 = adsDay(x.start), e = x.active ? now : adsDay(x.end || x.start), a1 = Math.min(e, T), live = e >= T, dur = a1 - a0 + 1, real = !tpl(x.body) && !tpl(x.title);
+      const items = ma.map(x => { const a0 = adsDay(x.start), e = x.active ? tk : adsDay(x.end || x.start), a1 = Math.min(e, T), live = e >= T, dur = a1 - a0 + 1, real = !tpl(x.body) && !tpl(x.title);
         return { a0, a1, dur, live, win: live && dur >= ADS_WIN, key: real ? x.body + '\u0001' + x.title : '', copy: real ? [x.title || x.body, x.title ? x.body : ''].filter(Boolean) : [],
           thumb: img(x.thumb), url: `https://www.facebook.com/ads/library/?id=${x.id}`, badges: [x.store, live ? null : '관측 종료'].filter(Boolean), dt: `${adsKst(x.start)}~`, sub: live ? `최근 확인 · ${dur}일` : `${dur}일` }; });
       const act = items.filter(c => c.live).length, st = cnt(ma, x => x.store), s0 = Math.min(...items.map(c => c.a0));
       const wc = items.filter(c => c.key), life = adsLife(wc, c => c.key, c => c.a0, c => c.a1, c => c.live);
       const win = adsWinList(items, life);
-      h += adsSummary([['수집한 소재', ma.length, '개', `${M.count ? `전체 ${M.count}건 중 · ` : ''}최근 확인 ${act}개 · iOS ${st.iOS || 0} · Play ${st.Play || 0}`], ['최초 마케팅 집행', adsDkY(s0, T), '', `최초 확인 · ${past ? '기준일' : '오늘'} ${T - s0 + 1}일째`]], adsCycle(items, T));
+      h += adsSummary([['수집한 소재', ma.length, '개', `${M.count ? `전체 ${M.count}건 중 · ` : ''}최근 확인 ${act}개 · iOS ${st.iOS || 0} · Play ${st.Play || 0}`], ['최초 마케팅 집행', adsDkY(s0, T), '', `최초 확인 · ${past ? '기준일' : T >= now ? '오늘' : '마지막 추적'} ${T - s0 + 1}일째`]], adsCycle(items, T));
       h += adsTimeline(items, T, 'meta') + adsWinCreative(win);
       h += `<div class="text-xs font-semibold mb-2">문구 조합 <span class="muted font-normal">위닝 문구 먼저</span></div><div class="mb-5">${life.length ? adsCopies(life.map(g => ({ ...g, a: g.b || g.a, b: g.b ? g.a : '' })), wc.length) : '<div class="text-[11px] muted">문구 없음</div>'}</div>`;
       h += adsGridHead(items, '누르면 원본 광고') + adsGrid(items);
@@ -3778,7 +3779,7 @@ function adsRenderDetail(R){
       const f0 = Math.min(...items.map(c => c.a0)), l1 = Math.max(...items.map(c => c.a1)), recent = items.filter(c => c.live).length;
       const wc = items.filter(c => c.key), life = adsLife(wc, c => c.key, c => c.a0, c => c.a1, c => c.live);
       const win = adsWinList(items, life), advs = (G.advertisers || []).map(a => escapeHtml(a.name)).join(', ');
-      h += adsSummary([['수집한 소재', ga.length, '개', `${Object.entries(fm).map(([k, n]) => `${k} ${n}`).join(' · ')} · 최근 확인 ${recent}개 · 광고주 ${advs}`], ['최초 마케팅 집행', adsDkY(f0, T), '', `최초 확인 · ${past ? '기준일' : '오늘'} ${T - f0 + 1}일째`]], adsCycle(items, T));
+      h += adsSummary([['수집한 소재', ga.length, '개', `${Object.entries(fm).map(([k, n]) => `${k} ${n}`).join(' · ')} · 최근 확인 ${recent}개 · 광고주 ${advs}`], ['최초 마케팅 집행', adsDkY(f0, T), '', `최초 확인 · ${past ? '기준일' : T >= now ? '오늘' : '마지막 추적'} ${T - f0 + 1}일째`]], adsCycle(items, T));
       h += adsTimeline(items, T, 'google') + adsWinCreative(win);
       if(life.length) h += `<div class="text-xs font-semibold mb-2">문구 조합 <span class="muted font-normal">위닝 문구 먼저 · 문구 있는 소재 ${wc.length}개 기준</span></div><div class="mb-5">${adsCopies(life, wc.length)}</div>`;
       h += adsGridHead(items, '누르면 원본 광고') + adsGrid(items);
