@@ -1055,6 +1055,8 @@ body, main { background:#f6f7f9 !important; }
 .card thead.bg-slate-900 { background:#ffffff !important; }   /* 카드 안 고정 표 머리 = 카드 색 */
 .gd-ctab2 thead tr:first-child th.gd-sh { border-bottom-color:#e3e5ea !important; }   /* 상세 표: 스토어 이름 줄 ↔ 매출·인기 줄 구분선 */
 .gs-tab.on { background:#5046c8 !important; color:#ffffff !important; }   /* 순위 비교 검색 드롭다운 탭: 다른 선택 버튼과 같은 진한 보라 + 흰 글자 (다크용 흰 글자가 연보라 위에서 안 보이던 것) */
+.cal-navbtn, .cal-today-btn, .more-btn { background:#ffffff !important; border-color:#e6e8ed !important; }   /* 달력 이전/다음 · 오늘 · 목록/더보기 버튼: 페이지 배경(#f6f7f9)에 묻혀서 카드처럼 흰 바탕 + 테두리 (11/06) */
+.cal-navbtn:hover, .cal-today-btn:hover, .more-btn:hover { border-color:#5046c8 !important; }
 .rank-chip { background:#f6f7f9 !important; border-color:#e6e8ed !important; color:#37352f !important; }   /* 흰 카드 안 순위 칩: 연회색 칩 */
 .summary-card-hover:hover, .wl-row:hover, .cal-row:hover, [class*="hover:bg-slate-8"]:hover { background:#f8f9fb !important; }   /* 행 Hover */
 :root { --line:#e6e8ed !important; }
@@ -3665,13 +3667,15 @@ function adsBack(){ adsSel = null; adsKeep(); openAdsView(); }
    위닝 크리에이티브 = 위닝 소재 중 문구도 위닝인 것 먼저(문구 없는 동영상은 소재만으로), 소재 집행 기간 긴 순
    비율(%)은 '많이 만든 문구'일 뿐 효과가 아니므로 작게만 표시
    기준일(adsAsOf): 과거 날짜를 고르면 그날 기준으로 다시 계산(그날 이후 시작한 소재 제외 · 기간은 그날까지) */
-const ADS_WIN = 21, ADS_WIN_SHORT = 14, ADS_WEEKS = 13;
-/* 위닝 기준 일수는 매체별 (11/06): 소재를 2~3주마다 바꾸는 단기 회전형 매체는 21일을 넘기는 소재가 거의 없어 14일로.
-   판정은 개요의 성격과 같음 — 최근 확인 소재 40% 이상이 90일+ 이면 상시 집행형, 아니고 관측 종료 소재 수명 중앙값 35일 이하면 단기 회전형 */
-function adsWinDays(items){
-  const live = items.filter(c => c.live), ended = items.filter(c => !c.live).map(c => c.dur).sort((a, b) => a - b), med = ended.length ? ended[Math.floor(ended.length / 2)] : null;
-  const always = live.length && live.filter(c => c.dur >= 90).length / live.length >= .4;
-  return !always && med != null && med <= 35 ? ADS_WIN_SHORT : ADS_WIN;
+const ADS_WIN = 21, ADS_WEEKS = 13;
+/* 위닝 기준 (11/06, 화면에는 기준을 따로 쓰지 않음): 지금 집행 중이면서 그 매체의 평균 유지 기간 이상 버티는 소재 = '평소보다 오래 살아남은 소재'.
+   평균 유지 기간 = 최근 13주에 처음 확인된 소재의 유지 일수 평균 (요약 카드 · 비교 띠의 '평균 유지 기간'과 같은 값, 그 기간 소재가 없으면 끝난 소재 평균).
+   끝난 소재가 5개 미만이면 평균이 의미 없어 '집행 중 소재 중 가장 오래된 상위 3개'로 대신. 집행 중 소재가 없으면 위닝 없음 */
+function adsWinDays(items, T){
+  const live = items.filter(c => c.live); if(!live.length) return Infinity;
+  const ended = items.filter(c => !c.live), W0 = adsWk(T) - (ADS_WEEKS - 1) * 7, cur = items.filter(c => c.a0 >= W0), base = cur.length ? cur : ended;
+  if(ended.length >= 5 && base.length) return Math.max(1, Math.ceil(base.reduce((t, c) => t + c.dur, 0) / base.length));
+  return -3;   /* 상위 3개 (같은 일수가 많아도 3개만 — pack 에서 처리) */
 }
 let adsMedia = null, adsAsOf = null;   /* 상세 화면 매체 탭 'meta' | 'google' · 기준일(일 번호, null = 오늘) */
 const adsDk = k => adsKst(k * 86400 - 9 * 3600);
@@ -3686,7 +3690,7 @@ function adsLife(arr, key, a0, a1, live, th = ADS_WIN){
     return { ...g, a, b: b.filter(Boolean).join(' / '), dur, win: g.live > 0 && dur >= th }; })
     .sort((p, q) => (q.win - p.win) || (p.win ? q.dur - p.dur : q.n - p.n));
 }
-/* 문구 조합: 카드 그리드(가로로 채움) · 최대 9개 */
+/* 핵심 카피(문구 조합): 카드 그리드(가로로 채움) · 최대 9개 */
 function adsCopies(groups, total){
   const w = groups.filter(g => g.win).length, show = groups.slice(0, 9);
   return `<div class="grid gap-2" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr))">${show.map(g => `<div class="rounded-lg border ${g.win ? 'border-indigo-500' : 'border-slate-800'} bg-slate-900/40 p-2.5 min-w-0 flex flex-col">
@@ -3758,10 +3762,12 @@ function adsWinList(items, life){
     .sort((a, b) => (b.both - a.both) || (b.dur - a.dur) || (!!b.thumb - !!a.thumb));
 }
 /* 위닝 크리에이티브 TOP3: 소재(이미지·영상)와 문구를 한 카드에 */
-function adsWinCreative(w, th = ADS_WIN){
+/* 위닝이 없을 때 이유를 한 줄로: 집행 중 소재가 없거나, 가장 오래된 집행 중 소재가 아직 기준 일수 전 */
+function adsWinEmpty(items, th){ return (items || []).some(c => c.live) ? '아직 위닝 크리에이티브가 없습니다.' : '지금 집행 중인 소재가 없습니다.'; }
+function adsWinCreative(w, th = ADS_WIN, items = null){
   const nb = w.filter(c => c.both).length;
-  let h = `<div id="adsWinBox" class="rounded-lg border border-slate-800 bg-slate-900/40 p-3 mb-5"><div class="text-xs font-semibold">위닝 크리에이티브 <span class="muted font-normal">${th}일 이상 유지 중 · ${nb}개</span></div>`;
-  if(!w.length) return h + `<div class="text-[11px] muted mt-1">지금 집행 중이면서 ${th}일 이상 이어진 소재가 없습니다. 소재를 자주 바꾸거나 최근 집행이 멈춘 경우이며, 집행 ${th}일 미만인 신작은 아직 판정할 수 없습니다.</div></div>`;
+  let h = `<div id="adsWinBox" class="rounded-lg border border-slate-800 bg-slate-900/40 p-3 mb-5"><div class="text-xs font-semibold">위닝 크리에이티브 <span class="muted font-normal">${nb}개</span></div>`;
+  if(!w.length) return h + `<div class="text-[11px] muted mt-1">${adsWinEmpty(items, th)}</div></div>`;
   h += `<div class="grid gap-2 mt-2" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr))">${w.slice(0, 3).map((c, i) => `<a href="${c.url}" target="_blank" rel="noopener" class="flex gap-3 rounded-lg border ${c.both ? 'border-indigo-500' : 'border-slate-800'} p-2 min-w-0 hover:border-indigo-500">
       <div class="relative w-24 h-24 shrink-0 rounded-md bg-slate-950 overflow-hidden" ${c.thumb ? `style="background:url('${c.thumb}') center/cover no-repeat"` : ''}>${c.thumb ? '' : '<div class="absolute inset-0 flex items-center justify-center text-[10px] muted">미리보기 없음</div>'}<span class="ads-win absolute left-1 top-1 text-[10px] font-semibold px-1.5 py-0.5 rounded">${i + 1}</span></div>
       <div class="min-w-0 flex flex-col"><div class="text-xs font-semibold leading-snug line-clamp-2">${escapeHtml(c.copy[0] || '문구 없음 (동영상 등)')}</div>${c.copy[1] ? `<div class="text-[11px] muted leading-snug line-clamp-2 mt-0.5">${escapeHtml(c.copy.slice(1).join(' / '))}</div>` : ''}
@@ -3776,7 +3782,7 @@ function adsGrid(items){
 }
 function adsGridHead(items, note){
   const n = items.filter(c => c.win).length;
-  return `<div class="flex items-center justify-between mb-2"><div class="text-xs font-semibold">소재 <span class="muted font-normal">${note}</span></div>${n ? `<label class="text-[11px] muted flex items-center gap-1.5 cursor-pointer shrink-0"><input type="checkbox" onchange="this.closest('section').querySelector('.ads-grid').classList.toggle('ads-winonly',this.checked)">위닝만 보기 (${n})</label>` : ''}</div>`;
+  return `<div class="flex items-center justify-between mb-2"><div class="text-xs font-semibold">광고 소재</div>${n ? `<label class="text-[11px] muted flex items-center gap-1.5 cursor-pointer shrink-0"><input type="checkbox" onchange="this.closest('section').querySelector('.ads-grid').classList.toggle('ads-winonly',this.checked)">위닝만 보기 (${n})</label>` : ''}</div>`;
 }
 /* 개요 위닝 카드 → 해당 매체 탭으로 가서 그 소재를 찾아 잠깐 강조 */
 function adsJump(k, url){
@@ -3795,7 +3801,7 @@ function adsRenderDetail(R){
   const ma = (M.ads || []).filter(x => adsDay(x.start) <= T), ga = (G.ads || []).filter(x => adsDay(x.first) <= T);
   /* 매체별 소재 정리 (개요 · Meta · Google 탭이 같이 씀) */
   const tpl = v => /\{\{.*\}\}/.test(v || '');   /* 카탈로그(DCO) 광고의 {{product.name}} 같은 틀 문구는 실제 문구가 아님 */
-  const mItems = ma.map(x => { const a0 = adsDay(x.start), e = x.active ? tk : adsDay(x.end || x.start), a1 = Math.min(e, T), live = e >= T, dur = a1 - a0 + 1, real = !tpl(x.body) && !tpl(x.title);
+  const mItems = ma.map(x => { const a0 = adsDay(x.start), seenD = x.seen ? adsDay(x.seen) : tk, act = x.active && seenD >= tk - 1, e = act ? tk : x.active ? seenD : adsDay(x.end || x.start),   /* 마지막 추적에서 다시 확인된 활성 소재만 집행 중 (seen 없으면 예전 데이터라 추적일로 봄) */ a1 = Math.min(e, T), live = e >= T, dur = a1 - a0 + 1, real = !tpl(x.body) && !tpl(x.title);
     return { a0, a1, dur, live, win: live && dur >= ADS_WIN, fmtL: x.fmt === 'VIDEO' ? '영상' : x.fmt === 'DCO' ? '카탈로그' : '이미지', storeL: x.store === 'Play' ? 'Android' : x.store === 'iOS' ? 'iOS' : '', key: real ? x.body + '\u0001' + x.title : '', copy: real ? [x.title || x.body, x.title ? x.body : ''].filter(Boolean) : [],
       thumb: img(x.thumb), url: `https://www.facebook.com/ads/library/?id=${x.id}`, badges: [x.store, live ? null : '관측 종료'].filter(Boolean), dt: `${adsKst(x.start)}~`, sub: live ? `최근 확인 · ${dur}일` : `${dur}일` }; });
   /* Google 문구 정리: 게임 이름(또는 이름이 두 줄로 쪼개진 조각) · 스토어 카드 라벨 · 깨진 HTML 문자(x22, x26quot; 등) 제거 → 실제 광고 문구만.
@@ -3809,15 +3815,17 @@ function adsRenderDetail(R){
   const gItems = ga.map(x => { const a0 = adsDay(x.first), e = adsDay(x.last), a1 = Math.min(e, T), live = e >= T - 2, dur = a1 - a0 + 1, copy = cl(x);
     return { a0, a1, dur, live, win: live && dur >= ADS_WIN, fmtL: x.yt ? '영상' : x.fmt === 2 ? '이미지' : '앱 광고', storeL: '', key: copy.join('\u0001'), copy,
       thumb: img(x.thumb), url: `https://adstransparency.google.com/advertiser/${x.adv}/creative/${x.id}?region=KR`, badges: [x.yt ? '동영상' : x.fmt === 2 ? '이미지' : '앱'], dt: `${adsDk(a0)}–${adsDk(a1)}`, sub: `${dur}일` }; });
-  const pack = items => { const th = adsWinDays(items); items.forEach(c => { c.win = c.live && c.dur >= th; }); const wc = items.filter(c => c.key), life = adsLife(wc, c => c.key, c => c.a0, c => c.a1, c => c.live, th); return { items, wc, life, th, win: adsWinList(items, life) }; };
+  const pack = items => { let th = adsWinDays(items, T);
+    if(th === -3){ const top = items.filter(c => c.live).sort((x, y) => y.dur - x.dur || (!!y.thumb - !!x.thumb)).slice(0, 3); items.forEach(c => { c.win = top.includes(c); }); th = top.length ? top.at(-1).dur : Infinity; }
+    else items.forEach(c => { c.win = c.live && c.dur >= th; }); const wc = items.filter(c => c.key), life = adsLife(wc, c => c.key, c => c.a0, c => c.a1, c => c.live, th); return { items, wc, life, th, win: adsWinList(items, life) }; };
   const P = { meta: pack(mItems), google: pack(gItems) };
   if(!['overview', 'meta', 'google'].includes(adsMedia)) adsMedia = 'overview';
   const t0 = Math.min(...[...(M.ads || []).map(x => adsDay(x.start)), ...(G.ads || []).map(x => adsDay(x.first))].filter(Number.isFinite), now);
   let h = `<div class="flex flex-wrap items-center gap-3"><button type="button" class="more-btn h-8" onclick="adsBack()"><i class="fa-solid fa-chevron-left mr-1.5"></i>목록</button>
     <div class="flex items-center gap-2.5 min-w-0">${mkIcon(R.name)}<div class="min-w-0"><div class="text-[15px] font-semibold truncate">${escapeHtml(R.name)}</div><div class="text-[11px] muted">${escapeHtml(R.pkg)} · ${R.tracked_at.slice(0, 10)} 추적 · 한국</div></div></div>
     <div class="flex flex-wrap items-center gap-1.5 ml-auto"><label class="text-[11px] muted flex items-center gap-1.5 mr-1">기준일<input type="date" class="h-8 rounded-md border border-slate-800 bg-slate-900 px-2 text-xs" value="${adsIso(T)}" min="${adsIso(t0)}" max="${adsIso(tk)}" onchange="adsSetAsOf(this.value)"></label>${past ? `<button type="button" class="cal-chip" onclick="adsSetAsOf('')">오늘로</button>` : ''}
-    ${[['overview', 'fa-solid fa-layer-group', '개요', null, '#a5a0ff'], ['meta', 'fa-brands fa-meta', 'Meta', ma.length, '#2563eb'], ['google', 'fa-brands fa-google', 'Google', ga.length, '#059669']].map(([k, ic, lb, n, c]) =>
-      `<button type="button" onclick="adsSetMedia('${k}')" class="cal-chip${adsMedia === k ? ' on' : ''}" style="${adsMedia === k ? `border-color:${c};color:${c}` : ''}"><i class="${ic}"></i>${lb}${n != null ? ` <span class="muted">${n}</span>` : ''}</button>`).join('')}</div></div>`;
+    <div class="mk-seg" role="group" aria-label="보기">${[['overview', 'fa-solid fa-layer-group', '개요', null], ['meta', 'fa-brands fa-meta', 'Meta', ma.length], ['google', 'fa-brands fa-google', 'Google', ga.length]].map(([k, ic, lb, n]) =>
+      `<button type="button" onclick="adsSetMedia('${k}')" class="${adsMedia === k ? 'on' : ''}" aria-pressed="${adsMedia === k}"><i class="${ic} mr-1.5"></i>${lb}${n != null ? `<span class="ml-1 opacity-70">${n}</span>` : ''}</button>`).join('')}</div></div></div>`;
   if(past) h += `<div class="rounded-lg border border-indigo-500 bg-slate-900/40 px-3 py-2 text-[11px]"><b class="rk-v">${adsDkY(T, now)} 기준</b><span class="muted"> · 그날 기준으로 다시 계산</span></div>`;
   if(adsMedia === 'overview'){
     h += adsOverview(P, T, { meta: M, google: G });
@@ -3827,8 +3835,8 @@ function adsRenderDetail(R){
     else{
       const { items, wc, life, win } = P.meta, act = items.filter(c => c.live).length, st = cnt(ma, x => x.store), s0 = Math.min(...items.map(c => c.a0));
       h += adsSummary([['수집한 소재', ma.length, '개', `${M.count ? `전체 ${M.count}건 중 · ` : ''}최근 확인 ${act}개 · iOS ${st.iOS || 0} · Play ${st.Play || 0}`], ['최초 마케팅 집행', adsDkY(s0, T), '', `최초 확인 · ${past ? '기준일' : T >= now ? '오늘' : '마지막 추적'} ${T - s0 + 1}일째`]], adsCycle(items, T));
-      h += adsTimeline(items, T, 'meta') + adsWinCreative(win, P.meta.th);
-      h += `<div class="text-xs font-semibold mb-2">문구 조합 <span class="muted font-normal">위닝 문구 먼저</span></div><div class="mb-5">${life.length ? adsCopies(life.map(g => ({ ...g, a: g.b || g.a, b: g.b ? g.a : '' })), wc.length) : '<div class="text-[11px] muted">문구 없음</div>'}</div>`;
+      h += adsTimeline(items, T, 'meta') + adsWinCreative(win, P.meta.th, items);
+      h += `<div class="text-xs font-semibold mb-2">핵심 카피</div><div class="mb-5">${life.length ? adsCopies(life.map(g => ({ ...g, a: g.b || g.a, b: g.b ? g.a : '' })), wc.length) : '<div class="text-[11px] muted">문구 없음</div>'}</div>`;
       h += adsGridHead(items, '누르면 원본 광고') + adsGrid(items);
     }
     h += `</section>`;
@@ -3841,8 +3849,8 @@ function adsRenderDetail(R){
       const { items, wc, life, win } = P.google, fm = cnt(ga, x => x.yt ? '동영상' : x.fmt === 2 ? '이미지' : '앱 광고');
       const f0 = Math.min(...items.map(c => c.a0)), recent = items.filter(c => c.live).length, advs = (G.advertisers || []).map(a => escapeHtml(a.name)).join(', ');
       h += adsSummary([['수집한 소재', ga.length, '개', `${Object.entries(fm).map(([k, n]) => `${k} ${n}`).join(' · ')} · 최근 확인 ${recent}개 · 광고주 ${advs}`], ['최초 마케팅 집행', adsDkY(f0, T), '', `최초 확인 · ${past ? '기준일' : T >= now ? '오늘' : '마지막 추적'} ${T - f0 + 1}일째`]], adsCycle(items, T));
-      h += adsTimeline(items, T, 'google') + adsWinCreative(win, P.google.th);
-      if(life.length) h += `<div class="text-xs font-semibold mb-2">문구 조합 <span class="muted font-normal">위닝 문구 먼저 · 문구 있는 소재 ${wc.length}개 기준</span></div><div class="mb-5">${adsCopies(life, wc.length)}</div>`;
+      h += adsTimeline(items, T, 'google') + adsWinCreative(win, P.google.th, items);
+      if(life.length) h += `<div class="text-xs font-semibold mb-2">핵심 카피 <span class="muted font-normal">문구 있는 소재 ${wc.length}개 기준</span></div><div class="mb-5">${adsCopies(life, wc.length)}</div>`;
       h += adsGridHead(items, '누르면 원본 광고') + adsGrid(items);
     }
     h += `</section>`;
@@ -3859,10 +3867,19 @@ function adsProfile(p, T, kind){
   const live = items.filter(c => c.live), ended = items.filter(c => !c.live).map(c => c.dur).sort((a, b) => a - b), med = ended.length ? ended[Math.floor(ended.length / 2)] : null;
   const r6 = live.filter(c => c.a0 >= T - 41).length, long = live.filter(c => c.dur >= 90).length, mxLive = live.length ? Math.max(...live.map(c => c.dur)) : 0;
   const n6 = items.filter(c => c.a0 >= T - 41).length, p6 = items.filter(c => c.a0 >= T - 83 && c.a0 < T - 41).length;
-  const type = live.length && long / live.length >= .4 ? 'always' : med != null && med <= 35 ? 'short' : 'mid';
+  /* 성격 판정 순서 (11/06): 지금 집행 없음 → 단일 소재 장기 운영(집행 중 1~2개가 60일+) → 캠페인 집행 중(끝난 소재 5개 미만이라 수명을 아직 못 잼)
+     → 상시 집행형 → 단기 회전형 → 중기 운영형 */
+  const lastSeen = Math.max(...items.map(c => c.a1));
+  const type = !live.length ? 'stop' : live.length <= 2 && mxLive >= 60 ? 'single' : ended.length < 5 ? 'running'
+    : long / live.length >= .4 ? 'always' : med != null && med <= 35 ? 'short' : 'mid';
   const wkr = v => { const a = Math.max(1, Math.floor(v / 7)), b = Math.max(1, Math.ceil(v / 7)); return a === b ? `${a}주` : `${a}~${b}주`; };
-  const head = type === 'short' ? `${wkr(med)}마다 소재를 갈아끼우는 단기 회전` : type === 'always' ? (r6 <= live.length * .3 ? '장기 상시 소재 위에 신규를 소량 얹는 상시 집행' : '장기 상시 소재와 신규 소재를 함께 돌리는 상시 집행') : '소재를 한두 달씩 유지하는 중기 운영';
-  const sub = type === 'always' ? `최근 확인 소재 ${live.length}개 중 ${long}개가 90일 이상 · 최장 ${mxLive}일`
+  const head = { stop: `지금은 집행이 확인되지 않음 · 마지막 확인 ${adsDkY(lastSeen, T)}`, single: `소재 ${live.length}개를 ${mxLive}일째 바꾸지 않고 장기 운영`,
+    running: `소재 ${live.length}개 집행 중 · 최근 ${Math.max(1, Math.ceil(mxLive / 7))}주 안에 투입`,
+    short: `${wkr(med)}마다 소재를 갈아끼우는 단기 회전`, always: r6 <= live.length * .3 ? '장기 상시 소재 위에 신규를 소량 얹는 상시 집행' : '장기 상시 소재와 신규 소재를 함께 돌리는 상시 집행',
+    mid: '소재를 한두 달씩 유지하는 중기 운영' }[type];
+  const sub = type === 'always' || type === 'single' ? `최근 확인 소재 ${live.length}개 중 ${long}개가 90일 이상 · 최장 ${mxLive}일`
+    : type === 'running' ? `최근 확인 소재 ${live.length}개 · 가장 오래된 소재 ${mxLive}일째`
+    : type === 'stop' ? `수집한 소재 ${items.length}개 모두 관측 종료 · 소재 수명 중앙값 ${med ?? '–'}일`
     : `소재 수명 중앙값 ${med ?? '–'}일 · 최근 확인 소재 ${live.length && r6 === live.length ? '모두' : `${live.length}개 중 ${r6}개가`} 최근 6주 안에 투입`;
   /* 흐름 */
   const ym = k => { const d = new Date(k * 86400000); return d.getUTCFullYear() * 12 + d.getUTCMonth(); }, YT = ym(T), M0 = YT - 11;
@@ -3888,7 +3905,7 @@ function adsProfile(p, T, kind){
   const wkSets = new Map(); items.filter(c => c.a0 >= T - 41).forEach(c => { const k = adsWk(c.a0); wkSets.set(k, (wkSets.get(k) || 0) + 1); });
   const big = [...wkSets].sort((a, b) => b[1] - a[1])[0];
   const trend = n6 > p6 * 1.2 + 1 ? '증가' : n6 < p6 * .8 - 1 ? '감소' : '유지';
-  return { kind, type, badge: { short: '단기 회전형', always: '상시 집행형', mid: '중기 운영형' }[type], head, sub, rich, flow, newCopy, topCopy, latestTop, live: live.length, r6, long, n6, p6, trend,
+  return { kind, type, badge: { short: '단기 회전형', always: '상시 집행형', mid: '중기 운영형', running: '캠페인 집행 중', single: '단일 소재 장기 운영', stop: '집행 중단' }[type], head, sub, rich, flow, newCopy, topCopy, latestTop, live: live.length, r6, long, n6, p6, trend,
     big: big && big[1] >= 5 ? { k: big[0], n: big[1] } : null, cyc: adsCycle(items, T), win: p.win.filter(c => c.both).length };
 }
 function adsOverview(P, T, raw){
@@ -3899,7 +3916,7 @@ function adsOverview(P, T, raw){
      맨 아래 = 두 매체 비교 띠 (항목별 막대로 나란히) */
   const recent = p => `최근 6주 신규 ${p.trend} · ${p.p6} → ${p.n6}개`;   /* 짧게: 자세한 근거는 결론에 마우스를 올리면 */
   const col = k => { const p = pr[k], icon = `<i class="fa-brands fa-${k} mr-1.5 ${k === 'meta' ? 'text-sky-400' : 'text-emerald-400'}"></i>`;
-    if(!p) return `<div class="card rounded-xl p-5 min-w-0"><div class="font-semibold text-sm">${icon}${LB[k]}</div><div class="text-xs muted mt-2">이 게임의 ${LB[k]} 광고를 찾지 못했습니다.</div></div>`;
+    if(!p) return `<div class="card rounded-xl p-5 min-w-0"><div class="font-semibold text-sm">${icon}${LB[k]}</div><div class="text-[16px] font-semibold mt-3">${LB[k]} 광고 확인 안 됨</div><div class="text-xs muted mt-1">소액 집행이거나 다른 매체(네이버·카카오 등) 위주일 수 있음</div></div>`;
     const note = p.rich ? (p.newCopy.length ? `최근 6주 새 문구: ${p.newCopy.map(escapeHtml).join(' · ')}` : '') : (p.topCopy ? `대표 문구: ${escapeHtml(p.topCopy)}` : '');
     /* 위닝 크리에이티브 상위 2개: 썸네일 · 문구 · 형식 칩 · 최초~최근 확인 날짜 · 관측 일수 (누르면 매체 탭의 그 소재로) */
     const chip = t => `<span class="text-[11px] px-1.5 py-0.5 rounded bg-slate-800/70">${t}</span>`;
@@ -3910,7 +3927,7 @@ function adsOverview(P, T, raw){
           <div class="mt-auto pt-1 text-[11px] muted">${adsDkY(w.a0, T)} ~ ${adsDkY(w.a1, T)}</div></div>
         <div class="shrink-0 pl-2.5 border-l border-slate-800 flex flex-col justify-center text-right"><div class="text-[20px] font-semibold rk-v leading-none">${w.dur.toLocaleString()}<span class="text-[11px] muted font-normal ml-0.5">일</span></div>${w.cg ? `<div class="text-[10px] muted mt-1">문구 ${w.cg.dur.toLocaleString()}일</div>` : ''}</div></button>`;
     const win = P[k].win.length ? `<div class="grid gap-2 sm:grid-cols-2">${P[k].win.slice(0, 2).map(wc).join('')}</div>`
-      : `<div class="rounded-lg border border-slate-800 p-3 text-xs muted">${P[k].th}일 이상 유지 중인 소재 없음</div>`;
+      : `<div class="rounded-lg border border-slate-800 p-3 text-xs muted">${adsWinEmpty(P[k].items, P[k].th)}</div>`;
     return `<div class="card rounded-xl p-5 min-w-0 flex flex-col">
       <div class="flex items-center justify-between gap-2"><div class="font-semibold text-sm">${icon}${LB[k]}</div><span class="ads-badge-${k} text-[11px] font-semibold px-2 py-0.5 rounded">${p.badge}</span></div>
       <div class="border-l-4 pl-3 mt-3" style="border-left-color:${k === 'meta' ? '#2589E8' : '#20C997'}" title="${escapeAttr(p.sub + (p.big ? ` · ${adsDk(p.big.k)}주 한 번에 ${p.big.n}개` : ''))}"><div class="text-[16px] font-semibold leading-snug">${p.head}</div><div class="text-xs muted mt-1">${recent(p)}</div></div>
@@ -3923,7 +3940,7 @@ function adsOverview(P, T, raw){
           <div class="shrink-0"><span class="text-[11px] muted mr-1.5">지금 집행 중</span><b class="text-[18px] rk-v">${p.live}</b><span class="text-[11px] muted ml-0.5">개</span></div>
           <div class="flex gap-[2px] h-2.5 rounded-sm overflow-hidden flex-1 min-w-[90px] max-w-[200px]">${p.live ? parts.filter(x => x[1]).map(x => `<div title="${x[0]} ${x[1]}개" style="width:${x[1] / p.live * 100}%;background:rgba(${rgb},${x[2]})"></div>`).join('') : ''}</div>
           <div class="flex flex-wrap gap-x-3 gap-y-1 text-[11px]">${parts.map(x => `<span><span class="inline-block w-2 h-2 rounded-sm align-middle mr-1" style="background:rgba(${rgb},${x[2]})"></span><span class="muted">${x[0]}</span> <b class="rk-v">${x[1]}</b></span>`).join('')}</div></div>`; })()}
-      <div class="text-[11px] muted mt-4 mb-1.5">위닝 크리에이티브 <span class="ml-1">${P[k].th}일 이상 유지 중</span></div>${win}
+      <div class="text-[11px] muted mt-4 mb-1.5">위닝 크리에이티브</div>${win}
       <div class="mt-auto pt-3 text-right"><button type="button" class="text-[13px] font-bold ads-new hover:underline" onclick="adsSetMedia('${k}');window.scrollTo({top:0})">${LB[k]} 상세 &gt;</button></div></div>`; };
   let h = `<div class="grid gap-3 md:grid-cols-2 items-stretch">${col('meta')}${col('google')}</div>`;
   /* 두 매체 비교 띠: 항목마다 Meta/Google 막대 */
