@@ -32,7 +32,10 @@ function themeUrl(t){ const u = new URL(location.href); u.pathname = u.pathname.
 function osTheme(){ try{ return matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; }catch(e){ return 'dark'; } }
 function pickedTheme(){ try{ return sessionStorage.getItem('gmi.theme'); }catch(e){ return null; } }
 try{ localStorage.removeItem('gmi.theme'); }catch(e){}   /* 예전 버전이 남긴 저장값 정리 */
-(() => { const t = pickedTheme() || osTheme(); if(t !== PAGE_THEME) location.replace(themeUrl(t)); })();
+(() => { const t = pickedTheme() || osTheme(); if(t !== PAGE_THEME) location.replace(themeUrl(t));
+  /* 라이트 파일이어도 주소창에는 /light.html 을 안 보이게 (11/06): 주소만 바꾸고 다시 불러오지 않음.
+     새로고침하면 index.html 이 열렸다가 위 줄에서 바로 light.html 로 넘어오므로 화면은 그대로 */
+  else if(PAGE_THEME === 'light' && /light\.html$/.test(location.pathname)) try{ history.replaceState(history.state, '', location.pathname.replace(/light\.html$/, '') + location.search + location.hash); }catch(e){} })();
 /* 페이지를 연 채로 기기 설정이 바뀌면 따라감 (토글로 고른 탭은 제외) */
 try{ matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if(!pickedTheme() && osTheme() !== PAGE_THEME) location.replace(themeUrl(osTheme())); }); }catch(e){}
 document.documentElement.dataset.theme = PAGE_THEME;
