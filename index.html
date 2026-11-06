@@ -591,6 +591,23 @@ select option { background-color: #202428; color: #e8eaed; }
 .mk-sec.on { color:#e6e3ff; border-color:#6257e8; }
 /* 의미색 유틸리티 */
 .t-sales { color:var(--c-sales); } .t-pop { color:var(--c-pop); } .rk-v { color:#e8eaed; }   /* 매출·인기 '~위' 숫자는 테마 단색 (11/05) */ .t-up { color:var(--c-up); } .t-down { color:var(--c-down); } .t-new { color:var(--c-new); }
+.ads-winonly > a:not([data-win]) { display:none; }   /* 마케팅 추적: '위닝만 보기' */
+.ads-win { background:#5046c8; color:rgb(255,255,255); }   /* 두 테마 모두 흰 글자 (#fff 는 라이트 변환에서 글자색으로 바뀜) */
+.ads-tl { position:relative; }   /* 마케팅 추적 교체 이력 */
+.ads-ml { position:absolute; left:150px; right:0; top:0; bottom:0; pointer-events:none; }
+.ads-ml span { position:absolute; top:0; bottom:0; width:1px; background:rgba(160,167,173,.4); }
+.ads-row { display:grid; grid-template-columns:150px minmax(0,1fr); align-items:center; min-height:24px; font-size:11px; }
+.ads-sub { min-height:22px; }
+.ads-tr { position:relative; height:16px; background:repeating-linear-gradient(90deg,transparent 0,transparent calc(100%/13 - 1px),rgba(111,118,123,.16) calc(100%/13 - 1px),rgba(111,118,123,.16) calc(100%/13)); }
+.ads-b { position:absolute; top:0; height:16px; border-radius:3px; font-size:11px; line-height:16px; padding:0 5px; white-space:nowrap; overflow:hidden; }
+.ads-bt { position:absolute; top:0; font-size:11px; line-height:16px; white-space:nowrap; }
+.ads-on { background:#5046c8; color:rgb(255,255,255); }
+.ads-off { background:rgba(111,118,123,.45); color:#c3c7ca; }
+.ads-cut { border-top-left-radius:0; border-bottom-left-radius:0; }
+.ads-new { color:#60a5fa; } .ads-end { color:#8b9196; }
+.ads-today { position:absolute; top:0; bottom:0; width:0; border-left:1.5px dashed #f59e0b; }
+.ads-today-lb { position:absolute; top:0; font-size:10px; font-weight:600; color:#f59e0b; padding-right:4px; white-space:nowrap; }
+@media (max-width:640px){ .ads-row { grid-template-columns:96px minmax(0,1fr); } .ads-ml { left:96px; } }
 .bg-sales { background-color:var(--c-sales); } .bg-pop { background-color:var(--c-pop); } .bg-up { background-color:var(--c-up); } .bg-down { background-color:var(--c-down); } .bg-new { background-color:var(--c-new); }
 .chip-up { background:rgba(248,113,113,.14); color:#fca5a5; } .chip-down { background:rgba(96,165,250,.14); color:#93c5fd; } .chip-new { background:rgba(167,139,250,.14); color:#c4b5fd; }
 /* 키보드 이동 시 포커스 표시 */
@@ -1029,6 +1046,7 @@ html[data-theme="light"] .theme-seg:not(.to-dark) button[data-t="light"], html[d
       <div class="sb-sub"><button type="button" data-go="biz:structure" onclick="sbGo('biz:structure')">시장 구조</button><button type="button" data-go="biz:change" onclick="sbGo('biz:change')">변동 추적</button><button type="button" data-go="biz:debut" onclick="sbGo('biz:debut')">매출 패턴</button><button type="button" data-go="biz:releases" onclick="sbGo('biz:releases')">신작 동향</button></div>
     </div>
     <button class="sb-item" data-view="search" onclick="switchView('search')" data-tip="순위 비교"><i data-lucide="chart-no-axes-combined"></i><span class="sb-tx">순위 비교</span></button>
+    <button class="sb-item" data-view="ads" onclick="switchView('ads')" data-tip="마케팅 추적"><i data-lucide="megaphone"></i><span class="sb-tx">마케팅 추적</span></button>
     <div class="sb-group">일정</div>
     <button class="sb-item" data-view="calendar" onclick="switchView('calendar')" data-tip="신작 달력"><i data-lucide="calendar-days"></i><span class="sb-tx">신작 달력</span></button>
     <button class="sb-item" data-view="events" onclick="switchView('events')" data-tip="행사 달력"><i data-lucide="calendar-range"></i><span class="sb-tx">행사 달력</span></button>
@@ -1553,6 +1571,12 @@ document.querySelectorAll('.sc-store button').forEach(b => { const on = b.datase
   </div>
   <div id="mvTable" class="mv-cards"></div>
   <p class="text-[11px] muted px-1">게임을 누르면 그 스토어·나라 기준 상세<i class="fa-regular fa-circle-question mk-info" title="같은 날 각 스토어 순위 · 앱스토어는 2026-11-03부터 수집"></i></p>
+</div>
+
+<!-- 마케팅 추적 (11/06): gchart 추적 수집기(data/ads)가 모은 게임별 KR 광고 — 목록 → 게임 상세 -->
+<div id="view-ads" class="hidden space-y-4">
+  <div id="adsList"></div>
+  <div id="adsDetail" class="hidden space-y-4"></div>
 </div>
 
 <div id="view-watch" class="hidden space-y-4">
@@ -2710,7 +2734,7 @@ function switchView(view){
   sbDrawer(false); sbSync();
   if(!document.getElementById('detailPanel').classList.contains('translate-x-full')) closeGameDetail();
   document.documentElement.dataset.view = view;
-  ['dashboard','global','watch','ranking','market','business','search','calendar','events','database','report'].forEach(v => {
+  ['dashboard','global','watch','ranking','market','business','search','ads','calendar','events','database','report'].forEach(v => {
     const el = document.getElementById(`view-${v}`);
     if(el) el.classList.toggle('hidden', v==='database' ? !(view==='sales'||view==='popular'||view==='newReleases') : view!==v);
   });
@@ -2719,6 +2743,7 @@ function switchView(view){
   if(view==='ranking')renderRanking();
   if(view==='business')work.push(openBusinessAnalysis());
   if(view==='search')work.push(openSearchView());
+  if(view==='ads')work.push(openAdsView());
   if(view==='calendar')work.push(ensureCalendarMonthLoaded());
   if(view==='events')openEventsView();
   /* 현재 탭을 URL 해시에 기록: 새로고침·링크 공유 시 같은 탭으로 열림 (리포트는 ?w= 주를 유지) */
@@ -2829,7 +2854,7 @@ function showToast(msg){
   t.textContent = msg; t.classList.add('on');
   clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('on'), 2500);
 }
-const VALID_VIEWS = ['dashboard','global','watch','ranking','market','monthly','business','calendar','events','sales','popular','newReleases','search','report'];
+const VALID_VIEWS = ['dashboard','global','watch','ranking','market','monthly','business','calendar','events','sales','popular','newReleases','search','ads','report'];
 function viewFromHash(){ const v = decodeURIComponent(location.hash.slice(1)).split('?')[0]; return VALID_VIEWS.includes(v) && !((COUNTRY !== 'kr' || STORE !== 'gp') && KR_ONLY_VIEWS.includes(v)) ? v : 'dashboard'; }
 /* 다른 나라에서 한국 전용 메뉴를 누르면 한국으로 바꿔 그 화면을 연다 */
 document.addEventListener('click', e => {
@@ -3550,6 +3575,217 @@ function searchStats(name, S, dates){
   };
   const scm = S.score.get(k), scs = dates.map(d => scm.get(d)).filter(v => v != null);
   return { name, color: searchColorOf[k], sales: one('sales'), popular: one('popular'), score: scs.at(-1) ?? null, scoreChange: scs.length > 1 ? Math.round((scs.at(-1) - scs[0]) * 10) / 10 : null };
+}
+
+
+/* ---------- 마케팅 추적 (11/06) ----------
+   gchart 'Ad Tracker' 워크플로가 data/ads/ 에 저장한 결과를 읽음: index.json(추적한 앱 목록) · <pkg>.json(최신 1회분) · img/<pkg>/*.jpg
+   Meta 는 종료일이 없어 시작일 분포, Google 은 첫·마지막 노출일이 있어 기간 막대로 보여줌 */
+const ADS_BASE = DATA_BASE + 'ads/';
+let adsIndex = null, adsSel = null; const adsCache = {};
+const adsKst = ts => { const d = new Date((ts + 9 * 3600) * 1000); return `${d.getUTCMonth() + 1}/${d.getUTCDate()}`; };
+const adsDay = ts => Math.floor((ts + 9 * 3600) / 86400);
+async function openAdsView(){
+  const L = document.getElementById('adsList'), D = document.getElementById('adsDetail');
+  if(!adsIndex){
+    L.innerHTML = skBlocks(4);
+    try{ adsIndex = await (await fetch(ADS_BASE + 'index.json?t=' + Date.now())).json(); }
+    catch(e){ adsIndex = null; L.innerHTML = mkEmpty('추적 결과를 불러오지 못했습니다.'); return; }
+  }
+  if(adsSel) return adsOpen(adsSel);
+  D.classList.add('hidden'); L.classList.remove('hidden');
+  L.innerHTML = !adsIndex.length ? mkEmpty('아직 추적한 게임이 없습니다.') : `<div class="card rounded-xl p-5">
+    <div class="mk-card-head"><div><h3 class="font-semibold text-sm">추적한 게임</h3><p class="text-[11px] muted mt-1">한국 · Meta 광고 라이브러리 · Google 광고 투명성 센터 · 게임을 누르면 상세</p></div></div>
+    <div class="grid gap-3" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr))">${adsIndex.map(x => `
+      <button type="button" class="text-left rounded-xl border border-slate-800 bg-slate-900/40 hover:bg-slate-800/60 p-3.5 min-w-0" onclick="adsOpen('${escapeAttr(x.pkg)}')">
+        <div class="flex items-center gap-2.5 min-w-0">${mkIcon(x.name)}<div class="min-w-0"><div class="text-[13px] font-semibold text-slate-100 truncate">${escapeHtml(x.name)}</div><div class="text-[11px] muted truncate">${escapeHtml(x.pkg)}</div></div></div>
+        <div class="flex items-center gap-3 mt-3 text-xs"><span><span class="muted">Meta</span> <b class="rk-v">${x.meta}</b><span class="muted">${x.meta_total > x.meta ? ` / ${x.meta_total}` : ''}</span></span><span><span class="muted">Google</span> <b class="rk-v">${x.google}</b></span><span class="ml-auto text-[11px] muted">${x.tracked_at.slice(5, 10).replace('-', '/')} 추적</span></div>
+      </button>`).join('')}</div></div>`;
+}
+async function adsOpen(pkg){
+  if(adsSel !== pkg) adsMedia = null;
+  adsSel = pkg;
+  const L = document.getElementById('adsList'), D = document.getElementById('adsDetail');
+  L.classList.add('hidden'); D.classList.remove('hidden'); D.innerHTML = skBlocks(6);
+  try{ adsCache[pkg] = adsCache[pkg] || await (await fetch(`${ADS_BASE}${encodeURIComponent(pkg)}.json?t=${Date.now()}`)).json(); }
+  catch(e){ D.innerHTML = mkEmpty('이 게임의 추적 결과를 불러오지 못했습니다.'); return; }
+  adsRenderDetail(adsCache[pkg]);
+}
+function adsBack(){ adsSel = null; openAdsView(); }
+/* 위닝 크리에이티브 (11/06): '오랜 기간 바꾸지 않고 지금도 집행 중인가' — 문구와 소재를 함께 봄
+   소재 — 지금도 집행 중(Meta 활성 · Google 최근 3일 노출) + 집행 ADS_WIN일 이상
+   문구 — 그 문구를 처음 쓴 날 → 마지막으로 쓴 날이 ADS_WIN일 이상 + 지금도 집행 중인 소재가 그 문구를 씀
+   위닝 크리에이티브 = 위닝 소재 중 문구도 위닝인 것 먼저(문구 없는 동영상은 소재만으로), 소재 집행 기간 긴 순
+   비율(%)은 '많이 만든 문구'일 뿐 효과가 아니므로 작게만 표시
+   기준일(adsAsOf): 과거 날짜를 고르면 그날 기준으로 다시 계산(그날 이후 시작한 소재 제외 · 기간은 그날까지) */
+const ADS_WIN = 21, ADS_WEEKS = 13;
+let adsMedia = null, adsAsOf = null;   /* 상세 화면 매체 탭 'meta' | 'google' · 기준일(일 번호, null = 오늘) */
+const adsDk = k => adsKst(k * 86400 - 9 * 3600);
+const adsWk = k => k - ((k + 3) % 7);   /* 그 주 월요일 (일 번호 0 = 1970-01-01 목요일) */
+const adsIso = k => new Date(k * 86400000).toISOString().slice(0, 10);
+const adsDkY = (k, T) => { const d = new Date(k * 86400000); return d.getUTCFullYear() !== new Date(T * 86400000).getUTCFullYear() ? `${String(d.getUTCFullYear()).slice(2)}/${d.getUTCMonth() + 1}/${d.getUTCDate()}` : adsDk(k); };
+function adsLife(arr, key, a0, a1, live){
+  const m = new Map();
+  for(const x of arr){ const k = key(x); let g = m.get(k); if(!g){ g = { k, n: 0, first: 1e9, last: 0, live: 0 }; m.set(k, g); }
+    g.n++; g.first = Math.min(g.first, a0(x)); g.last = Math.max(g.last, a1(x)); if(live(x)) g.live++; }
+  return [...m.values()].map(g => { const [a, ...b] = g.k.split('\u0001'); const dur = g.last - g.first + 1;
+    return { ...g, a, b: b.filter(Boolean).join(' / '), dur, win: g.live > 0 && dur >= ADS_WIN }; })
+    .sort((p, q) => (q.win - p.win) || (p.win ? q.dur - p.dur : q.n - p.n));
+}
+/* 문구 조합: 카드 그리드(가로로 채움) · 최대 9개 */
+function adsCopies(groups, total){
+  const w = groups.filter(g => g.win).length, show = groups.slice(0, 9);
+  return `<div class="grid gap-2" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr))">${show.map(g => `<div class="rounded-lg border ${g.win ? 'border-indigo-500' : 'border-slate-800'} bg-slate-900/40 p-2.5 min-w-0 flex flex-col">
+      <div class="flex items-center gap-1.5 mb-1">${g.win ? `<span class="ads-win text-[10px] font-semibold px-1.5 py-0.5 rounded">위닝</span>` : ''}<span class="text-[11px] muted">소재 ${g.n}개 · ${Math.round(g.n / total * 100)}%</span><span class="ml-auto text-[11px] ${g.live ? 'rk-v font-semibold' : 'muted'}">${g.dur}일${g.live ? ' · 사용 중' : ''}</span></div>
+      <div class="text-xs font-semibold leading-snug line-clamp-2" title="${escapeAttr(g.a)}">${escapeHtml(g.a)}</div>${g.b ? `<div class="text-[11px] muted leading-snug line-clamp-2 mt-0.5" title="${escapeAttr(g.b)}">${escapeHtml(g.b)}</div>` : ''}
+      <div class="text-[10px] muted mt-auto pt-1.5">${adsDk(g.first)} → ${g.live ? '사용 중' : adsDk(g.last)}</div></div>`).join('')}</div>`
+    + (groups.length > show.length ? `<div class="text-[11px] muted mt-1.5">문구 ${groups.length}개 중 ${show.length}개 표시${w > show.length ? ` · 위닝 문구 ${w}개` : ''}</div>` : '');
+}
+/* 교체 이력 (11/06): 같은 주(월~일)에 처음 확인된 소재 = 1세트 = 교체 1회. 최근 ADS_WEEKS주.
+   날짜 용어는 수집 기준으로 통일: 최초 확인(실제 광고 시작일과 다를 수 있음) · 최근 확인(최근 3일 안에 다시 확인) · 관측 종료(그 뒤로 안 보임, 실제 종료 보장 없음)
+   상단 통계(평균 투입 간격 · 세트당 신규 소재 · 평균 관측 기간) → 주간 신규/관측 종료 줄 → 13주 이전 최초 확인(접힘) → 기간 안 세트(시간순).
+   세트를 누르면 세트 요약(최장 유지 · 마지막 확인)과 소재별 막대(최초 확인 ~ 마지막 확인 · 기간). 주황 점선 = 기준일(오늘) */
+function adsTimeline(items, T, kind){
+  const W0 = adsWk(T) - (ADS_WEEKS - 1) * 7, SPAN = ADS_WEEKS * 7, X = k => Math.max(0, Math.min(100, (k - W0) / SPAN * 100));
+  const weeks = Array.from({ length: ADS_WEEKS }, (_, i) => W0 + i * 7), now = adsDay(Date.now() / 1000);
+  const months = []; weeks.forEach((w, i) => { const m = new Date(w * 86400000).getUTCMonth(); if(!months.length || months.at(-1).m !== m) months.push({ m, i, n: 1 }); else months.at(-1).n++; });
+  const st = c => c.live ? '최근 확인' : '관측 종료', rng = c => `${adsDkY(c.a0, T)} ~ ${adsDkY(c.a1, T)}`;
+  const bar = (a0, a1, on, tx, tip) => { const l = X(a0), w = Math.max(.8, X(a1 + 1) - l), cut = a0 < W0, t = (cut ? '◀ ' : '') + tx;
+    const out = w < 26 ? (l + w < 70 ? `<span class="ads-bt muted" style="left:calc(${l + w}% + 4px)">${t}</span>` : `<span class="ads-bt muted" style="right:calc(${100 - l}% + 4px)">${t}</span>`) : '';
+    return `<div class="ads-tr" title="${escapeAttr(tip)}"><div class="ads-b ${on ? 'ads-on' : 'ads-off'}${cut ? ' ads-cut' : ''}" style="left:${l}%;width:${w}%">${out ? '' : t}</div>${out}</div>`; };
+  const inWin = items.filter(c => c.a1 >= W0), pre = inWin.filter(c => c.a0 < W0), cur = inWin.filter(c => c.a0 >= W0), gone = items.length - inWin.length;
+  const setsOf = arr => { const m = new Map(); arr.forEach(c => { const k = adsWk(c.a0); if(!m.has(k)) m.set(k, []); m.get(k).push(c); });
+    return [...m.values()].map(cs => ({ cs: cs.sort((a, b) => a.a0 - b.a0 || b.dur - a.dur), a0: Math.min(...cs.map(c => c.a0)), a1: Math.max(...cs.map(c => c.a1)), live: cs.filter(c => c.live).length, mx: Math.max(...cs.map(c => c.dur)) })); };
+  const tog = `onclick="this.nextElementSibling.classList.toggle('hidden');this.querySelector('.ads-chev')?.classList.toggle('rotate-90')"`;
+  const chev = '<i class="fa-solid fa-chevron-right ads-chev text-[9px] mr-1.5 transition-transform"></i>';
+  const oneRow = c => `<div class="ads-row ads-sub"><a href="${c.url}" target="_blank" rel="noopener" class="flex items-center gap-1.5 min-w-0 pl-5 hover:underline" title="${escapeAttr(c.copy[0] || '')}">${c.thumb ? `<span class="w-4 h-4 rounded-sm shrink-0" style="background:url('${c.thumb}') center/cover"></span>` : '<span class="w-4 h-4 rounded-sm shrink-0 bg-slate-800"></span>'}<span class="truncate">${escapeHtml(c.badges[0] || '')}${c.copy[0] ? ` · ${escapeHtml(c.copy[0])}` : ''}</span></a>
+      ${bar(c.a0, c.a1, c.live, `${rng(c)} · ${c.dur}일`, `최초 확인 ${adsDkY(c.a0, T)} · ${st(c)} ${adsDkY(c.a1, T)} · 관측 기간 ${c.dur}일${c.copy[0] ? `\n${c.copy[0]}` : ''}`)}</div>`;
+  const setRow = s => { const tx = s.live ? `관측 기간 ${T - s.a0 + 1}일 · ${s.live}개 최근 확인` : `최장 ${s.mx}일 · ${adsDkY(s.a1, T)} 관측 종료`;
+    const tip = `최초 확인 ${adsDkY(s.a0, T)} · 소재 ${s.cs.length}개\n최근 확인 ${s.live}개 · 마지막 확인 ${adsDkY(s.a1, T)} · 세트 내 최장 유지 ${s.mx}일`;
+    return `<div class="ads-row cursor-pointer hover:bg-slate-800/40 rounded" ${tog}><span class="flex items-center min-w-0">${chev}<span class="muted mr-1">최초 확인</span><b class="rk-v font-semibold">${adsDkY(s.a0, T)}</b><span class="muted ml-1">· ${s.cs.length}개</span></span>${bar(s.a0, s.a1, s.live > 0, tx, tip)}</div>
+      <div class="hidden"><div class="ads-row ads-sub"><span></span><div class="text-[11px] muted pl-1">세트 내 최장 유지 <b class="rk-v">${s.mx}일</b> · 마지막 확인 <b class="rk-v">${adsDkY(s.a1, T)}</b> · 최근 확인 ${s.live}/${s.cs.length}개</div></div>${s.cs.map(oneRow).join('')}</div>`; };
+  const cs = setsOf(cur).sort((a, b) => a.a0 - b.a0);
+  let h = `<div class="flex items-baseline justify-between gap-2 mb-2"><div class="text-xs font-semibold">교체 이력 <span class="muted font-normal">최근 ${ADS_WEEKS}주 · 같은 주 투입 = 1세트</span></div>
+    <div class="text-[11px] muted shrink-0"><span class="inline-block w-2 h-2 rounded-sm align-middle ads-on mr-1"></span>최근 확인 <span class="inline-block w-2 h-2 rounded-sm align-middle ads-off ml-2 mr-1"></span>관측 종료</div></div>
+    <div class="ads-tl mb-1"><div class="ads-ml">${months.slice(1).map(o => `<span style="left:${o.i / ADS_WEEKS * 100}%"></span>`).join('')}<i class="ads-today" style="left:${X(T + 1)}%"></i></div>
+    <div class="ads-row" style="min-height:14px"><span></span><div class="relative h-[14px]"><span class="ads-today-lb" style="right:${100 - X(T + 1)}%">${adsDk(T)} ${T >= now ? '오늘' : '기준일'}</span></div></div>
+    <div class="ads-row"><span></span><div class="grid text-[11px] font-semibold" style="grid-template-columns:repeat(${ADS_WEEKS},minmax(0,1fr))">${months.map(o => `<span style="grid-column:span ${o.n}" class="pl-1">${o.m + 1}월</span>`).join('')}</div></div>
+    <div class="ads-row"><span class="muted">주 (월요일 날짜)</span><div class="grid text-[10px] muted" style="grid-template-columns:repeat(${ADS_WEEKS},minmax(0,1fr))">${weeks.map(w => `<span class="pl-1 truncate">${adsDk(w)}주</span>`).join('')}</div></div>
+    <div class="ads-row border-b border-slate-800 pb-1 mb-1"><span><span class="ads-new font-semibold">신규</span> <span class="muted">/ 관측 종료</span></span><div class="grid" style="grid-template-columns:repeat(${ADS_WEEKS},minmax(0,1fr))">${weeks.map(w => {
+      const n = items.filter(c => c.a0 >= w && c.a0 <= w + 6).length, e = items.filter(c => !c.live && c.a1 >= w && c.a1 <= w + 6).length;
+      return `<span class="pl-1 text-[11px] font-semibold" title="${adsDk(w)}주 · 신규 ${n}개 · 관측 종료 ${e}개">${n ? `<span class="ads-new">+${n}</span>` : ''}${e ? `<span class="ads-end ml-1">−${e}</span>` : ''}</span>`; }).join('')}</div></div>`;
+  if(pre.length){ const ps = setsOf(pre).sort((a, b) => b.mx - a.mx), lv = pre.filter(c => c.live).length, mx = Math.max(...pre.map(c => c.dur));
+    h += `<div class="ads-row cursor-pointer hover:bg-slate-800/40 rounded" ${tog}><span class="flex items-center min-w-0">${chev}<b class="rk-v font-semibold">${ADS_WEEKS}주 이전 최초 확인</b><span class="muted ml-1">· ${pre.length}개</span></span>
+      ${bar(Math.min(...pre.map(c => c.a0)), Math.max(...pre.map(c => c.a1)), lv > 0, `장기 집행 · ${lv}개 최근 확인 · ${pre.length - lv}개 기간 중 관측 종료 · 최장 ${mx}일`, `${ADS_WEEKS}주보다 먼저 처음 확인되고 이 기간에도 확인된 소재 ${pre.length}개 · 세트 ${ps.length}개`)}</div>
+      <div class="hidden">${ps.slice(0, 4).map(setRow).join('')}${ps.length > 4 ? `<div class="ads-row cursor-pointer" onclick="this.nextElementSibling.classList.remove('hidden');this.remove()"><span class="muted pl-5 hover:underline">외 세트 ${ps.length - 4}개 더 보기</span><span></span></div><div class="hidden">${ps.slice(4).map(setRow).join('')}</div>` : ''}</div>`; }
+  h += cs.map(setRow).join('');
+  if(!inWin.length) h += `<div class="text-[11px] muted py-2">최근 ${ADS_WEEKS}주에 확인된 소재가 없습니다.</div>`;
+  return h + `</div><div class="text-[11px] muted mb-5">${gone ? `${ADS_WEEKS}주 전 종료 ${gone}개 제외` : ''}</div>`;
+}
+/* 요약 카드 (11/06): 현황 4칸 + 교체 주기 4칸을 한 카드에. 위닝 수는 머리에 두고 누르면 위닝 영역으로 */
+function adsCycle(items, T){
+  const W0 = adsWk(T) - (ADS_WEEKS - 1) * 7, cur = items.filter(c => c.a0 >= W0), m = new Map();
+  cur.forEach(c => { const k = adsWk(c.a0); m.set(k, [...(m.get(k) || []), c]); });
+  const ss = [...m.values()].map(cs => ({ a0: Math.min(...cs.map(c => c.a0)), n: cs.length })).sort((a, b) => a.a0 - b.a0), gaps = ss.slice(1).map((x, i) => x.a0 - ss[i].a0);
+  const avg = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null, f1 = v => v == null ? '–' : String(Math.round(v * 10) / 10);
+  const g = avg(gaps), n = avg(ss.map(x => x.n));
+  return [['소재 교체 주기', g == null ? '–' : `약 ${Math.round(g)}`, g == null ? '' : '일마다', '', `새 소재 세트가 들어온 날짜끼리 간격의 평균 ${f1(g)}일`], ['1회 투입 소재 수', n == null ? '–' : `약 ${Math.round(n)}`, n == null ? '' : '개', '', `세트 1개에 들어간 소재 수 평균 ${f1(n)}개`],
+    ['평균 관측 기간', f1(avg(cur.map(c => c.dur))), '일', '', '이 기간에 처음 확인된 소재의 관측 기간 평균 (최근 확인 소재는 기준일까지)'], ['교체 횟수', ss.length, '회', '', '새 세트가 투입된 횟수']];
+}
+function adsSummary(top, cyc){
+  /* 한 줄 6칸(수집한 소재 · 최초 마케팅 집행 | 교체 주기 4칸): 라벨 + 숫자만. 보조 설명(전체 건수 · 날짜 범위 등)은 마우스를 올리면 */
+  const cell = ([lb, v, u, sub, tip], i) => `<div class="min-w-0 px-3 py-2.5${i === 2 ? ' lg:border-l border-slate-800' : ''}" title="${escapeAttr([sub, tip].filter(Boolean).join(' · '))}"><div class="text-[11px] muted truncate">${lb}</div><div class="text-[16px] font-semibold rk-v leading-tight mt-1 truncate">${v}${u ? `<span class="text-[11px] muted font-normal ml-0.5">${u}</span>` : ''}</div></div>`;
+  return `<div class="rounded-lg border border-slate-800 bg-slate-900/40 mb-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">${[...top, ...cyc.map(c => [c[0], c[1], c[2], c[3], `최근 ${ADS_WEEKS}주 · ${c[4]}`])].map(cell).join('')}</div>`;
+}
+function adsWinList(items, life){
+  const lw = new Map(life.map(g => [g.k, g]));
+  return items.filter(c => c.win).map(c => ({ ...c, cg: c.key ? lw.get(c.key) : null }))
+    .map(c => ({ ...c, both: !c.key || !!c.cg?.win }))
+    .sort((a, b) => (b.both - a.both) || (b.dur - a.dur) || (!!b.thumb - !!a.thumb));
+}
+/* 위닝 크리에이티브 TOP3: 소재(이미지·영상)와 문구를 한 카드에 */
+function adsWinCreative(w){
+  const nb = w.filter(c => c.both).length;
+  let h = `<div id="adsWinBox" class="rounded-lg border border-slate-800 bg-slate-900/40 p-3 mb-5"><div class="text-xs font-semibold">위닝 크리에이티브 <span class="muted font-normal">${ADS_WIN}일 이상 유지 중 · ${nb}개</span></div>`;
+  if(!w.length) return h + `<div class="text-[11px] muted mt-1">지금 집행 중이면서 ${ADS_WIN}일 이상 이어진 소재가 없습니다. 소재를 자주 바꾸거나 최근 집행이 멈춘 경우이며, 집행 ${ADS_WIN}일 미만인 신작은 아직 판정할 수 없습니다.</div></div>`;
+  h += `<div class="grid gap-2 mt-2" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr))">${w.slice(0, 3).map((c, i) => `<a href="${c.url}" target="_blank" rel="noopener" class="flex gap-3 rounded-lg border ${c.both ? 'border-indigo-500' : 'border-slate-800'} p-2 min-w-0 hover:border-indigo-500">
+      <div class="relative w-24 h-24 shrink-0 rounded-md bg-slate-950 overflow-hidden" ${c.thumb ? `style="background:url('${c.thumb}') center/cover no-repeat"` : ''}>${c.thumb ? '' : '<div class="absolute inset-0 flex items-center justify-center text-[10px] muted">미리보기 없음</div>'}<span class="ads-win absolute left-1 top-1 text-[10px] font-semibold px-1.5 py-0.5 rounded">${i + 1}</span></div>
+      <div class="min-w-0 flex flex-col"><div class="text-xs font-semibold leading-snug line-clamp-2">${escapeHtml(c.copy[0] || '문구 없음 (동영상 등)')}</div>${c.copy[1] ? `<div class="text-[11px] muted leading-snug line-clamp-2 mt-0.5">${escapeHtml(c.copy.slice(1).join(' / '))}</div>` : ''}
+        <div class="mt-auto pt-1.5 flex flex-wrap gap-x-2 text-[11px]"><span><span class="muted">소재</span> <b class="rk-v">${c.dur}일</b></span>${c.cg ? `<span><span class="muted">문구</span> <b class="rk-v">${c.cg.dur}일</b><span class="muted"> · 소재 ${c.cg.n}개</span></span>` : ''}<span class="muted">${c.badges.join(' · ')}</span></div></div></a>`).join('')}</div>`;
+  return h + `</div>`;
+}
+function adsGrid(items){
+  return `<div class="ads-grid grid gap-2" style="grid-template-columns:repeat(auto-fill,minmax(140px,1fr))">${items.map(c => `<a href="${c.url}" target="_blank" rel="noopener" ${c.win ? 'data-win="1"' : ''} class="rounded-lg border ${c.win ? 'border-indigo-500' : 'border-slate-800'} bg-slate-900/40 hover:border-indigo-500 overflow-hidden min-w-0 block">
+    <div class="relative aspect-square bg-slate-950" ${c.thumb ? `style="background:url('${c.thumb}') center/cover no-repeat"` : ''}>${c.thumb ? '' : '<div class="absolute inset-0 flex items-center justify-center text-[11px] muted text-center px-2">미리보기 없음</div>'}
+      <div class="absolute left-1.5 top-1.5 flex flex-wrap gap-1">${c.win ? `<span class="ads-win text-[10px] font-semibold px-1.5 py-0.5 rounded">위닝 · ${c.dur}일</span>` : ''}${c.badges.map(b => `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-black/65 text-white">${escapeHtml(b)}</span>`).join('')}</div></div>
+    <div class="px-2 py-1.5"><div class="text-[11px] font-semibold">${c.dt}<span class="muted font-normal ml-1">${c.sub || ''}</span></div><div class="text-[11px] muted leading-snug line-clamp-2">${escapeHtml(c.copy[0] || '')}</div></div></a>`).join('')}</div>`;
+}
+function adsGridHead(items, note){
+  const n = items.filter(c => c.win).length;
+  return `<div class="flex items-center justify-between mb-2"><div class="text-xs font-semibold">소재 <span class="muted font-normal">${note}</span></div>${n ? `<label class="text-[11px] muted flex items-center gap-1.5 cursor-pointer shrink-0"><input type="checkbox" onchange="this.closest('section').querySelector('.ads-grid').classList.toggle('ads-winonly',this.checked)">위닝만 보기 (${n})</label>` : ''}</div>`;
+}
+function adsSetMedia(m){ adsMedia = m; if(adsSel && adsCache[adsSel]) adsRenderDetail(adsCache[adsSel]); }
+function adsSetAsOf(v){ const k = v ? Math.floor(Date.parse(v) / 86400000) : NaN; adsAsOf = isNaN(k) || k >= adsDay(Date.now() / 1000) ? null : k; if(adsSel && adsCache[adsSel]) adsRenderDetail(adsCache[adsSel]); }
+function adsRenderDetail(R){
+  const D = document.getElementById('adsDetail'), now = adsDay(Date.now() / 1000), T = adsAsOf ?? now, past = T < now, img = f => f ? `${ADS_BASE}img/${encodeURIComponent(R.pkg)}/${f}` : '';
+  const cnt = (arr, f) => arr.reduce((m, x) => { const k = f(x); m[k] = (m[k] || 0) + 1; return m; }, {});
+  const M = R.meta || {}, G = R.google || {};
+  /* 기준일 T 로 자르기: T 이후 시작한 소재 제외, 끝은 T 까지 */
+  const ma = (M.ads || []).filter(x => adsDay(x.start) <= T), ga = (G.ads || []).filter(x => adsDay(x.first) <= T);
+  if(!adsMedia) adsMedia = ma.length || !ga.length ? 'meta' : 'google';
+  const t0 = Math.min(...[...(M.ads || []).map(x => adsDay(x.start)), ...(G.ads || []).map(x => adsDay(x.first))].filter(Number.isFinite), now);
+  let h = `<div class="flex flex-wrap items-center gap-3"><button type="button" class="more-btn h-8" onclick="adsBack()"><i class="fa-solid fa-chevron-left mr-1.5"></i>목록</button>
+    <div class="flex items-center gap-2.5 min-w-0">${mkIcon(R.name)}<div class="min-w-0"><div class="text-[15px] font-semibold truncate">${escapeHtml(R.name)}</div><div class="text-[11px] muted">${escapeHtml(R.pkg)} · ${R.tracked_at.slice(0, 10)} 추적 · 한국</div></div></div>
+    <div class="flex flex-wrap items-center gap-1.5 ml-auto"><label class="text-[11px] muted flex items-center gap-1.5 mr-1">기준일<input type="date" class="h-8 rounded-md border border-slate-800 bg-slate-900 px-2 text-xs" value="${adsIso(T)}" min="${adsIso(t0)}" max="${adsIso(now)}" onchange="adsSetAsOf(this.value)"></label>${past ? `<button type="button" class="cal-chip" onclick="adsSetAsOf('')">오늘로</button>` : ''}
+    ${[['meta', 'fa-meta', 'Meta', ma.length, '#60a5fa'], ['google', 'fa-google', 'Google', ga.length, '#34d399']].map(([k, ic, lb, n, c]) =>
+      `<button type="button" onclick="adsSetMedia('${k}')" class="cal-chip${adsMedia === k ? ' on' : ''}" style="${adsMedia === k ? `border-color:${c};color:${c}` : ''}"><i class="fa-brands ${ic}"></i>${lb} <span class="muted">${n}</span></button>`).join('')}</div></div>`;
+  if(past) h += `<div class="rounded-lg border border-indigo-500 bg-slate-900/40 px-3 py-2 text-[11px]"><b class="rk-v">${adsDkY(T, now)} 기준</b><span class="muted"> · 그날 기준으로 다시 계산</span></div>`;
+  if(adsMedia === 'meta'){
+    h += `<section class="card rounded-xl p-5"><div class="mk-card-head"><div><h3 class="font-semibold text-sm"><i class="fa-brands fa-meta mr-1.5 text-sky-400"></i>Meta</h3><p class="text-[11px] muted mt-1">${(M.pages || []).map(p => escapeHtml(p.name || p.id)).join(', ') || '페이지 없음'}${M.count ? ` · 전체 ${M.count}건 중 ${(M.ads || []).length}개 수집` : ''}</p></div></div>`;
+    if(!ma.length) h += mkEmpty(past ? '기준일까지 시작한 Meta 광고가 없습니다.' : '이 게임의 Meta 광고를 찾지 못했습니다.');
+    else{
+      const tpl = v => /\{\{.*\}\}/.test(v || '');   /* 카탈로그(DCO) 광고의 {{product.name}} 같은 틀 문구는 실제 문구가 아님 */
+      const items = ma.map(x => { const a0 = adsDay(x.start), e = x.active ? now : adsDay(x.end || x.start), a1 = Math.min(e, T), live = e >= T, dur = a1 - a0 + 1, real = !tpl(x.body) && !tpl(x.title);
+        return { a0, a1, dur, live, win: live && dur >= ADS_WIN, key: real ? x.body + '\u0001' + x.title : '', copy: real ? [x.title || x.body, x.title ? x.body : ''].filter(Boolean) : [],
+          thumb: img(x.thumb), url: `https://www.facebook.com/ads/library/?id=${x.id}`, badges: [x.store, live ? null : '관측 종료'].filter(Boolean), dt: `${adsKst(x.start)}~`, sub: live ? `최근 확인 · ${dur}일` : `${dur}일` }; });
+      const act = items.filter(c => c.live).length, st = cnt(ma, x => x.store), s0 = Math.min(...items.map(c => c.a0));
+      const wc = items.filter(c => c.key), life = adsLife(wc, c => c.key, c => c.a0, c => c.a1, c => c.live);
+      const win = adsWinList(items, life);
+      h += adsSummary([['수집한 소재', ma.length, '개', `${M.count ? `전체 ${M.count}건 중 · ` : ''}최근 확인 ${act}개 · iOS ${st.iOS || 0} · Play ${st.Play || 0}`], ['최초 마케팅 집행', adsDkY(s0, T), '', `최초 확인 · ${past ? '기준일' : '오늘'} ${T - s0 + 1}일째`]], adsCycle(items, T));
+      h += adsTimeline(items, T, 'meta') + adsWinCreative(win);
+      h += `<div class="text-xs font-semibold mb-2">문구 조합 <span class="muted font-normal">위닝 문구 먼저</span></div><div class="mb-5">${life.length ? adsCopies(life.map(g => ({ ...g, a: g.b || g.a, b: g.b ? g.a : '' })), wc.length) : '<div class="text-[11px] muted">문구 없음</div>'}</div>`;
+      h += adsGridHead(items, '누르면 원본 광고') + adsGrid(items);
+    }
+  }else{
+    h += `<section class="card rounded-xl p-5"><div class="mk-card-head"><div><h3 class="font-semibold text-sm"><i class="fa-brands fa-google mr-1.5 text-emerald-400"></i>Google</h3><p class="text-[11px] muted mt-1">${(G.advertisers || []).map(a => escapeHtml(a.name)).join(', ') || (G.query ? `광고주 '${escapeHtml(G.query)}' 후보에서 이 게임 광고 없음` : '광고주 검색 안 함')}</p></div></div>`;
+    if(!ga.length){
+      const c = (G.candidates || []).filter(x => x.creativesKR);
+      h += mkEmpty(past && (G.ads || []).length ? '기준일까지 시작한 Google 광고가 없습니다.' : '이 게임의 Google 광고를 찾지 못했습니다.') + (c.length ? `<div class="text-[11px] muted mt-2">확인한 광고주: ${c.map(x => `${escapeHtml(x.name)} (KR 소재 ${x.creativesKR}개${x.topPkgs?.length ? ` · 주로 ${escapeHtml(x.topPkgs[0][0])}` : ''})`).join(' · ')}</div>` : '');
+    }else{
+      /* 문구 정리: 게임 이름(또는 이름이 두 줄로 쪼개진 조각) · 스토어 카드 라벨 · 깨진 HTML 문자(x22, x26quot; 등) 제거 → 실제 광고 문구만.
+         동영상 광고는 미리보기에 문구가 없어 빠지므로 비율은 '문구가 있는 소재' 기준.
+         게임 이름은 추적 때 입력한 짧은 이름(예 'WOS')일 수 있어 순위 데이터의 정식 이름 · 추적 검색어 전부도 이름으로 봄 */
+      const fullName = (() => { try{ for(const s of ['sales', 'popular']){ const I = mkDailyBase(s).idx, d = I?.dates?.at(-1); const n = I?.byDate.get(d)?.get('id:' + R.pkg)?.name; if(n) return n; } }catch(e){} return ''; })();
+      const nz = v => v.replace(/[\s:：·\-]/g, '').toLowerCase();
+      const nk = [R.name, fullName, ...String(R.meta?.query || '').split(',')].map(nz).filter(Boolean).join('|');
+      const STORE_LB = /^(출시 예정|속도감 있는 게임|등록|사전 등록|지금 예약|예약하기|설치|받기|열기|앱 열기)$/;
+      const ENT = { quot: '"', amp: '&', lt: '<', gt: '>', '#39': "'", apos: "'" };
+      const cl = x => (x.lines || []).map(l => l.replace(/x26(#?\w+);/g, (m, e) => ENT[e] ?? '').replace(/^x22/, '').replace(/x22/g, '"').trim()).filter(l => { const z = nz(l); return z && !STORE_LB.test(l) && !nk.includes(z) && z !== nk; });
+      const fm = cnt(ga, x => x.yt ? '동영상' : x.fmt === 2 ? '이미지' : '앱 광고');
+      const items = ga.map(x => { const a0 = adsDay(x.first), e = adsDay(x.last), a1 = Math.min(e, T), live = e >= T - 2, dur = a1 - a0 + 1, copy = cl(x);
+        return { a0, a1, dur, live, win: live && dur >= ADS_WIN, key: copy.join('\u0001'), copy,
+          thumb: img(x.thumb), url: `https://adstransparency.google.com/advertiser/${x.adv}/creative/${x.id}?region=KR`, badges: [x.yt ? '동영상' : x.fmt === 2 ? '이미지' : '앱'], dt: `${adsDk(a0)}–${adsDk(a1)}`, sub: `${dur}일` }; });
+      const f0 = Math.min(...items.map(c => c.a0)), l1 = Math.max(...items.map(c => c.a1)), recent = items.filter(c => c.live).length;
+      const wc = items.filter(c => c.key), life = adsLife(wc, c => c.key, c => c.a0, c => c.a1, c => c.live);
+      const win = adsWinList(items, life), advs = (G.advertisers || []).map(a => escapeHtml(a.name)).join(', ');
+      h += adsSummary([['수집한 소재', ga.length, '개', `${Object.entries(fm).map(([k, n]) => `${k} ${n}`).join(' · ')} · 최근 확인 ${recent}개 · 광고주 ${advs}`], ['최초 마케팅 집행', adsDkY(f0, T), '', `최초 확인 · ${past ? '기준일' : '오늘'} ${T - f0 + 1}일째`]], adsCycle(items, T));
+      h += adsTimeline(items, T, 'google') + adsWinCreative(win);
+      if(life.length) h += `<div class="text-xs font-semibold mb-2">문구 조합 <span class="muted font-normal">위닝 문구 먼저 · 문구 있는 소재 ${wc.length}개 기준</span></div><div class="mb-5">${adsCopies(life, wc.length)}</div>`;
+      h += adsGridHead(items, '누르면 원본 광고') + adsGrid(items);
+    }
+  }
+  h += `</section><p class="text-[11px] muted">Meta·Google 공개 광고 기준 · 날짜는 수집 기준 · 집행 금액·노출 수는 비공개</p>`;
+  D.innerHTML = h;
 }
 
 /* ---------- 비교 요약표 ---------- */
