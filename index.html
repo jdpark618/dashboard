@@ -3613,7 +3613,7 @@ async function openAdsView(){
   if(!adsIndex.length){ L.innerHTML = mkEmpty('아직 추적한 게임이 없습니다.'); return; }
   L.innerHTML = `<div id="adsToday" class="mb-4"></div>
     <div class="card rounded-xl p-5">
-    <div class="mk-card-head flex-wrap gap-3"><div class="border-l-[3px] border-indigo-500 pl-2.5"><h3 class="font-semibold text-sm" id="adsPastT">전체 리스트 <span class="muted font-normal" id="adsListN"></span></h3><p class="text-[11px] muted mt-1" id="adsPastSub">추적한 모든 게임 · 마지막 추적일 기준 · 게임을 누르면 상세</p></div>
+    <div class="mk-card-head flex-wrap gap-3"><div><h3 class="font-semibold text-sm border-l-[3px] border-indigo-500 pl-2.5" id="adsPastT">전체 리스트 <span class="muted font-normal" id="adsListN"></span></h3><p class="text-[11px] muted mt-1 pl-[13px]" id="adsPastSub">추적한 모든 게임 · 마지막 추적일 기준 · 게임을 누르면 상세</p></div>
       <div class="flex flex-wrap items-center gap-2"><input id="adsListQ" type="search" placeholder="게임 이름 (패키지, 개발사명) 검색" value="${escapeAttr(adsListQ)}" oninput="adsListQ=this.value;adsListPage=0;adsRenderList()" class="h-8 w-56 rounded-md border border-slate-800 bg-slate-900 px-2.5 text-xs">
         <div class="mk-seg" role="group" aria-label="보기">${[['all', '전체'], ['popular', '인기 추적'], ['sales', '매출 추적']].map(([k, lb]) => `<button type="button" data-k="${k}" onclick="adsListF='${k}';adsListPage=0;adsRenderList()">${lb}</button>`).join('')}</div></div></div>
     <div id="adsListGrid"></div></div>`;
@@ -3644,7 +3644,7 @@ function adsRenderToday(live){
         <td class="py-2 px-2 muted truncate" title="${escapeAttr(x.pkg)}">${escapeHtml(adsPub(x) || x.pkg)}</td>
         <td class="py-2 px-2 text-right rk-v">${x.meta}</td><td class="py-2 px-2 text-right rk-v">${x.google}</td></tr>`).join('')
       : '<tr><td colspan="4" class="text-xs muted py-3 px-2">오늘 추적한 게임이 없습니다.</td></tr>'}</tbody></table>`; };
-  T.innerHTML = `<div class="card rounded-xl p-5"><div class="mk-card-head"><div class="border-l-[3px] border-indigo-500 pl-2.5"><h3 class="font-semibold text-sm">TODAY</h3><p class="text-[11px] muted mt-1">Google Play 한국 · ${day ? `${Number(day.slice(5, 7))}/${Number(day.slice(8))} ` : ''}인기 · 매출 TOP5 · 게임을 누르면 상세</p></div></div>
+  T.innerHTML = `<div class="card rounded-xl p-5"><div class="mk-card-head"><div><h3 class="font-semibold text-sm border-l-[3px] border-indigo-500 pl-2.5">TODAY</h3><p class="text-[11px] muted mt-1 pl-[13px]">Google Play 한국 · ${day ? `${Number(day.slice(5, 7))}/${Number(day.slice(8))} ` : ''}인기 · 매출 TOP5 · 게임을 누르면 상세</p></div></div>
     <div class="grid gap-x-8 gap-y-4 lg:grid-cols-2 mt-2"><div class="min-w-0">${col('popular')}</div><div class="lg:border-l lg:border-slate-800 lg:pl-8 min-w-0">${col('sales')}</div></div></div>`;
 }
 function adsRenderList(){
