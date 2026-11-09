@@ -3884,7 +3884,7 @@ function adsRenderDetail(R){
     else{
       const { items, wc, life, win } = P.meta, act = items.filter(c => c.live).length, st = cnt(ma, x => x.store), s0 = Math.min(...items.map(c => c.a0));
       h += adsSummary([['수집한 소재', ma.length, '개', `${M.count ? `전체 ${M.count}건 중 · ` : ''}최근 확인 ${act}개 · iOS ${st.iOS || 0} · Play ${st.Play || 0}`], ['최초 마케팅 집행', adsDkY(s0, T), '', `최초 확인 · ${past ? '기준일' : T >= now ? '오늘' : '마지막 추적'} ${T - s0 + 1}일째`]], adsCycle(items, T));
-      h += adsTimeline(items, T, 'meta') + adsWinCreative(win, P.meta.th, items);
+      h += adsFlowBlock(P, T, 'meta') + adsTimeline(items, T, 'meta') + adsWinCreative(win, P.meta.th, items);
       h += `<div class="text-xs font-semibold mb-2">핵심 카피</div><div class="mb-5">${life.length ? adsCopies(life.map(g => ({ ...g, a: g.b || g.a, b: g.b ? g.a : '' })), wc.length) : '<div class="text-[11px] muted">문구 없음</div>'}</div>`;
       h += adsGridHead(items, '누르면 원본 광고') + adsGrid(items);
     }
@@ -3898,7 +3898,7 @@ function adsRenderDetail(R){
       const { items, wc, life, win } = P.google, fm = cnt(ga, x => x.yt ? '동영상' : x.fmt === 2 ? '이미지' : '앱 광고');
       const f0 = Math.min(...items.map(c => c.a0)), recent = items.filter(c => c.live).length, advs = (G.advertisers || []).map(a => escapeHtml(a.name)).join(', ');
       h += adsSummary([['수집한 소재', ga.length, '개', `${Object.entries(fm).map(([k, n]) => `${k} ${n}`).join(' · ')} · 최근 확인 ${recent}개 · 광고주 ${advs}`], ['최초 마케팅 집행', adsDkY(f0, T), '', `최초 확인 · ${past ? '기준일' : T >= now ? '오늘' : '마지막 추적'} ${T - f0 + 1}일째`]], adsCycle(items, T));
-      h += adsTimeline(items, T, 'google') + adsWinCreative(win, P.google.th, items);
+      h += adsFlowBlock(P, T, 'google') + adsTimeline(items, T, 'google') + adsWinCreative(win, P.google.th, items);
       if(life.length) h += `<div class="text-xs font-semibold mb-2">핵심 카피 <span class="muted font-normal">문구 있는 소재 ${wc.length}개 기준</span></div><div class="mb-5">${adsCopies(life, wc.length)}</div>`;
       h += adsGridHead(items, '누르면 원본 광고') + adsGrid(items);
     }
@@ -3957,6 +3957,14 @@ function adsProfile(p, T, kind){
   return { kind, type, badge: { short: '단기 회전형', always: '상시 집행형', mid: '중기 운영형', running: '캠페인 집행 중', single: '단일 소재 장기 운영', stop: '집행 중단' }[type], head, sub, rich, flow, newCopy, topCopy, latestTop, live: live.length, r6, long, n6, p6, trend,
     big: big && big[1] >= 5 ? { k: big[0], n: big[1] } : null, cyc: adsCycle(items, T), win: p.win.filter(c => c.both).length };
 }
+/* 매체 탭 '메시지 흐름' (11/09: 개요에서 옮김) — 시기별 대표 문구 또는 월별 신규 소재 수 */
+function adsFlowBlock(P, T, k){
+  const p = adsProfile(P[k], T, k); if(!p || !p.flow.length) return '';
+  const note = p.rich ? (p.newCopy.length ? `최근 6주 새 문구: ${p.newCopy.map(escapeHtml).join(' · ')}` : '') : (p.topCopy ? `대표 문구: ${escapeHtml(p.topCopy)}` : '');
+  return `<div class="mb-5"><div class="text-xs font-semibold mb-2">${p.rich ? '메시지 흐름' : '투입 흐름'} <span class="muted font-normal">${p.rich ? '시기별 가장 많이 쓴 문구' : '월별 신규 소재 수'}</span></div>
+    <div class="grid gap-1.5" style="grid-template-columns:repeat(${p.flow.length},minmax(0,1fr))">${p.flow.map(f => `<div class="rounded-lg border ${f.now ? 'border-indigo-500' : 'border-slate-800'} px-2.5 py-1.5 min-w-0"><div class="text-[11px] muted">${f.lb}</div><div class="text-xs font-semibold leading-snug mt-0.5 line-clamp-2" title="${escapeAttr(f.v)}">${escapeHtml(f.v)}</div></div>`).join('')}</div>
+    ${note ? `<div class="text-[11px] muted mt-1.5">${note}</div>` : ''}</div>`;
+}
 function adsOverview(P, T, raw){
   const LB = { meta: 'Meta', google: 'Google' }, pr = { meta: adsProfile(P.meta, T, 'meta'), google: adsProfile(P.google, T, 'google') };
   const ks = ['meta', 'google'].filter(k => pr[k]);
@@ -3977,27 +3985,30 @@ function adsOverview(P, T, raw){
         <div class="shrink-0 pl-2.5 border-l border-slate-800 flex flex-col justify-center text-right"><div class="text-[20px] font-semibold rk-v leading-none">${w.dur.toLocaleString()}<span class="text-[11px] muted font-normal ml-0.5">일</span></div>${w.cg ? `<div class="text-[10px] muted mt-1">문구 ${w.cg.dur.toLocaleString()}일</div>` : ''}</div></button>`;
     const win = P[k].win.length ? `<div class="grid gap-2 sm:grid-cols-2">${P[k].win.slice(0, 2).map(wc).join('')}</div>`
       : `<div class="rounded-lg border border-slate-800 p-3 text-xs muted">${adsWinEmpty(P[k].items, P[k].th)}</div>`;
+    /* 카드 구조 (11/09): 운영 현황 → 운영 패턴 → 주목할 소재. 월별 메시지 흐름 · 1회 투입 · 교체 횟수 · 전체 소재는 매체 탭으로 */
+    const rgb = k === 'meta' ? '37,137,232' : '32,201,151', mid = Math.max(0, p.live - p.r6 - p.long);
+    const newPct = p.live ? Math.round(p.r6 / p.live * 100) : 0, oldPct = p.live ? Math.round(p.long / p.live * 100) : 0;
+    const lead = !p.live ? null : oldPct > newPct ? [oldPct, '90일 이상 소재 비중', '장기 소재 중심'] : [newPct, '최근 6주 신규 비중', '신규 소재 중심'];
+    const cv = (c, u) => c[1] === '–' ? '–' : `${Math.round(parseFloat(String(c[1]).replace('약 ', '')))}${u}`;
+    const stat = (lb, v) => `<div class="rounded-md bg-slate-900/60 px-2.5 py-1.5 min-w-0"><div class="text-[11px] muted truncate">${lb}</div><div class="text-[15px] font-semibold rk-v leading-tight mt-0.5">${v}</div></div>`;
+    const parts = [['6주 이내', p.r6, 1], ['6주~90일', mid, .6], ['90일+', p.long, .32]];
+    const msg = p.rich ? [p.flow.at(-1)?.v, ...p.newCopy].filter((v, i, A) => v && A.indexOf(v) === i).slice(0, 2) : (p.topCopy ? [p.topCopy] : []);
+    const recentL = P[k].items.filter(c => c.live).sort((x, y) => y.a0 - x.a0 || y.dur - x.dur);
     return `<div class="card rounded-xl p-5 min-w-0 flex flex-col">
       <div class="flex items-center justify-between gap-2"><div class="font-semibold text-sm">${icon}${LB[k]}</div><span class="ads-badge-${k} text-[11px] font-semibold px-2 py-0.5 rounded">${p.badge}</span></div>
-      <div class="border-l-4 pl-3 mt-3" style="border-left-color:${k === 'meta' ? '#2589E8' : '#20C997'}" title="${escapeAttr(p.sub + (p.big ? ` · ${adsDk(p.big.k)}주 한 번에 ${p.big.n}개` : ''))}"><div class="text-[16px] font-semibold leading-snug">${p.head}</div><div class="text-xs muted mt-1">${recent(p)}</div></div>
-      <div class="text-[11px] muted mt-5" title="${escapeAttr(note.replace(/<[^>]+>/g, ''))}">${p.rich ? '메시지 흐름' : '투입 흐름 (월별 신규)'}</div>
-      <div class="grid gap-1.5 mt-1.5" style="grid-template-columns:repeat(${Math.max(1, p.flow.length)},minmax(0,1fr))">${p.flow.map(f => `<div class="rounded-lg border ${f.now ? 'border-indigo-500' : 'border-slate-800'} px-2 py-1.5 min-w-0"><div class="text-[11px] muted">${f.lb}</div><div class="text-xs font-semibold leading-snug mt-0.5 line-clamp-2" title="${escapeAttr(f.v)}">${escapeHtml(f.v)}</div></div>`).join('') || '<div class="text-[11px] muted">최근 1년 투입 없음</div>'}</div>
-      ${(() => { /* 운영 수치 4칸 (하단 '두 매체 비교' 띠에서 카드 안으로 옮김, 11/09) */
-        const v = (c, u) => c[1] === '–' ? '–' : `${Math.round(parseFloat(String(c[1]).replace('약 ', '')))}${u}`;
-        const st = [['교체 주기', v(p.cyc[0], '일')], ['1회 투입', v(p.cyc[1], '개')], ['평균 유지', v(p.cyc[2], '일')], ['교체 횟수', v(p.cyc[3], '회')]];
-        return `<div class="grid grid-cols-4 gap-1.5 mt-4" title="최근 ${ADS_WEEKS}주 기준">${st.map(([lb, x]) => `<div class="rounded-md bg-slate-900/60 px-2.5 py-1.5 min-w-0"><div class="text-[11px] muted truncate">${lb}</div><div class="text-[15px] font-semibold rk-v leading-tight mt-0.5">${x}</div></div>`).join('')}</div>`; })()}
-      ${(() => { /* 지금 집행 중 소재의 나이 구성: 6주 내 신규 / 6주~90일 / 90일+ → 단기 회전형인지 상시 집행형인지 숫자로 뒷받침 */
-        const rgb = k === 'meta' ? '37,137,232' : '32,201,151', mid = Math.max(0, p.live - p.r6 - p.long);
-        const parts = [['6주 내 신규', p.r6, 1], ['6주~90일', mid, .6], ['90일+', p.long, .32]];
-        return `<div class="mt-3 pt-3 border-t border-slate-800 flex flex-wrap items-center gap-x-4 gap-y-2">
-          <div class="shrink-0"><span class="text-[11px] muted mr-1.5">지금 집행 중</span><b class="text-[18px] rk-v">${p.live}</b><span class="text-[11px] muted ml-0.5">개</span></div>
-          <div class="flex gap-[2px] h-2.5 rounded-sm overflow-hidden flex-1 min-w-[90px] max-w-[200px]">${p.live ? parts.filter(x => x[1]).map(x => `<div title="${x[0]} ${x[1]}개" style="width:${x[1] / p.live * 100}%;background:rgba(${rgb},${x[2]})"></div>`).join('') : ''}</div>
-          <div class="flex flex-wrap gap-x-3 gap-y-1 text-[11px]">${parts.map(x => `<span><span class="inline-block w-2 h-2 rounded-sm align-middle mr-1" style="background:rgba(${rgb},${x[2]})"></span><span class="muted">${x[0]}</span> <b class="rk-v">${x[1]}</b></span>`).join('')}</div></div>`; })()}
+      <div class="flex items-end gap-6 mt-3 flex-wrap">
+        <div><div class="text-[11px] muted">현재 집행 중인 소재</div><div class="leading-none mt-1"><b class="text-[34px] font-bold rk-v">${p.live}</b><span class="text-sm muted ml-1">개</span></div></div>
+        ${lead ? `<div class="pl-5 border-l border-slate-800"><div class="text-[11px] muted">${lead[1]}</div><div class="leading-none mt-1"><b class="text-[24px] font-bold" style="color:${k === 'meta' ? '#2589E8' : '#20C997'}">${lead[0]}%</b><span class="text-xs font-semibold ml-2" style="color:${k === 'meta' ? '#2589E8' : '#20C997'}">${lead[2]}</span></div></div>` : ''}
+      </div>
+      <div class="text-xs muted mt-2" title="${escapeAttr(p.sub)}">${p.head}</div>
+      <div class="grid grid-cols-3 gap-1.5 mt-3" title="최근 ${ADS_WEEKS}주 기준">${stat('최근 6주 신규', p.n6 + '개')}${stat('평균 교체 주기', cv(p.cyc[0], '일'))}${stat('평균 유지 기간', cv(p.cyc[2], '일'))}</div>
+      <div class="text-[11px] muted mt-4">소재 연령 분포</div>
+      <div class="flex gap-[2px] h-2.5 rounded-sm overflow-hidden mt-1.5">${p.live ? parts.filter(x => x[1]).map(x => `<div title="${x[0]} ${x[1]}개" style="width:${x[1] / p.live * 100}%;background:rgba(${rgb},${x[2]})"></div>`).join('') : '<div class="flex-1 bg-slate-800/60"></div>'}</div>
+      <div class="flex flex-wrap gap-x-3 mt-1 text-[11px]">${parts.map(x => `<span><span class="inline-block w-2 h-2 rounded-sm align-middle mr-1" style="background:rgba(${rgb},${x[2]})"></span><span class="muted">${x[0]}</span> <b class="rk-v">${x[1]}</b></span>`).join('')}</div>
+      ${msg.length ? `<div class="text-xs mt-4 truncate" title="${escapeAttr(msg.join(' · '))}"><span class="muted">최근 주요 메시지 · </span><span class="rk-v font-semibold">${msg.map(escapeHtml).join(' · ')}</span></div>` : ''}
       <div class="text-[11px] muted mt-4 mb-1.5">위닝 크리에이티브</div>${win}
-      ${(() => { /* 집행 중 소재 썸네일 (11/09): 최근 시작 순 · 카드 폭에 맞춰 2줄까지만 보임(넘치는 줄은 grid-auto-rows:0 으로 숨김) · 위닝은 보라 테두리 */
-        const L = P[k].items.filter(c => c.live).sort((a, b) => b.a0 - a.a0 || b.dur - a.dur); if(!L.length) return '';
-        return `<div class="flex items-baseline justify-between mt-4 mb-1.5"><span class="text-[11px] muted">집행 중 소재 · 최근 시작 순 ${L.length}개</span><button type="button" class="text-[11px] muted hover:underline" onclick="adsSetMedia('${k}');setTimeout(() => document.querySelector('#adsDetail .ads-grid')?.scrollIntoView({ block: 'start' }), 50)">모두 보기 ›</button></div>
-          <div class="grid overflow-hidden" style="grid-template-columns:repeat(auto-fill,minmax(60px,1fr));grid-template-rows:repeat(2,auto);grid-auto-rows:0;column-gap:6px">${L.slice(0, 40).map(c => `<div class="pb-1.5 min-w-0"><a href="${c.url}" target="_blank" rel="noopener" title="${escapeAttr((c.copy[0] || c.fmtL || '') + ' · ' + c.dur + '일')}" class="relative block aspect-square rounded-md bg-slate-950 overflow-hidden ${c.win ? 'ring-2 ring-indigo-500 ring-inset' : ''}" ${c.thumb ? `style="background:url('${c.thumb}') center/cover no-repeat"` : ''}>${c.thumb ? '' : `<span class="absolute inset-0 flex items-center justify-center text-[10px] muted">${c.fmtL || '없음'}</span>`}<span class="absolute left-1 bottom-1 text-[9px] font-semibold px-1 rounded bg-black/65 text-white">${c.dur.toLocaleString()}일</span></a></div>`).join('')}</div>`; })()}
+      ${recentL.length ? `<div class="flex items-baseline justify-between mt-4 mb-1.5"><span class="text-[11px] muted">최근 집행 소재</span><button type="button" class="text-[11px] ads-new font-semibold hover:underline" onclick="adsSetMedia('${k}');setTimeout(() => document.querySelector('#adsDetail .ads-grid')?.scrollIntoView({ block: 'start' }), 50)">전체 ${recentL.length}개 보기 ›</button></div>
+        <div class="grid grid-cols-8 gap-1.5">${recentL.slice(0, 8).map(c => `<a href="${c.url}" target="_blank" rel="noopener" title="${escapeAttr((c.copy[0] || c.fmtL || '') + ' · ' + c.dur + '일')}" class="relative block aspect-square rounded-md bg-slate-950 overflow-hidden ${c.win ? 'ring-2 ring-indigo-500 ring-inset' : ''}" ${c.thumb ? `style="background:url('${c.thumb}') center/cover no-repeat"` : ''}>${c.thumb ? '' : `<span class="absolute inset-0 flex items-center justify-center text-[10px] muted">${c.fmtL || '없음'}</span>`}<span class="absolute left-1 bottom-1 text-[9px] font-semibold px-1 rounded bg-black/65 text-white">${c.dur.toLocaleString()}일</span></a>`).join('')}</div>` : ''}
       <div class="mt-auto pt-4 flex justify-end"><button type="button" class="inline-flex items-center gap-1.5 rounded-lg border border-indigo-500 px-4 py-1.5 text-[13px] font-bold ads-new hover:bg-indigo-500/10" onclick="adsSetMedia('${k}');window.scrollTo({top:0})">${LB[k]} 상세 보기 <i class="fa-solid fa-chevron-right text-[10px]"></i></button></div></div>`; };
   let h = `<div class="grid gap-3 md:grid-cols-2 items-stretch">${col('meta')}${col('google')}</div>`;
   return `<div class="space-y-4">${h}</div>`;
