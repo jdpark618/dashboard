@@ -658,10 +658,30 @@ html.panel-lock { overflow: hidden; }
 .asof { font-size:12px; color:rgba(189,181,255,.9); }
 /* 행사 달력: 구글 캘린더 임베드 (원래 밝은 화면이라 다크 테마에서는 색 반전 + 색상 회전으로 사이트 톤에 맞춤) */
 #view-events { max-width:1180px; margin:0 auto; }   /* 넓은 화면에서도 가로 1180px 가운데 (인벤 게임 캘린더 크기) */
-.ev-frame { height:clamp(620px, calc(100vh - 200px), 800px); background:#fff; }   /* 한 화면 안, 최대 800px */
-@media (max-width:767px){ .ev-frame { height:760px; } }
-.ev-frame iframe { width:100%; height:100%; border:0; display:block; }
-.ev-frame.dark { background:#202428; } .ev-frame.dark iframe { filter:invert(.9) hue-rotate(180deg) brightness(1.05); }
+.ev-body { display:grid; grid-template-columns:minmax(0,1fr) 360px; gap:16px; }
+@media (max-width:1199px){ .ev-body { grid-template-columns:1fr; } }
+.ev-dow, .ev-wk { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); }
+.ev-dow { border-bottom:1px solid var(--line); } .ev-dow div { padding:8px 10px; font-size:11px; color:#8b9297; }
+.ev-dow div:nth-child(6) { color:#60a5fa; } .ev-dow div:nth-child(7) { color:#f87171; }
+.ev-wk { position:relative; border-bottom:1px solid var(--line); height:var(--ev-wh, 124px); } .ev-wk:last-child { border-bottom:0; }
+.ev-cell { border-right:1px solid var(--line); padding:5px 6px 4px; min-width:0; cursor:pointer; } .ev-cell:last-child { border-right:0; }
+.ev-cell:hover { background:rgba(41,47,51,.6); } .ev-cell.out { opacity:.42; }
+.ev-cell.sel { background:rgba(41,47,51,.9); box-shadow:inset 0 0 0 2px #6257e8; }
+.ev-dn { font-size:12px; font-weight:600; height:20px; display:flex; align-items:center; }
+.ev-cell.sat .ev-dn { color:#60a5fa; } .ev-cell.sun .ev-dn { color:#f87171; }
+.ev-cell.today .ev-dn span { background:#6257e8; color:rgb(255,255,255); border-radius:999px; padding:0 6px; line-height:18px; }
+.ev-lanes { position:absolute; left:0; right:0; top:26px; pointer-events:none; }
+.evb { position:absolute; height:17px; border-radius:4px; font-size:11px; line-height:17px; padding:0 6px 0 5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:600; color:#e6e8ea; background:color-mix(in srgb, var(--c) 26%, #202428); border-left:3px solid var(--c); }
+.evb.cl { border-top-left-radius:0; border-bottom-left-radius:0; border-left-color:transparent; } .evb.cr { border-top-right-radius:0; border-bottom-right-radius:0; }
+.ev-items { margin-top:59px; } .ev-it { display:flex; align-items:center; gap:5px; font-size:11px; line-height:17px; white-space:nowrap; overflow:hidden; }
+.ev-it i { width:6px; height:6px; border-radius:50%; flex:none; } .ev-it span { overflow:hidden; text-overflow:ellipsis; }
+.ev-more { font-size:11px; color:#8b9297; line-height:16px; }
+#evPanel { height:var(--ev-ph, 760px); overflow-y:auto; }
+@media (max-width:1199px){ #evPanel { height:auto; max-height:none; } }
+.ev-card { border-radius:8px; padding:9px 10px; margin-bottom:6px; border-left:3px solid var(--c) !important; }
+.ev-card .c { font-size:10px; font-weight:700; color:var(--c); } .ev-card .t { font-size:13px; font-weight:600; margin-top:2px; line-height:1.35; }
+.ev-card .m { font-size:11px; color:#8b9297; margin-top:4px; } .ev-card .d { font-size:11px; color:#8b9297; margin-top:6px; line-height:1.5; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; white-space:pre-line; }
+.ev-sec { font-size:12px; font-weight:700; margin:16px 0 8px; } .ev-sec b { color:#8b9297; font-weight:500; margin-left:4px; }
 .ev-empty { height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; font-size:13px; color:#a0a7ad; background:#202428; text-align:center; padding:24px; }
 .toast { position:fixed; left:50%; bottom:28px; z-index:80; transform:translate(-50%, 8px); opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; background:#292f33; color:#e8eaed; border:1px solid #343a3e; border-radius:10px; padding:9px 14px; font-size:13px; font-weight:600; box-shadow:0 8px 24px rgba(0,0,0,.45); }
 .toast.on { opacity:1; transform:translate(-50%, 0); }
@@ -1486,12 +1506,20 @@ document.querySelectorAll('.sc-store button').forEach(b => { const on = b.datase
 </div>
 
 <!-- CALENDAR VIEW -->
-<!-- 행사 달력: 직접 관리하는 구글 캘린더(게임쇼·e스포츠·비즈니스 행사)를 그대로 끼워 넣음. 나라·스토어와 무관 -->
-<div id="view-events" class="hidden space-y-4">
-  <div class="filter-row">
-    <a id="evOpen" class="asof hover:underline" href="#" target="_blank" rel="noopener">구글 캘린더에서 열기 ›</a>
+<!-- 행사 달력 (11/09): 직접 관리하는 공개 구글 캘린더를 gchart 가 6시간마다 data/events.json 으로 받아 두고 여기서 직접 그림.
+     왼쪽 월 달력(여러 날 행사 = 막대 3줄까지 · 당일 일정 = 점 줄) + 오른쪽 고른 날짜 일정. 나라·스토어와 무관 -->
+<div id="view-events" class="hidden space-y-3">
+  <div class="cal-bar">
+    <div class="flex items-center gap-2">
+      <button onclick="evMove(-1)" class="cal-navbtn" aria-label="이전 달"><i class="fa-solid fa-chevron-left"></i></button>
+      <h3 id="evTitle" class="text-lg font-bold min-w-[120px] text-center whitespace-nowrap">-</h3>
+      <button onclick="evMove(1)" class="cal-navbtn" aria-label="다음 달"><i class="fa-solid fa-chevron-right"></i></button>
+      <button onclick="evMove(0)" class="cal-today-btn">오늘</button>
+      <div id="evChips" class="flex flex-wrap items-center gap-1.5 ml-1"></div>
+    </div>
+    <div class="flex items-center gap-3 ml-auto"><span id="evUpd" class="text-[11px] muted"></span><a id="evOpen" class="asof hover:underline" href="#" target="_blank" rel="noopener">구글 캘린더에서 열기 ›</a></div>
   </div>
-  <section class="card rounded-xl overflow-hidden"><div id="evFrame" class="ev-frame"></div></section>
+  <div class="ev-body"><section id="evCal" class="card rounded-xl overflow-hidden"></section><aside id="evPanel" class="card rounded-xl p-4 thin-scroll"></aside></div>
 </div>
 
 <div id="view-calendar" class="hidden space-y-3">
@@ -2769,16 +2797,67 @@ function switchView(view){
 }
 /* 스토어·국가 선택을 지금 페이지 칸으로: both = 스토어+국가, store = 스토어만(4개국을 함께 보는 화면)
    country = 국가만(두 스토어를 나란히 보는 일간 마켓별 순위). 신작 달력 · 신작 DB · 신작 동향 · 주간 리포트는 없음 */
-/* 행사 달력: 공개 구글 캘린더를 처음 열 때만 불러옴 (월 보기 · 월요일 시작 · 서울 시간) */
-const EVENT_CAL_ID = 'c_58bf32be64488847f1007ad21615b0fcdf767a96764ea45106af7b5b75974456@group.calendar.google.com';   /* 구글 캘린더 설정 > 캘린더 통합 > '캘린더 ID' (공개 캘린더여야 보임) */
-function openEventsView(){
-  const box = document.getElementById('evFrame'), a = document.getElementById('evOpen');
-  box.classList.toggle('dark', PAGE_THEME === 'dark');   /* 사이트 테마를 따름 */
-  if(!EVENT_CAL_ID){ box.innerHTML = '<div class="ev-empty"><i class="fa-regular fa-calendar text-2xl text-slate-500"></i>행사 캘린더가 아직 연결되지 않았습니다<span class="text-[12px] text-slate-500">구글 캘린더 ID 를 넣으면 여기에 표시됩니다</span></div>'; a.classList.add('hidden'); return; }
-  a.classList.remove('hidden'); a.href = `https://calendar.google.com/calendar/u/0?cid=${encodeURIComponent(EVENT_CAL_ID)}`;
-  if(box.querySelector('iframe')) return;
-  const q = new URLSearchParams({ src: EVENT_CAL_ID, ctz: 'Asia/Seoul', hl: 'ko', mode: 'MONTH', wkst: '2', showTitle: '0', showPrint: '0', showTz: '0', showCalendars: '0', bgcolor: '#ffffff', color: PAGE_THEME === 'dark' ? '#BEB8FA' : '#795548' });   /* 일정 막대 색: 다크 #514C83 (반전 필터를 거치면 그 색이 되도록 역산한 값) · 라이트는 구글 캘린더 '코코아' 갈색 */
-  box.innerHTML = `<iframe src="https://calendar.google.com/calendar/embed?${q}" title="행사 달력"></iframe>`;
+/* 행사 달력 (11/09): gchart data/events.json (6시간마다 공개 구글 캘린더에서 받음) → 직접 그림 */
+const EVENT_CAL_ID = 'c_58bf32be64488847f1007ad21615b0fcdf767a96764ea45106af7b5b75974456@group.calendar.google.com';   /* 구글 캘린더 '캘린더 ID' (공개) — 원본 열기 링크용 */
+/* 분류: 제목 앞 [..] 머리표 */
+const EV_CATS = [['행사', '#7c6cf0', ['행사', '쇼']], ['e스포츠', '#e0567a', ['e']], ['비즈니스', '#2f9e8f', ['비즈니스', 'Biz', '국회', '토론']],
+  ['출시·테스트', '#e08a2f', ['출시', '테스트']], ['마감·접수', '#8a94a0', ['마감', '접수', '모집', '채용']], ['방송', '#3b82c4', ['Live', 'LIVE']], ['기타', '#8a94a0', []]];
+const evS = { data: null, ym: null, sel: null, off: new Set() };
+const evD = s => new Date(s + 'T00:00:00Z'), evF = d => d.toISOString().slice(0, 10), evAdd = (s, n) => evF(new Date(evD(s).getTime() + n * 864e5));
+const evMD = s => `${+s.slice(5, 7)}/${+s.slice(8)}`;
+async function openEventsView(){
+  const a = document.getElementById('evOpen'); a.href = `https://calendar.google.com/calendar/u/0?cid=${encodeURIComponent(EVENT_CAL_ID)}`;
+  if(!evS.data){
+    document.getElementById('evCal').innerHTML = `<div class="p-10 text-center text-xs muted"><i class="fa-solid fa-spinner fa-spin mr-1.5"></i>행사 일정을 불러오는 중...</div>`;
+    try{ const j = await (await fetch(`${DATA_BASE}events.json?t=${Date.now()}`)).json(); evS.data = j;
+      j.events.forEach(e => { const m = e.t.match(/^\[([^\]]+)\]\s*/), k = m ? m[1] : '', c = EV_CATS.find(c => c[2].includes(k)) || EV_CATS.at(-1);
+        e.cat = c[0]; e.col = c[1]; e.title = m ? e.t.slice(m[0].length) : e.t; e.multi = e.e > e.s; }); }
+    catch(err){ document.getElementById('evCal').innerHTML = mkEmpty('행사 일정을 불러오지 못했습니다.'); return; }
+  }
+  if(!evS.ym){ const t = kstTodayStr(); evS.ym = t.slice(0, 7); evS.sel = t; }
+  evRender();
+}
+function evMove(n){ if(n === 0){ const t = kstTodayStr(); evS.ym = t.slice(0, 7); evS.sel = t; } else { const d = evD(evS.ym + '-01'); d.setUTCMonth(d.getUTCMonth() + n); evS.ym = evF(d).slice(0, 7); evS.sel = evS.ym === kstTodayStr().slice(0, 7) ? kstTodayStr() : evS.ym + '-01'; } evRender(); }
+function evPick(d){ evS.sel = d; evRender(); }
+function evToggle(c){ evS.off.has(c) ? evS.off.delete(c) : evS.off.add(c); evRender(); }
+function evRender(){
+  const J = evS.data; if(!J) return;
+  const EV = J.events.filter(e => !evS.off.has(e.cat)), today = kstTodayStr(), first = evS.ym + '-01';
+  const dow = (evD(first).getUTCDay() + 6) % 7, start = evAdd(first, -dow), last = evF(new Date(Date.UTC(+evS.ym.slice(0, 4), +evS.ym.slice(5, 7), 0)));
+  const weeks = Math.ceil((dow + +last.slice(8)) / 7), LANES = 3, ITEMS = 1;
+  document.getElementById('evTitle').textContent = `${evS.ym.slice(0, 4)}년 ${+evS.ym.slice(5, 7)}월`;
+  /* 화면 높이에 맞춤: 주당 높이 (최소 116px) · 오른쪽 패널은 달력과 같은 높이 */
+  const top = document.getElementById('evCal').getBoundingClientRect().top + scrollY, wh = Math.max(116, Math.floor((innerHeight - top - 24 - 34) / weeks));
+  const root = document.documentElement.style; root.setProperty('--ev-wh', wh + 'px'); root.setProperty('--ev-ph', (wh * weeks + 36) + 'px');
+  let h = `<div class="ev-dow">${['월', '화', '수', '목', '금', '토', '일'].map(d => `<div>${d}</div>`).join('')}</div>`;
+  for(let w = 0; w < weeks; w++){
+    const ws = evAdd(start, w * 7), we = evAdd(ws, 6);
+    /* 여러 날 행사: 주 안에서 겹치지 않게 줄 배치 (긴 행사 먼저), 3줄까지 막대 · 넘치면 그 날 '+N개 더' */
+    const multi = EV.filter(e => e.multi && e.s <= we && e.e >= ws).sort((a, b) => a.s.localeCompare(b.s) || b.e.localeCompare(a.e));
+    const lanes = [], hidden = {};
+    multi.forEach(e => { const c0 = (evD(e.s < ws ? ws : e.s) - evD(ws)) / 864e5, c1 = (evD(e.e > we ? we : e.e) - evD(ws)) / 864e5;
+      let li = lanes.findIndex(L => L.every(x => x.c1 < c0 || x.c0 > c1)); if(li < 0){ lanes.push([]); li = lanes.length - 1; }
+      lanes[li].push({ e, c0, c1, cl: e.s < ws, cr: e.e > we }); if(li >= LANES) for(let c = c0; c <= c1; c++) hidden[c] = (hidden[c] || 0) + 1; });
+    const bars = lanes.slice(0, LANES).flatMap((L, li) => L.map(b => `<div class="evb ${b.cl ? 'cl' : ''} ${b.cr ? 'cr' : ''}" style="left:calc(${b.c0} * 100% / 7 + 4px);width:calc(${b.c1 - b.c0 + 1} * 100% / 7 - 8px);top:${li * 19}px;--c:${b.e.col}" title="${escapeAttr(b.e.t)}">${escapeHtml(b.e.title)}</div>`)).join('');
+    h += `<div class="ev-wk"><div class="ev-lanes">${bars}</div>`;
+    for(let c = 0; c < 7; c++){ const d = evAdd(ws, c), one = EV.filter(e => !e.multi && e.s === d), more = Math.max(0, one.length - ITEMS) + (hidden[c] || 0);
+      h += `<div class="ev-cell ${d.slice(0, 7) !== evS.ym ? 'out' : ''} ${d === today ? 'today' : ''} ${d === evS.sel ? 'sel' : ''} ${c === 5 ? 'sat' : c === 6 ? 'sun' : ''}" onclick="evPick('${d}')"><div class="ev-dn"><span>${+d.slice(8)}</span></div>
+        <div class="ev-items">${one.slice(0, ITEMS).map(e => `<div class="ev-it" title="${escapeAttr(e.t)}"><i style="background:${e.col}"></i><span>${e.tm ? e.tm + ' ' : ''}${escapeHtml(e.title)}</span></div>`).join('')}${more ? `<div class="ev-more">+${more}개 더</div>` : ''}</div></div>`; }
+    h += `</div>`;
+  }
+  document.getElementById('evCal').innerHTML = h;
+  /* 분류 칩: 이번 달에 걸친 일정 수 · 누르면 끄고 켬 */
+  const inM = J.events.filter(e => e.e >= first && e.s <= last);
+  document.getElementById('evChips').innerHTML = EV_CATS.map(([n, col]) => { const k = inM.filter(e => e.cat === n).length; return k ? `<button type="button" class="cal-chip ${evS.off.has(n) ? '' : 'on'}" style="--tc:${col}" onclick="evToggle('${n}')"><i></i>${n} <b>${k}</b></button>` : ''; }).join('');
+  document.getElementById('evUpd').textContent = J.updated ? `일정 변경 ${evMD(J.updated.slice(0, 10))} ${J.updated.slice(11, 16)}` : '';
+  /* 오른쪽: 고른 날짜 */
+  const sd = evS.sel, on = EV.filter(e => e.s <= sd && e.e >= sd), day = on.filter(e => !e.multi || e.s === sd), going = on.filter(e => e.multi && e.s !== sd);
+  const card = e => `<div class="ev-card inbox border" style="--c:${e.col}"><div class="c">${e.cat}</div><div class="t">${e.url ? `<a href="${escapeAttr(e.url)}" target="_blank" rel="noopener" class="hover:underline">${escapeHtml(e.title)} <i class="fa-solid fa-arrow-up-right-from-square text-[9px] muted"></i></a>` : escapeHtml(e.title)}</div>
+    <div class="m">${e.multi ? `${evMD(e.s)} ~ ${evMD(e.e)} · ${(evD(e.e) - evD(e.s)) / 864e5 + 1}일` : evMD(e.s) + (e.tm ? ' ' + e.tm : '')}${e.loc ? ' · ' + escapeHtml(e.loc) : ''}</div>${e.desc ? `<div class="d">${escapeHtml(e.desc)}</div>` : ''}</div>`;
+  const dw = ['일', '월', '화', '수', '목', '금', '토'][evD(sd).getUTCDay()];
+  document.getElementById('evPanel').innerHTML = `<h3 class="text-[15px] font-semibold">${+sd.slice(5, 7)}월 ${+sd.slice(8)}일 (${dw})</h3><div class="text-[11px] muted mt-1">날짜를 누르면 그날 일정 · 제목을 누르면 홈페이지</div>
+    <div class="ev-sec">이날 시작 · 당일<b>${day.length}</b></div>${day.map(card).join('') || '<div class="text-xs muted">없음</div>'}
+    ${going.length ? `<div class="ev-sec">진행 중인 행사<b>${going.length}</b></div>${going.map(card).join('')}` : ''}`;
 }
 /* 스토어·국가 전환: 새로고침 없이 이 자리에서. 메뉴·상단바·필터 줄은 그대로 두고 필터 줄 아래 본문만 '읽는 중'
    나라·스토어에 묶인 데이터·캐시만 비우고 지금 화면을 다시 그림 (패키지·시트 이름으로 키를 둔 캐시는 그대로 재사용) */
