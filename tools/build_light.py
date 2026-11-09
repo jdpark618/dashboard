@@ -111,9 +111,9 @@ body, main { background:#f6f7f9 !important; }
 .card { background:#ffffff !important; border-color:#e6e8ed !important; box-shadow:none !important; transition:box-shadow .15s; }
 .card:hover { box-shadow:0 2px 8px rgba(15,23,42,.05) !important; }   /* 그림자는 마우스를 올렸을 때만 약하게 */
 .card thead.bg-slate-900 { background:#ffffff !important; }   /* 카드 안 고정 표 머리 = 카드 색 */
-.inbox { background:#f4f6f9 !important; }   /* 카드 안의 카드: 흰 카드 위 연회색 면 + 아주 옅은 테두리 (11/09) */
-.inbox:not(.border-indigo-500):not([class*="hover:border"]:hover) { border-color:#eef0f4 !important; }
-.inbox .bg-slate-950 { background-color:#e7eaef !important; }
+.inbox { background:#ffffff !important; box-shadow:0 1px 3px rgba(15,23,42,.07) !important; }   /* 카드 안의 카드 (11/09 1안): 흰 카드 + 조금 진한 테두리 + 옅은 그림자로 살짝 띄움 (연회색 면은 바탕과 같아 구멍처럼 보였음) */
+.inbox:not(.border-indigo-500):not([class*="hover:border"]:hover) { border-color:#dfe3e9 !important; }
+.inbox .bg-slate-950 { background-color:#eef0f3 !important; }
 .gd-ctab2 thead tr:first-child th.gd-sh { border-bottom-color:#e3e5ea !important; }   /* 상세 표: 스토어 이름 줄 ↔ 매출·인기 줄 구분선 */
 .gs-tab.on { background:#5046c8 !important; color:#ffffff !important; }   /* 순위 비교 검색 드롭다운 탭: 다른 선택 버튼과 같은 진한 보라 + 흰 글자 (다크용 흰 글자가 연보라 위에서 안 보이던 것) */
 .cal-navbtn, .cal-today-btn, .more-btn { background:#ffffff !important; border-color:#e6e8ed !important; }   /* 달력 이전/다음 · 오늘 · 목록/더보기 버튼: 페이지 배경(#f6f7f9)에 묻혀서 카드처럼 흰 바탕 + 테두리 (11/06) */
