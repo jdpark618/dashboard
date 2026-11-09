@@ -3661,7 +3661,7 @@ async function openAdsView(){
   if(!adsIndex.length){ L.innerHTML = mkEmpty('아직 추적한 게임이 없습니다.'); return; }
   L.innerHTML = `<div id="adsToday" class="mb-4"></div>
     <div class="card rounded-xl p-5">
-    <div class="mk-card-head flex-wrap gap-3"><div><h3 class="font-semibold text-sm" id="adsPastT">지난 추적 <span class="muted font-normal" id="adsListN"></span></h3><p class="text-[11px] muted mt-1" id="adsPastSub">TOP5 에서 빠진 게임 · 마지막 추적일 기준 · 게임을 누르면 상세</p></div>
+    <div class="mk-card-head flex-wrap gap-3"><div><h3 class="font-semibold text-sm" id="adsPastT">전체 리스트 <span class="muted font-normal" id="adsListN"></span></h3><p class="text-[11px] muted mt-1" id="adsPastSub">추적한 모든 게임 · 마지막 추적일 기준 · 게임을 누르면 상세</p></div>
       <div class="flex flex-wrap items-center gap-2"><input id="adsListQ" type="search" placeholder="게임 이름 (패키지, 개발사명) 검색" value="${escapeAttr(adsListQ)}" oninput="adsListQ=this.value;adsListPage=0;adsRenderList()" class="h-8 w-56 rounded-md border border-slate-800 bg-slate-900 px-2.5 text-xs">
         <div class="mk-seg" role="group" aria-label="보기">${[['all', '전체'], ['popular', '인기 추적'], ['sales', '매출 추적']].map(([k, lb]) => `<button type="button" data-k="${k}" onclick="adsListF='${k}';adsListPage=0;adsRenderList()">${lb}</button>`).join('')}</div></div></div>
     <div id="adsListGrid"></div></div>`;
@@ -3679,18 +3679,21 @@ function adsPub(x){
   adsPubCache.set(x.pkg, p); return p;
 }
 /* 목록 (11/09 개편): 매일 보는 건 오늘 TOP5(최대 10개)뿐이고 쌓이는 건 빠진 게임이라 두 구역으로 나눔.
-   위 = 오늘 추적 중 (인기 · 매출 두 칸, 순위 순서 · 숫자는 안 보임) / 아래 = 지난 추적 표 (검색하면 오늘 게임도 같이 찾음) */
+   위 = TODAY (인기 · 매출 두 칸 표, 순위 순서 · 숫자는 안 보임) / 아래 = 전체 리스트 표 (오늘 게임은 '추적 중') */
 function adsRenderToday(live){
   const T = document.getElementById('adsToday'); if(!T) return;
   const day = adsIndex.filter(live).map(x => x.rank_date).filter(Boolean).sort().at(-1) || '';
+  /* 11/09: 아래 전체 리스트와 같은 칸(개발사 · Meta · Google 소재)으로 — 두 칸 표 */
   const col = k => { const L = adsIndex.filter(x => live(x) && x.charts?.[k] != null).sort((a, b) => a.charts[k] - b.charts[k]);
-    return `<div class="min-w-0"><div class="text-[13px] font-semibold rk-v mb-1.5">${k === 'popular' ? '인기' : '매출'} TOP5</div>
-      ${L.length ? L.map(x => `<button type="button" onclick="adsOpen('${escapeAttr(x.pkg)}')" class="w-full flex items-center gap-3 px-2 py-2 -mx-2 rounded-lg hover:bg-slate-800/50 text-left min-w-0">
-        ${mkIcon(x.name)}<div class="min-w-0 flex-1"><div class="text-[13px] font-semibold truncate">${escapeHtml(x.name)}</div><div class="text-[11px] muted truncate">${escapeHtml(adsPub(x) || x.pkg)}</div></div>
-        <div class="shrink-0 flex items-center gap-3 text-[12px]"><span class="${x.meta ? 'rk-v' : 'muted'}"><i class="fa-brands fa-meta text-sky-400 mr-1"></i>${x.meta}</span><span class="${x.google ? 'rk-v' : 'muted'}"><i class="fa-brands fa-google text-emerald-400 mr-1"></i>${x.google}</span></div></button>`).join('')
-      : '<div class="text-xs muted py-3">오늘 추적한 게임이 없습니다.</div>'}</div>`; };
-  T.innerHTML = `<div class="card rounded-xl p-5"><div class="mk-card-head"><div><h3 class="font-semibold text-sm">오늘 추적 중</h3><p class="text-[11px] muted mt-1">Google Play 한국 · ${day ? `${Number(day.slice(5, 7))}/${Number(day.slice(8))} ` : ''}인기 · 매출 TOP5 · 게임을 누르면 상세</p></div></div>
-    <div class="grid gap-x-10 gap-y-4 md:grid-cols-2 mt-3">${col('popular')}<div class="md:border-l md:border-slate-800 md:pl-10 min-w-0">${col('sales')}</div></div></div>`;
+    return `<table class="w-full text-xs table-fixed"><colgroup><col><col style="width:30%"><col style="width:84px"><col style="width:96px"></colgroup>
+      <thead class="muted whitespace-nowrap"><tr><th class="py-2 px-2 text-left text-[13px] font-semibold rk-v">${k === 'popular' ? '인기' : '매출'} TOP5</th><th class="py-2 px-2 text-left font-normal">개발사</th><th class="py-2 px-2 text-right font-normal">Meta 소재</th><th class="py-2 px-2 text-right font-normal">Google 소재</th></tr></thead>
+      <tbody>${L.length ? L.map(x => `<tr class="border-t border-slate-800 hover:bg-slate-800/40 cursor-pointer" onclick="adsOpen('${escapeAttr(x.pkg)}')">
+        <td class="py-2 px-2"><div class="flex items-center gap-2.5 min-w-0">${mkIcon(x.name)}<span class="font-semibold truncate">${escapeHtml(x.name)}</span></div></td>
+        <td class="py-2 px-2 muted truncate" title="${escapeAttr(x.pkg)}">${escapeHtml(adsPub(x) || x.pkg)}</td>
+        <td class="py-2 px-2 text-right rk-v">${x.meta}</td><td class="py-2 px-2 text-right rk-v">${x.google}</td></tr>`).join('')
+      : '<tr><td colspan="4" class="text-xs muted py-3 px-2">오늘 추적한 게임이 없습니다.</td></tr>'}</tbody></table>`; };
+  T.innerHTML = `<div class="card rounded-xl p-5"><div class="mk-card-head"><div><h3 class="font-semibold text-sm">TODAY</h3><p class="text-[11px] muted mt-1">Google Play 한국 · ${day ? `${Number(day.slice(5, 7))}/${Number(day.slice(8))} ` : ''}인기 · 매출 TOP5 · 게임을 누르면 상세</p></div></div>
+    <div class="grid gap-x-8 gap-y-4 lg:grid-cols-2 mt-2"><div class="min-w-0">${col('popular')}</div><div class="lg:border-l lg:border-slate-800 lg:pl-8 min-w-0">${col('sales')}</div></div></div>`;
 }
 function adsRenderList(){
   const G = document.getElementById('adsListGrid'); if(!G || !adsIndex) return;
@@ -3700,14 +3703,13 @@ function adsRenderList(){
   const lastRank = adsIndex.reduce((m, x) => (x.rank_date || '') > m ? x.rank_date : m, ''), lastDay = adsIndex.reduce((m, x) => x.tracked_at > m ? x.tracked_at : m, '').slice(0, 10);
   const live = x => lastRank ? x.rank_date === lastRank : x.tracked_at.slice(0, 10) >= lastDay;
   adsRenderToday(live);
-  let L = adsIndex.filter(x => (q ? (nz(x.name).includes(q) || nz(x.pkg).includes(q) || nz(adsPub(x)).includes(q) || (x.aliases || []).some(v => nz(v).includes(q))) : !live(x))   /* aliases = Google 광고주 법인명 · Meta 페이지명 */
+  let L = adsIndex.filter(x => (q ? (nz(x.name).includes(q) || nz(x.pkg).includes(q) || nz(adsPub(x)).includes(q) || (x.aliases || []).some(v => nz(v).includes(q))) : true)   /* aliases = Google 광고주 법인명 · Meta 페이지명 */
     && (adsListF === 'all' || x.charts?.[adsListF] != null));
   const key = { name: x => x.name, pub: x => adsPub(x) || '', meta: x => x.meta, google: x => x.google, tracked: x => x.rank_date || x.tracked_at.slice(0, 10) }[adsListSort];   /* 마지막 추적 = 마지막으로 TOP5 에 들어 추적된 순위일 */
   L = L.slice().sort((a, b) => { const A = key(a), B = key(b); return (typeof A === 'string' ? A.localeCompare(B, 'ko') : A - B) * adsListDir || b.tracked_at.localeCompare(a.tracked_at); });
-  const pastN = adsIndex.filter(x => !live(x)).length;
-  document.getElementById('adsPastT').firstChild.textContent = q ? '검색 결과 ' : '지난 추적 ';
-  document.getElementById('adsListN').textContent = q ? `${L.length}개` : `${pastN}개`;
-  if(!L.length){ G.innerHTML = `<div class="text-xs muted py-6 text-center">${q ? `'${escapeHtml(adsListQ)}'에 맞는 게임이 없습니다.` : pastN ? '해당하는 게임이 없습니다.' : '아직 TOP5 에서 빠진 게임이 없습니다.'}</div>`; return; }
+  document.getElementById('adsPastT').firstChild.textContent = q ? '검색 결과 ' : '전체 리스트 ';
+  document.getElementById('adsListN').textContent = `${L.length}개`;
+  if(!L.length){ G.innerHTML = `<div class="text-xs muted py-6 text-center">${q ? `'${escapeHtml(adsListQ)}'에 맞는 게임이 없습니다.` : '해당하는 게임이 없습니다.'}</div>`; return; }
   const pages = Math.ceil(L.length / ADS_LIST_PAGE); adsListPage = Math.min(adsListPage, pages - 1);
   const th = (k, lb, right) => `<th class="py-2 px-2 font-normal ${right ? 'text-right' : 'text-left'}"><button type="button" class="hover:underline ${adsListSort === k ? 'rk-v font-semibold' : ''}" onclick="adsListSet('${k}')">${lb}${adsListSort === k ? (adsListDir < 0 ? ' ▾' : ' ▴') : ''}</button></th>`;
   const tag = x => ['popular', 'sales'].filter(k => x.charts?.[k] != null).map(k => `<span class="ml-1.5 shrink-0 whitespace-nowrap text-[10px] px-1.5 py-px rounded bg-slate-800/70 muted align-middle">${k === 'popular' ? '인기' : '매출'}</span>`).join('');
