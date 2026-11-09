@@ -3588,13 +3588,15 @@ function searchStats(name, S, dates){
    gchart 'Ad Tracker' 워크플로가 data/ads/ 에 저장한 결과를 읽음: index.json(추적한 앱 목록) · <pkg>.json(최신 1회분) · img/<pkg>/*.jpg
    Meta 는 종료일이 없어 시작일 분포, Google 은 첫·마지막 노출일이 있어 기간 막대로 보여줌 */
 const ADS_BASE = DATA_BASE + 'ads/';
+/* 로딩 표시: 사이트 다른 화면과 같은 스피너 + 문구 (막대 스켈레톤 대신, 11/09) */
+const adsLoading = (t = '광고 데이터를 불러오는 중...') => `<div class="card rounded-xl p-10 text-center text-xs muted"><i class="fa-solid fa-spinner fa-spin mr-1.5"></i>${t}</div>`;
 let adsIndex = null, adsSel = null; const adsCache = {};
 const adsKst = ts => { const d = new Date((ts + 9 * 3600) * 1000); return `${d.getUTCMonth() + 1}/${d.getUTCDate()}`; };
 const adsDay = ts => Math.floor((ts + 9 * 3600) / 86400);
 async function openAdsView(){
   const L = document.getElementById('adsList'), D = document.getElementById('adsDetail');
   if(!adsIndex){
-    L.innerHTML = skBlocks(4);
+    L.innerHTML = adsLoading('추적한 게임 목록을 불러오는 중...');
     try{ adsIndex = await (await fetch(ADS_BASE + 'index.json?t=' + Date.now())).json(); }
     catch(e){ adsIndex = null; L.innerHTML = mkEmpty('추적 결과를 불러오지 못했습니다.'); return; }
   }
@@ -3650,7 +3652,7 @@ async function adsOpen(pkg){
   if(adsSel !== pkg) adsMedia = null;
   adsSel = pkg;
   const L = document.getElementById('adsList'), D = document.getElementById('adsDetail');
-  L.classList.add('hidden'); D.classList.remove('hidden'); D.innerHTML = skBlocks(6);
+  L.classList.add('hidden'); D.classList.remove('hidden'); D.innerHTML = adsLoading();
   try{ adsCache[pkg] = adsCache[pkg] || await (await fetch(`${ADS_BASE}${encodeURIComponent(pkg)}.json?t=${Date.now()}`)).json(); }
   catch(e){ D.innerHTML = mkEmpty('이 게임의 추적 결과를 불러오지 못했습니다.'); return; }
   adsRenderDetail(adsCache[pkg]); adsKeep();
@@ -4938,7 +4940,7 @@ async function gdAdsCheck(name){
 }
 async function gdAdsRender(){
   const B = document.getElementById('gdAdsBody'); if(!B || !gdAdsPkg) return;
-  const pkg = gdAdsPkg; B.innerHTML = skBlocks(3);
+  const pkg = gdAdsPkg; B.innerHTML = adsLoading();
   try{ adsCache[pkg] = adsCache[pkg] || await (await fetch(`${ADS_BASE}${encodeURIComponent(pkg)}.json?t=${Date.now()}`)).json(); }
   catch(e){ B.innerHTML = mkEmpty('마케팅 추적 결과를 불러오지 못했습니다.'); return; }
   if(gdAdsPkg !== pkg) return;
