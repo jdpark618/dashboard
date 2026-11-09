@@ -3980,16 +3980,18 @@ let adsMediaCur = null;
 function adsMediaOpen(key, i){
   const R = ADS_MEDIA[key], L = R?.L, k = R?.k; if(!L || !L[i]) return; adsMediaCur = { key, i };
   const c = L[i], LB = k === 'meta' ? 'Meta' : 'Google';
-  const media = c.yt ? `<iframe class="w-full aspect-video rounded-lg bg-black" src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(c.yt)}?rel=0&playsinline=1" title="광고 영상" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`
-    : (c.src || c.thumb) ? `<img src="${escapeAttr(c.src || c.thumb)}" ${c.src ? 'referrerpolicy="no-referrer"' : ''} alt="" class="max-w-full max-h-[70vh] mx-auto rounded-lg object-contain" ${c.src ? '' : 'style="height:min(64vh,620px);width:auto"'} onerror="if(this.dataset.f!=='1'&&'${escapeAttr(c.thumb)}'){this.dataset.f='1';this.removeAttribute('referrerpolicy');this.src='${escapeAttr(c.thumb)}'}">`
+  const fb = c.thumb ? `<img src="${escapeAttr(c.thumb)}" alt="" class="max-w-full max-h-[70vh] mx-auto rounded-lg object-contain" style="height:min(64vh,620px);width:auto">` : '';
+  const media = c.vsrc ? `<video src="${escapeAttr(c.vsrc)}" ${c.src || c.thumb ? `poster="${escapeAttr(c.src || c.thumb)}"` : ''} controls playsinline preload="metadata" class="max-w-full max-h-[70vh] mx-auto rounded-lg bg-black block" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='block';const n=document.getElementById('adsMediaNote');if(n)n.textContent='영상 주소가 만료됨 · 원본에서 재생'"></video><div style="display:none">${fb}</div>`
+    : c.yt ? `<iframe class="w-full aspect-video rounded-lg bg-black" src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(c.yt)}?rel=0&playsinline=1" title="광고 영상" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`
+    : (c.src || c.thumb) ? `<img src="${escapeAttr(c.src || c.thumb)}" ${c.src ? 'referrerpolicy="no-referrer"' : ''} alt="" class="max-w-full max-h-[70vh] mx-auto rounded-lg object-contain" ${c.src ? '' : 'style="height:min(64vh,620px);width:auto"'} onerror="if(this.dataset.f!=='1'&&'${escapeAttr(c.thumb)}'){this.dataset.f='1';this.removeAttribute('referrerpolicy');this.src='${escapeAttr(c.thumb)}';const n=document.getElementById('adsMediaNote');if(n)n.textContent='저장된 미리보기'}">`
     : `<div class="aspect-square max-h-[60vh] mx-auto rounded-lg bg-slate-950 flex items-center justify-center text-sm muted">미리보기 없음</div>`;
-  const note = c.yt ? '' : c.src ? '원본 이미지' : k === 'meta' ? (c.fmtL === '영상' ? '영상은 원본에서 재생 · 첫 장면 미리보기' : '저장된 미리보기') : '저장된 미리보기';
+  const note = c.vsrc || c.yt ? '' : c.src ? '원본 이미지' : k === 'meta' && c.fmtL === '영상' ? '영상은 원본에서 재생 · 첫 장면 미리보기' : '저장된 미리보기';
   const kv = (lb, v) => v ? `<dt>${lb}</dt><dd>${v}</dd>` : '';
   let el = document.getElementById('adsMediaPop');
   if(!el){ el = document.createElement('div'); el.id = 'adsMediaPop'; el.className = 'fixed inset-0 z-[56] bg-black/75 flex items-center justify-center p-4'; el.onclick = e => { if(e.target === el) adsMediaClose(); }; document.body.appendChild(el); document.addEventListener('keydown', adsMediaKey); }
   el.innerHTML = `<button type="button" onclick="adsMediaStep(-1)" class="ads-mnav left-3" aria-label="이전 소재" ${i ? '' : 'disabled'}><i class="fa-solid fa-chevron-left"></i></button>
     <div class="card rounded-xl w-full max-w-[1120px] max-h-[92vh] overflow-y-auto thin-scroll p-4 grid gap-5 md:grid-cols-[minmax(0,1fr)_300px]" role="dialog" aria-label="소재 크게 보기">
-      <div class="min-w-0 flex flex-col justify-center">${media}${note ? `<div class="text-[11px] muted text-center mt-2">${note}</div>` : ''}</div>
+      <div class="min-w-0 flex flex-col justify-center">${media}<div id="adsMediaNote" class="text-[11px] muted text-center mt-2">${note}</div></div>
       <div class="min-w-0 flex flex-col">
         <div class="flex items-center gap-2"><span class="text-[12px] muted"><i class="fa-brands fa-${k} mr-1 ${k === 'meta' ? 'text-sky-400' : 'text-emerald-400'}"></i>${LB} 소재 ${i + 1} / ${L.length}</span>
           <button type="button" onclick="adsMediaClose()" class="ml-auto w-8 h-8 rounded-md hover:bg-slate-800 muted" aria-label="닫기"><i class="fa-solid fa-xmark"></i></button></div>
@@ -4016,6 +4018,8 @@ function adsJump(k, url){
 }
 function adsSetMedia(m){ adsMedia = m; adsKeep(); if(adsSel && adsCache[adsSel]) adsRenderDetail(adsCache[adsSel]); }
 function adsSetAsOf(v){ const k = v ? Math.floor(Date.parse(v) / 86400000) : NaN, R = adsCache[adsSel], tk = Math.min(adsDay(Date.now() / 1000), R ? adsDay(Date.parse(R.tracked_at) / 1000) : 1e9); adsAsOf = isNaN(k) || k >= tk ? null : k; if(adsSel && adsCache[adsSel]) adsRenderDetail(adsCache[adsSel]); }
+/* Meta 원본 주소(11/09): 주소 안 oe= 가 만료 시각(16진수 초) — 지났거나 1시간 안에 끝나면 쓰지 않고 저장된 썸네일로 */
+function adsFresh(u){ if(!u) return ''; const m = String(u).match(/[?&]oe=([0-9a-fA-F]+)/); return m && parseInt(m[1], 16) * 1000 < Date.now() + 3600e3 ? '' : u; }
 /* 소재 정리 (마케팅 추적 화면 · 앱 상세 패널이 같이 씀) */
 function adsBuild(R, asOf = null){
   const now = adsDay(Date.now() / 1000), tk = Math.min(now, adsDay(Date.parse(R.tracked_at) / 1000)), T = asOf ?? tk, past = asOf != null, img = f => f ? `${ADS_BASE}img/${encodeURIComponent(R.pkg)}/${f}` : '';
@@ -4027,7 +4031,7 @@ function adsBuild(R, asOf = null){
   const tpl = v => /\{\{.*\}\}/.test(v || '');   /* 카탈로그(DCO) 광고의 {{product.name}} 같은 틀 문구는 실제 문구가 아님 */
   const mItems = ma.map(x => { const a0 = adsDay(x.start), seenD = x.seen ? adsDay(x.seen) : tk, act = x.active && seenD >= tk - 2, e = act ? tk : x.active ? seenD : adsDay(x.end || x.start),   /* 최근 3일 안의 추적에서 다시 확인된 활성 소재만 집행 중 (Google 과 같은 3일 여유 · 30개 한도로 하루 빠지는 소재 보호 · seen 없으면 예전 데이터라 추적일로 봄) */ a1 = Math.min(e, T), live = e >= T, dur = a1 - a0 + 1, real = !tpl(x.body) && !tpl(x.title);
     return { a0, a1, dur, live, win: live && dur >= ADS_WIN, fmtL: x.fmt === 'VIDEO' ? '영상' : x.fmt === 'DCO' ? '카탈로그' : '이미지', storeL: x.store === 'Play' ? 'Android' : x.store === 'iOS' ? 'iOS' : '', key: real ? x.body + '\u0001' + x.title : '', copy: real ? [x.title || x.body, x.title ? x.body : ''].filter(Boolean) : [],
-      thumb: img(x.thumb), url: `https://www.facebook.com/ads/library/?id=${x.id}`, badges: [x.store, live ? null : '관측 종료'].filter(Boolean), dt: `${adsKst(x.start)}~`, sub: live ? `최근 확인 · ${dur}일` : `${dur}일` }; });
+      thumb: img(x.thumb), vsrc: adsFresh(x.vsrc), src: adsFresh(x.isrc), url: `https://www.facebook.com/ads/library/?id=${x.id}`, badges: [x.store, live ? null : '관측 종료'].filter(Boolean), dt: `${adsKst(x.start)}~`, sub: live ? `최근 확인 · ${dur}일` : `${dur}일` }; });
   /* Google 문구 정리: 게임 이름(또는 이름이 두 줄로 쪼개진 조각) · 스토어 카드 라벨 · 깨진 HTML 문자(x22, x26quot; 등) 제거 → 실제 광고 문구만.
      게임 이름은 추적 때 입력한 짧은 이름(예 'WOS')일 수 있어 순위 데이터의 정식 이름 · 추적 검색어 전부도 이름으로 봄 */
   const fullName = (() => { try{ for(const s of ['sales', 'popular']){ const I = mkDailyBase(s).idx, d = I?.dates?.at(-1); const n = I?.byDate.get(d)?.get('id:' + R.pkg)?.name; if(n) return n; } }catch(e){} return ''; })();
