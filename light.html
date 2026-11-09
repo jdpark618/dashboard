@@ -2904,7 +2904,7 @@ function evRender(){
   document.getElementById('evUpd').textContent = J.updated ? `일정 변경 ${evMD(J.updated.slice(0, 10))} ${J.updated.slice(11, 16)}` : '';
   /* 오른쪽: 고른 날짜 */
   const sd = evS.sel, on = EV.filter(e => e.s <= sd && e.e >= sd), day = on.filter(e => !e.multi || e.s === sd), going = on.filter(e => e.multi && e.s !== sd);
-  const card = e => `<div class="ev-card inbox border" style="--c:${e.col}"><div class="c">${e.cat}</div><div class="t">${e.url ? `<a href="${escapeAttr(e.url)}" target="_blank" rel="noopener" class="hover:underline">${escapeHtml(e.title)} <i class="fa-solid fa-arrow-up-right-from-square text-[9px] muted"></i></a>` : escapeHtml(e.title)}</div>
+  const card = e => `<div class="ev-card inbox border" style="--c:${e.col}"><div class="c">${e.cat}</div><div class="t" ${e.desc ? `title="${escapeAttr(e.desc)}"` : ''}>${e.url ? `<a href="${escapeAttr(e.url)}" target="_blank" rel="noopener" class="hover:underline">${escapeHtml(e.title)} <i class="fa-solid fa-arrow-up-right-from-square text-[9px] muted"></i></a>` : escapeHtml(e.title)}</div>
     <dl class="kv"><dt>기간</dt><dd>${e.multi ? `${evMD(e.s)} ~ ${evMD(e.e)} <span class="muted">(${(evD(e.e) - evD(e.s)) / 864e5 + 1}일)</span>` : evMD(e.s) + (e.tm ? ` <span class="muted">${e.tm}</span>` : '')}</dd>${e.loc ? `<dt>장소</dt><dd>${escapeHtml(e.loc)}</dd>` : ''}</dl></div>`;   /* 11/09: 설명은 빼고 기간 · 장소를 항목으로 */
   const dw = ['일', '월', '화', '수', '목', '금', '토'][evD(sd).getUTCDay()];
   document.getElementById('evPanel').innerHTML = `<h3 class="text-[15px] font-semibold">${+sd.slice(5, 7)}월 ${+sd.slice(8)}일 (${dw})</h3><div class="text-[11px] muted mt-1">날짜를 누르면 그날 일정 · 제목을 누르면 홈페이지</div>
