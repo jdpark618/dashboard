@@ -681,6 +681,7 @@ html.panel-lock { overflow: hidden; }
 .ev-card { border-radius:8px; padding:9px 10px; margin-bottom:6px; border-left:3px solid var(--c) !important; }
 .ev-card .c { font-size:10px; font-weight:700; color:var(--c); } .ev-card .t { font-size:13px; font-weight:600; margin-top:2px; line-height:1.35; }
 .ev-card .m { font-size:11px; color:#8b9297; margin-top:4px; } .ev-card .d { font-size:11px; color:#8b9297; margin-top:6px; line-height:1.5; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; white-space:pre-line; }
+.ev-card .kv { display:grid; grid-template-columns:auto 1fr; gap:3px 10px; margin:7px 0 0; font-size:12px; line-height:1.45; } .ev-card .kv dt { color:#8b9297; } .ev-card .kv dd { margin:0; font-weight:600; min-width:0; }
 .ev-sec { font-size:12px; font-weight:700; margin:16px 0 8px; } .ev-sec b { color:#8b9297; font-weight:500; margin-left:4px; }
 .ev-empty { height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; font-size:13px; color:#a0a7ad; background:#202428; text-align:center; padding:24px; }
 .toast { position:fixed; left:50%; bottom:28px; z-index:80; transform:translate(-50%, 8px); opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; background:#292f33; color:#e8eaed; border:1px solid #343a3e; border-radius:10px; padding:9px 14px; font-size:13px; font-weight:600; box-shadow:0 8px 24px rgba(0,0,0,.45); }
@@ -2853,7 +2854,7 @@ function evRender(){
   /* 오른쪽: 고른 날짜 */
   const sd = evS.sel, on = EV.filter(e => e.s <= sd && e.e >= sd), day = on.filter(e => !e.multi || e.s === sd), going = on.filter(e => e.multi && e.s !== sd);
   const card = e => `<div class="ev-card inbox border" style="--c:${e.col}"><div class="c">${e.cat}</div><div class="t">${e.url ? `<a href="${escapeAttr(e.url)}" target="_blank" rel="noopener" class="hover:underline">${escapeHtml(e.title)} <i class="fa-solid fa-arrow-up-right-from-square text-[9px] muted"></i></a>` : escapeHtml(e.title)}</div>
-    <div class="m">${e.multi ? `${evMD(e.s)} ~ ${evMD(e.e)} · ${(evD(e.e) - evD(e.s)) / 864e5 + 1}일` : evMD(e.s) + (e.tm ? ' ' + e.tm : '')}${e.loc ? ' · ' + escapeHtml(e.loc) : ''}</div>${e.desc ? `<div class="d">${escapeHtml(e.desc)}</div>` : ''}</div>`;
+    <dl class="kv"><dt>기간</dt><dd>${e.multi ? `${evMD(e.s)} ~ ${evMD(e.e)} <span class="muted">(${(evD(e.e) - evD(e.s)) / 864e5 + 1}일)</span>` : evMD(e.s) + (e.tm ? ` <span class="muted">${e.tm}</span>` : '')}</dd>${e.loc ? `<dt>장소</dt><dd>${escapeHtml(e.loc)}</dd>` : ''}</dl></div>`;   /* 11/09: 설명은 빼고 기간 · 장소를 항목으로 */
   const dw = ['일', '월', '화', '수', '목', '금', '토'][evD(sd).getUTCDay()];
   document.getElementById('evPanel').innerHTML = `<h3 class="text-[15px] font-semibold">${+sd.slice(5, 7)}월 ${+sd.slice(8)}일 (${dw})</h3><div class="text-[11px] muted mt-1">날짜를 누르면 그날 일정 · 제목을 누르면 홈페이지</div>
     <div class="ev-sec">이날 시작 · 당일<b>${day.length}</b></div>${day.map(card).join('') || '<div class="text-xs muted">없음</div>'}
