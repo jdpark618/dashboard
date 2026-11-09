@@ -3868,6 +3868,9 @@ function adsBuild(R, asOf = null){
     return { a0, a1, dur, live, win: live && dur >= ADS_WIN, fmtL: x.yt ? '영상' : x.fmt === 2 ? '이미지' : '앱 광고', storeL: '', key: copy.join('\u0001'), copy,
       thumb: img(x.thumb), url: `https://adstransparency.google.com/advertiser/${x.adv}/creative/${x.id}?region=KR`, badges: [x.yt ? '동영상' : x.fmt === 2 ? '이미지' : '앱'], dt: `${adsDk(a0)}–${adsDk(a1)}`, sub: `${dur}일` }; });
   const pack = items => { let th = adsWinDays(items, T);
+    /* 지금 집행 중 소재가 없으면 (11/09) 과거 집행 기록 기준: 전체 소재 평균 유지 기간 이상 오래 쓴 소재 = 위닝 */
+    if(items.length && !items.some(c => c.live)){ th = Math.max(1, Math.ceil(items.reduce((t, c) => t + c.dur, 0) / items.length)); items.forEach(c => { c.win = c.dur >= th; });
+      const wc = items.filter(c => c.key), life = adsLife(wc, c => c.key, c => c.a0, c => c.a1, () => true, th); return { items, wc, life, th, win: adsWinList(items, life), past: true }; }
     if(th === -3){ const top = items.filter(c => c.live).sort((x, y) => y.dur - x.dur || (!!y.thumb - !!x.thumb)).slice(0, 3); items.forEach(c => { c.win = top.includes(c); }); th = top.length ? top.at(-1).dur : Infinity; }
     else items.forEach(c => { c.win = c.live && c.dur >= th; }); const wc = items.filter(c => c.key), life = adsLife(wc, c => c.key, c => c.a0, c => c.a1, c => c.live, th); return { items, wc, life, th, win: adsWinList(items, life) }; };
   const P = { meta: pack(mItems), google: pack(gItems) };
@@ -3930,7 +3933,7 @@ function adsProfile(p, T, kind){
   const type = !live.length ? 'stop' : live.length <= 2 && mxLive >= 60 ? 'single' : ended.length < 5 ? 'running'
     : long / live.length >= .4 ? 'always' : med != null && med <= 35 ? 'short' : 'mid';
   const wkr = v => { const a = Math.max(1, Math.floor(v / 7)), b = Math.max(1, Math.ceil(v / 7)); return a === b ? `${a}주` : `${a}~${b}주`; };
-  const head = { stop: `지금은 집행이 확인되지 않음 · 마지막 확인 ${adsDkY(lastSeen, T)}`, single: `소재 ${live.length}개를 ${mxLive}일째 바꾸지 않고 장기 운영`,
+  const head = { stop: `마지막 집행 ${adsDkY(lastSeen, T)}`, single: `소재 ${live.length}개를 ${mxLive}일째 바꾸지 않고 장기 운영`,
     running: `소재 ${live.length}개 집행 중 · 최근 ${Math.max(1, Math.ceil(mxLive / 7))}주 안에 투입`,
     short: '신규 소재 투입이 활발한 단기 순환형 운영', always: r6 <= live.length * .3 ? '기존 장기 집행 소재를 중심으로 신규 소재를 소량 병행' : '기존 장기 집행 소재를 중심으로 신규 소재를 병행',
     mid: '소재를 한두 달씩 유지하며 교체하는 운영' }[type];   /* 11/09: 주(週) 숫자를 빼고 패턴만 — 숫자는 교체 주기 · 유지 기간 칸에서 */
