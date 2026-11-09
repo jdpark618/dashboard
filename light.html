@@ -3651,7 +3651,7 @@ async function openAdsView(){
   L.innerHTML = `<div class="card rounded-xl p-5">
     <div class="mk-card-head flex-wrap gap-3"><div><h3 class="font-semibold text-sm">추적한 게임 <span class="muted font-normal" id="adsListN"></span></h3><p class="text-[11px] muted mt-1">한국 · Meta 광고 라이브러리 · Google 광고 투명성 센터 · 게임을 누르면 상세</p></div>
       <div class="flex flex-wrap items-center gap-2"><input id="adsListQ" type="search" placeholder="게임 이름 (패키지, 개발사명) 검색" value="${escapeAttr(adsListQ)}" oninput="adsListQ=this.value;adsListShow=ADS_LIST_PAGE;adsRenderList()" class="h-8 w-56 rounded-md border border-slate-800 bg-slate-900 px-2.5 text-xs">
-        <div class="mk-seg" role="group" aria-label="정렬">${[['recent', '최근 추적'], ['name', '이름순'], ['ads', '소재 많은 순']].map(([k, lb]) => `<button type="button" data-k="${k}" onclick="adsListSort='${k}';adsRenderList()">${lb}</button>`).join('')}</div></div></div>
+        <div class="mk-seg" role="group" aria-label="정렬">${[['recent', '순위순'], ['name', '이름순'], ['ads', '소재 많은 순']].map(([k, lb]) => `<button type="button" data-k="${k}" onclick="adsListSort='${k}';adsRenderList()">${lb}</button>`).join('')}</div></div></div>
     <div id="adsListGrid"></div></div>`;
   adsRenderList();
 }
@@ -3667,18 +3667,29 @@ function adsPub(x){
   adsPubCache.set(x.pkg, p); return p;
 }
 function adsRenderList(){
+  /* 목록 (11/09): 매일 인기 TOP5 · 매출 TOP5 를 추적 → '인기 순위 추적' · '매출 순위 추적'으로 나눠 보여줌 (둘 다면 양쪽에).
+     TOP5 에서 빠진 게임도 마지막 추적일 기준으로 남음 · 순위 정보가 없는 게임(수동 추적)은 '기타 추적' */
   const G = document.getElementById('adsListGrid'); if(!G || !adsIndex) return;
   document.querySelectorAll('#adsList .mk-seg button').forEach(b => { const on = b.dataset.k === adsListSort; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
   const nz = v => String(v || '').replace(/[\s:：·\-]/g, '').toLowerCase(), q = nz(adsListQ);
-  let L = adsIndex.filter(x => !q || nz(x.name).includes(q) || nz(x.pkg).includes(q) || nz(adsPub(x)).includes(q) || (x.aliases || []).some(v => nz(v).includes(q)));   /* aliases = Google 광고주 법인명(예 주식회사 카카오게임즈) · Meta 페이지명 */
-  L = L.slice().sort(adsListSort === 'name' ? (a, b) => a.name.localeCompare(b.name, 'ko') : adsListSort === 'ads' ? (a, b) => (b.meta + b.google) - (a.meta + a.google) : (a, b) => b.tracked_at.localeCompare(a.tracked_at));
+  const L = adsIndex.filter(x => !q || nz(x.name).includes(q) || nz(x.pkg).includes(q) || nz(adsPub(x)).includes(q) || (x.aliases || []).some(v => nz(v).includes(q)));   /* aliases = Google 광고주 법인명(예 주식회사 카카오게임즈) · Meta 페이지명 */
   document.getElementById('adsListN').textContent = q ? `${L.length} / ${adsIndex.length}개` : `${adsIndex.length}개`;
   if(!L.length){ G.innerHTML = `<div class="text-xs muted py-6 text-center">'${escapeHtml(adsListQ)}'에 맞는 게임이 없습니다.</div>`; return; }
-  G.innerHTML = `<div class="grid gap-3" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr))">${L.slice(0, adsListShow).map(x => `
-      <button type="button" class="text-left rounded-xl border border-slate-800 bg-slate-900/40 hover:bg-slate-800/60 p-3.5 min-w-0" onclick="adsOpen('${escapeAttr(x.pkg)}')">
-        <div class="flex items-center gap-2.5 min-w-0">${mkIcon(x.name)}<div class="min-w-0"><div class="text-[13px] font-semibold text-slate-100 truncate">${escapeHtml(x.name)}</div><div class="text-[11px] muted truncate" title="${escapeAttr(x.pkg)}">${escapeHtml(adsPub(x) || x.pkg)}</div></div></div>
+  const latest = adsIndex.reduce((m, x) => x.rank_date > m ? x.rank_date : m, '');
+  const card = (x, key) => { const rk = key ? x.charts?.[key] : null, old = rk != null && x.rank_date && x.rank_date < latest;
+    return `<button type="button" class="text-left rounded-xl border border-slate-800 bg-slate-900/40 hover:bg-slate-800/60 p-3.5 min-w-0" onclick="adsOpen('${escapeAttr(x.pkg)}')">
+        <div class="flex items-center gap-2.5 min-w-0">${mkIcon(x.name)}<div class="min-w-0 flex-1"><div class="text-[13px] font-semibold text-slate-100 truncate">${escapeHtml(x.name)}</div><div class="text-[11px] muted truncate" title="${escapeAttr(x.pkg)}">${escapeHtml(adsPub(x) || x.pkg)}</div></div>
+          ${rk != null ? `<span class="shrink-0 text-right leading-tight"><b class="text-[13px] rk-v">${rk}위</b>${old ? `<span class="block text-[10px] muted">${x.rank_date.slice(5).replace('-', '/')} 기준</span>` : ''}</span>` : ''}</div>
         <div class="flex items-center gap-3 mt-3 text-xs"><span><span class="muted">Meta</span> <b class="rk-v">${x.meta}</b><span class="muted">${x.meta_total > x.meta ? ` / ${x.meta_total}` : ''}</span></span><span><span class="muted">Google</span> <b class="rk-v">${x.google}</b></span><span class="ml-auto text-[11px] muted">${x.tracked_at.slice(5, 10).replace('-', '/')} 추적</span></div>
-      </button>`).join('')}</div>${L.length > adsListShow ? `<div class="text-center mt-4"><button type="button" class="more-btn" onclick="adsListShow+=ADS_LIST_PAGE;adsRenderList()">더 보기 (${L.length - adsListShow}개 남음)</button></div>` : ''}`;
+      </button>`; };
+  const sorter = key => adsListSort === 'name' ? (a, b) => a.name.localeCompare(b.name, 'ko') : adsListSort === 'ads' ? (a, b) => (b.meta + b.google) - (a.meta + a.google)
+    : (a, b) => (b.rank_date || '').localeCompare(a.rank_date || '') || ((key ? a.charts?.[key] : 0) ?? 99) - ((key ? b.charts?.[key] : 0) ?? 99) || b.tracked_at.localeCompare(a.tracked_at);   /* 기본: 최근 순위일 → 순위 → 최근 추적 */
+  const sec = (key, title, icon) => { const S = L.filter(x => key ? x.charts?.[key] != null : !x.charts || !Object.keys(x.charts).length).sort(sorter(key)); if(!S.length) return '';
+    const cur = key ? S.filter(x => x.rank_date === latest).length : 0;
+    return `<div class="mt-4 first:mt-0"><div class="flex items-baseline gap-2 mb-2"><h4 class="text-[13px] font-semibold">${icon}${title}</h4><span class="text-[11px] muted">${key ? `지금 TOP5 ${cur}개 · 전체 ${S.length}개` : `${S.length}개`}</span></div>
+      <div class="grid gap-3" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr))">${S.slice(0, adsListShow).map(x => card(x, key)).join('')}</div>
+      ${S.length > adsListShow ? `<div class="text-center mt-3"><button type="button" class="more-btn" onclick="adsListShow+=ADS_LIST_PAGE;adsRenderList()">더 보기 (${S.length - adsListShow}개 남음)</button></div>` : ''}</div>`; };
+  G.innerHTML = sec('popular', '인기 순위 추적', '<i class="fa-solid fa-fire mr-1.5 t-pop"></i>') + sec('sales', '매출 순위 추적', '<i class="fa-solid fa-coins mr-1.5 t-sales"></i>') + sec(null, '기타 추적', '');
 }
 async function adsOpen(pkg){
   if(adsSel !== pkg) adsMedia = null;
