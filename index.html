@@ -3611,10 +3611,11 @@ async function openAdsView(){
   if(adsSel) return adsOpen(adsSel);
   D.classList.add('hidden'); L.classList.remove('hidden');
   if(!adsIndex.length){ L.innerHTML = mkEmpty('아직 추적한 게임이 없습니다.'); return; }
-  L.innerHTML = `<div class="card rounded-xl p-5">
-    <div class="mk-card-head flex-wrap gap-3"><div><h3 class="font-semibold text-sm">추적한 게임 <span class="muted font-normal" id="adsListN"></span></h3><p class="text-[11px] muted mt-1">한국 · Meta 광고 라이브러리 · Google 광고 투명성 센터 · 게임을 누르면 상세</p></div>
+  L.innerHTML = `<div id="adsToday" class="mb-4"></div>
+    <div class="card rounded-xl p-5">
+    <div class="mk-card-head flex-wrap gap-3"><div><h3 class="font-semibold text-sm" id="adsPastT">지난 추적 <span class="muted font-normal" id="adsListN"></span></h3><p class="text-[11px] muted mt-1" id="adsPastSub">TOP5 에서 빠진 게임 · 마지막 추적일 기준 · 게임을 누르면 상세</p></div>
       <div class="flex flex-wrap items-center gap-2"><input id="adsListQ" type="search" placeholder="게임 이름 (패키지, 개발사명) 검색" value="${escapeAttr(adsListQ)}" oninput="adsListQ=this.value;adsListPage=0;adsRenderList()" class="h-8 w-56 rounded-md border border-slate-800 bg-slate-900 px-2.5 text-xs">
-        <div class="mk-seg" role="group" aria-label="보기">${[['all', '전체'], ['live', '현재 TOP5'], ['popular', '인기 추적'], ['sales', '매출 추적']].map(([k, lb]) => `<button type="button" data-k="${k}" onclick="adsListF='${k}';adsListPage=0;adsRenderList()">${lb}</button>`).join('')}</div></div></div>
+        <div class="mk-seg" role="group" aria-label="보기">${[['all', '전체'], ['popular', '인기 추적'], ['sales', '매출 추적']].map(([k, lb]) => `<button type="button" data-k="${k}" onclick="adsListF='${k}';adsListPage=0;adsRenderList()">${lb}</button>`).join('')}</div></div></div>
     <div id="adsListGrid"></div></div>`;
   adsRenderList();
 }
@@ -3629,18 +3630,36 @@ function adsPub(x){
   let p = ''; try{ for(const s of ['sales', 'popular']){ const I = mkDailyBase(s).idx; if(!I?.dates) continue; for(const d of I.dates.slice(-60).reverse()){ const e = I.byDate.get(d)?.get('id:' + x.pkg); if(e?.publisher){ p = e.publisher; break; } } if(p) break; } }catch(e){}
   adsPubCache.set(x.pkg, p); return p;
 }
+/* 목록 (11/09 개편): 매일 보는 건 오늘 TOP5(최대 10개)뿐이고 쌓이는 건 빠진 게임이라 두 구역으로 나눔.
+   위 = 오늘 추적 중 (인기 · 매출 두 칸, 순위 순서 · 숫자는 안 보임) / 아래 = 지난 추적 표 (검색하면 오늘 게임도 같이 찾음) */
+function adsRenderToday(live){
+  const T = document.getElementById('adsToday'); if(!T) return;
+  const day = adsIndex.filter(live).map(x => x.rank_date).filter(Boolean).sort().at(-1) || '';
+  const col = k => { const L = adsIndex.filter(x => live(x) && x.charts?.[k] != null).sort((a, b) => a.charts[k] - b.charts[k]);
+    return `<div class="min-w-0"><div class="text-[13px] font-semibold rk-v mb-1.5">${k === 'popular' ? '인기' : '매출'} TOP5</div>
+      ${L.length ? L.map(x => `<button type="button" onclick="adsOpen('${escapeAttr(x.pkg)}')" class="w-full flex items-center gap-3 px-2 py-2 -mx-2 rounded-lg hover:bg-slate-800/50 text-left min-w-0">
+        ${mkIcon(x.name)}<div class="min-w-0 flex-1"><div class="text-[13px] font-semibold truncate">${escapeHtml(x.name)}</div><div class="text-[11px] muted truncate">${escapeHtml(adsPub(x) || x.pkg)}</div></div>
+        <div class="shrink-0 flex items-center gap-3 text-[12px]"><span class="${x.meta ? 'rk-v' : 'muted'}"><i class="fa-brands fa-meta text-sky-400 mr-1"></i>${x.meta}</span><span class="${x.google ? 'rk-v' : 'muted'}"><i class="fa-brands fa-google text-emerald-400 mr-1"></i>${x.google}</span></div></button>`).join('')
+      : '<div class="text-xs muted py-3">오늘 추적한 게임이 없습니다.</div>'}</div>`; };
+  T.innerHTML = `<div class="card rounded-xl p-5"><div class="mk-card-head"><div><h3 class="font-semibold text-sm">오늘 추적 중</h3><p class="text-[11px] muted mt-1">Google Play 한국 · ${day ? `${Number(day.slice(5, 7))}/${Number(day.slice(8))} ` : ''}인기 · 매출 TOP5 · 게임을 누르면 상세</p></div></div>
+    <div class="grid gap-x-10 gap-y-4 md:grid-cols-2 mt-3">${col('popular')}<div class="md:border-l md:border-slate-800 md:pl-10 min-w-0">${col('sales')}</div></div></div>`;
+}
 function adsRenderList(){
   const G = document.getElementById('adsListGrid'); if(!G || !adsIndex) return;
   document.querySelectorAll('#adsList .mk-seg button').forEach(b => { const on = b.dataset.k === adsListF; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
   const nz = v => String(v || '').replace(/[\s:：·\-]/g, '').toLowerCase(), q = nz(adsListQ);
-  const lastDay = adsIndex.reduce((m, x) => x.tracked_at > m ? x.tracked_at : m, '').slice(0, 10);
-  const live = x => x.tracked_at.slice(0, 10) >= lastDay;   /* 가장 최근 추적 회차에 들어 있으면 '추적 중' (TOP5 에서 빠지면 다음 날부터 추적 종료) */
-  let L = adsIndex.filter(x => (!q || nz(x.name).includes(q) || nz(x.pkg).includes(q) || nz(adsPub(x)).includes(q) || (x.aliases || []).some(v => nz(v).includes(q)))   /* aliases = Google 광고주 법인명 · Meta 페이지명 */
-    && (adsListF === 'all' || (adsListF === 'live' ? live(x) : x.charts?.[adsListF] != null)));
-  const key = { name: x => x.name, pub: x => adsPub(x) || '', meta: x => x.meta, google: x => x.google, tracked: x => x.tracked_at }[adsListSort];
+  /* 오늘 추적 중 = 가장 최근 순위일(rank_date)의 TOP5 에 든 게임. 빠진 게임은 rank_date 가 예전 날짜로 남음 (수동으로 다시 추적해도 순위일은 그대로) */
+  const lastRank = adsIndex.reduce((m, x) => (x.rank_date || '') > m ? x.rank_date : m, ''), lastDay = adsIndex.reduce((m, x) => x.tracked_at > m ? x.tracked_at : m, '').slice(0, 10);
+  const live = x => lastRank ? x.rank_date === lastRank : x.tracked_at.slice(0, 10) >= lastDay;
+  adsRenderToday(live);
+  let L = adsIndex.filter(x => (q ? (nz(x.name).includes(q) || nz(x.pkg).includes(q) || nz(adsPub(x)).includes(q) || (x.aliases || []).some(v => nz(v).includes(q))) : !live(x))   /* aliases = Google 광고주 법인명 · Meta 페이지명 */
+    && (adsListF === 'all' || x.charts?.[adsListF] != null));
+  const key = { name: x => x.name, pub: x => adsPub(x) || '', meta: x => x.meta, google: x => x.google, tracked: x => x.rank_date || x.tracked_at.slice(0, 10) }[adsListSort];   /* 마지막 추적 = 마지막으로 TOP5 에 들어 추적된 순위일 */
   L = L.slice().sort((a, b) => { const A = key(a), B = key(b); return (typeof A === 'string' ? A.localeCompare(B, 'ko') : A - B) * adsListDir || b.tracked_at.localeCompare(a.tracked_at); });
-  document.getElementById('adsListN').textContent = L.length === adsIndex.length ? `${adsIndex.length}개` : `${L.length} / ${adsIndex.length}개`;
-  if(!L.length){ G.innerHTML = `<div class="text-xs muted py-6 text-center">${q ? `'${escapeHtml(adsListQ)}'에 맞는 게임이 없습니다.` : '해당하는 게임이 없습니다.'}</div>`; return; }
+  const pastN = adsIndex.filter(x => !live(x)).length;
+  document.getElementById('adsPastT').firstChild.textContent = q ? '검색 결과 ' : '지난 추적 ';
+  document.getElementById('adsListN').textContent = q ? `${L.length}개` : `${pastN}개`;
+  if(!L.length){ G.innerHTML = `<div class="text-xs muted py-6 text-center">${q ? `'${escapeHtml(adsListQ)}'에 맞는 게임이 없습니다.` : pastN ? '해당하는 게임이 없습니다.' : '아직 TOP5 에서 빠진 게임이 없습니다.'}</div>`; return; }
   const pages = Math.ceil(L.length / ADS_LIST_PAGE); adsListPage = Math.min(adsListPage, pages - 1);
   const th = (k, lb, right) => `<th class="py-2 px-2 font-normal ${right ? 'text-right' : 'text-left'}"><button type="button" class="hover:underline ${adsListSort === k ? 'rk-v font-semibold' : ''}" onclick="adsListSet('${k}')">${lb}${adsListSort === k ? (adsListDir < 0 ? ' ▾' : ' ▴') : ''}</button></th>`;
   const tag = x => ['popular', 'sales'].filter(k => x.charts?.[k] != null).map(k => `<span class="ml-1.5 shrink-0 whitespace-nowrap text-[10px] px-1.5 py-px rounded bg-slate-800/70 muted align-middle">${k === 'popular' ? '인기' : '매출'}</span>`).join('');
@@ -3648,7 +3667,7 @@ function adsRenderList(){
       <td class="py-2 px-2"><div class="flex items-center gap-2.5 min-w-0">${mkIcon(x.name)}<span class="font-semibold truncate">${escapeHtml(x.name)}</span>${tag(x)}</div></td>
       <td class="py-2 px-2 muted truncate max-w-[180px]" title="${escapeAttr(x.pkg)}">${escapeHtml(adsPub(x) || x.pkg)}</td>
       <td class="py-2 px-2 text-right rk-v">${x.meta}</td><td class="py-2 px-2 text-right rk-v">${x.google}</td>
-      <td class="py-2 px-2 text-right ${live(x) ? '' : 'muted'}">${x.tracked_at.slice(5, 10).replace('-', '/')}</td></tr>`).join('');
+      <td class="py-2 px-2 text-right ${live(x) ? 'rk-v font-semibold' : 'muted'}">${live(x) ? '추적 중' : (x.rank_date || x.tracked_at).slice(5, 10).replace('-', '/')}</td></tr>`).join('');
   const pg = pages > 1 ? `<div class="flex items-center justify-center gap-1 mt-4">${[['‹', adsListPage - 1], ...Array.from({ length: pages }, (_, i) => [i + 1, i]), ['›', adsListPage + 1]].map(([lb, i]) => i < 0 || i >= pages
       ? `<span class="px-2.5 py-1 text-xs muted opacity-40">${lb}</span>` : `<button type="button" class="px-2.5 py-1 text-xs rounded-md ${i === adsListPage && typeof lb === 'number' ? 'bg-indigo-600 text-white' : 'border border-slate-800 hover:border-indigo-500'}" onclick="adsListPage=${i};adsRenderList()">${lb}</button>`).join('')}</div>` : '';
   G.innerHTML = `<div class="overflow-x-auto"><table class="w-full text-xs min-w-[560px]"><thead class="muted"><tr>${th('name', '게임')}${th('pub', '개발사')}${th('meta', 'Meta 소재', 1)}${th('google', 'Google 소재', 1)}${th('tracked', '마지막 추적', 1)}</tr></thead><tbody>${rows}</tbody></table></div>${pg}`;
@@ -3836,7 +3855,7 @@ function adsRenderDetail(R){
   let h = `<div class="flex flex-wrap items-center gap-3"><button type="button" class="more-btn h-8" onclick="adsBack()"><i class="fa-solid fa-chevron-left mr-1.5"></i>목록</button>
     <div class="flex items-center gap-2.5 min-w-0">${mkIcon(R.name)}<div class="min-w-0"><div class="text-[15px] font-semibold truncate">${escapeHtml(R.name)}</div><div class="text-[11px] muted">${escapeHtml(R.pkg)} · ${R.tracked_at.slice(0, 10)} 추적 · 한국</div></div></div>
     <div class="flex flex-wrap items-center gap-1.5 ml-auto"><!-- 기준일 선택은 이력이 쌓일 때까지 숨김 (11/06): adsSetAsOf · adsAsOf 코드는 그대로 -->
-    <div class="mk-seg" role="group" aria-label="보기">${[['overview', 'fa-solid fa-layer-group', '개요', null], ['meta', 'fa-brands fa-meta', 'Meta', ma.length], ['google', 'fa-brands fa-google', 'Google', ga.length]].map(([k, ic, lb, n]) =>
+    <div class="mk-seg" role="group" aria-label="보기">${[['overview', 'fa-solid fa-layer-group', '요약', null], ['meta', 'fa-brands fa-meta', 'Meta', ma.length], ['google', 'fa-brands fa-google', 'Google', ga.length]].map(([k, ic, lb, n]) =>
       `<button type="button" onclick="adsSetMedia('${k}')" class="${adsMedia === k ? 'on' : ''}" aria-pressed="${adsMedia === k}"><i class="${ic} mr-1.5"></i>${lb}${n != null ? `<span class="ml-1 opacity-70">전체 ${n}</span>` : ''}</button>`).join('')}</div></div></div>`;
   if(past) h += `<div class="inbox rounded-lg border border-indigo-500 bg-slate-900/40 px-3 py-2 text-[11px]"><b class="rk-v">${adsDkY(T, now)} 기준</b><span class="muted"> · 그날 기준으로 다시 계산</span></div>`;
   if(adsMedia === 'overview'){
@@ -3965,10 +3984,10 @@ function adsOverview(P, T, raw){
         <div class="ml-auto flex items-end gap-5 pl-5 border-l border-slate-800" title="최근 ${ADS_WEEKS}주 기준">${[['최근 6주 신규 투입', p.n6 + '개'], ['평균 교체 주기', cv(p.cyc[0], '일')], ['평균 유지 기간', cv(p.cyc[2], '일')]].map(([lb, x]) => `<div><div class="text-[11px] muted whitespace-nowrap">${lb}</div><div class="text-[18px] font-semibold rk-v leading-none mt-1.5">${x}</div></div>`).join('')}</div>
       </div>
       <div class="mt-3 border-l-[3px] pl-2.5 text-[14px] font-semibold rk-v leading-snug" style="border-left-color:${k === 'meta' ? '#2589E8' : '#20C997'}" title="${escapeAttr(p.sub)}">${p.head}</div>
-      <div class="text-[13px] font-semibold rk-v mt-5">현재 집행 중 소재 · 집행 기간</div>
+      <div class="text-[13px] font-semibold rk-v mt-5">현재 집행 중 소재 &amp; 기간</div>
       <div class="flex gap-[2px] h-2.5 rounded-sm overflow-hidden mt-1.5">${p.live ? parts.filter(x => x[1]).map(x => `<div title="${x[0]} ${x[1]}개" style="width:${x[1] / p.live * 100}%;background:rgba(${rgb},${x[2]})"></div>`).join('') : '<div class="flex-1 bg-slate-800/60"></div>'}</div>
       <div class="flex flex-wrap gap-x-3 mt-1 text-[12px]">${parts.map(x => `<span><span class="inline-block w-2 h-2 rounded-sm align-middle mr-1" style="background:rgba(${rgb},${x[2]})"></span><span class="muted">${x[0]}</span> <b class="rk-v">${x[1]}</b></span>`).join('')}</div>
-      ${msg.length ? `<div class="text-[13px] font-semibold rk-v mt-5">최근 주요 메시지</div><div class="mt-1">${msg.map(t => `<div class="flex gap-2 items-start mt-1.5 min-w-0" title="${escapeAttr(t)}"><span class="shrink-0 text-[22px] leading-[18px] font-extrabold" style="color:${k === 'meta' ? '#2589E8' : '#20C997'}">“</span><span class="text-[15px] font-semibold rk-v leading-snug truncate">${escapeHtml(t)}</span></div>`).join('')}</div>` : ''}
+      ${msg.length ? `<div class="text-[13px] font-semibold rk-v mt-5">핵심 카피</div><div class="mt-1">${msg.map(t => `<div class="flex gap-2 items-start mt-1.5 min-w-0" title="${escapeAttr(t)}"><span class="shrink-0 text-[22px] leading-[18px] font-extrabold" style="color:${k === 'meta' ? '#2589E8' : '#20C997'}">“</span><span class="text-[15px] font-semibold rk-v leading-snug truncate">${escapeHtml(t)}</span></div>`).join('')}</div>` : ''}
       <div class="text-[13px] font-semibold rk-v mt-5 mb-2">위닝 크리에이티브</div>${win}
       ${recentL.length ? `<div class="flex items-baseline justify-between mt-5 mb-2"><span class="text-[13px] font-semibold rk-v">최근 집행 소재 <span class="ml-2 text-[11px] muted font-normal"><span class="inline-block w-2.5 h-2.5 rounded-sm align-middle ring-2 ring-indigo-500 ring-inset mr-1"></span>위닝 크리에이티브</span></span><button type="button" class="text-[11px] ads-new font-semibold hover:underline" onclick="adsSetMedia('${k}');setTimeout(() => document.querySelector('#adsDetail .ads-grid')?.scrollIntoView({ block: 'start' }), 50)">전체 ${recentL.length}개 보기 ›</button></div>
         <div class="grid grid-cols-8 gap-1.5">${recentL.slice(0, 8).map(c => `<a href="${c.url}" target="_blank" rel="noopener" title="${escapeAttr((c.copy[0] || c.fmtL || '') + ' · ' + c.dur + '일')}" class="relative block aspect-square rounded-md bg-slate-950 overflow-hidden ${c.win ? 'ring-2 ring-indigo-500 ring-inset' : ''}" ${c.thumb ? `style="background:url('${c.thumb}') center/cover no-repeat"` : ''}>${c.thumb ? '' : `<span class="absolute inset-0 flex items-center justify-center text-[10px] muted">${c.fmtL || '없음'}</span>`}<span class="absolute left-1 bottom-1 text-[10px] font-semibold px-1 rounded bg-black/65 text-white">${c.dur.toLocaleString()}일</span></a>`).join('')}</div>` : ''}
@@ -4985,10 +5004,10 @@ async function gdAdsRender(){
       </div>
       <div class="grid grid-cols-3 gap-3 mt-3 pt-3 border-t border-slate-800" title="최근 ${ADS_WEEKS}주 기준">${[['최근 6주 신규 투입', p.n6 + '개'], ['평균 교체 주기', cv(p.cyc[0], '일')], ['평균 유지 기간', cv(p.cyc[2], '일')]].map(([lb, x]) => `<div class="min-w-0"><div class="text-[11px] muted truncate">${lb}</div><div class="text-[16px] font-semibold rk-v leading-none mt-1">${x}</div></div>`).join('')}</div>
       <div class="mt-3 border-l-[3px] pl-2.5 text-[14px] font-semibold rk-v leading-snug" style="border-left-color:${hex}" title="${escapeAttr(p.sub)}">${p.head}</div>
-      <div class="text-[12px] font-semibold rk-v mt-4">현재 집행 중 소재 · 집행 기간</div>
+      <div class="text-[12px] font-semibold rk-v mt-4">현재 집행 중 소재 &amp; 기간</div>
       <div class="flex gap-[2px] h-2 rounded-sm overflow-hidden mt-1.5">${p.live ? parts.filter(x => x[1]).map(x => `<div title="${x[0]} ${x[1]}개" style="width:${x[1] / p.live * 100}%;background:rgba(${rgb},${x[2]})"></div>`).join('') : '<div class="flex-1 bg-slate-800/60"></div>'}</div>
       <div class="flex flex-wrap gap-x-3 mt-1 text-[11px]">${parts.map(x => `<span><span class="inline-block w-2 h-2 rounded-sm align-middle mr-1" style="background:rgba(${rgb},${x[2]})"></span><span class="muted">${x[0]}</span> <b class="rk-v">${x[1]}</b></span>`).join('')}</div>
-      ${msg.length ? `<div class="text-[12px] font-semibold rk-v mt-4">최근 주요 메시지</div><div class="mt-1">${msg.map(t => `<div class="flex gap-2 items-start mt-1.5 min-w-0" title="${escapeAttr(t)}"><span class="shrink-0 text-[22px] leading-[18px] font-extrabold" style="color:${hex}">“</span><span class="text-[14px] font-semibold rk-v leading-snug truncate">${escapeHtml(t)}</span></div>`).join('')}</div>` : ''}
+      ${msg.length ? `<div class="text-[12px] font-semibold rk-v mt-4">핵심 카피</div><div class="mt-1">${msg.map(t => `<div class="flex gap-2 items-start mt-1.5 min-w-0" title="${escapeAttr(t)}"><span class="shrink-0 text-[22px] leading-[18px] font-extrabold" style="color:${hex}">“</span><span class="text-[14px] font-semibold rk-v leading-snug truncate">${escapeHtml(t)}</span></div>`).join('')}</div>` : ''}
       <div class="text-[12px] font-semibold rk-v mt-4 mb-2">위닝 크리에이티브</div>
       ${win.length ? `<div class="grid grid-cols-3 gap-1.5">${win.map(c => `<a href="${c.url}" target="_blank" rel="noopener" class="relative block aspect-square rounded-md bg-slate-950 overflow-hidden" ${c.thumb ? `style="background:url('${c.thumb}') center/cover no-repeat"` : ''} title="${escapeAttr((c.copy[0] || '') + ' · ' + adsDkY(c.a0, T) + ' ~ ' + adsDkY(c.a1, T))}">${c.thumb ? '' : `<span class="absolute inset-0 flex items-center justify-center text-[10px] muted">${c.fmtL || '미리보기 없음'}</span>`}<span class="absolute left-1 bottom-1 text-[10px] font-semibold px-1.5 rounded bg-black/65 text-white">${c.dur.toLocaleString()}일</span></a>`).join('')}</div>`
         : `<div class="inbox rounded-lg border border-slate-800 p-3 text-xs muted">${adsWinEmpty(P[k].items, P[k].th)}</div>`}
@@ -4996,7 +5015,7 @@ async function gdAdsRender(){
       <button type="button" class="ads-foot -mx-4 -mb-4 px-4 py-2.5 border-t border-slate-800 rounded-b-xl flex items-center justify-between gap-3 text-left" style="--fc:${rgb}" onclick="gdAdsOpen('${escapeAttr(pkg)}', '${k}')">
         <span class="text-[11px] muted truncate">전체 소재 · 교체 이력 · 핵심 카피</span><span class="shrink-0 text-[12px] font-bold" style="color:rgb(var(--fc))">${LB[k]} 상세 보기 <i class="fa-solid fa-arrow-right text-[10px] ml-1"></i></span></button></div>`; };
   B.innerHTML = `<div class="flex flex-wrap items-baseline justify-between gap-2"><div><h4 class="text-sm font-semibold">마케팅 추적</h4><div class="text-[11px] muted mt-0.5">한국 · Meta ${ma.length} · Google ${ga.length} · ${R.tracked_at.slice(5, 10).replace('-', '/')} 추적</div></div>
-    <button type="button" class="text-[13px] font-bold ads-new hover:underline" onclick="gdAdsOpen('${escapeAttr(pkg)}')">개요 보기 &gt;</button></div>
+    <button type="button" class="text-[13px] font-bold ads-new hover:underline" onclick="gdAdsOpen('${escapeAttr(pkg)}')">요약 보기 &gt;</button></div>
     <div class="grid gap-3 md:grid-cols-2 mt-3">${card('meta')}${card('google')}</div>`;
 }
 function gdAdsOpen(pkg, media = 'overview'){ try{ closeGameDetail(); }catch(e){} adsSel = pkg; adsMedia = media; try{ sessionStorage.setItem('gmi.ads', JSON.stringify({ pkg, media })); }catch(e){} switchView('ads'); window.scrollTo({ top: 0 }); }
