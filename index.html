@@ -667,7 +667,8 @@ html.panel-lock { overflow: hidden; }
 .ev-cell { border-right:1px solid var(--line); padding:5px 6px 4px; min-width:0; cursor:pointer; } .ev-cell:last-child { border-right:0; }
 .ev-cell:hover { background:rgba(41,47,51,.6); } .ev-cell.out { opacity:.42; }
 .ev-cell.sel { background:rgba(41,47,51,.9); box-shadow:inset 0 0 0 2px #6257e8; }
-.ev-dn { font-size:12px; font-weight:600; height:20px; display:flex; align-items:center; }
+.ev-dn { font-size:12px; font-weight:600; height:20px; display:flex; align-items:center; gap:4px; }
+.ev-dot { width:7px; height:7px; border-radius:50%; flex:none; } .ev-dn .ev-more { margin-left:auto; font-style:normal; font-weight:500; }   /* 당일 일정 점 · 넘친 개수는 날짜 줄 오른쪽 */
 .ev-cell.sat .ev-dn { color:#60a5fa; } .ev-cell.sun .ev-dn { color:#f87171; }
 .ev-cell.today .ev-dn span { background:#6257e8; color:rgb(255,255,255); border-radius:999px; padding:0 6px; line-height:18px; }
 .ev-lanes { position:absolute; left:0; right:0; top:26px; pointer-events:none; }
@@ -2825,7 +2826,7 @@ function evRender(){
   const J = evS.data; if(!J) return;
   const EV = J.events.filter(e => !evS.off.has(e.cat)), today = kstTodayStr(), first = evS.ym + '-01';
   const dow = (evD(first).getUTCDay() + 6) % 7, start = evAdd(first, -dow), last = evF(new Date(Date.UTC(+evS.ym.slice(0, 4), +evS.ym.slice(5, 7), 0)));
-  const weeks = Math.ceil((dow + +last.slice(8)) / 7), LANES = 3, ITEMS = 1;
+  const weeks = Math.ceil((dow + +last.slice(8)) / 7), LANES = 4, DOTS = 3;   /* 11/09: 막대 4줄 · 당일 일정은 날짜 옆 점(3개까지) → 6주 달도 스크롤 없이 */
   document.getElementById('evTitle').textContent = `${evS.ym.slice(0, 4)}년 ${+evS.ym.slice(5, 7)}월`;
   /* 화면 높이에 맞춤: 주당 높이 (최소 116px) · 오른쪽 패널은 달력과 같은 높이 */
   const top = document.getElementById('evCal').getBoundingClientRect().top + scrollY, wh = Math.max(116, Math.floor((innerHeight - top - 24 - 34) / weeks));
@@ -2841,9 +2842,8 @@ function evRender(){
       lanes[li].push({ e, c0, c1, cl: e.s < ws, cr: e.e > we }); if(li >= LANES) for(let c = c0; c <= c1; c++) hidden[c] = (hidden[c] || 0) + 1; });
     const bars = lanes.slice(0, LANES).flatMap((L, li) => L.map(b => `<div class="evb ${b.cl ? 'cl' : ''} ${b.cr ? 'cr' : ''}" style="left:calc(${b.c0} * 100% / 7 + 4px);width:calc(${b.c1 - b.c0 + 1} * 100% / 7 - 8px);top:${li * 19}px;--c:${b.e.col}" title="${escapeAttr(b.e.t)}">${escapeHtml(b.e.title)}</div>`)).join('');
     h += `<div class="ev-wk"><div class="ev-lanes">${bars}</div>`;
-    for(let c = 0; c < 7; c++){ const d = evAdd(ws, c), one = EV.filter(e => !e.multi && e.s === d), more = Math.max(0, one.length - ITEMS) + (hidden[c] || 0);
-      h += `<div class="ev-cell ${d.slice(0, 7) !== evS.ym ? 'out' : ''} ${d === today ? 'today' : ''} ${d === evS.sel ? 'sel' : ''} ${c === 5 ? 'sat' : c === 6 ? 'sun' : ''}" onclick="evPick('${d}')"><div class="ev-dn"><span>${+d.slice(8)}</span></div>
-        <div class="ev-items">${one.slice(0, ITEMS).map(e => `<div class="ev-it" title="${escapeAttr(e.t)}"><i style="background:${e.col}"></i><span>${e.tm ? e.tm + ' ' : ''}${escapeHtml(e.title)}</span></div>`).join('')}${more ? `<div class="ev-more">+${more}개 더</div>` : ''}</div></div>`; }
+    for(let c = 0; c < 7; c++){ const d = evAdd(ws, c), one = EV.filter(e => !e.multi && e.s === d), more = Math.max(0, one.length - DOTS) + (hidden[c] || 0);
+      h += `<div class="ev-cell ${d.slice(0, 7) !== evS.ym ? 'out' : ''} ${d === today ? 'today' : ''} ${d === evS.sel ? 'sel' : ''} ${c === 5 ? 'sat' : c === 6 ? 'sun' : ''}" onclick="evPick('${d}')"><div class="ev-dn"><span>${+d.slice(8)}</span>${one.slice(0, DOTS).map(e => `<i class="ev-dot" style="background:${e.col}" title="${escapeAttr((e.tm ? e.tm + ' ' : '') + e.t)}"></i>`).join('')}${more ? `<em class="ev-more">+${more}</em>` : ''}</div></div>`; }
     h += `</div>`;
   }
   document.getElementById('evCal').innerHTML = h;
