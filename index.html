@@ -36,9 +36,10 @@ try{ localStorage.removeItem('gmi.theme'); }catch(e){}   /* 예전 버전이 남
      새로고침하면 index.html 이 열렸다가 위 줄에서 바로 light.html 로 넘어오므로 화면은 그대로 */
   else if(PAGE_THEME === 'light' && /light\.html$/.test(location.pathname)) try{ history.replaceState(history.state, '', location.pathname.replace(/light\.html$/, '') + location.search + location.hash); }catch(e){} })();
 /* 페이지를 연 채로 기기 설정이 바뀌면 따라감 (토글로 고른 탭은 제외) */
-try{ matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if(!pickedTheme() && osTheme() !== PAGE_THEME) location.replace(themeUrl(osTheme())); }); }catch(e){}
+try{ matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if(!pickedTheme() && osTheme() !== PAGE_THEME) themeGo(osTheme()); }); }catch(e){}
 document.documentElement.dataset.theme = PAGE_THEME;
-function setTheme(t){ try{ sessionStorage.setItem('gmi.theme', t); }catch(e){} location.replace(themeUrl(t)); }
+function themeGo(t){ const u = themeUrl(t); if(u === location.href) location.reload(); else location.replace(u); }   /* 라이트 페이지는 주소가 /dashboard/ 라 다크 주소와 같음 → 같으면 새로 불러오기 (안 그러면 # 이동만 되고 안 바뀜, 11/09) */
+function setTheme(t){ try{ sessionStorage.setItem('gmi.theme', t); }catch(e){} themeGo(t); }
 /* 스위치: 캡슐을 먼저 옮기고(0.18초) 그 테마 파일로 */
 function themeSlide(t){
   if(t === PAGE_THEME) return;
@@ -3916,7 +3917,7 @@ function adsOverview(P, T, raw){
   const ks = ['meta', 'google'].filter(k => pr[k]);
   if(!ks.length) return `<section class="card rounded-xl p-5">${mkEmpty('이 게임의 광고를 찾지 못했습니다.')}</section>`;
   /* 좌우 50:50 매체 분할 (11/06): 왼쪽 = Meta, 오른쪽 = Google. 각 단 맨 위 = 결론(타이틀) → 흐름 → 숫자 → 위닝 1위
-     맨 아래 = 두 매체 비교 띠 (항목별 막대로 나란히) */
+     (11/09: 하단 '두 매체 비교' 띠는 없애고 운영 수치 4칸을 각 카드 안으로 · 위닝 아래 집행 중 소재 썸네일) */
   const recent = p => `최근 6주 신규 ${p.trend} · ${p.p6} → ${p.n6}개`;   /* 짧게: 자세한 근거는 결론에 마우스를 올리면 */
   const col = k => { const p = pr[k], icon = `<i class="fa-brands fa-${k} mr-1.5 ${k === 'meta' ? 'text-sky-400' : 'text-emerald-400'}"></i>`;
     if(!p) return `<div class="card rounded-xl p-5 min-w-0"><div class="font-semibold text-sm">${icon}${LB[k]}</div><div class="text-[16px] font-semibold mt-3">${LB[k]} 광고 확인 안 됨</div><div class="text-xs muted mt-1">소액 집행이거나 다른 매체(네이버·카카오 등) 위주일 수 있음</div></div>`;
@@ -3936,6 +3937,10 @@ function adsOverview(P, T, raw){
       <div class="border-l-4 pl-3 mt-3" style="border-left-color:${k === 'meta' ? '#2589E8' : '#20C997'}" title="${escapeAttr(p.sub + (p.big ? ` · ${adsDk(p.big.k)}주 한 번에 ${p.big.n}개` : ''))}"><div class="text-[16px] font-semibold leading-snug">${p.head}</div><div class="text-xs muted mt-1">${recent(p)}</div></div>
       <div class="text-[11px] muted mt-5" title="${escapeAttr(note.replace(/<[^>]+>/g, ''))}">${p.rich ? '메시지 흐름' : '투입 흐름 (월별 신규)'}</div>
       <div class="grid gap-1.5 mt-1.5" style="grid-template-columns:repeat(${Math.max(1, p.flow.length)},minmax(0,1fr))">${p.flow.map(f => `<div class="rounded-lg border ${f.now ? 'border-indigo-500' : 'border-slate-800'} px-2 py-1.5 min-w-0"><div class="text-[11px] muted">${f.lb}</div><div class="text-xs font-semibold leading-snug mt-0.5 line-clamp-2" title="${escapeAttr(f.v)}">${escapeHtml(f.v)}</div></div>`).join('') || '<div class="text-[11px] muted">최근 1년 투입 없음</div>'}</div>
+      ${(() => { /* 운영 수치 4칸 (하단 '두 매체 비교' 띠에서 카드 안으로 옮김, 11/09) */
+        const v = (c, u) => c[1] === '–' ? '–' : `${Math.round(parseFloat(String(c[1]).replace('약 ', '')))}${u}`;
+        const st = [['교체 주기', v(p.cyc[0], '일')], ['1회 투입', v(p.cyc[1], '개')], ['평균 유지', v(p.cyc[2], '일')], ['교체 횟수', v(p.cyc[3], '회')]];
+        return `<div class="grid grid-cols-4 gap-1.5 mt-4" title="최근 ${ADS_WEEKS}주 기준">${st.map(([lb, x]) => `<div class="rounded-md bg-slate-900/60 px-2.5 py-1.5 min-w-0"><div class="text-[11px] muted truncate">${lb}</div><div class="text-[15px] font-semibold rk-v leading-tight mt-0.5">${x}</div></div>`).join('')}</div>`; })()}
       ${(() => { /* 지금 집행 중 소재의 나이 구성: 6주 내 신규 / 6주~90일 / 90일+ → 단기 회전형인지 상시 집행형인지 숫자로 뒷받침 */
         const rgb = k === 'meta' ? '37,137,232' : '32,201,151', mid = Math.max(0, p.live - p.r6 - p.long);
         const parts = [['6주 내 신규', p.r6, 1], ['6주~90일', mid, .6], ['90일+', p.long, .32]];
@@ -3944,16 +3949,12 @@ function adsOverview(P, T, raw){
           <div class="flex gap-[2px] h-2.5 rounded-sm overflow-hidden flex-1 min-w-[90px] max-w-[200px]">${p.live ? parts.filter(x => x[1]).map(x => `<div title="${x[0]} ${x[1]}개" style="width:${x[1] / p.live * 100}%;background:rgba(${rgb},${x[2]})"></div>`).join('') : ''}</div>
           <div class="flex flex-wrap gap-x-3 gap-y-1 text-[11px]">${parts.map(x => `<span><span class="inline-block w-2 h-2 rounded-sm align-middle mr-1" style="background:rgba(${rgb},${x[2]})"></span><span class="muted">${x[0]}</span> <b class="rk-v">${x[1]}</b></span>`).join('')}</div></div>`; })()}
       <div class="text-[11px] muted mt-4 mb-1.5">위닝 크리에이티브</div>${win}
-      <div class="mt-auto pt-3 text-right"><button type="button" class="text-[13px] font-bold ads-new hover:underline" onclick="adsSetMedia('${k}');window.scrollTo({top:0})">${LB[k]} 상세 &gt;</button></div></div>`; };
+      ${(() => { /* 집행 중 소재 썸네일 (11/09): 최근 시작 순 · 카드 폭에 맞춰 2줄까지만 보임(넘치는 줄은 grid-auto-rows:0 으로 숨김) · 위닝은 보라 테두리 */
+        const L = P[k].items.filter(c => c.live).sort((a, b) => b.a0 - a.a0 || b.dur - a.dur); if(!L.length) return '';
+        return `<div class="flex items-baseline justify-between mt-4 mb-1.5"><span class="text-[11px] muted">집행 중 소재 · 최근 시작 순 ${L.length}개</span><button type="button" class="text-[11px] muted hover:underline" onclick="adsSetMedia('${k}');setTimeout(() => document.querySelector('#adsDetail .ads-grid')?.scrollIntoView({ block: 'start' }), 50)">모두 보기 ›</button></div>
+          <div class="grid overflow-hidden" style="grid-template-columns:repeat(auto-fill,minmax(60px,1fr));grid-template-rows:repeat(2,auto);grid-auto-rows:0;column-gap:6px">${L.slice(0, 40).map(c => `<div class="pb-1.5 min-w-0"><a href="${c.url}" target="_blank" rel="noopener" title="${escapeAttr((c.copy[0] || c.fmtL || '') + ' · ' + c.dur + '일')}" class="relative block aspect-square rounded-md bg-slate-950 overflow-hidden ${c.win ? 'ring-2 ring-indigo-500 ring-inset' : ''}" ${c.thumb ? `style="background:url('${c.thumb}') center/cover no-repeat"` : ''}>${c.thumb ? '' : `<span class="absolute inset-0 flex items-center justify-center text-[10px] muted">${c.fmtL || '없음'}</span>`}<span class="absolute left-1 bottom-1 text-[9px] font-semibold px-1 rounded bg-black/65 text-white">${c.dur.toLocaleString()}일</span></a></div>`).join('')}</div>`; })()}
+      <div class="mt-auto pt-4 flex justify-end"><button type="button" class="inline-flex items-center gap-1.5 rounded-lg border border-indigo-500 px-4 py-1.5 text-[13px] font-bold ads-new hover:bg-indigo-500/10" onclick="adsSetMedia('${k}');window.scrollTo({top:0})">${LB[k]} 상세 보기 <i class="fa-solid fa-chevron-right text-[10px]"></i></button></div></div>`; };
   let h = `<div class="grid gap-3 md:grid-cols-2 items-stretch">${col('meta')}${col('google')}</div>`;
-  /* 두 매체 비교 띠: 항목마다 Meta/Google 막대 */
-  const nv = v => parseFloat(String(v).replace(/[^\d.]/g, '')) || 0;
-  const items = [0, 1, 2, 3].map(i => ({ lb: (pr.meta || pr.google).cyc[i][0], v: ['meta', 'google'].map(k => pr[k] ? { t: `${pr[k].cyc[i][1]}${pr[k].cyc[i][1] === '–' ? '' : pr[k].cyc[i][2]}`, n: nv(pr[k].cyc[i][1]) } : { t: '–', n: 0 }) }));
-  items.push({ lb: '위닝 크리에이티브', v: ['meta', 'google'].map(k => pr[k] ? { t: `${pr[k].win}개`, n: pr[k].win } : { t: '–', n: 0 }) });
-  const CL = ['#60a5fa', '#34d399'];
-  h += `<section class="card rounded-xl p-5"><div class="text-[11px] muted mb-2">두 매체 비교 · 최근 ${ADS_WEEKS}주 <span class="ml-2"><span class="inline-block w-2 h-2 rounded-sm align-middle mr-1" style="background:${CL[0]}"></span>Meta <span class="inline-block w-2 h-2 rounded-sm align-middle ml-2 mr-1" style="background:${CL[1]}"></span>Google</span></div>
-    <div class="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">${items.map(it => { const mx = Math.max(...it.v.map(x => x.n), 1);
-      return `<div class="min-w-0"><div class="text-[11px] muted mb-1.5">${it.lb}</div>${it.v.map((x, j) => `<div class="flex items-center gap-2 mb-1"><div class="flex-1 h-2 rounded-sm bg-slate-800/60 overflow-hidden"><div class="h-full rounded-sm" style="width:${x.n / mx * 100}%;background:${CL[j]}"></div></div><span class="text-[15px] font-semibold rk-v w-[92px] text-right shrink-0">${x.t}</span></div>`).join('')}</div>`; }).join('')}</div></section>`;
   return `<div class="space-y-4">${h}</div>`;
 }
 
