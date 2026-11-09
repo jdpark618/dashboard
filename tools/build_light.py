@@ -117,6 +117,7 @@ body, main { background:#f6f7f9 !important; }
 .evb { color:#1f2328 !important; background:color-mix(in srgb, var(--c) 16%, #ffffff) !important; }   /* 행사 달력 막대 (11/09) */
 .ev-cell:hover { background:#f7f8fa !important; } .ev-cell.sel { background:#f4f2ff !important; box-shadow:inset 0 0 0 2px #5046c8 !important; }
 .ev-cell.today .ev-dn span { background:#5046c8 !important; }
+.ads-mnav { background:#ffffff !important; border-color:#dfe3e9 !important; color:#1f2328 !important; box-shadow:0 2px 8px rgba(15,23,42,.12); }   /* 소재 크게 보기 좌우 버튼 (11/09) */
 .gd-ctab2 thead tr:first-child th.gd-sh { border-bottom-color:#e3e5ea !important; }   /* 상세 표: 스토어 이름 줄 ↔ 매출·인기 줄 구분선 */
 .gs-tab.on { background:#5046c8 !important; color:#ffffff !important; }   /* 순위 비교 검색 드롭다운 탭: 다른 선택 버튼과 같은 진한 보라 + 흰 글자 (다크용 흰 글자가 연보라 위에서 안 보이던 것) */
 .cal-navbtn, .cal-today-btn, .more-btn { background:#ffffff !important; border-color:#e6e8ed !important; }   /* 달력 이전/다음 · 오늘 · 목록/더보기 버튼: 페이지 배경(#f6f7f9)에 묻혀서 카드처럼 흰 바탕 + 테두리 (11/06) */
