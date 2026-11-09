@@ -215,7 +215,7 @@ body { background:var(--bg); font-family:'Pretendard Variable',Pretendard,-apple
 /* 하위 메뉴 (시장 분석): 아이콘 중심선 위치에 세로선, 선택 항목은 보라 글자 + 굵은 선 */
 /* 주간 리포트: 메뉴와 같은 모양, 새 리포트면 NEW (접힘 상태는 아이콘 모서리) */
 .sb-rep { margin-top:4px; }
-.sb-rep .hd-new, .sb-hot .hd-new { margin-left:auto; margin-right:10px; }   /* 마케팅 추적 HOT: 신규 기능이라 당분간 고정 표시 (11/06) */
+.sb-rep .hd-new, .sb-hot .hd-new { margin-left:auto; margin-right:10px; min-width:33px; text-align:center; }   /* NEW · HOT 글자 폭이 달라도 배지 크기 같게 */   /* 마케팅 추적 HOT: 신규 기능이라 당분간 고정 표시 (11/06) */
 .sb-cnt { margin-left:auto; margin-right:12px; font-size:11px; font-weight:600; color:#6f767b; }
 .sb-chev { margin-left:auto; margin-right:10px; display:inline-flex; }
 .sb-chev svg { width:15px; height:15px; transition:transform .22s ease; }
@@ -255,7 +255,7 @@ html.sb-mini .sb-wrap .sb-sub { display:none; }
 html.sb-mini .sb-group { color:transparent; }
 html.sb-mini .sb-group:not(:first-child)::after { content:''; position:absolute; left:8px; right:8px; top:50%; border-top:1px solid #292f33; }
 html.sb-mini .sb-group.raw::before { display:none; }
-html.sb-mini .sb-rep .hd-new, html.sb-mini .sb-hot .hd-new { position:absolute; top:3px; right:2px; margin:0; padding:0 3px; font-size:9px; line-height:14px; }
+html.sb-mini .sb-rep .hd-new, html.sb-mini .sb-hot .hd-new { min-width:0; position:absolute; top:3px; right:2px; margin:0; padding:0 3px; font-size:9px; line-height:14px; }
 /* 넓은 화면은 사이드바가 시장 분석 섹션 메뉴 역할 → 페이지 안 탭은 숨김 (좁은 화면은 그대로) */
 #mkSectionTabs { display:none; }
 /* 섹션이 다른 화면처럼 위 바 바로 아래(같은 간격)에서 시작 */
@@ -3606,7 +3606,7 @@ async function openAdsView(){
   L.innerHTML = `<div class="card rounded-xl p-5">
     <div class="mk-card-head flex-wrap gap-3"><div><h3 class="font-semibold text-sm">추적한 게임 <span class="muted font-normal" id="adsListN"></span></h3><p class="text-[11px] muted mt-1">한국 · Meta 광고 라이브러리 · Google 광고 투명성 센터 · 게임을 누르면 상세</p></div>
       <div class="flex flex-wrap items-center gap-2"><input id="adsListQ" type="search" placeholder="게임 이름 (패키지, 개발사명) 검색" value="${escapeAttr(adsListQ)}" oninput="adsListQ=this.value;adsListPage=0;adsRenderList()" class="h-8 w-56 rounded-md border border-slate-800 bg-slate-900 px-2.5 text-xs">
-        <div class="mk-seg" role="group" aria-label="보기">${[['all', '전체'], ['live', '추적 중'], ['popular', '인기 추적'], ['sales', '매출 추적']].map(([k, lb]) => `<button type="button" data-k="${k}" onclick="adsListF='${k}';adsListPage=0;adsRenderList()">${lb}</button>`).join('')}</div></div></div>
+        <div class="mk-seg" role="group" aria-label="보기">${[['all', '전체'], ['live', '현재 TOP5'], ['popular', '인기 추적'], ['sales', '매출 추적']].map(([k, lb]) => `<button type="button" data-k="${k}" onclick="adsListF='${k}';adsListPage=0;adsRenderList()">${lb}</button>`).join('')}</div></div></div>
     <div id="adsListGrid"></div></div>`;
   adsRenderList();
 }
