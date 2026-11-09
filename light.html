@@ -7893,6 +7893,20 @@ function syncSet(s, label, detail){
   box.title = detail ? `${label} · ${detail}` : label;
   box.classList.toggle('retry', s === 'fail'); box.onclick = s === 'fail' ? fetchAllData : null;
 }
+/* 오늘 수집 로그 확인 (11/09): gchart data/runlog/<오늘>/<카테고리>.json 의 마지막 시도가 실패면 점을 빨강(수집 실패),
+   순위 수집이 재시도를 기다리는 중(3번째 전 실패)이면 노랑. 동기화가 정상일 때만 덮어씀 · 자세한 건 /admin */
+async function collectCheck(base){
+  const day = kstTodayStr(), LB = { new: '신작', popular: '인기', sales: '매출', ads: '마케팅' };
+  const recs = await Promise.all(Object.keys(LB).map(k => fetch(`${DATA_BASE}runlog/${day}/${k}.json?t=${Date.now()}`).then(r => r.ok ? r.json() : null).catch(() => null).then(v => [k, v])));
+  const bad = [], wait = [];
+  recs.forEach(([k, v]) => { const a = v?.attempts?.at(-1); if(!a || a.ok) return;
+    const why = (a.msgs.find(m => m[0] === 'x') || [])[1] || '';
+    ((k === 'popular' || k === 'sales') && a.n < 3 ? wait : bad).push(`${LB[k]}${why ? `(${why})` : ''}`); });
+  if(document.getElementById('syncStatus').dataset.s !== 'ok') return;   /* 그사이 다시 동기화 중이면 손대지 않음 */
+  if(bad.length) syncSet('fail', '수집 실패', `오늘 수집 실패: ${bad.join(' · ')} · ${base}`);
+  else if(wait.length) syncSet('lag', '수집 재시도 대기', `1시간 뒤 다시 수집: ${wait.join(' · ')} · ${base}`);
+  const box = document.getElementById('tbStat'); if(bad.length){ box.classList.remove('retry'); box.onclick = null; }   /* 다시 시도 버튼이 아님 */
+}
 async function fetchAllData(){
   if(fetchBusy) return; fetchBusy = true;
   const seq = scopeSeq;
@@ -7937,6 +7951,7 @@ async function fetchAllData(){
       syncSet('lag', '수집 지연', `${lag}일 전 데이터 · 최신 수집일 ${latest} (기대 수집일 ${expected}, KST ${CRAWL_READY_HOUR_KST}시 기준). 크롤러 실행 상태를 확인하세요. 마지막 동기화 ${syncTime}`);
     }else{
       syncSet('ok', '동기화 완료', `마지막 동기화 ${syncTime} · 최신 수집일 ${latest}`);
+      collectCheck(`마지막 동기화 ${syncTime} · 최신 수집일 ${latest}`);
     }
     updateReportBadge();
   }catch(err){
