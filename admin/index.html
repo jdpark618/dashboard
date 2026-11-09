@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>ChartDeck Admin</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<style>
+  :root { --bg:#191d20; --surface:#202428; --surface-2:#292f33; --line:rgba(52,58,62,.7); --tx:#e6e8ea; --mu:#8b9297; --ok:#22c55e; --ng:#ef4444; --wait:#6b7280; --warn:#f59e0b; --pu:#7d72f0; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--tx); font-family:'Pretendard Variable',Pretendard,system-ui,sans-serif; font-size:13px; letter-spacing:-0.01em; font-variant-numeric:tabular-nums; }
+  .wrap { max-width:1280px; margin:0 auto; padding:28px 24px 60px; }
+  header { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:20px; }
+  h1 { font-size:18px; margin:0; border-left:3px solid var(--pu); padding-left:10px; }
+  .sub { color:var(--mu); font-size:12px; margin-top:6px; padding-left:13px; }
+  .note { font-size:11px; color:var(--warn); }
+  .day { background:var(--surface); border:1px solid var(--line); border-radius:12px; margin-bottom:14px; overflow:hidden; }
+  .day-hd { display:flex; align-items:center; gap:12px; padding:12px 18px; border-bottom:1px solid var(--line); }
+  .day-hd b { font-size:14px; }
+  .day-hd .sum { color:var(--mu); font-size:12px; }
+  .pill { font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; }
+  .pill.ok { background:rgba(34,197,94,.14); color:var(--ok); } .pill.ng { background:rgba(239,68,68,.15); color:var(--ng); }
+  table { width:100%; border-collapse:collapse; table-layout:fixed; }
+  th { text-align:left; font-weight:400; color:var(--mu); font-size:11px; padding:8px 18px; }
+  td { padding:10px 18px; border-top:1px solid var(--line); vertical-align:top; }
+  .cat { display:flex; align-items:center; gap:10px; white-space:nowrap; font-weight:600; font-size:13px; }
+  .dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+  .dot.ok { background:var(--ok); box-shadow:0 0 0 3px rgba(34,197,94,.18); }
+  .dot.ng { background:var(--ng); box-shadow:0 0 0 3px rgba(239,68,68,.2); }
+  .dot.wait { background:var(--wait); }
+  .t { font-weight:600; } .late { color:var(--mu); font-size:11px; margin-left:6px; } .late.bad { color:var(--warn); }
+  .msgs { margin:0; padding:0; list-style:none; display:grid; gap:3px; }
+  .msgs li { font-size:12px; line-height:1.45; } .msgs .o { color:var(--ok); } .msgs .x { color:var(--ng); } .msgs .w { color:var(--warn); } .msgs .m { color:var(--mu); }
+  .extra { color:var(--mu); font-size:11px; margin-top:4px; }
+  a { color:inherit; } .run { color:var(--mu); font-size:11px; text-decoration:none; } .run:hover { text-decoration:underline; }
+  .err { padding:40px; text-align:center; color:var(--mu); }
+  .tl { margin:0 0 6px; padding:0; list-style:none; display:grid; gap:4px; }
+  .tl li { display:grid; grid-template-columns:44px 44px 1fr; gap:8px; font-size:12px; line-height:1.45; }
+  .tl .st { font-weight:700; } .tl .tm { color:var(--mu); }
+  .tl .x .st { color:var(--ng); } .tl .r .st { color:var(--warn); } .tl .o .st { color:var(--ok); }
+  .pill.re { background:rgba(245,158,11,.15); color:var(--warn); margin-left:6px; }
+  .dot.run { background:var(--warn); box-shadow:0 0 0 3px rgba(245,158,11,.2); }
+  .msgs .r { color:var(--warn); }
+  .tl + .msgs { margin-top:6px; padding-top:6px; border-top:1px dashed var(--line); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div><h1>수집 로그</h1><div class="sub">GitHub Actions · jdpark618/gchart · 시간은 모두 KST · 최근 14일</div></div>
+    <div class="note" id="note"></div>
+  </header>
+  <div id="days"><div class="err">실행 기록을 불러오는 중...</div></div>
+</div>
+<script>
+/* 수집 로그 (11/09)
+   - 상태 · 실행 시각: GitHub Actions 실행 기록 (토큰 없이 공개 API, 시간당 60회 한도 → 한 번 열 때 1회만 부름)
+   - 메시지 · 재시도: 각 수집기가 gchart Pages 에 남긴 data/runlog/<KST 날짜>/<카테고리>.json
+   인기 · 매출은 같은 순위 수집 실행에서 나오고, 재시도는 1시간 간격 최대 3번 (최초 → 재시도 → 최종) */
+const CATS = [
+  { k: 'new',     lb: '신작',   wf: 'Wame Calendar Scraper',        cron: '03:12' },
+  { k: 'popular', lb: '인기',   wf: 'Daily PlayStore Rank Scraper', cron: '03:42' },
+  { k: 'sales',   lb: '매출',   wf: 'Daily PlayStore Rank Scraper', cron: '03:42' },
+  { k: 'ads',     lb: '마케팅', wf: 'Ad Tracker (마케팅 추적)',      cron: '05:30' },
+];
+const LOG_BASE = 'https://jdpark618.github.io/gchart/data/runlog/', DAYS = 14;
+const kst = iso => new Date(Date.parse(iso) + 9 * 3600e3);   /* UTC ISO → KST 를 UTC 칸에 담은 Date (표시용) */
+const ymd = d => d.toISOString().slice(0, 10), hm = d => d.toISOString().slice(11, 16);
+const DOW = ['일', '월', '화', '수', '목', '금', '토'];
+const esc = v => String(v ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const ICON = { o: '✓', x: '✕', w: '!', r: '↻', m: '·' };
+function lateTxt(cron, d){
+  const [h, m] = cron.split(':').map(Number), mins = d.getUTCHours() * 60 + d.getUTCMinutes() - (h * 60 + m);
+  if(mins < 0) return '';
+  return `<span class="late ${mins >= 240 ? 'bad' : ''}">+${Math.floor(mins / 60)}시간 ${mins % 60}분</span>`;
+}
+const msgList = M => `<ul class="msgs">${M.map(([t, m]) => `<li class="${t}">${ICON[t] || '·'} ${esc(m)}</li>`).join('')}</ul>`;
+async function getLog(day, k){ try{ const r = await fetch(`${LOG_BASE}${day}/${k}.json?t=${Date.now()}`); return r.ok ? await r.json() : null; }catch(e){ return null; } }
+async function main(){
+  const today = ymd(kst(new Date().toISOString())), days = [];
+  for(let i = 0; i < DAYS; i++) days.push(ymd(new Date(Date.parse(today) - i * 864e5)));
+  let runs = [], apiErr = '';
+  const [api, logs] = await Promise.all([
+    fetch('https://api.github.com/repos/jdpark618/gchart/actions/runs?per_page=100').then(r => r.ok ? r.json() : Promise.reject(new Error(r.status))).catch(e => { apiErr = e.message; return null; }),
+    Promise.all(days.flatMap(d => CATS.map(c => getLog(d, c.k).then(v => [`${d}/${c.k}`, v])))).then(Object.fromEntries),
+  ]);
+  if(api) runs = api.workflow_runs; else document.getElementById('note').textContent = `GitHub 실행 기록을 못 불러옴 (${apiErr}) · 시간당 조회 한도일 수 있음 — 수집 로그만 표시`;
+  const byDay = new Map();
+  runs.filter(r => CATS.some(c => c.wf === r.name)).forEach(r => { const d = ymd(kst(r.run_started_at || r.created_at)); if(!byDay.has(d)) byDay.set(d, []); byDay.get(d).push(r); });
+  document.getElementById('days').innerHTML = days.map(day => {
+    const R = byDay.get(day) || [], dw = DOW[new Date(day + 'T00:00:00Z').getUTCDay()];
+    const rows = CATS.map(c => {
+      const mine = R.filter(r => r.name === c.wf), sch = mine.filter(r => r.event === 'schedule').sort((a, b) => a.run_started_at.localeCompare(b.run_started_at))[0];
+      const manual = mine.filter(r => r !== sch).length, L = logs[`${day}/${c.k}`], A = L?.attempts || [], cron = L?.sched || c.cron;
+      const extraManual = manual ? `<div class="extra">수동 실행 ${manual}회${sch ? ' 더 있음' : ''}</div>` : '';
+      if(!sch && !A.length) return { st: 'wait', html: `<td><div class="cat"><span class="dot wait"></span>${c.lb}</div></td><td>${cron}</td><td style="color:var(--mu)">${day === today ? '아직 실행 전' : '예약 실행 없음'}</td><td><ul class="msgs"><li class="m">-</li></ul>${extraManual}</td>` };
+      /* 상태: 실행 중(재시도 대기 포함) → 노랑 / 마지막 시도 결과 → 초록·빨강 / 로그 없으면 GitHub 결과 */
+      const running = sch && sch.status !== 'completed', last = A.at(-1);
+      const st = running ? 'run' : last ? (last.ok ? 'ok' : 'ng') : sch.conclusion === 'success' ? 'ok' : 'ng';
+      const s = sch ? kst(sch.run_started_at) : kst(A[0].start), e = sch ? kst(sch.updated_at) : kst(last.end);
+      const dur = Math.max(1, Math.round((e - s) / 60e3));
+      let body;
+      if(!A.length) body = msgList(running ? [['m', '실행 중...']] : [['m', '수집 로그 없음 (로그 기록 시작 전)']]);
+      else if(A.length === 1 && !(running && !last.ok)) body = msgList(last.msgs);
+      else {
+        /* 최초 → 재시도 → 최종: 시도마다 시각 · 결과 · 대표 문구 (실패면 첫 실패 줄) */
+        const lb = i => i === 0 ? '최초' : (i === A.length - 1 && !running) ? '최종' : '재시도';
+        const pick = a => (a.msgs.find(m => m[0] === 'x') || a.msgs[0] || ['m', ''])[1];
+        const tl = A.map((a, i) => `<li class="${a.ok ? 'o' : i === A.length - 1 && !running ? 'x' : 'r'}"><span class="st">${lb(i)}</span><span class="tm">${hm(kst(a.start))}</span><span>${a.ok ? '✓' : '✕'} ${esc(pick(a))}</span></li>`);
+        if(running && !last.ok) tl.push(`<li class="r"><span class="st">다음</span><span class="tm">${hm(new Date(kst(last.end).getTime() + 60 * 60e3))}</span><span>1시간 뒤 다시 수집 예정</span></li>`);
+        body = `<ul class="tl">${tl.join('')}</ul>${msgList(last.msgs)}`;
+      }
+      const reN = Math.max(0, A.length - 1);
+      return { st, html: `<td><div class="cat"><span class="dot ${st}"></span>${c.lb}${reN ? `<span class="pill re">재시도 ${reN}</span>` : ''}</div></td><td>${cron}</td>
+        <td><span class="t">${hm(s)}</span>${lateTxt(cron, s)}<div class="extra">${running ? '실행 중' : `${dur}분 소요`}${sch ? ` · <a class="run" href="${sch.html_url}" target="_blank" rel="noopener">실행 기록 ↗</a>` : ''}</div></td>
+        <td>${body}${extraManual}</td>` };
+    });
+    const ng = rows.filter(r => r.st === 'ng').length, ok = rows.filter(r => r.st === 'ok').length;
+    return `<section class="day"><div class="day-hd"><b>${Number(day.slice(5, 7))}/${Number(day.slice(8))} (${dw})</b>${ng ? `<span class="pill ng">실패 ${ng}</span>` : ok === 4 ? '<span class="pill ok">모두 정상</span>' : ''}<span class="sum">${ok}/4 정상</span></div>
+      <table><colgroup><col style="width:170px"><col style="width:90px"><col style="width:220px"><col></colgroup>
+      <thead><tr><th>카테고리</th><th>예약 시간</th><th>실제 실행</th><th>수집 로그</th></tr></thead><tbody>${rows.map(r => `<tr>${r.html}</tr>`).join('')}</tbody></table></section>`;
+  }).join('');
+}
+main();
+</script>h>카테고리</th><th>예약 시간</th><th>실제 실행</th><th>수집 로그</th></tr></thead><tbody>${rows.map(r => `<tr>${r.html}</tr>`).join('')}</tbody></table></section>`;
+  }).join('');
+}
+main();
+</script>
+</body>
+</html>
