@@ -3829,21 +3829,40 @@ async function adsOpen(pkg){
 }
 const adsKeep = () => { try{ adsSel ? sessionStorage.setItem('gmi.ads', JSON.stringify({ pkg: adsSel, media: adsMedia })) : sessionStorage.removeItem('gmi.ads'); }catch(e){} };
 function adsBack(){ adsSel = null; adsKeep(); openAdsView(); }
-/* 위닝 크리에이티브 (11/06): '오랜 기간 바꾸지 않고 지금도 집행 중인가' — 문구와 소재를 함께 봄
-   소재 — 지금도 집행 중(Meta 활성 · Google 최근 3일 노출) + 집행 ADS_WIN일 이상
-   문구 — 그 문구를 처음 쓴 날 → 마지막으로 쓴 날이 ADS_WIN일 이상 + 지금도 집행 중인 소재가 그 문구를 씀
+/* 위닝 크리에이티브: 문구와 소재를 함께 봄
+   소재 — 아래 '위닝 기준 (11/10 개정)' (집행 중 = Meta 활성 · Google 최근 3일 노출)
+   문구 — 그 문구를 처음 쓴 날 → 마지막으로 쓴 날이 ADS_WIN_MIN일 이상 + 지금도 집행 중인 소재가 그 문구를 씀
    위닝 크리에이티브 = 위닝 소재 중 문구도 위닝인 것 먼저(문구 없는 동영상은 소재만으로), 소재 집행 기간 긴 순
    비율(%)은 '많이 만든 문구'일 뿐 효과가 아니므로 작게만 표시
    기준일(adsAsOf): 과거 날짜를 고르면 그날 기준으로 다시 계산(그날 이후 시작한 소재 제외 · 기간은 그날까지) */
 const ADS_WIN = 21, ADS_WEEKS = 13;
-/* 위닝 기준 (11/06, 화면에는 기준을 따로 쓰지 않음): 지금 집행 중이면서 그 매체의 평균 유지 기간 이상 버티는 소재 = '평소보다 오래 살아남은 소재'.
-   평균 유지 기간 = 최근 13주에 처음 확인된 소재의 유지 일수 평균 (요약 카드 · 비교 띠의 '평균 유지 기간'과 같은 값, 그 기간 소재가 없으면 끝난 소재 평균).
-   끝난 소재가 5개 미만이면 평균이 의미 없어 '집행 중 소재 중 가장 오래된 상위 3개'로 대신. 집행 중 소재가 없으면 위닝 없음 */
-function adsWinDays(items, T){
-  const live = items.filter(c => c.live); if(!live.length) return Infinity;
-  const ended = items.filter(c => !c.live), W0 = adsWk(T) - (ADS_WEEKS - 1) * 7, cur = items.filter(c => c.a0 >= W0), base = cur.length ? cur : ended;
-  if(ended.length >= 5 && base.length) return Math.max(1, Math.ceil(base.reduce((t, c) => t + c.dur, 0) / base.length));
-  return -3;   /* 상위 3개 (같은 일수가 많아도 3개만 — pack 에서 처리) */
+/* 위닝 기준 (11/10 개정): '같이 시작한 소재들이 꺼지는 동안 살아남았는가'
+   예전 기준(매체 평균 유지 기간 이상)은 같은 날 한꺼번에 올린 소재가 전부 위닝이 되고(집행 중의 90%대), 기준 일수가 게임마다 1~84일로 흔들렸음.
+   · 위닝  = 집행 중 + ADS_WIN_MIN일 이상 + 같은 주에 시작한 소재가 ADS_COHORT개 이상이고 그 절반 이상이 종료됨. 오래 버틴 순으로 매체당 ADS_WIN_MAX개(같은 소재는 하나로 셈)
+   · 상시  = 집행 중 + ADS_EVER일 이상 (골라 남긴 것이 아니라 계속 켜 두는 소재 — 위닝과 따로)
+   · 장기  = 집행 중 + ADS_WIN일 이상인데 위닝·상시가 아닌 소재 (같이 시작한 소재가 아직 대부분 살아 있거나 비교할 묶음이 없음)
+   · 그 밖 = 판단 보류 (집행 일수가 짧음)
+   집행 중 소재가 없으면 과거 기록 기준: 끝난 소재 중 평균 이상 + ADS_WIN_MIN일 이상 오래 쓴 상위 ADS_WIN_MAX개 */
+const ADS_WIN_MIN = 14, ADS_EVER = 180, ADS_WIN_MAX = 5, ADS_COHORT = 4;
+const ADS_WIN_TIP = `위닝 = 지금 집행 중이고 ${ADS_WIN_MIN}일 이상 됐으며, 같은 주에 시작한 소재(${ADS_COHORT}개 이상)의 절반 이상이 종료된 뒤에도 남은 소재. 오래 버틴 순 최대 ${ADS_WIN_MAX}개. ${ADS_EVER}일 이상은 '상시 소재'로 따로 봄. 성과 수치가 아니라 집행 기록으로 추정한 것`;
+const adsSameKey = c => c.thumb || c.yt || c.url;   /* 같은 소재(스토어·변형만 다른 광고)를 하나로 셀 때 */
+function adsWinMark(items){
+  const wk = new Map(), past = items.length > 0 && !items.some(c => c.live);
+  items.forEach(c => { const k = adsWk(c.a0), g = wk.get(k) || { n: 0, end: 0 }; g.n++; if(!c.live) g.end++; wk.set(k, g); });
+  const avg = past ? items.reduce((t, c) => t + c.dur, 0) / items.length : 0;
+  items.forEach(c => { c.coh = wk.get(adsWk(c.a0)); c.win = c.long = false; c.ever = c.live && c.dur >= ADS_EVER;
+    c.cand = past ? c.dur >= Math.max(ADS_WIN_MIN, avg) : c.live && !c.ever && c.dur >= ADS_WIN_MIN && c.coh.n >= ADS_COHORT && c.coh.end * 2 >= c.coh.n; });
+  const keys = [];
+  items.filter(c => c.cand).sort((a, b) => b.dur - a.dur || b.coh.end / b.coh.n - a.coh.end / a.coh.n || (!!b.thumb - !!a.thumb))
+    .forEach(c => { const k = adsSameKey(c); if(keys.includes(k) || keys.length < ADS_WIN_MAX){ if(!keys.includes(k)) keys.push(k); c.win = true; } });
+  items.forEach(c => { c.long = c.live && !c.win && !c.ever && c.dur >= ADS_WIN; });
+  return past;
+}
+/* 소재 썸네일 위 상태 표시: 위닝(보라) · 상시 · 장기(회색) */
+function adsTag(c, cls = 'text-[10px] px-1.5'){
+  return c.win ? `<span class="ads-win ${cls} font-semibold py-0.5 rounded">위닝 · ${c.dur}일</span>`
+    : c.ever ? `<span class="${cls} font-semibold py-0.5 rounded bg-black/65 text-white" title="${ADS_EVER}일 이상 계속 켜 두는 소재">상시 · ${c.dur.toLocaleString()}일</span>`
+    : c.long ? `<span class="${cls} font-semibold py-0.5 rounded bg-black/65 text-white" title="오래 집행 중이지만 같이 시작한 소재가 아직 대부분 살아 있거나 비교할 묶음이 없음">장기 · ${c.dur}일</span>` : '';
 }
 let adsMedia = null, adsAsOf = null;   /* 상세 화면 매체 탭 'meta' | 'google' · 기준일(일 번호, null = 오늘) */
 const adsDk = k => adsKst(k * 86400 - 9 * 3600);
@@ -3957,14 +3976,20 @@ function adsWinList(items, life){
   const lw = new Map(life.map(g => [g.k, g]));
   return items.filter(c => c.win).map(c => ({ ...c, cg: c.key ? lw.get(c.key) : null }))
     .map(c => ({ ...c, both: !c.key || !!c.cg?.win }))
-    .sort((a, b) => (b.both - a.both) || (b.dur - a.dur) || (!!b.thumb - !!a.thumb));
+    .sort((a, b) => (b.both - a.both) || (b.dur - a.dur) || (!!b.thumb - !!a.thumb))
+    .filter((c, i, A) => A.findIndex(x => adsSameKey(x) === adsSameKey(c)) === i);   /* 같은 소재(스토어·변형만 다름)는 한 번만 */
 }
 /* 위닝 크리에이티브 TOP3: 소재(이미지·영상)와 문구를 한 카드에 */
 /* 위닝이 없을 때 이유를 한 줄로: 집행 중 소재가 없거나, 가장 오래된 집행 중 소재가 아직 기준 일수 전 */
-function adsWinEmpty(items, th){ return (items || []).some(c => c.live) ? '아직 위닝 크리에이티브가 없습니다.' : '지금 집행 중인 소재가 없습니다.'; }
+function adsWinEmpty(items, th){
+  const live = (items || []).filter(c => c.live); if(!live.length) return '지금 집행 중인 소재가 없습니다.';
+  const ever = live.filter(c => c.ever).length, rest = live.filter(c => !c.ever), old = rest.length ? Math.max(...rest.map(c => c.dur)) : 0, long = live.filter(c => c.long).length, tail = (long ? ` · 장기 집행 ${long}개` : '') + (ever ? ` · 상시 소재 ${ever}개` : '');
+  if(rest.length && old < ADS_WIN_MIN) return `판단 보류 · 가장 오래된 소재가 ${old}일차 (${ADS_WIN_MIN}일부터 판단)${tail}`;
+  return `아직 위닝이 없습니다 · 같은 주에 시작한 소재의 절반 이상이 종료된 뒤에도 남은 소재가 없음${tail}`;
+}
 function adsWinCreative(w, th = ADS_WIN, items = null, k = ''){
   const nb = w.filter(c => c.both).length;
-  let h = `<div id="adsWinBox" class="mb-5"><div class="text-xs font-semibold">위닝 크리에이티브 <span class="muted font-normal">${nb}개</span></div>`;
+  let h = `<div id="adsWinBox" class="mb-5"><div class="text-xs font-semibold">위닝 크리에이티브 <span class="muted font-normal">${nb}개</span><i class="fa-regular fa-circle-question mk-info ml-1 muted font-normal" title="${ADS_WIN_TIP}"></i></div>`;
   if(!w.length) return h + `<div class="text-[11px] muted mt-1">${adsWinEmpty(items, th)}</div></div>`;
   h += `<div class="grid gap-2 mt-2" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr))">${w.slice(0, 3).map((c, i) => `<a ${k ? adsMA('win-' + k, k, w, c) : `href="${c.url}" target="_blank" rel="noopener"`} class="flex gap-3 inbox rounded-lg border ${c.both ? 'border-indigo-500' : 'border-slate-800'} p-2 min-w-0 hover:border-indigo-500">
       <div class="relative w-24 h-24 shrink-0 rounded-md bg-slate-950 overflow-hidden" ${c.thumb ? `style="background:url('${c.thumb}') center/cover no-repeat"` : ''}>${c.thumb ? '' : '<div class="absolute inset-0 flex items-center justify-center text-[10px] muted">미리보기 없음</div>'}<span class="ads-win absolute left-1 top-1 text-[10px] font-semibold px-1.5 py-0.5 rounded">${i + 1}</span></div>
@@ -3979,7 +4004,7 @@ function adsMA(key, k, L, c){ ADS_MEDIA[key] = { k, L }; const i = L.indexOf(c);
 function adsGrid(items, k = ''){
   return `<div class="ads-grid grid gap-2" style="grid-template-columns:repeat(auto-fill,minmax(140px,1fr))">${items.map(c => `<a ${k ? adsMA(k, k, items, c) : `href="${c.url}" target="_blank" rel="noopener"`} ${c.win ? 'data-win="1"' : ''} class="inbox rounded-lg border ${c.win ? 'border-indigo-500' : 'border-slate-800'} bg-slate-900/40 hover:border-indigo-500 overflow-hidden min-w-0 block">
     <div class="relative aspect-square bg-slate-950" ${c.thumb ? `style="background:url('${c.thumb}') center/cover no-repeat"` : ''}>${c.thumb ? '' : '<div class="absolute inset-0 flex items-center justify-center text-[11px] muted text-center px-2">미리보기 없음</div>'}
-      <div class="absolute left-1.5 top-1.5 flex flex-wrap gap-1">${c.win ? `<span class="ads-win text-[10px] font-semibold px-1.5 py-0.5 rounded">위닝 · ${c.dur}일</span>` : ''}${c.badges.map(b => `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-black/65 text-white">${escapeHtml(b)}</span>`).join('')}</div></div>
+      <div class="absolute left-1.5 top-1.5 flex flex-wrap gap-1">${adsTag(c)}${c.badges.map(b => `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-black/65 text-white">${escapeHtml(b)}</span>`).join('')}</div></div>
     <div class="px-2 py-1.5"><div class="text-[11px] font-semibold">${c.dt}<span class="muted font-normal ml-1">${c.sub || ''}</span></div><div class="text-[11px] muted leading-snug line-clamp-2">${escapeHtml(c.copy[0] || '')}</div></div></a>`).join('')}</div>`;
 }
 /* 소재 크게 보기 (11/09): Google 영상 = 유튜브(쿠키 없는 플레이어)로 재생 · Google 이미지 = 원본 주소를 바로(리퍼러 숨김, 저장 없음)
@@ -4003,7 +4028,7 @@ function adsMediaOpen(key, i){
       <div class="min-w-0 flex flex-col">
         <div class="flex items-center gap-2"><span class="text-[12px] muted"><i class="fa-brands fa-${k} mr-1 ${k === 'meta' ? 'text-sky-400' : 'text-emerald-400'}"></i>${LB} 소재 ${i + 1} / ${L.length}</span>
           <button type="button" onclick="adsMediaClose()" class="ml-auto w-8 h-8 rounded-md hover:bg-slate-800 muted" aria-label="닫기"><i class="fa-solid fa-xmark"></i></button></div>
-        <div class="flex flex-wrap gap-1.5 mt-2">${c.win ? `<span class="ads-win text-[11px] font-semibold px-2 py-0.5 rounded">위닝 · ${c.dur}일</span>` : ''}<span class="text-[11px] font-semibold px-2 py-0.5 rounded ${c.live ? 'bg-emerald-500/15 text-emerald-400' : 'bg-slate-800 muted'}">${c.live ? '집행 중' : '관측 종료'}</span>${[c.fmtL, c.storeL].filter(Boolean).map(b => `<span class="text-[11px] px-2 py-0.5 rounded bg-slate-800/70">${b}</span>`).join('')}</div>
+        <div class="flex flex-wrap gap-1.5 mt-2">${adsTag(c, 'text-[11px] px-2')}<span class="text-[11px] font-semibold px-2 py-0.5 rounded ${c.live ? 'bg-emerald-500/15 text-emerald-400' : 'bg-slate-800 muted'}">${c.live ? '집행 중' : '관측 종료'}</span>${[c.fmtL, c.storeL].filter(Boolean).map(b => `<span class="text-[11px] px-2 py-0.5 rounded bg-slate-800/70">${b}</span>`).join('')}</div>
         ${c.copy.length ? `<div class="text-[15px] font-semibold rk-v leading-snug mt-4">${escapeHtml(c.copy[0])}</div>${c.copy.slice(1).map(t => `<div class="text-[13px] muted leading-relaxed mt-1 whitespace-pre-line">${escapeHtml(t)}</div>`).join('')}` : '<div class="text-[13px] muted mt-4">문구 없는 소재</div>'}
         <dl class="ads-kv mt-4">${kv('기간', `${adsDk(c.a0)} ~ ${c.live ? '집행 중' : adsDk(c.a1)} <span class="muted">(${c.dur}일)</span>`)}${kv('형식', c.fmtL)}</dl>
         <a href="${c.url}" target="_blank" rel="noopener" class="mt-auto pt-4 inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-800 px-3 py-2 text-[13px] font-semibold hover:border-indigo-500">${k === 'meta' ? 'Meta 광고 라이브러리' : 'Google 광고 투명성 센터'}에서 보기 <i class="fa-solid fa-arrow-up-right-from-square text-[11px]"></i></a>
@@ -4051,12 +4076,9 @@ function adsBuild(R, asOf = null){
   const gItems = ga.map(x => { const a0 = adsDay(x.first), e = adsDay(x.last), a1 = Math.min(e, T), live = e >= T - 2, dur = a1 - a0 + 1, copy = cl(x);
     return { a0, a1, dur, live, win: live && dur >= ADS_WIN, fmtL: x.yt ? '영상' : x.fmt === 2 ? '이미지' : '앱 광고', storeL: '', key: copy.join('\u0001'), copy,
       thumb: img(x.thumb), yt: x.yt || '', src: x.img || '', url: `https://adstransparency.google.com/advertiser/${x.adv}/creative/${x.id}?region=KR`, badges: [x.yt ? '동영상' : x.fmt === 2 ? '이미지' : '앱'], dt: `${adsDk(a0)}–${adsDk(a1)}`, sub: `${dur}일` }; });
-  const pack = items => { let th = adsWinDays(items, T);
-    /* 지금 집행 중 소재가 없으면 (11/09) 과거 집행 기록 기준: 전체 소재 평균 유지 기간 이상 오래 쓴 소재 = 위닝 */
-    if(items.length && !items.some(c => c.live)){ th = Math.max(1, Math.ceil(items.reduce((t, c) => t + c.dur, 0) / items.length)); items.forEach(c => { c.win = c.dur >= th; });
-      const wc = items.filter(c => c.key), life = adsLife(wc, c => c.key, c => c.a0, c => c.a1, () => true, th); return { items, wc, life, th, win: adsWinList(items, life), past: true }; }
-    if(th === -3){ const top = items.filter(c => c.live).sort((x, y) => y.dur - x.dur || (!!y.thumb - !!x.thumb)).slice(0, 3); items.forEach(c => { c.win = top.includes(c); }); th = top.length ? top.at(-1).dur : Infinity; }
-    else items.forEach(c => { c.win = c.live && c.dur >= th; }); const wc = items.filter(c => c.key), life = adsLife(wc, c => c.key, c => c.a0, c => c.a1, c => c.live, th); return { items, wc, life, th, win: adsWinList(items, life) }; };
+  const pack = items => { const past = adsWinMark(items), th = ADS_WIN_MIN;
+    const wc = items.filter(c => c.key), life = adsLife(wc, c => c.key, c => c.a0, c => c.a1, past ? () => true : c => c.live, th);
+    return { items, wc, life, th, win: adsWinList(items, life), ...(past ? { past: true } : {}) }; };
   const P = { meta: pack(mItems), google: pack(gItems) };
   return { now, tk, T, past, img, M, G, ma, ga, P };
 }
@@ -4201,7 +4223,7 @@ function adsOverview(P, T, raw){
       <div class="flex gap-[2px] h-2.5 rounded-sm overflow-hidden mt-1.5">${p.live ? parts.filter(x => x[1]).map(x => `<div title="${x[0]} ${x[1]}개" style="width:${x[1] / p.live * 100}%;background:rgba(${rgb},${x[2]})"></div>`).join('') : '<div class="flex-1 bg-slate-800/60"></div>'}</div>
       <div class="flex flex-wrap gap-x-3 mt-1 text-[12px]">${parts.map(x => `<span><span class="inline-block w-2 h-2 rounded-sm align-middle mr-1" style="background:rgba(${rgb},${x[2]})"></span><span class="muted">${x[0]}</span> <b class="rk-v">${x[1]}</b></span>`).join('')}</div>
       ${msg.length ? `<div class="text-[13px] font-semibold rk-v mt-5">핵심 카피</div><div class="mt-1">${msg.map(t => `<div class="flex gap-2 items-start mt-1.5 min-w-0" title="${escapeAttr(t)}"><span class="shrink-0 text-[22px] leading-[18px] font-extrabold" style="color:${k === 'meta' ? '#2589E8' : '#20C997'}">“</span><span class="text-[15px] font-semibold rk-v leading-snug truncate">${escapeHtml(t)}</span></div>`).join('')}</div>` : ''}
-      <div class="text-[13px] font-semibold rk-v mt-5 mb-2">위닝 크리에이티브</div>${win}
+      <div class="text-[13px] font-semibold rk-v mt-5 mb-2">위닝 크리에이티브<i class="fa-regular fa-circle-question mk-info ml-1 muted font-normal" title="${ADS_WIN_TIP}"></i></div>${win}
       ${recentL.length ? `<div class="flex items-baseline justify-between mt-5 mb-2"><span class="text-[13px] font-semibold rk-v">최근 집행 소재 <span class="ml-2 text-[11px] muted font-normal"><span class="inline-block w-2.5 h-2.5 rounded-sm align-middle ring-2 ring-indigo-500 ring-inset mr-1"></span>위닝 크리에이티브</span></span><button type="button" class="text-[11px] ads-new font-semibold hover:underline" onclick="adsSetMedia('${k}');setTimeout(() => document.querySelector('#adsDetail .ads-grid')?.scrollIntoView({ block: 'start' }), 50)">전체 ${recentL.length}개 보기 ›</button></div>
         <div class="grid grid-cols-8 gap-1.5">${recentL.slice(0, 8).map(c => `<a ${adsMA('ovr-' + k, k, recentL, c)} title="${escapeAttr((c.copy[0] || c.fmtL || '') + ' · ' + c.dur + '일')}" class="relative block aspect-square rounded-md bg-slate-950 overflow-hidden ${c.win ? 'ring-2 ring-indigo-500 ring-inset' : ''}" ${c.thumb ? `style="background:url('${c.thumb}') center/cover no-repeat"` : ''}>${c.thumb ? '' : `<span class="absolute inset-0 flex items-center justify-center text-[10px] muted">${c.fmtL || '없음'}</span>`}<span class="absolute left-1 bottom-1 text-[10px] font-semibold px-1 rounded bg-black/65 text-white">${c.dur.toLocaleString()}일</span></a>`).join('')}</div>` : ''}
       <div class="mt-auto pt-5"></div>
@@ -5261,7 +5283,7 @@ async function gdAdsRender(){
       <div class="flex gap-[2px] h-2 rounded-sm overflow-hidden mt-1.5">${p.live ? parts.filter(x => x[1]).map(x => `<div title="${x[0]} ${x[1]}개" style="width:${x[1] / p.live * 100}%;background:rgba(${rgb},${x[2]})"></div>`).join('') : '<div class="flex-1 bg-slate-800/60"></div>'}</div>
       <div class="flex flex-wrap gap-x-3 mt-1 text-[11px]">${parts.map(x => `<span><span class="inline-block w-2 h-2 rounded-sm align-middle mr-1" style="background:rgba(${rgb},${x[2]})"></span><span class="muted">${x[0]}</span> <b class="rk-v">${x[1]}</b></span>`).join('')}</div>
       ${msg.length ? `<div class="text-[12px] font-semibold rk-v mt-4">핵심 카피</div><div class="mt-1">${msg.map(t => `<div class="flex gap-2 items-start mt-1.5 min-w-0" title="${escapeAttr(t)}"><span class="shrink-0 text-[22px] leading-[18px] font-extrabold" style="color:${hex}">“</span><span class="text-[14px] font-semibold rk-v leading-snug truncate">${escapeHtml(t)}</span></div>`).join('')}</div>` : ''}
-      <div class="text-[12px] font-semibold rk-v mt-4 mb-2">위닝 크리에이티브</div>
+      <div class="text-[12px] font-semibold rk-v mt-4 mb-2">위닝 크리에이티브<i class="fa-regular fa-circle-question mk-info ml-1 muted font-normal" title="${ADS_WIN_TIP}"></i></div>
       ${win.length ? `<div class="grid grid-cols-3 gap-1.5">${win.map(c => `<a ${adsMA('pw-' + k, k, win, c)} class="relative block aspect-square rounded-md bg-slate-950 overflow-hidden" ${c.thumb ? `style="background:url('${c.thumb}') center/cover no-repeat"` : ''} title="${escapeAttr((c.copy[0] || '') + ' · ' + adsDkY(c.a0, T) + ' ~ ' + adsDkY(c.a1, T))}">${c.thumb ? '' : `<span class="absolute inset-0 flex items-center justify-center text-[10px] muted">${c.fmtL || '미리보기 없음'}</span>`}<span class="absolute left-1 bottom-1 text-[10px] font-semibold px-1.5 rounded bg-black/65 text-white">${c.dur.toLocaleString()}일</span></a>`).join('')}</div>`
         : `<div class="inbox rounded-lg border border-slate-800 p-3 text-xs muted">${adsWinEmpty(P[k].items, P[k].th)}</div>`}
       <div class="mt-auto pt-4"></div>
