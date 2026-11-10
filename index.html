@@ -606,6 +606,7 @@ select option { background-color: #202428; color: #e8eaed; }
 .t-sales { color:var(--c-sales); } .t-pop { color:var(--c-pop); } .rk-v { color:#e8eaed; }   /* 매출·인기 '~위' 숫자는 테마 단색 (11/05) */ .t-up { color:var(--c-up); } .t-down { color:var(--c-down); } .t-new { color:var(--c-new); }
 .ads-winonly > a:not([data-win]) { display:none; }   /* 마케팅 추적: '위닝만 보기' */
 .ads-win { background:#5046c8; color:rgb(255,255,255); }
+.ads-ended { opacity:.55; filter:saturate(.6); transition:opacity .15s, filter .15s; } .ads-ended:hover { opacity:1; filter:none; }   /* 끝난 소재: 집행 중 소재와 구분 (올리면 원래대로) */
 .ads-foot { background:rgba(var(--fc),.06); transition:background .15s; } .ads-foot:hover { background:rgba(var(--fc),.14); }   /* 개요 카드 아래 '상세 보기' 띠 */
 .ads-badge-meta { background:rgba(37,137,232,.18); color:#5aa8f0; } .ads-badge-google { background:rgba(32,201,151,.16); color:#20C997; }   /* 개요 성격 배지: 매체 색 은은하게 */   /* 두 테마 모두 흰 글자 (#fff 는 라이트 변환에서 글자색으로 바뀜) */
 .ads-tl { position:relative; }   /* 마케팅 추적 교체 이력 */
@@ -3715,6 +3716,11 @@ const ADS_LIST_PAGE = 30;
 let adsListQ = '', adsListF = 'all', adsListSort = 'tracked', adsListDir = -1, adsListPage = 0;
 /* 개발사명: 추적기가 index 에 넣은 값 → 없으면 순위 데이터(매출·인기, 최근 60일)에서 찾음 */
 const adsPubCache = new Map();
+/* 목록의 소재 수 칸 (11/10): 0 은 '–'(광고를 찾지 못함). Meta 는 비로그인 한도로 일부만 수집되므로 전체 건수가 더 많으면 '47 /609' 처럼 함께 */
+function adsNum(n, total){
+  if(!n) return `<span class="muted" title="광고를 찾지 못함">–</span>`;
+  return total > n ? `<span title="전체 ${total.toLocaleString()}건 중 ${n}개 수집">${n}<span class="muted font-normal text-[10px] ml-0.5">/${total.toLocaleString()}</span></span>` : String(n);
+}
 function adsPub(x){
   if(x.publisher) return x.publisher;
   if(adsPubCache.has(x.pkg)) return adsPubCache.get(x.pkg);
@@ -3733,7 +3739,7 @@ function adsRenderToday(live){
       <tbody>${L.length ? L.map(x => `<tr class="border-t border-slate-800 hover:bg-slate-800/40 cursor-pointer" onclick="adsOpen('${escapeAttr(x.pkg)}')">
         <td class="py-2 pl-2 pr-0 text-center text-[13px] font-bold rk-v">${x.charts[k]}</td><td class="py-2 px-2"><div class="flex items-center gap-2.5 min-w-0">${mkIcon(x.name)}<span class="font-semibold truncate">${escapeHtml(x.name)}</span></div></td>
         <td class="py-2 px-2 muted truncate" title="${escapeAttr(x.pkg)}">${escapeHtml(adsPub(x) || x.pkg)}</td>
-        <td class="py-2 px-2 text-right rk-v">${x.meta}</td><td class="py-2 px-2 text-right rk-v">${x.google}</td></tr>`).join('')
+        <td class="py-2 px-2 text-right rk-v">${adsNum(x.meta, x.meta_total || 0)}</td><td class="py-2 px-2 text-right rk-v">${adsNum(x.google, 0)}</td></tr>`).join('')
       : '<tr><td colspan="5" class="text-xs muted py-3 px-2">오늘 추적한 게임이 없습니다.</td></tr>'}</tbody></table>`; };
   T.innerHTML = `<div class="card rounded-xl p-5"><div class="mk-card-head"><div><h3 class="font-semibold text-sm border-l-[3px] border-indigo-500 pl-2.5">TODAY</h3><p class="text-[11px] muted mt-1 pl-[13px]">Google Play 한국 · ${day ? `${Number(day.slice(5, 7))}/${Number(day.slice(8))} ` : ''}인기 · 매출 TOP5 · 게임을 누르면 상세</p></div></div>
     <div class="grid gap-x-8 gap-y-4 lg:grid-cols-2 mt-2"><div class="min-w-0">${col('popular')}</div><div class="lg:border-l lg:border-slate-800 lg:pl-8 min-w-0">${col('sales')}</div></div></div>`;
@@ -3759,7 +3765,7 @@ function adsRenderList(){
   const rows = L.slice(adsListPage * ADS_LIST_PAGE, (adsListPage + 1) * ADS_LIST_PAGE).map(x => `<tr class="border-t border-slate-800 hover:bg-slate-800/40 cursor-pointer" onclick="adsOpen('${escapeAttr(x.pkg)}')">
       <td class="py-2 px-2"><div class="flex items-center gap-2.5 min-w-0">${mkIcon(x.name)}<span class="font-semibold truncate">${escapeHtml(x.name)}</span>${tag(x)}</div></td>
       <td class="py-2 px-2 muted truncate max-w-[180px]" title="${escapeAttr(x.pkg)}">${escapeHtml(adsPub(x) || x.pkg)}</td>
-      <td class="py-2 px-2 text-right rk-v">${x.meta}</td><td class="py-2 px-2 text-right rk-v">${x.google}</td>
+      <td class="py-2 px-2 text-right rk-v">${adsNum(x.meta, x.meta_total || 0)}</td><td class="py-2 px-2 text-right rk-v">${adsNum(x.google, 0)}</td>
       <td class="py-2 px-2 text-right ${live(x) ? 'rk-v font-semibold' : 'muted'}">${live(x) ? '추적 중' : (x.rank_date || x.tracked_at).slice(5, 10).replace('-', '/')}</td></tr>`).join('');
   const pg = pages > 1 ? `<div class="flex items-center justify-center gap-1 mt-4">${[['‹', adsListPage - 1], ...Array.from({ length: pages }, (_, i) => [i + 1, i]), ['›', adsListPage + 1]].map(([lb, i]) => i < 0 || i >= pages
       ? `<span class="px-2.5 py-1 text-xs muted opacity-40">${lb}</span>` : `<button type="button" class="px-2.5 py-1 text-xs rounded-md ${i === adsListPage && typeof lb === 'number' ? 'bg-indigo-600 text-white' : 'border border-slate-800 hover:border-indigo-500'}" onclick="adsListPage=${i};adsRenderList()">${lb}</button>`).join('')}</div>` : '';
@@ -3949,10 +3955,22 @@ const ADS_MEDIA = {};   /* 목록 이름 → { k: 매체, L: 소재 목록 } (�
 /* 소재 썸네일 링크 속성 (11/09 통일): 누르면 사이트 안 크게 보기 · Ctrl/Shift/가운데 클릭은 원본 광고 */
 function adsMA(key, k, L, c){ ADS_MEDIA[key] = { k, L }; const i = L.indexOf(c);
   return `href="${c.url}" target="_blank" rel="noopener" onclick="if(!event.ctrlKey&&!event.metaKey&&!event.shiftKey){event.preventDefault();event.stopPropagation();adsMediaOpen('${key}',${i})}"`; }
+/* 같은 소재 묶기 (11/10): 이미지·영상이 같은 광고(스토어·변형만 다름)는 한 칸으로, 오른쪽 위에 ×N.
+   대표 = 위닝 → 집행 중 → 오래된 순. 자리는 그 소재가 처음 나온 순서 그대로. 스토어 표시는 묶인 것들을 합침 */
+function adsGroupSame(items){
+  const m = new Map();
+  items.forEach(c => { const k = adsSameKey(c); m.has(k) ? m.get(k).push(c) : m.set(k, [c]); });
+  return [...m.values()].map(g => { if(g.length < 2) return g[0];
+    const r = g.slice().sort((a, b) => (b.win - a.win) || (b.live - a.live) || (b.dur - a.dur))[0], st = [...new Set(g.flatMap(c => c.badges.filter(b => b !== '관측 종료')))];
+    return { ...r, same: g.length, badges: [...st, r.live ? null : '관측 종료'].filter(Boolean) }; });
+}
 function adsGrid(items, k = ''){
-  return `<div class="ads-grid grid gap-2" style="grid-template-columns:repeat(auto-fill,minmax(140px,1fr))">${items.map(c => `<a ${k ? adsMA(k, k, items, c) : `href="${c.url}" target="_blank" rel="noopener"`} ${c.win ? 'data-win="1"' : ''} class="inbox rounded-lg border ${c.win ? 'border-indigo-500' : 'border-slate-800'} bg-slate-900/40 hover:border-indigo-500 overflow-hidden min-w-0 block">
+  items = adsGroupSame(items);
+  const dim = items.some(c => c.live);   /* 집행 중 소재가 있을 때만 끝난 소재를 흐리게 (전부 끝난 게임은 그대로) */
+  return `<div class="ads-grid grid gap-2" style="grid-template-columns:repeat(auto-fill,minmax(140px,1fr))">${items.map(c => `<a ${k ? adsMA(k, k, items, c) : `href="${c.url}" target="_blank" rel="noopener"`} ${c.win ? 'data-win="1"' : ''} class="inbox rounded-lg border ${c.win ? 'border-indigo-500' : 'border-slate-800'} bg-slate-900/40 hover:border-indigo-500 overflow-hidden min-w-0 block${dim && !c.live ? ' ads-ended' : ''}">
     <div class="relative aspect-square bg-slate-950" ${c.thumb ? `style="background:url('${c.thumb}') center/cover no-repeat"` : ''}>${c.thumb ? '' : '<div class="absolute inset-0 flex items-center justify-center text-[11px] muted text-center px-2">미리보기 없음</div>'}
-      <div class="absolute left-1.5 top-1.5 flex flex-wrap gap-1">${adsTag(c)}${c.badges.map(b => `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-black/65 text-white">${escapeHtml(b)}</span>`).join('')}</div></div>
+      ${c.same ? `<span class="absolute right-1.5 top-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded bg-black/75 text-white" title="같은 소재를 쓰는 광고 ${c.same}개 (스토어·변형만 다름)">×${c.same}</span>` : ''}
+      <div class="absolute left-1.5 top-1.5 flex flex-wrap gap-1${c.same ? ' pr-8' : ''}">${adsTag(c)}${c.badges.map(b => `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-black/65 text-white">${escapeHtml(b)}</span>`).join('')}</div></div>
     <div class="px-2 py-1.5"><div class="text-[11px] font-semibold">${c.dt}<span class="muted font-normal ml-1">${c.sub || ''}</span></div><div class="text-[11px] muted leading-snug line-clamp-2">${escapeHtml(c.copy[0] || '')}</div></div></a>`).join('')}</div>`;
 }
 /* 소재 크게 보기 (11/09): Google 영상 = 유튜브(쿠키 없는 플레이어)로 재생 · Google 이미지 = 원본 주소를 바로(리퍼러 숨김, 저장 없음)
@@ -3988,8 +4006,8 @@ function adsMediaStep(d){ if(adsMediaCur) adsMediaOpen(adsMediaCur.key, adsMedia
 function adsMediaClose(){ const el = document.getElementById('adsMediaPop'); if(el){ el.classList.add('hidden'); el.innerHTML = ''; } adsMediaCur = null; }   /* 비워야 영상 소리가 멈춤 */
 function adsMediaKey(e){ if(!adsMediaCur) return; if(e.key === 'Escape'){ e.stopImmediatePropagation(); adsMediaClose(); } else if(e.key === 'ArrowLeft') adsMediaStep(-1); else if(e.key === 'ArrowRight') adsMediaStep(1); }
 function adsGridHead(items, note){
-  const n = items.filter(c => c.win).length;
-  return `<div class="flex items-center justify-between mb-2"><div class="text-xs font-semibold">광고 소재</div>${n ? `<label class="text-[11px] muted flex items-center gap-1.5 cursor-pointer shrink-0"><input type="checkbox" onchange="this.closest('section').querySelector('.ads-grid').classList.toggle('ads-winonly',this.checked)">위닝만 보기 (${n})</label>` : ''}</div>`;
+  const g = adsGroupSame(items), n = g.filter(c => c.win).length;
+  return `<div class="flex items-center justify-between mb-2"><div class="text-xs font-semibold">광고 소재 <span class="muted font-normal">${g.length < items.length ? `${g.length}종 · 광고 ${items.length}개` : `${items.length}개`}</span></div>${n ? `<label class="text-[11px] muted flex items-center gap-1.5 cursor-pointer shrink-0"><input type="checkbox" onchange="this.closest('section').querySelector('.ads-grid').classList.toggle('ads-winonly',this.checked)">위닝만 보기 (${n})</label>` : ''}</div>`;
 }
 /* 개요 위닝 카드 → 해당 매체 탭으로 가서 그 소재를 찾아 잠깐 강조 */
 function adsJump(k, url){
@@ -4049,7 +4067,7 @@ function adsRenderDetail(R){
     else{
       const { items, wc, life, win } = P.meta, act = items.filter(c => c.live).length, st = cnt(ma, x => x.store), s0 = Math.min(...items.map(c => c.a0));
       h += adsSummary([['수집한 소재', ma.length, '개', `${M.count ? `전체 ${M.count}건 중 · ` : ''}최근 확인 ${act}개 · iOS ${st.iOS || 0} · Play ${st.Play || 0}`], ['최초 마케팅 집행', adsDkY(s0, T), '', `최초 확인 · ${past ? '기준일' : T >= now ? '오늘' : '마지막 추적'} ${T - s0 + 1}일째`]], adsCycle(items, T));
-      h += adsFlowBlock(P, T, 'meta') + adsTimeline(items, T, 'meta') + adsWinCreative(win, P.meta.th, items, 'meta');
+      h += adsWinCreative(win, P.meta.th, items, 'meta') + adsFlowBlock(P, T, 'meta') + adsTimeline(items, T, 'meta');   /* 11/10: 위닝을 수치 바로 다음으로 */
       h += `<div class="text-xs font-semibold mb-2">핵심 카피</div><div class="mb-5">${life.length ? adsCopies(life.map(g => ({ ...g, a: g.b || g.a, b: g.b ? g.a : '' })), wc.length, 'meta', wc, T) : '<div class="text-[11px] muted">문구 없음</div>'}</div>`;
       h += adsGridHead(items, '누르면 원본 광고') + adsGrid(items, 'meta');
     }
@@ -4063,7 +4081,7 @@ function adsRenderDetail(R){
       const { items, wc, life, win } = P.google, fm = cnt(ga, x => x.yt ? '동영상' : x.fmt === 2 ? '이미지' : '앱 광고');
       const f0 = Math.min(...items.map(c => c.a0)), recent = items.filter(c => c.live).length, advs = (G.advertisers || []).map(a => escapeHtml(a.name)).join(', ');
       h += adsSummary([['수집한 소재', ga.length, '개', `${Object.entries(fm).map(([k, n]) => `${k} ${n}`).join(' · ')} · 최근 확인 ${recent}개 · 광고주 ${advs}`], ['최초 마케팅 집행', adsDkY(f0, T), '', `최초 확인 · ${past ? '기준일' : T >= now ? '오늘' : '마지막 추적'} ${T - f0 + 1}일째`]], adsCycle(items, T));
-      h += adsFlowBlock(P, T, 'google') + adsTimeline(items, T, 'google') + adsWinCreative(win, P.google.th, items, 'google');
+      h += adsWinCreative(win, P.google.th, items, 'google') + adsFlowBlock(P, T, 'google') + adsTimeline(items, T, 'google');
       if(life.length) h += `<div class="text-xs font-semibold mb-2">핵심 카피 <span class="muted font-normal">문구 있는 소재 ${wc.length}개 기준</span></div><div class="mb-5">${adsCopies(life, wc.length, 'google', wc, T)}</div>`;
       h += adsGridHead(items, '누르면 원본 광고') + adsGrid(items, 'google');
     }
