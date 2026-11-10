@@ -3,6 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- 연결 예열: 시트 조회(fetch 라 crossorigin) · 앱 아이콘/스크린샷 · CDN -->
+<link rel="preconnect" href="https://docs.google.com" crossorigin>
+<link rel="preconnect" href="https://play-lh.googleusercontent.com">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="preconnect" href="https://cdn.tailwindcss.com">
 <title>ChartDeck</title>
 <!-- 링크 미리보기 (카카오톡·슬랙·트위터 등): 이미지는 절대 주소, 바꿀 때는 ?v= 숫자를 올려 캐시 갱신 -->
 <meta name="description" content="구글 플레이·애플 앱스토어 글로벌 게임 순위를 매일 한눈에. 한국·미국·일본·대만 매출·인기 차트와 신작 달력, 시장 분석까지.">
@@ -2814,7 +2819,7 @@ async function openEventsView(){
   const a = document.getElementById('evOpen'); a.href = `https://calendar.google.com/calendar/u/0?cid=${encodeURIComponent(EVENT_CAL_ID)}`;
   if(!evS.data){
     document.getElementById('evCal').innerHTML = `<div class="p-10 text-center text-xs muted"><i class="fa-solid fa-spinner fa-spin mr-1.5"></i>행사 일정을 불러오는 중...</div>`;
-    try{ const j = await (await fetch(`${DATA_BASE}events.json?t=${Date.now()}`)).json(); evS.data = j;
+    try{ const j = await (await fetch(`${DATA_BASE}events.json`)).json(); evS.data = j;
       j.events.forEach(e => { const m = e.t.match(/^\[([^\]]+)\]\s*/), k = m ? m[1] : '', c = EV_CATS.find(c => c[2].includes(k)) || EV_CATS.at(-1);
         e.cat = c[0]; e.col = c[1]; e.title = m ? e.t.slice(m[0].length) : e.t; e.multi = e.e > e.s; }); }
     catch(err){ document.getElementById('evCal').innerHTML = mkEmpty('행사 일정을 불러오지 못했습니다.'); return; }
@@ -3680,13 +3685,16 @@ const ADS_BASE = DATA_BASE + 'ads/';
 /* 로딩 표시: 사이트 다른 화면과 같은 스피너 + 문구 (막대 스켈레톤 대신, 11/09) */
 const adsLoading = (t = '광고 데이터를 불러오는 중...') => `<div class="card rounded-xl p-10 text-center text-xs muted"><i class="fa-solid fa-spinner fa-spin mr-1.5"></i>${t}</div>`;
 let adsIndex = null, adsSel = null; const adsCache = {};
+/* 추적 목록: 한 번만 받아 함께 씀. 주소에 시각을 붙이지 않아 브라우저 캐시(10분) + 변경 확인(304)만으로 끝남 */
+let adsIndexP = null;
+function adsIndexLoad(){ return adsIndexP ||= fetch(ADS_BASE + 'index.json').then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))).then(j => (adsIndex = j)).catch(e => { adsIndexP = null; throw e; }); }
 const adsKst = ts => { const d = new Date((ts + 9 * 3600) * 1000); return `${d.getUTCMonth() + 1}/${d.getUTCDate()}`; };
 const adsDay = ts => Math.floor((ts + 9 * 3600) / 86400);
 async function openAdsView(){
   const L = document.getElementById('adsList'), D = document.getElementById('adsDetail');
   if(!adsIndex){
     L.innerHTML = adsLoading('추적한 게임 목록을 불러오는 중...');
-    try{ adsIndex = await (await fetch(ADS_BASE + 'index.json?t=' + Date.now())).json(); }
+    try{ await adsIndexLoad(); }
     catch(e){ adsIndex = null; L.innerHTML = mkEmpty('추적 결과를 불러오지 못했습니다.'); return; }
   }
   /* 테마 전환(페이지 이동) 뒤에도 보던 게임·탭 유지 (탭 안에서만, sessionStorage) */
@@ -3763,7 +3771,7 @@ async function adsOpen(pkg){
   adsSel = pkg;
   const L = document.getElementById('adsList'), D = document.getElementById('adsDetail');
   L.classList.add('hidden'); D.classList.remove('hidden'); D.innerHTML = adsLoading();
-  try{ adsCache[pkg] = adsCache[pkg] || await (await fetch(`${ADS_BASE}${encodeURIComponent(pkg)}.json?t=${Date.now()}`)).json(); }
+  try{ adsCache[pkg] = adsCache[pkg] || await (await fetch(`${ADS_BASE}${encodeURIComponent(pkg)}.json`)).json(); }
   catch(e){ D.innerHTML = mkEmpty('이 게임의 추적 결과를 불러오지 못했습니다.'); return; }
   adsRenderDetail(adsCache[pkg]); adsKeep();
 }
@@ -5074,23 +5082,63 @@ async function gdLoadInfo(pkg, c = COUNTRY, st = STORE){
   const ck = `${st}:${c}:${pkg}`;
   if(gdInfoCache.has(ck)){ show(gdInfoCache.get(ck)); return; }
   show(null);
-  try{
-    /* 조건 조회는 머리글 없이 오고 parseGviz 가 첫 줄을 머리글로 옮기므로 둘 다에서 찾음.
-       다른 시트가 오더라도 A열이 이 패키지명인 줄은 앱정보뿐이라 안전.
-       해외는 그 나라 시트(현지 언어)를 먼저 보고, 없으면 한국 시트 */
-    const look = async sheet => {
-      const { cols, rows } = parseGviz(await (await fetch(gvizUrl(sheet, 1, `A = '${pkg}'`), { cache: 'no-store' })).text());
-      return [cols, ...rows].find(x => Array.isArray(x) && x.length >= 4 && String(x[0]).trim() === pkg) || null;
-    };
-    const sfx = COUNTRIES[c].sfx;
-    const ssfx = STORES[st].sfx;
-    let r = await look(APPINFO_SHEET + ssfx + sfx);
-    if(!r && sfx) r = await look(APPINFO_SHEET + ssfx);
-    const info = r ? { desc: String(r[2] || '').trim(), shots: String(r[3] || '').split('\n').map(x => x.trim()).filter(x => /^https?:/.test(x)), date: String(r[4] || '').trim() } : null;
-    gdInfoCache.set(ck, info && (info.desc || info.shots.length) ? info : null);
-  }catch(e){ gdInfoCache.set(ck, null); }
-  show(gdInfoCache.get(ck));
+  show(await gdInfoFetch(pkg, c, st));
 }
+/* 앱정보 한 줄 조회: 같은 게임은 받는 중인 요청을 함께 씀 (상세를 여러 번 다시 그려도 한 번만 · 미리 받기와 공용) */
+const gdInfoInFlight = new Map();
+function gdInfoFetch(pkg, c = COUNTRY, st = STORE){
+  const ck = `${st}:${c}:${pkg}`;
+  if(!gdInfoInFlight.has(ck)) gdInfoInFlight.set(ck, (async () => {
+    try{
+      /* 조건 조회는 머리글 없이 오고 parseGviz 가 첫 줄을 머리글로 옮기므로 둘 다에서 찾음.
+         다른 시트가 오더라도 A열이 이 패키지명인 줄은 앱정보뿐이라 안전.
+         해외는 그 나라 시트(현지 언어)를 먼저 보고, 없으면 한국 시트 */
+      const look = async sheet => {
+        const { cols, rows } = parseGviz(await (await fetch(gvizUrl(sheet, 1, `A = '${pkg}'`), { cache: 'no-store' })).text());
+        return [cols, ...rows].find(x => Array.isArray(x) && x.length >= 4 && String(x[0]).trim() === pkg) || null;
+      };
+      const sfx = COUNTRIES[c].sfx;
+      const ssfx = STORES[st].sfx;
+      let r = await look(APPINFO_SHEET + ssfx + sfx);
+      if(!r && sfx) r = await look(APPINFO_SHEET + ssfx);
+      const info = r ? { desc: String(r[2] || '').trim(), shots: String(r[3] || '').split('\n').map(x => x.trim()).filter(x => /^https?:/.test(x)), date: String(r[4] || '').trim() } : null;
+      gdInfoCache.set(ck, info && (info.desc || info.shots.length) ? info : null);
+    }catch(e){ gdInfoCache.set(ck, null); }
+    return gdInfoCache.get(ck);
+  })());
+  return gdInfoInFlight.get(ck);
+}
+/* 미리 받기: 목록에서 게임에 마우스를 잠깐 올리거나 누르는 순간 그 게임의 순위 기록·앱정보 조회를 시작 (결과는 상세가 그대로 씀) */
+function gdPrefetch(name, opts = {}){
+  const st = opts.store && STORES[opts.store] ? opts.store : STORE, c = opts.country && COUNTRIES[opts.country] ? opts.country : COUNTRY;
+  const pkg = opts.pkg || (st === STORE ? pkgOfName(name) : '');
+  if(!pkg || !/^[\w.]+$/.test(pkg)) return null;
+  snapLoad(); gdInfoFetch(pkg, c, st);
+  gdLink(st, pkg).then(oid => oid && gdPkgLoad(oid, st === 'gp' ? 'ios' : 'gp')).catch(() => {});   /* 반대 스토어의 같은 게임도 */
+  return gdPkgLoad(pkg, st);
+}
+(function gdPrefetchWire(){
+  const SEL = '[data-game], [onclick*="openGameDetail("]';
+  let timer = 0, busy = false, lastEl = null;
+  const parse = el => {
+    if(el.dataset.game) return { name: el.dataset.game };
+    const m = (el.getAttribute('onclick') || '').match(/openGameDetail\('((?:\\.|[^'\\])*)'(?:\s*,\s*\{[^}]*?pkg:\s*'([^']*)')?/);
+    return m ? { name: m[1].replace(/\\(.)/g, '$1'), pkg: m[2] || '' } : null;
+  };
+  const go = el => {
+    let p = null; try{ const g = parse(el); p = g && gdPrefetch(g.name, g); }catch(e){}
+    if(p){ busy = true; p.catch(() => {}).finally(() => { busy = false; }); }
+  };
+  /* 마우스: 0.2초 머물 때만, 앞선 미리 받기가 끝난 뒤에만 (목록을 훑을 때 요청이 몰리지 않게) */
+  document.addEventListener('pointerover', e => {
+    if(e.pointerType !== 'mouse') return;
+    const el = e.target.closest ? e.target.closest(SEL) : null;
+    if(el === lastEl) return;
+    lastEl = el; clearTimeout(timer);
+    if(el && !busy) timer = setTimeout(() => go(el), 200);
+  }, { passive: true });
+  document.addEventListener('pointerdown', e => { const el = e.target.closest ? e.target.closest(SEL) : null; if(el){ clearTimeout(timer); go(el); } }, { passive: true });
+})();
 /* 게임 상세 스크린샷 크게 보기: 신작 상세의 확대 창을 그대로 씀. 큰 이미지는 고해상도 주소, 실패하면 원래 주소 */
 let gdShotList = [];
 /* 스크린샷 주소를 원하는 높이로: 구글 =h{높이}, 애플은 '/{가로}x{세로}bb.jpg' 상자 크기 (비율 유지) */
@@ -5126,7 +5174,7 @@ let gdPage = 'gdPgSum';
 /* 앱 상세 패널 '마케팅 추적' (11/06): 추적한 적 있는 게임만 왼쪽 메뉴에 보이고, 개요와 같은 계산을 패널 폭으로 요약 */
 let gdAdsPkg = '';
 async function gdAdsCheck(name){
-  try{ if(!adsIndex) adsIndex = await (await fetch(ADS_BASE + 'index.json?t=' + Date.now())).json(); }catch(e){ return; }
+  try{ if(!adsIndex) await adsIndexLoad(); }catch(e){ return; }
   const nz = v => String(v || '').replace(/[\s:：·\-]/g, '').toLowerCase(), gp = (typeof detailIds !== 'undefined' && detailIds?.gp) || (detailStore === 'gp' ? detailPkg : '');
   const hit = (adsIndex || []).find(x => (gp && x.pkg === gp) || nz(x.name) === nz(name));
   if(detailCurrentName !== name) return;   /* 그 사이 다른 게임을 열었으면 무시 */
@@ -5135,7 +5183,7 @@ async function gdAdsCheck(name){
 async function gdAdsRender(){
   const B = document.getElementById('gdAdsBody'); if(!B || !gdAdsPkg) return;
   const pkg = gdAdsPkg; B.innerHTML = adsLoading();
-  try{ adsCache[pkg] = adsCache[pkg] || await (await fetch(`${ADS_BASE}${encodeURIComponent(pkg)}.json?t=${Date.now()}`)).json(); }
+  try{ adsCache[pkg] = adsCache[pkg] || await (await fetch(`${ADS_BASE}${encodeURIComponent(pkg)}.json`)).json(); }
   catch(e){ B.innerHTML = mkEmpty('마케팅 추적 결과를 불러오지 못했습니다.'); return; }
   if(gdAdsPkg !== pkg) return;
   const R = adsCache[pkg], { T, P, ma, ga } = adsBuild(R), LB = { meta: 'Meta', google: 'Google' };
@@ -5364,15 +5412,19 @@ function gdFirstLabel(first, st, c, D){
 const GD_STORE_ICON = { gp: '<i class="fa-brands fa-google-play text-emerald-400"></i>', ios: '<i class="fa-brands fa-apple text-slate-100"></i>' };
 function gdHas(st, c){ const P = gdPkgOf(st); return !!P && (P[c]?.sales?.length || 0) + (P[c]?.popular?.length || 0) > 0; }
 function gdCountryTableHtml(){
-  const Pm = gdPkgOf(detailStore), Gm = gdGlobalSync(detailStore);
-  if(!Pm || !Gm) return '';
+  const Gm = gdGlobalSync(detailStore);
+  if(!Gm) return '';   /* 최신 차트(스냅샷)만 있으면 오늘 순위부터 먼저 그리고, 게임별 기록이 오면 다시 그림 */
   /* 머리 버튼: 스토어 · 나라 */
   document.getElementById('gdCty').innerHTML = `<span class="mk-seg">${['gp', 'ios'].map(st => `<button type="button" class="${st === detailStore ? 'on' : ''}" ${detailIds[st] ? `onclick="gdSetScope('${detailCountry}', '${st}')"` : 'disabled'} title="${STORES[st].name}">${GD_STORE_ICON[st].replace('"></i>', ' text-[13px]"></i>')}</button>`).join('')}</span>`
     + `<span class="mk-seg">${GL_ORDER.map(c => `<button type="button" class="${c === detailCountry ? 'on' : ''}" ${gdHas(detailStore, c) ? `onclick="gdSetScope('${c}')"` : 'disabled'} title="${COUNTRIES[c].name}${gdHas(detailStore, c) ? '' : ' · 차트에 오른 기록 없음'}">${glFlag(c, 'sm')}<span class="ml-1">${COUNTRIES[c].name}</span></button>`).join('')}</span>`;
   const cell = (st, c, k) => {
     const cls = 'rk-v', on = c === detailCountry && st === detailStore ? ' on' : '';
     const P = gdPkgOf(st), G = gdGlobalSync(st);
-    if(!P || !G) return `<td class="muted text-[12px]">…</td>`;
+    if(!G) return `<td class="muted text-[12px]">…</td>`;
+    if(!P){   /* 게임별 기록이 오기 전: 최신 차트에 있으면 오늘 순위만 먼저 */
+      const g = (G[c]?.[k]?.rows || []).find(x => String(x[4] || '').replace(/^'/, '').trim() === detailIds[st]);
+      return g ? `<td class="gd-cc${on}"><b class="${cls}">${rankOf(g)}위</b> <span class="ml-1 inline-block align-middle">${rankChangeBadge(String(g[2] || '-'), false)}</span></td>` : `<td class="muted text-[12px]">…</td>`;
+    }
     const click = gdHas(st, c) ? ` onclick="gdSetScope('${c}', '${st}')" title="${COUNTRIES[c].name} · ${STORES[st].name} 기준으로 보기"` : '';
     const L = G[c]?.[k]?.date, rows = P[c]?.[k] || [], r = rows.find(x => rowDate(x) === L);
     if(r) return `<td class="gd-cc${on}"${click}><b class="${cls}">${rankOf(r)}위</b> <span class="ml-1 inline-block align-middle">${rankChangeBadge(String(r[2] || '-'), false)}</span></td>`;
@@ -5380,7 +5432,7 @@ function gdCountryTableHtml(){
     return `<td class="gd-cc muted text-[12px]${on}${gdHas(st, c) ? '' : ' off'}"${click}>${last ? `밖 · ${mkShort(last)}` : gdHas(st, c) ? '밖' : '-'}</td>`;
   };
   /* 연결된 스토어만 열로 (반대 스토어를 못 찾으면 그 열은 아예 없음) */
-  const sts = ['gp', 'ios'].filter(st => detailIds[st] && gdPkgOf(st) && gdGlobalSync(st));
+  const sts = ['gp', 'ios'].filter(st => detailIds[st] && gdGlobalSync(st) && (gdPkgOf(st) || st === detailStore));
   /* 스토어 제목 옆 링크 아이콘 = 그 스토어 페이지 (지금 보는 나라) */
   const M = Object.fromEntries(sts.map(st => [st, gdStoreMeta(st)]));
   const head = st => `<th colspan="2" class="gd-sh">${GD_STORE_ICON[st]}<span class="ml-1.5">${STORES[st].name}</span><a id="gdLink-${st}" class="gd-golink" href="${escapeAttr(M[st].url)}" target="_blank" rel="noopener" title="${STORES[st].name}에서 보기" aria-label="${STORES[st].name}에서 보기"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></th>`;
@@ -5394,10 +5446,12 @@ async function gdRenderCountryTable(){
   const pkg = detailPkg, el = document.getElementById('detailKpis');
   if(!pkg) return false;
   el.className = '';
-  const html = gdCountryTableHtml();
-  if(html){ el.innerHTML = html; return true; }
-  el.innerHTML = '<div class="text-[12px] muted py-3">국가별 순위 불러오는 중…</div>';
-  await Promise.all([gdPkgLoad(pkg), gdGlobalData(detailStore)]);
+  const html = gdCountryTableHtml(), st = detailStore;
+  el.innerHTML = html || '<div class="text-[12px] muted py-3">국가별 순위 불러오는 중…</div>';
+  if(html && gdPkgOf(st)) return true;
+  /* 최신 차트가 먼저 오면 오늘 순위만이라도 바로 */
+  if(!html) gdGlobalData(st).then(() => { if(pkg === detailPkg && st === detailStore && !gdPkgOf(st)){ const h = gdCountryTableHtml(); if(h) el.innerHTML = h; } }).catch(() => {});
+  await Promise.all([gdPkgLoad(pkg), gdGlobalData(st)]);
   if(pkg === detailPkg) el.innerHTML = gdCountryTableHtml();
   return true;
 }
@@ -8092,6 +8146,8 @@ window.addEventListener('DOMContentLoaded', async () => {
   await fetchAllData();
   if(bootReveal) bootReveal();
   openPendingDetail();
+  /* 첫 화면이 끝나고 한가할 때: 상세 패널이 쓰는 스냅샷(4개국 최신 차트)과 추적 목록을 미리 받아 둠 */
+  (window.requestIdleCallback || (f => setTimeout(f, 1500)))(() => { snapLoad().then(() => gdEnsureGlobal()).catch(() => {}); adsIndexLoad().catch(() => {}); });
 });
 /* 글로벌 순위에서 다른 나라 게임을 눌러 넘어온 경우: 그 게임 상세를 바로 */
 function openPendingDetail(){
