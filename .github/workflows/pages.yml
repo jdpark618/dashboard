@@ -1,0 +1,47 @@
+name: Build and deploy Pages
+
+# main 에 푸시하면 배포본(_site)을 만들어 GitHub Pages 에 올린다.
+#  - 소스(index.html)는 Tailwind CDN 을 쓰는 그대로 두고, 배포본에서만 미리 만든 CSS 파일로 바꿈 (tools/build_site.py)
+#  - light.html 도 여기서 다시 만들므로, 커밋 때 깜빡해도 배포본은 항상 index.html 과 맞음
+# 켜는 법: 저장소 Settings → Pages → Build and deployment → Source 를 "GitHub Actions" 로.
+# 끄는 법: Source 를 "Deploy from a branch" (main / root) 로 되돌리면 예전처럼 저장소 파일이 그대로 나감.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: 배포본 만들기 (light.html 재생성 + Tailwind CSS 빌드)
+        run: python tools/build_site.py
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
