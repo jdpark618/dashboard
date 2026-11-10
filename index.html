@@ -604,26 +604,26 @@ select option { background-color: #202428; color: #e8eaed; }
 .mk-sec.on { color:#e6e3ff; border-color:#6257e8; }
 /* 의미색 유틸리티 */
 .t-sales { color:var(--c-sales); } .t-pop { color:var(--c-pop); } .rk-v { color:#e8eaed; }   /* 매출·인기 '~위' 숫자는 테마 단색 (11/05) */ .t-up { color:var(--c-up); } .t-down { color:var(--c-down); } .t-new { color:var(--c-new); }
-.ads-grid[data-f="win"] > a:not([data-win]), .ads-grid[data-f="live"] > a:not([data-live]), .ads-grid[data-f="end"] > a[data-live] { display:none; }   /* 마케팅 추적: 소재 걸러 보기 (전체 · 집행 중 · 종료 · 위닝) */ .ads-grid[data-f="end"] > .ads-ended { opacity:1; filter:none; }   /* 매체 상세 구역 (11/10): 구역마다 선으로 나누고 제목을 본문보다 크게 · 구역 바로가기 띠는 위에 붙어 따라옴 */ .ads-sec { margin-top:22px; padding-top:20px; border-top:1px solid var(--line); scroll-margin-top:104px; } .ads-nav + .ads-sec { margin-top:0; border-top:0; } .ads-h { font-size:14px; font-weight:600; margin-bottom:10px; } .ads-h > .muted { font-size:11px; margin-left:6px; } .ads-nav { position:sticky; top:52px; z-index:6; display:flex; overflow-x:auto; scrollbar-width:none; margin:0 -20px; padding:0 8px; background:var(--surface); border-bottom:1px solid var(--line); } .ads-nav::-webkit-scrollbar { display:none; }
-.ads-win { background:#5046c8; color:rgb(255,255,255); }
-.ads-ended { opacity:.55; filter:saturate(.6); transition:opacity .15s, filter .15s; } .ads-ended:hover { opacity:1; filter:none; }   /* 끝난 소재: 집행 중 소재와 구분 (올리면 원래대로) */
-.ads-foot { background:rgba(var(--fc),.06); transition:background .15s; } .ads-foot:hover { background:rgba(var(--fc),.14); }   /* 개요 카드 아래 '상세 보기' 띠 */
-.ads-badge-meta { background:rgba(37,137,232,.18); color:#5aa8f0; } .ads-badge-google { background:rgba(32,201,151,.16); color:#20C997; }   /* 개요 성격 배지: 매체 색 은은하게 */   /* 두 테마 모두 흰 글자 (#fff 는 라이트 변환에서 글자색으로 바뀜) */
-.ads-tl { position:relative; }   /* 마케팅 추적 교체 이력 */
-.ads-ml { position:absolute; left:150px; right:0; top:0; bottom:0; pointer-events:none; }
-.ads-ml span { position:absolute; top:0; bottom:0; width:1px; background:rgba(160,167,173,.4); }
-.ads-row { display:grid; grid-template-columns:150px minmax(0,1fr); align-items:center; min-height:24px; font-size:11px; }
-.ads-sub { min-height:22px; }
-.ads-tr { position:relative; height:16px; background:repeating-linear-gradient(90deg,transparent 0,transparent calc(100%/13 - 1px),rgba(111,118,123,.16) calc(100%/13 - 1px),rgba(111,118,123,.16) calc(100%/13)); }
-.ads-b { position:absolute; top:0; height:16px; border-radius:3px; font-size:11px; line-height:16px; padding:0 5px; white-space:nowrap; overflow:hidden; }
-.ads-bt { position:absolute; top:0; font-size:11px; line-height:16px; white-space:nowrap; }
-.ads-on { background:#5046c8; color:rgb(255,255,255); }
-.ads-off { background:rgba(111,118,123,.45); color:#c3c7ca; }
-.ads-cut { border-top-left-radius:0; border-bottom-left-radius:0; }
-.ads-new { color:#60a5fa; } .ads-end { color:#8b9196; }
-.ads-today { position:absolute; top:0; bottom:0; width:0; border-left:1.5px dashed #f59e0b; }
-.ads-today-lb { position:absolute; top:0; font-size:10px; font-weight:600; color:#f59e0b; padding-right:4px; white-space:nowrap; }
-@media (max-width:640px){ .ads-row { grid-template-columns:96px minmax(0,1fr); } .ads-ml { left:96px; } }
+.mka-grid[data-f="win"] > a:not([data-win]), .mka-grid[data-f="live"] > a:not([data-live]), .mka-grid[data-f="end"] > a[data-live] { display:none; }   /* 마케팅 추적: 소재 걸러 보기 (전체 · 집행 중 · 종료 · 위닝) */ .mka-grid[data-f="end"] > .mka-ended { opacity:1; filter:none; }   /* 매체 상세 구역 (11/10): 구역마다 선으로 나누고 제목을 본문보다 크게 · 구역 바로가기 띠는 위에 붙어 따라옴 */ .mka-sec { margin-top:22px; padding-top:20px; border-top:1px solid var(--line); scroll-margin-top:104px; } .mka-nav + .mka-sec { margin-top:0; border-top:0; } .mka-h { font-size:14px; font-weight:600; margin-bottom:10px; } .mka-h > .muted { font-size:11px; margin-left:6px; } .mka-nav { position:sticky; top:52px; z-index:6; display:flex; overflow-x:auto; scrollbar-width:none; margin:0 -20px; padding:0 8px; background:var(--surface); border-bottom:1px solid var(--line); } .mka-nav::-webkit-scrollbar { display:none; }
+.mka-win { background:#5046c8; color:rgb(255,255,255); }
+.mka-ended { opacity:.55; filter:saturate(.6); transition:opacity .15s, filter .15s; } .mka-ended:hover { opacity:1; filter:none; }   /* 끝난 소재: 집행 중 소재와 구분 (올리면 원래대로) */
+.mka-foot { background:rgba(var(--fc),.06); transition:background .15s; } .mka-foot:hover { background:rgba(var(--fc),.14); }   /* 개요 카드 아래 '상세 보기' 띠 */
+.mka-badge-meta { background:rgba(37,137,232,.18); color:#5aa8f0; } .mka-badge-google { background:rgba(32,201,151,.16); color:#20C997; }   /* 개요 성격 배지: 매체 색 은은하게 */   /* 두 테마 모두 흰 글자 (#fff 는 라이트 변환에서 글자색으로 바뀜) */
+.mka-tl { position:relative; }   /* 마케팅 추적 교체 이력 */
+.mka-ml { position:absolute; left:150px; right:0; top:0; bottom:0; pointer-events:none; }
+.mka-ml span { position:absolute; top:0; bottom:0; width:1px; background:rgba(160,167,173,.4); }
+.mka-row { display:grid; grid-template-columns:150px minmax(0,1fr); align-items:center; min-height:24px; font-size:11px; }
+.mka-sub { min-height:22px; }
+.mka-tr { position:relative; height:16px; background:repeating-linear-gradient(90deg,transparent 0,transparent calc(100%/13 - 1px),rgba(111,118,123,.16) calc(100%/13 - 1px),rgba(111,118,123,.16) calc(100%/13)); }
+.mka-b { position:absolute; top:0; height:16px; border-radius:3px; font-size:11px; line-height:16px; padding:0 5px; white-space:nowrap; overflow:hidden; }
+.mka-bt { position:absolute; top:0; font-size:11px; line-height:16px; white-space:nowrap; }
+.mka-on { background:#5046c8; color:rgb(255,255,255); }
+.mka-off { background:rgba(111,118,123,.45); color:#c3c7ca; }
+.mka-cut { border-top-left-radius:0; border-bottom-left-radius:0; }
+.mka-new { color:#60a5fa; } .mka-end { color:#8b9196; }
+.mka-today { position:absolute; top:0; bottom:0; width:0; border-left:1.5px dashed #f59e0b; }
+.mka-today-lb { position:absolute; top:0; font-size:10px; font-weight:600; color:#f59e0b; padding-right:4px; white-space:nowrap; }
+@media (max-width:640px){ .mka-row { grid-template-columns:96px minmax(0,1fr); } .mka-ml { left:96px; } }
 .bg-sales { background-color:var(--c-sales); } .bg-pop { background-color:var(--c-pop); } .bg-up { background-color:var(--c-up); } .bg-down { background-color:var(--c-down); } .bg-new { background-color:var(--c-new); }
 .chip-up { background:rgba(248,113,113,.14); color:#fca5a5; } .chip-down { background:rgba(96,165,250,.14); color:#93c5fd; } .chip-new { background:rgba(167,139,250,.14); color:#c4b5fd; }
 /* 키보드 이동 시 포커스 표시 */
@@ -673,10 +673,10 @@ html.panel-lock { overflow: hidden; }
 .ev-cell { border-right:1px solid var(--line); padding:5px 6px 4px; min-width:0; cursor:pointer; } .ev-cell:last-child { border-right:0; }
 .ev-cell:hover { background:rgba(41,47,51,.6); } .ev-cell.out { opacity:.42; }
 .ev-cell.sel { background:rgba(41,47,51,.9); box-shadow:inset 0 0 0 2px #6257e8; }
-.ads-mnav { position:fixed; top:50%; transform:translateY(-50%); width:44px; height:44px; border-radius:999px; background:rgba(32,36,40,.9); border:1px solid rgba(80,87,92,.6); color:#e6e8ea; z-index:57; }
-.ads-mnav:hover:not(:disabled) { border-color:#6257e8; } .ads-mnav:disabled { opacity:.25; cursor:default; }
-@media (min-width:768px){ .ads-mgrid { grid-template-columns:minmax(0,1fr) 300px; } }   /* 소재 크게 보기 2단 (11/10: 대괄호+쉼표 클래스는 미리 만든 CSS 에서 빠져서 직접 지정) */
-.ads-kv { display:grid; grid-template-columns:auto 1fr; gap:4px 12px; font-size:12px; } .ads-kv dt { color:#8b9297; } .ads-kv dd { margin:0; font-weight:600; }
+.mka-mnav { position:fixed; top:50%; transform:translateY(-50%); width:44px; height:44px; border-radius:999px; background:rgba(32,36,40,.9); border:1px solid rgba(80,87,92,.6); color:#e6e8ea; z-index:57; }
+.mka-mnav:hover:not(:disabled) { border-color:#6257e8; } .mka-mnav:disabled { opacity:.25; cursor:default; }
+@media (min-width:768px){ .mka-mgrid { grid-template-columns:minmax(0,1fr) 300px; } }   /* 소재 크게 보기 2단 (11/10: 대괄호+쉼표 클래스는 미리 만든 CSS 에서 빠져서 직접 지정) */
+.mka-kv { display:grid; grid-template-columns:auto 1fr; gap:4px 12px; font-size:12px; } .mka-kv dt { color:#8b9297; } .mka-kv dd { margin:0; font-weight:600; }
 .ev-dn { font-size:12px; font-weight:600; height:20px; display:flex; align-items:center; gap:4px; }
 .ev-dot { width:7px; height:7px; border-radius:50%; flex:none; } .ev-dn .ev-more { margin-left:auto; font-style:normal; font-weight:500; }   /* 당일 일정 점 · 넘친 개수는 날짜 줄 오른쪽 */
 .ev-cell.sat .ev-dn { color:#60a5fa; } .ev-cell.sun .ev-dn { color:#f87171; }
@@ -3815,7 +3815,7 @@ function adsWinMark(items){
 }
 /* 소재 썸네일 위 상태 표시: 위닝(보라) · 상시 · 장기(회색) */
 function adsTag(c, cls = 'text-[10px] px-1.5'){
-  return c.win ? `<span class="ads-win ${cls} font-semibold py-0.5 rounded">위닝 · ${c.dur}일</span>`
+  return c.win ? `<span class="mka-win ${cls} font-semibold py-0.5 rounded">위닝 · ${c.dur}일</span>`
     : c.ever ? `<span class="${cls} font-semibold py-0.5 rounded bg-black/65 text-white" title="${ADS_EVER}일 이상 계속 켜 두는 소재">상시 · ${c.dur.toLocaleString()}일</span>`
     : c.long ? `<span class="${cls} font-semibold py-0.5 rounded bg-black/65 text-white" title="오래 집행 중이지만 같이 시작한 소재가 아직 대부분 살아 있거나 비교할 묶음이 없음">장기 · ${c.dur}일</span>` : '';
 }
@@ -3838,7 +3838,7 @@ function adsCopies(groups, total, k = '', wc = [], T = 0){
   const w = groups.filter(g => g.win).length, show = groups.slice(0, 9);
   if(k) ADS_COPY[k] = { groups, wc, total, T };
   return `<div class="grid gap-2" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr))">${show.map((g, i) => `<div ${k ? `role="button" tabindex="0" onclick="adsCopyOpen('${k}', ${i})" onkeydown="if(event.key==='Enter')adsCopyOpen('${k}', ${i})" title="누르면 세부 정보"` : ''} class="inbox rounded-lg border ${g.win ? 'border-indigo-500' : 'border-slate-800'} bg-slate-900/40 p-2.5 min-w-0 flex flex-col ${k ? 'cursor-pointer hover:border-indigo-500' : ''}">
-      <div class="flex items-center gap-1.5 mb-1">${g.win ? `<span class="ads-win text-[10px] font-semibold px-1.5 py-0.5 rounded">위닝</span>` : ''}<span class="text-[11px] muted">소재 ${g.n}개 · ${Math.round(g.n / total * 100)}%</span><span class="ml-auto text-[11px] ${g.live ? 'rk-v font-semibold' : 'muted'}">${g.dur}일${g.live ? ' · 사용 중' : ''}</span></div>
+      <div class="flex items-center gap-1.5 mb-1">${g.win ? `<span class="mka-win text-[10px] font-semibold px-1.5 py-0.5 rounded">위닝</span>` : ''}<span class="text-[11px] muted">소재 ${g.n}개 · ${Math.round(g.n / total * 100)}%</span><span class="ml-auto text-[11px] ${g.live ? 'rk-v font-semibold' : 'muted'}">${g.dur}일${g.live ? ' · 사용 중' : ''}</span></div>
       <div class="text-xs font-semibold leading-snug line-clamp-2" title="${escapeAttr(g.a)}">${escapeHtml(g.a)}</div>${g.b ? `<div class="text-[11px] muted leading-snug line-clamp-2 mt-0.5" title="${escapeAttr(g.b)}">${escapeHtml(g.b)}</div>` : ''}
       <div class="text-[10px] muted mt-auto pt-1.5">${adsDk(g.first)} → ${g.live ? '사용 중' : adsDk(g.last)}</div></div>`).join('')}</div>`
     + (groups.length > show.length ? `<div class="text-[11px] muted mt-1.5">문구 ${groups.length}개 중 ${show.length}개 표시${w > show.length ? ` · 위닝 문구 ${w}개` : ''}</div>` : '');
@@ -3853,7 +3853,7 @@ function adsCopyOpen(k, i){
   if(!el){ el = document.createElement('div'); el.id = 'adsCopyPop'; el.className = 'fixed inset-0 z-[55] bg-black/60 flex items-center justify-center p-4'; el.onclick = e => { if(e.target === el) adsCopyClose(); }; document.body.appendChild(el); }
   el.innerHTML = `<div class="card rounded-xl w-full max-w-[860px] max-h-[86vh] overflow-y-auto thin-scroll p-5" role="dialog" aria-label="핵심 카피 세부">
     <div class="flex items-start gap-3"><div class="min-w-0 flex-1">
-      <div class="flex items-center gap-2 text-[11px] muted"><i class="fa-brands fa-${k} ${k === 'meta' ? 'text-sky-400' : 'text-emerald-400'}"></i>${k === 'meta' ? 'Meta' : 'Google'} 핵심 카피${g.win ? '<span class="ads-win text-[10px] font-semibold px-1.5 py-0.5 rounded">위닝</span>' : ''}</div>
+      <div class="flex items-center gap-2 text-[11px] muted"><i class="fa-brands fa-${k} ${k === 'meta' ? 'text-sky-400' : 'text-emerald-400'}"></i>${k === 'meta' ? 'Meta' : 'Google'} 핵심 카피${g.win ? '<span class="mka-win text-[10px] font-semibold px-1.5 py-0.5 rounded">위닝</span>' : ''}</div>
       <div class="text-[16px] font-semibold rk-v leading-snug mt-1.5">${escapeHtml(g.a)}</div>${g.b ? `<div class="text-[13px] muted leading-relaxed mt-1 whitespace-pre-line">${escapeHtml(g.b)}</div>` : ''}</div>
       <button type="button" onclick="adsCopyClose()" class="shrink-0 w-8 h-8 rounded-md hover:bg-slate-800 muted" aria-label="닫기"><i class="fa-solid fa-xmark"></i></button></div>
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4 pt-4 border-t border-slate-800">
@@ -3865,12 +3865,13 @@ function adsCopyOpen(k, i){
     <div class="text-[13px] font-semibold rk-v mt-5 mb-2">이 문구를 쓴 소재 <span class="muted font-normal text-[11px]">사용 중 먼저 · 최근 시작 순 · 누르면 원본 광고</span></div>
     <div class="grid gap-2" style="grid-template-columns:repeat(auto-fill,minmax(120px,1fr))">${L.map(c => `<a ${adsMA('cp-' + k, k, L, c)} class="inbox rounded-lg border ${c.win ? 'border-indigo-500' : 'border-slate-800'} overflow-hidden block hover:border-indigo-500">
       <div class="relative aspect-square bg-slate-950" ${c.thumb ? `style="background:url('${c.thumb}') center/cover no-repeat"` : ''}>${c.thumb ? '' : `<div class="absolute inset-0 flex items-center justify-center text-[11px] muted">${c.fmtL || '미리보기 없음'}</div>`}
-        <span class="absolute left-1 top-1 text-[10px] font-semibold px-1.5 py-0.5 rounded ${c.live ? 'ads-win' : 'bg-black/65 text-white'}">${c.live ? '사용 중' : '종료'}</span></div>
+        <span class="absolute left-1 top-1 text-[10px] font-semibold px-1.5 py-0.5 rounded ${c.live ? 'mka-win' : 'bg-black/65 text-white'}">${c.live ? '사용 중' : '종료'}</span></div>
       <div class="px-2 py-1.5 text-[11px]"><b class="rk-v">${c.dur}일</b> <span class="muted">${adsDkY(c.a0, T)} ~ ${c.live ? '' : adsDkY(c.a1, T)}</span></div></a>`).join('')}</div></div>`;
   el.classList.remove('hidden'); document.addEventListener('keydown', adsCopyEsc);
 }
 function adsCopyClose(){ document.getElementById('adsCopyPop')?.classList.add('hidden'); document.removeEventListener('keydown', adsCopyEsc); }
 function adsCopyEsc(e){ if(e.key === 'Escape' && !adsMediaCur) adsCopyClose(); }
+/* 클래스 이름 주의 (11/10): 'ads-' 로 시작하는 클래스는 쓰지 말 것 — 광고 차단 목록(EasyList)에 .ads-row · .ads-bt 가 있어 차단 프로그램을 켠 브라우저에서 교체 이력이 통째로 숨겨졌음. 그래서 전부 'mka-' 로 바꿈 */
 /* 교체 이력 (11/06): 같은 주(월~일)에 처음 확인된 소재 = 1세트 = 교체 1회. 최근 ADS_WEEKS주.
    날짜 용어는 수집 기준으로 통일: 최초 확인(실제 광고 시작일과 다를 수 있음) · 최근 확인(최근 3일 안에 다시 확인) · 관측 종료(그 뒤로 안 보임, 실제 종료 보장 없음)
    상단 통계(평균 투입 간격 · 세트당 신규 소재 · 평균 관측 기간) → 주간 신규/관측 종료 줄 → 13주 이전 최초 확인(접힘) → 기간 안 세트(시간순).
@@ -3881,33 +3882,33 @@ function adsTimeline(items, T, kind){
   const months = []; weeks.forEach((w, i) => { const m = new Date(w * 86400000).getUTCMonth(); if(!months.length || months.at(-1).m !== m) months.push({ m, i, n: 1 }); else months.at(-1).n++; });
   const st = c => c.live ? '최근 확인' : '관측 종료', rng = c => `${adsDkY(c.a0, T)} ~ ${adsDkY(c.a1, T)}`;
   const bar = (a0, a1, on, tx, tip) => { const l = X(a0), w = Math.max(.8, X(a1 + 1) - l), cut = a0 < W0, t = (cut ? '◀ ' : '') + tx;
-    const out = w < 26 ? (l + w < 70 ? `<span class="ads-bt muted" style="left:calc(${l + w}% + 4px)">${t}</span>` : `<span class="ads-bt muted" style="right:calc(${100 - l}% + 4px)">${t}</span>`) : '';
-    return `<div class="ads-tr" title="${escapeAttr(tip)}"><div class="ads-b ${on ? 'ads-on' : 'ads-off'}${cut ? ' ads-cut' : ''}" style="left:${l}%;width:${w}%">${out ? '' : t}</div>${out}</div>`; };
+    const out = w < 26 ? (l + w < 70 ? `<span class="mka-bt muted" style="left:calc(${l + w}% + 4px)">${t}</span>` : `<span class="mka-bt muted" style="right:calc(${100 - l}% + 4px)">${t}</span>`) : '';
+    return `<div class="mka-tr" title="${escapeAttr(tip)}"><div class="mka-b ${on ? 'mka-on' : 'mka-off'}${cut ? ' mka-cut' : ''}" style="left:${l}%;width:${w}%">${out ? '' : t}</div>${out}</div>`; };
   const inWin = items.filter(c => c.a1 >= W0), pre = inWin.filter(c => c.a0 < W0), cur = inWin.filter(c => c.a0 >= W0), gone = items.length - inWin.length;
   const setsOf = arr => { const m = new Map(); arr.forEach(c => { const k = adsWk(c.a0); if(!m.has(k)) m.set(k, []); m.get(k).push(c); });
     return [...m.values()].map(cs => ({ cs: cs.sort((a, b) => a.a0 - b.a0 || b.dur - a.dur), a0: Math.min(...cs.map(c => c.a0)), a1: Math.max(...cs.map(c => c.a1)), live: cs.filter(c => c.live).length, mx: Math.max(...cs.map(c => c.dur)) })); };
-  const tog = `onclick="this.nextElementSibling.classList.toggle('hidden');this.querySelector('.ads-chev')?.classList.toggle('rotate-90')"`;
-  const chev = '<i class="fa-solid fa-chevron-right ads-chev text-[9px] mr-1.5 transition-transform"></i>';
-  const oneRow = c => `<div class="ads-row ads-sub"><a ${adsMA('tl-' + kind, kind, items, c)} class="flex items-center gap-1.5 min-w-0 pl-5 hover:underline" title="${escapeAttr(c.copy[0] || '')}">${c.thumb ? `<span class="w-4 h-4 rounded-sm shrink-0" style="background:url('${c.thumb}') center/cover"></span>` : '<span class="w-4 h-4 rounded-sm shrink-0 bg-slate-800"></span>'}<span class="truncate">${escapeHtml(c.badges[0] || '')}${c.copy[0] ? ` · ${escapeHtml(c.copy[0])}` : ''}</span></a>
+  const tog = `onclick="this.nextElementSibling.classList.toggle('hidden');this.querySelector('.mka-chev')?.classList.toggle('rotate-90')"`;
+  const chev = '<i class="fa-solid fa-chevron-right mka-chev text-[9px] mr-1.5 transition-transform"></i>';
+  const oneRow = c => `<div class="mka-row mka-sub"><a ${adsMA('tl-' + kind, kind, items, c)} class="flex items-center gap-1.5 min-w-0 pl-5 hover:underline" title="${escapeAttr(c.copy[0] || '')}">${c.thumb ? `<span class="w-4 h-4 rounded-sm shrink-0" style="background:url('${c.thumb}') center/cover"></span>` : '<span class="w-4 h-4 rounded-sm shrink-0 bg-slate-800"></span>'}<span class="truncate">${escapeHtml(c.badges[0] || '')}${c.copy[0] ? ` · ${escapeHtml(c.copy[0])}` : ''}</span></a>
       ${bar(c.a0, c.a1, c.live, `${rng(c)} · ${c.dur}일`, `최초 확인 ${adsDkY(c.a0, T)} · ${st(c)} ${adsDkY(c.a1, T)} · 관측 기간 ${c.dur}일${c.copy[0] ? `\n${c.copy[0]}` : ''}`)}</div>`;
   const setRow = s => { const tx = s.live ? `관측 기간 ${T - s.a0 + 1}일 · ${s.live}개 최근 확인` : `최장 ${s.mx}일 · ${adsDkY(s.a1, T)} 관측 종료`;
     const tip = `최초 확인 ${adsDkY(s.a0, T)} · 소재 ${s.cs.length}개\n최근 확인 ${s.live}개 · 마지막 확인 ${adsDkY(s.a1, T)} · 세트 내 최장 유지 ${s.mx}일`;
-    return `<div class="ads-row cursor-pointer hover:bg-slate-800/40 rounded" ${tog}><span class="flex items-center min-w-0">${chev}<span class="muted mr-1">최초 확인</span><b class="rk-v font-semibold">${adsDkY(s.a0, T)}</b><span class="muted ml-1">· ${s.cs.length}개</span></span>${bar(s.a0, s.a1, s.live > 0, tx, tip)}</div>
-      <div class="hidden"><div class="ads-row ads-sub"><span></span><div class="text-[11px] muted pl-1">세트 내 최장 유지 <b class="rk-v">${s.mx}일</b> · 마지막 확인 <b class="rk-v">${adsDkY(s.a1, T)}</b> · 최근 확인 ${s.live}/${s.cs.length}개</div></div>${s.cs.map(oneRow).join('')}</div>`; };
+    return `<div class="mka-row cursor-pointer hover:bg-slate-800/40 rounded" ${tog}><span class="flex items-center min-w-0">${chev}<span class="muted mr-1">최초 확인</span><b class="rk-v font-semibold">${adsDkY(s.a0, T)}</b><span class="muted ml-1">· ${s.cs.length}개</span></span>${bar(s.a0, s.a1, s.live > 0, tx, tip)}</div>
+      <div class="hidden"><div class="mka-row mka-sub"><span></span><div class="text-[11px] muted pl-1">세트 내 최장 유지 <b class="rk-v">${s.mx}일</b> · 마지막 확인 <b class="rk-v">${adsDkY(s.a1, T)}</b> · 최근 확인 ${s.live}/${s.cs.length}개</div></div>${s.cs.map(oneRow).join('')}</div>`; };
   const cs = setsOf(cur).sort((a, b) => a.a0 - b.a0);
-  let h = `<div id="adsSecTl" class="ads-sec"><div class="flex items-baseline justify-between gap-2 mb-2"><div class="ads-h mb-0">교체 이력 <span class="muted font-normal">최근 ${ADS_WEEKS}주 · 같은 주 투입 = 1세트</span></div>
-    <div class="text-[11px] muted shrink-0"><span class="inline-block w-2 h-2 rounded-sm align-middle ads-on mr-1"></span>최근 확인 <span class="inline-block w-2 h-2 rounded-sm align-middle ads-off ml-2 mr-1"></span>관측 종료</div></div>
-    <div class="ads-tl mb-1"><div class="ads-ml">${months.slice(1).map(o => `<span style="left:${o.i / ADS_WEEKS * 100}%"></span>`).join('')}<i class="ads-today" style="left:${X(T + 1)}%"></i></div>
-    <div class="ads-row" style="min-height:14px"><span></span><div class="relative h-[14px]"><span class="ads-today-lb" style="right:${100 - X(T + 1)}%">${adsDk(T)} ${adsAsOf != null ? '기준일' : T >= now ? '오늘' : '마지막 추적'}</span></div></div>
-    <div class="ads-row"><span></span><div class="grid text-[11px] font-semibold" style="grid-template-columns:repeat(${ADS_WEEKS},minmax(0,1fr))">${months.map(o => `<span style="grid-column:span ${o.n}" class="pl-1">${o.m + 1}월</span>`).join('')}</div></div>
-    <div class="ads-row"><span class="muted">주 (월요일 날짜)</span><div class="grid text-[10px] muted" style="grid-template-columns:repeat(${ADS_WEEKS},minmax(0,1fr))">${weeks.map(w => `<span class="pl-1 truncate">${adsDk(w)}주</span>`).join('')}</div></div>
-    <div class="ads-row border-b border-slate-800 pb-1 mb-1"><span><span class="ads-new font-semibold">신규</span> <span class="muted">/ 관측 종료</span></span><div class="grid" style="grid-template-columns:repeat(${ADS_WEEKS},minmax(0,1fr))">${weeks.map(w => {
+  let h = `<div id="adsSecTl" class="mka-sec"><div class="flex items-baseline justify-between gap-2 mb-2"><div class="mka-h mb-0">교체 이력 <span class="muted font-normal">최근 ${ADS_WEEKS}주 · 같은 주 투입 = 1세트</span></div>
+    <div class="text-[11px] muted shrink-0"><span class="inline-block w-2 h-2 rounded-sm align-middle mka-on mr-1"></span>최근 확인 <span class="inline-block w-2 h-2 rounded-sm align-middle mka-off ml-2 mr-1"></span>관측 종료</div></div>
+    <div class="mka-tl mb-1"><div class="mka-ml">${months.slice(1).map(o => `<span style="left:${o.i / ADS_WEEKS * 100}%"></span>`).join('')}<i class="mka-today" style="left:${X(T + 1)}%"></i></div>
+    <div class="mka-row" style="min-height:14px"><span></span><div class="relative h-[14px]"><span class="mka-today-lb" style="right:${100 - X(T + 1)}%">${adsDk(T)} ${adsAsOf != null ? '기준일' : T >= now ? '오늘' : '마지막 추적'}</span></div></div>
+    <div class="mka-row"><span></span><div class="grid text-[11px] font-semibold" style="grid-template-columns:repeat(${ADS_WEEKS},minmax(0,1fr))">${months.map(o => `<span style="grid-column:span ${o.n}" class="pl-1">${o.m + 1}월</span>`).join('')}</div></div>
+    <div class="mka-row"><span class="muted">주 (월요일 날짜)</span><div class="grid text-[10px] muted" style="grid-template-columns:repeat(${ADS_WEEKS},minmax(0,1fr))">${weeks.map(w => `<span class="pl-1 truncate">${adsDk(w)}주</span>`).join('')}</div></div>
+    <div class="mka-row border-b border-slate-800 pb-1 mb-1"><span><span class="mka-new font-semibold">신규</span> <span class="muted">/ 관측 종료</span></span><div class="grid" style="grid-template-columns:repeat(${ADS_WEEKS},minmax(0,1fr))">${weeks.map(w => {
       const n = items.filter(c => c.a0 >= w && c.a0 <= w + 6).length, e = items.filter(c => !c.live && c.a1 >= w && c.a1 <= w + 6).length;
-      return `<span class="pl-1 text-[11px] font-semibold" title="${adsDk(w)}주 · 신규 ${n}개 · 관측 종료 ${e}개">${n ? `<span class="ads-new">+${n}</span>` : ''}${e ? `<span class="ads-end ml-1">−${e}</span>` : ''}</span>`; }).join('')}</div></div>`;
+      return `<span class="pl-1 text-[11px] font-semibold" title="${adsDk(w)}주 · 신규 ${n}개 · 관측 종료 ${e}개">${n ? `<span class="mka-new">+${n}</span>` : ''}${e ? `<span class="mka-end ml-1">−${e}</span>` : ''}</span>`; }).join('')}</div></div>`;
   if(pre.length){ const ps = setsOf(pre).sort((a, b) => b.mx - a.mx), lv = pre.filter(c => c.live).length, mx = Math.max(...pre.map(c => c.dur));
-    h += `<div class="ads-row cursor-pointer hover:bg-slate-800/40 rounded" ${tog}><span class="flex items-center min-w-0">${chev}<b class="rk-v font-semibold">${ADS_WEEKS}주 이전 최초 확인</b><span class="muted ml-1">· ${pre.length}개</span></span>
+    h += `<div class="mka-row cursor-pointer hover:bg-slate-800/40 rounded" ${tog}><span class="flex items-center min-w-0">${chev}<b class="rk-v font-semibold">${ADS_WEEKS}주 이전 최초 확인</b><span class="muted ml-1">· ${pre.length}개</span></span>
       ${bar(Math.min(...pre.map(c => c.a0)), Math.max(...pre.map(c => c.a1)), lv > 0, `장기 집행 · ${lv}개 최근 확인 · ${pre.length - lv}개 기간 중 관측 종료 · 최장 ${mx}일`, `${ADS_WEEKS}주보다 먼저 처음 확인되고 이 기간에도 확인된 소재 ${pre.length}개 · 세트 ${ps.length}개`)}</div>
-      <div class="hidden">${ps.slice(0, 4).map(setRow).join('')}${ps.length > 4 ? `<div class="ads-row cursor-pointer" onclick="this.nextElementSibling.classList.remove('hidden');this.remove()"><span class="muted pl-5 hover:underline">외 세트 ${ps.length - 4}개 더 보기</span><span></span></div><div class="hidden">${ps.slice(4).map(setRow).join('')}</div>` : ''}</div>`; }
+      <div class="hidden">${ps.slice(0, 4).map(setRow).join('')}${ps.length > 4 ? `<div class="mka-row cursor-pointer" onclick="this.nextElementSibling.classList.remove('hidden');this.remove()"><span class="muted pl-5 hover:underline">외 세트 ${ps.length - 4}개 더 보기</span><span></span></div><div class="hidden">${ps.slice(4).map(setRow).join('')}</div>` : ''}</div>`; }
   h += cs.map(setRow).join('');
   if(!inWin.length) h += `<div class="text-[11px] muted py-2">최근 ${ADS_WEEKS}주에 확인된 소재가 없습니다.</div>`;
   return h + `</div>${gone ? `<div class="text-[11px] muted mt-1">${ADS_WEEKS}주 전 종료 ${gone}개 제외</div>` : ''}</div>`;
@@ -3944,10 +3945,10 @@ function adsWinEmpty(items, th){
 }
 function adsWinCreative(w, th = ADS_WIN, items = null, k = ''){
   const nb = w.filter(c => c.both).length;
-  let h = `<div id="adsWinBox" class="ads-sec"><div class="ads-h">위닝 크리에이티브 <span class="muted font-normal">${nb}개</span><i class="fa-regular fa-circle-question mk-info ml-1 muted font-normal" title="${ADS_WIN_TIP}"></i></div>`;
+  let h = `<div id="adsWinBox" class="mka-sec"><div class="mka-h">위닝 크리에이티브 <span class="muted font-normal">${nb}개</span><i class="fa-regular fa-circle-question mk-info ml-1 muted font-normal" title="${ADS_WIN_TIP}"></i></div>`;
   if(!w.length) return h + `<div class="inbox rounded-lg border border-slate-800 px-3 py-2.5 text-xs muted">${adsWinEmpty(items, th)}</div></div>`;
   h += `<div class="grid gap-2" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr))">${w.slice(0, 3).map((c, i) => `<a ${k ? adsMA('win-' + k, k, w, c) : `href="${c.url}" target="_blank" rel="noopener"`} class="flex gap-3 inbox rounded-lg border ${c.both ? 'border-indigo-500' : 'border-slate-800'} p-2 min-w-0 hover:border-indigo-500">
-      <div class="relative w-28 h-28 shrink-0 rounded-md bg-slate-950 overflow-hidden" ${c.thumb ? `style="background:url('${c.thumb}') center/cover no-repeat"` : ''}>${c.thumb ? '' : '<div class="absolute inset-0 flex items-center justify-center text-[10px] muted">미리보기 없음</div>'}<span class="ads-win absolute left-1 top-1 text-[10px] font-semibold px-1.5 py-0.5 rounded">${i + 1}</span></div>
+      <div class="relative w-28 h-28 shrink-0 rounded-md bg-slate-950 overflow-hidden" ${c.thumb ? `style="background:url('${c.thumb}') center/cover no-repeat"` : ''}>${c.thumb ? '' : '<div class="absolute inset-0 flex items-center justify-center text-[10px] muted">미리보기 없음</div>'}<span class="mka-win absolute left-1 top-1 text-[10px] font-semibold px-1.5 py-0.5 rounded">${i + 1}</span></div>
       <div class="min-w-0 flex flex-col"><div class="text-xs font-semibold leading-snug line-clamp-2">${escapeHtml(c.copy[0] || '문구 없음 (동영상 등)')}</div>${c.copy[1] ? `<div class="text-[11px] muted leading-snug line-clamp-2 mt-0.5">${escapeHtml(c.copy.slice(1).join(' / '))}</div>` : ''}
         <div class="mt-auto pt-1.5 flex flex-wrap gap-x-2 text-[11px]"><span><span class="muted">소재</span> <b class="rk-v">${c.dur}일</b></span>${c.cg ? `<span><span class="muted">문구</span> <b class="rk-v">${c.cg.dur}일</b><span class="muted"> · 소재 ${c.cg.n}개</span></span>` : ''}<span class="muted">${c.badges.join(' · ')}</span></div></div></a>`).join('')}</div>`;
   return h + `</div>`;
@@ -3968,7 +3969,7 @@ function adsGroupSame(items){
 function adsGrid(items, k = ''){
   items = adsGroupSame(items);
   const dim = items.some(c => c.live);   /* 집행 중 소재가 있을 때만 끝난 소재를 흐리게 (전부 끝난 게임은 그대로) */
-  return `<div class="ads-grid grid gap-2" style="grid-template-columns:repeat(auto-fill,minmax(140px,1fr))">${items.map(c => `<a ${k ? adsMA(k, k, items, c) : `href="${c.url}" target="_blank" rel="noopener"`} ${c.win ? 'data-win="1"' : ''} ${c.live ? 'data-live="1"' : ''} class="inbox rounded-lg border ${c.win ? 'border-indigo-500' : 'border-slate-800'} bg-slate-900/40 hover:border-indigo-500 overflow-hidden min-w-0 block${dim && !c.live ? ' ads-ended' : ''}">
+  return `<div class="mka-grid grid gap-2" style="grid-template-columns:repeat(auto-fill,minmax(140px,1fr))">${items.map(c => `<a ${k ? adsMA(k, k, items, c) : `href="${c.url}" target="_blank" rel="noopener"`} ${c.win ? 'data-win="1"' : ''} ${c.live ? 'data-live="1"' : ''} class="inbox rounded-lg border ${c.win ? 'border-indigo-500' : 'border-slate-800'} bg-slate-900/40 hover:border-indigo-500 overflow-hidden min-w-0 block${dim && !c.live ? ' mka-ended' : ''}">
     <div class="relative aspect-square bg-slate-950" ${c.thumb ? `style="background:url('${c.thumb}') center/cover no-repeat"` : ''}>${c.thumb ? '' : '<div class="absolute inset-0 flex items-center justify-center text-[11px] muted text-center px-2">미리보기 없음</div>'}
       ${c.same ? `<span class="absolute right-1.5 top-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded bg-black/75 text-white" title="같은 소재를 쓰는 광고 ${c.same}개 (스토어·변형만 다름)">×${c.same}</span>` : ''}
       <div class="absolute left-1.5 top-1.5 flex flex-wrap gap-1${c.same ? ' pr-8' : ''}">${adsTag(c)}${c.badges.map(b => `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-black/65 text-white">${escapeHtml(b)}</span>`).join('')}</div></div>
@@ -3989,18 +3990,18 @@ function adsMediaOpen(key, i){
   const kv = (lb, v) => v ? `<dt>${lb}</dt><dd>${v}</dd>` : '';
   let el = document.getElementById('adsMediaPop');
   if(!el){ el = document.createElement('div'); el.id = 'adsMediaPop'; el.className = 'fixed inset-0 z-[56] bg-black/75 flex items-center justify-center p-4'; el.onclick = e => { if(e.target === el) adsMediaClose(); }; document.body.appendChild(el); document.addEventListener('keydown', adsMediaKey); }
-  el.innerHTML = `<button type="button" onclick="adsMediaStep(-1)" class="ads-mnav left-3" aria-label="이전 소재" ${i ? '' : 'disabled'}><i class="fa-solid fa-chevron-left"></i></button>
-    <div class="card rounded-xl w-full max-w-[1120px] max-h-[92vh] overflow-y-auto thin-scroll p-4 grid gap-5 ads-mgrid" role="dialog" aria-label="소재 크게 보기">
+  el.innerHTML = `<button type="button" onclick="adsMediaStep(-1)" class="mka-mnav left-3" aria-label="이전 소재" ${i ? '' : 'disabled'}><i class="fa-solid fa-chevron-left"></i></button>
+    <div class="card rounded-xl w-full max-w-[1120px] max-h-[92vh] overflow-y-auto thin-scroll p-4 grid gap-5 mka-mgrid" role="dialog" aria-label="소재 크게 보기">
       <div class="min-w-0 flex flex-col justify-center">${media}<div id="adsMediaNote" class="text-[11px] muted text-center mt-2">${note}</div></div>
       <div class="min-w-0 flex flex-col">
         <div class="flex items-center gap-2"><span class="text-[12px] muted"><i class="fa-brands fa-${k} mr-1 ${k === 'meta' ? 'text-sky-400' : 'text-emerald-400'}"></i>${LB} 소재 ${i + 1} / ${L.length}</span>
           <button type="button" onclick="adsMediaClose()" class="ml-auto w-8 h-8 rounded-md hover:bg-slate-800 muted" aria-label="닫기"><i class="fa-solid fa-xmark"></i></button></div>
         <div class="flex flex-wrap gap-1.5 mt-2">${adsTag(c, 'text-[11px] px-2')}<span class="text-[11px] font-semibold px-2 py-0.5 rounded ${c.live ? 'bg-emerald-500/15 text-emerald-400' : 'bg-slate-800 muted'}">${c.live ? '집행 중' : '관측 종료'}</span>${[c.fmtL, c.storeL].filter(Boolean).map(b => `<span class="text-[11px] px-2 py-0.5 rounded bg-slate-800/70">${b}</span>`).join('')}</div>
         ${c.copy.length ? `<div class="text-[15px] font-semibold rk-v leading-snug mt-4">${escapeHtml(c.copy[0])}</div>${c.copy.slice(1).map(t => `<div class="text-[13px] muted leading-relaxed mt-1 whitespace-pre-line">${escapeHtml(t)}</div>`).join('')}` : '<div class="text-[13px] muted mt-4">문구 없는 소재</div>'}
-        <dl class="ads-kv mt-4">${kv('기간', `${adsDk(c.a0)} ~ ${c.live ? '집행 중' : adsDk(c.a1)} <span class="muted">(${c.dur}일)</span>`)}${kv('형식', c.fmtL)}</dl>
+        <dl class="mka-kv mt-4">${kv('기간', `${adsDk(c.a0)} ~ ${c.live ? '집행 중' : adsDk(c.a1)} <span class="muted">(${c.dur}일)</span>`)}${kv('형식', c.fmtL)}</dl>
         <a href="${c.url}" target="_blank" rel="noopener" class="mt-auto pt-4 inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-800 px-3 py-2 text-[13px] font-semibold hover:border-indigo-500">${k === 'meta' ? 'Meta 광고 라이브러리' : 'Google 광고 투명성 센터'}에서 보기 <i class="fa-solid fa-arrow-up-right-from-square text-[11px]"></i></a>
       </div></div>
-    <button type="button" onclick="adsMediaStep(1)" class="ads-mnav right-3" aria-label="다음 소재" ${i < L.length - 1 ? '' : 'disabled'}><i class="fa-solid fa-chevron-right"></i></button>`;
+    <button type="button" onclick="adsMediaStep(1)" class="mka-mnav right-3" aria-label="다음 소재" ${i < L.length - 1 ? '' : 'disabled'}><i class="fa-solid fa-chevron-right"></i></button>`;
   el.classList.remove('hidden');
 }
 function adsMediaStep(d){ if(adsMediaCur) adsMediaOpen(adsMediaCur.key, adsMediaCur.i + d); }
@@ -4010,15 +4011,15 @@ function adsGridHead(items, note){
   /* 걸러 보기 (11/10): '위닝만 보기' 체크 대신 전체 · 집행 중 · 종료 · 위닝 버튼 (해당 소재가 없거나 전부인 칸은 숨김) */
   const g = adsGroupSame(items), live = g.filter(c => c.live).length, win = g.filter(c => c.win).length;
   const F = [['', '전체', g.length], ['live', '집행 중', live], ['end', '종료', g.length - live], ['win', '위닝', win]].filter(([k, , c]) => !k || (c && (c < g.length || k === 'win')));
-  return `<div class="flex flex-wrap items-center justify-between gap-2 mb-3"><div class="ads-h mb-0">광고 소재 <span class="muted font-normal">${g.length < items.length ? `${g.length}종 · 광고 ${items.length}개` : `${items.length}개`}</span></div>${F.length > 1 ? `<div class="mk-seg" role="group" aria-label="소재 걸러 보기">${F.map(([k, lb, c], i) => `<button type="button" class="${i ? '' : 'on'}" aria-pressed="${!i}" onclick="adsGridF(this,'${k}')">${lb}<span class="ml-1 font-normal opacity-70">${c}</span></button>`).join('')}</div>` : ''}</div>`;
+  return `<div class="flex flex-wrap items-center justify-between gap-2 mb-3"><div class="mka-h mb-0">광고 소재 <span class="muted font-normal">${g.length < items.length ? `${g.length}종 · 광고 ${items.length}개` : `${items.length}개`}</span></div>${F.length > 1 ? `<div class="mk-seg" role="group" aria-label="소재 걸러 보기">${F.map(([k, lb, c], i) => `<button type="button" class="${i ? '' : 'on'}" aria-pressed="${!i}" onclick="adsGridF(this,'${k}')">${lb}<span class="ml-1 font-normal opacity-70">${c}</span></button>`).join('')}</div>` : ''}</div>`;
 }
-function adsGridF(b, k){ const G = b.closest('.ads-sec')?.querySelector('.ads-grid'); if(!G) return; G.dataset.f = k; [...b.parentElement.children].forEach(x => { const on = x === b; x.classList.toggle('on', on); x.setAttribute('aria-pressed', on); }); }
+function adsGridF(b, k){ const G = b.closest('.mka-sec')?.querySelector('.mka-grid'); if(!G) return; G.dataset.f = k; [...b.parentElement.children].forEach(x => { const on = x === b; x.classList.toggle('on', on); x.setAttribute('aria-pressed', on); }); }
 /* 매체 상세 구역 바로가기 (11/10): 화면이 길어 위에 붙어 따라오는 띠 — 누르면 그 구역으로 */
-function adsNav(L){ return `<nav class="ads-nav" aria-label="구역 바로가기">${L.filter(Boolean).map(([id, lb, n]) => `<button type="button" class="mk-sec" onclick="document.getElementById('${id}')?.scrollIntoView({behavior:'smooth',block:'start'})">${lb}${n != null ? `<span class="ml-1 font-normal opacity-70">${n}</span>` : ''}</button>`).join('')}</nav>`; }
+function adsNav(L){ return `<nav class="mka-nav" aria-label="구역 바로가기">${L.filter(Boolean).map(([id, lb, n]) => `<button type="button" class="mk-sec" onclick="document.getElementById('${id}')?.scrollIntoView({behavior:'smooth',block:'start'})">${lb}${n != null ? `<span class="ml-1 font-normal opacity-70">${n}</span>` : ''}</button>`).join('')}</nav>`; }
 /* 개요 위닝 카드 → 해당 매체 탭으로 가서 그 소재를 찾아 잠깐 강조 */
 function adsJump(k, url){
   adsSetMedia(k);
-  const a = [...document.querySelectorAll('#adsDetail .ads-grid > a')].find(e => e.getAttribute('href') === url); if(!a) return;
+  const a = [...document.querySelectorAll('#adsDetail .mka-grid > a')].find(e => e.getAttribute('href') === url); if(!a) return;
   a.scrollIntoView({ behavior: 'smooth', block: 'center' }); a.style.outline = '2px solid #5046c8'; a.style.outlineOffset = '2px'; setTimeout(() => { a.style.outline = ''; }, 2500);
 }
 function adsSetMedia(m){ adsMedia = m; adsKeep(); if(adsSel && adsCache[adsSel]) adsRenderDetail(adsCache[adsSel]); }
@@ -4076,8 +4077,8 @@ function adsRenderDetail(R){
       const flow = adsFlowBlock(P, T, 'meta');
       h += adsNav([['adsWinBox', '위닝', win.filter(c => c.both).length], flow && ['adsSecFlow', '흐름'], ['adsSecTl', '교체 이력'], ['adsSecCopy', '핵심 카피', life.length || null], ['adsSecGrid', '광고 소재', adsGroupSame(items).length]]);
       h += adsWinCreative(win, P.meta.th, items, 'meta') + flow + adsTimeline(items, T, 'meta');   /* 11/10: 위닝을 수치 바로 다음으로 */
-      h += `<div id="adsSecCopy" class="ads-sec"><div class="ads-h">핵심 카피</div>${life.length ? adsCopies(life.map(g => ({ ...g, a: g.b || g.a, b: g.b ? g.a : '' })), wc.length, 'meta', wc, T) : '<div class="text-[11px] muted">문구 없음</div>'}</div>`;
-      h += `<div id="adsSecGrid" class="ads-sec">${adsGridHead(items, '누르면 원본 광고') + adsGrid(items, 'meta')}</div>`;
+      h += `<div id="adsSecCopy" class="mka-sec"><div class="mka-h">핵심 카피</div>${life.length ? adsCopies(life.map(g => ({ ...g, a: g.b || g.a, b: g.b ? g.a : '' })), wc.length, 'meta', wc, T) : '<div class="text-[11px] muted">문구 없음</div>'}</div>`;
+      h += `<div id="adsSecGrid" class="mka-sec">${adsGridHead(items, '누르면 원본 광고') + adsGrid(items, 'meta')}</div>`;
     }
     h += `</section>`;
   }else{
@@ -4092,8 +4093,8 @@ function adsRenderDetail(R){
       const flow = adsFlowBlock(P, T, 'google');
       h += adsNav([['adsWinBox', '위닝', win.filter(c => c.both).length], flow && ['adsSecFlow', '흐름'], ['adsSecTl', '교체 이력'], life.length && ['adsSecCopy', '핵심 카피', life.length], ['adsSecGrid', '광고 소재', adsGroupSame(items).length]]);
       h += adsWinCreative(win, P.google.th, items, 'google') + flow + adsTimeline(items, T, 'google');
-      if(life.length) h += `<div id="adsSecCopy" class="ads-sec"><div class="ads-h">핵심 카피 <span class="muted font-normal">문구 있는 소재 ${wc.length}개 기준</span></div>${adsCopies(life, wc.length, 'google', wc, T)}</div>`;
-      h += `<div id="adsSecGrid" class="ads-sec">${adsGridHead(items, '누르면 원본 광고') + adsGrid(items, 'google')}</div>`;
+      if(life.length) h += `<div id="adsSecCopy" class="mka-sec"><div class="mka-h">핵심 카피 <span class="muted font-normal">문구 있는 소재 ${wc.length}개 기준</span></div>${adsCopies(life, wc.length, 'google', wc, T)}</div>`;
+      h += `<div id="adsSecGrid" class="mka-sec">${adsGridHead(items, '누르면 원본 광고') + adsGrid(items, 'google')}</div>`;
     }
     h += `</section>`;
   }
@@ -4154,7 +4155,7 @@ function adsProfile(p, T, kind){
 function adsFlowBlock(P, T, k){
   const p = adsProfile(P[k], T, k); if(!p || !p.flow.length) return '';
   const note = p.rich ? (p.newCopy.length ? `최근 6주 새 문구: ${p.newCopy.map(escapeHtml).join(' · ')}` : '') : (p.topCopy ? `대표 문구: ${escapeHtml(p.topCopy)}` : '');
-  return `<div id="adsSecFlow" class="ads-sec"><div class="ads-h">${p.rich ? '메시지 흐름' : '투입 흐름'} <span class="muted font-normal">${p.rich ? '시기별 가장 많이 쓴 문구' : '월별 신규 소재 수'}</span></div>
+  return `<div id="adsSecFlow" class="mka-sec"><div class="mka-h">${p.rich ? '메시지 흐름' : '투입 흐름'} <span class="muted font-normal">${p.rich ? '시기별 가장 많이 쓴 문구' : '월별 신규 소재 수'}</span></div>
     <div class="grid gap-1.5" style="grid-template-columns:repeat(${p.flow.length},minmax(0,1fr))">${p.flow.map(f => `<div class="inbox rounded-lg border ${f.now ? 'border-indigo-500' : 'border-slate-800'} px-2.5 py-1.5 min-w-0"><div class="text-[11px] muted">${f.lb}</div><div class="text-xs font-semibold leading-snug mt-0.5 line-clamp-2" title="${escapeAttr(f.v)}">${escapeHtml(f.v)}</div></div>`).join('')}</div>
     ${note ? `<div class="text-[11px] muted mt-1.5">${note}</div>` : ''}</div>`;
 }
@@ -4188,7 +4189,7 @@ function adsOverview(P, T, raw){
     const msg = p.rich ? [p.flow.at(-1)?.v, ...p.newCopy].filter((v, i, A) => v && A.indexOf(v) === i).slice(0, 2) : (p.topCopy ? [p.topCopy] : []);
     const recentL = P[k].items.filter(c => c.live).sort((x, y) => y.a0 - x.a0 || y.dur - x.dur);
     return `<div class="card rounded-xl p-5 min-w-0 flex flex-col">
-      <div class="flex items-center justify-between gap-2"><div class="font-semibold text-sm">${icon}${LB[k]}</div><span class="ads-badge-${k} text-[11px] font-semibold px-2 py-0.5 rounded">${p.badge}</span></div>
+      <div class="flex items-center justify-between gap-2"><div class="font-semibold text-sm">${icon}${LB[k]}</div><span class="mka-badge-${k} text-[11px] font-semibold px-2 py-0.5 rounded">${p.badge}</span></div>
       <div class="flex items-end gap-6 mt-3 flex-wrap">
         <div><div class="text-[11px] muted">현재 집행 중인 소재</div><div class="leading-none mt-1"><b class="text-[34px] font-bold rk-v">${p.live}</b><span class="text-sm muted ml-1">개</span></div></div>
         ${lead ? `<div class="pl-5 border-l border-slate-800"><div class="text-[11px] muted">${lead[1]}</div><div class="leading-none mt-1"><b class="text-[24px] font-bold" style="color:${k === 'meta' ? '#2589E8' : '#20C997'}">${lead[0]}%</b><span class="text-xs font-semibold ml-2" style="color:${k === 'meta' ? '#2589E8' : '#20C997'}">${lead[2]}</span></div></div>` : ''}
@@ -4200,10 +4201,10 @@ function adsOverview(P, T, raw){
       <div class="flex flex-wrap gap-x-3 mt-1 text-[12px]">${parts.map(x => `<span><span class="inline-block w-2 h-2 rounded-sm align-middle mr-1" style="background:rgba(${rgb},${x[2]})"></span><span class="muted">${x[0]}</span> <b class="rk-v">${x[1]}</b></span>`).join('')}</div>
       ${msg.length ? `<div class="text-[13px] font-semibold rk-v mt-5">핵심 카피</div><div class="mt-1">${msg.map(t => `<div class="flex gap-2 items-start mt-1.5 min-w-0" title="${escapeAttr(t)}"><span class="shrink-0 text-[22px] leading-[18px] font-extrabold" style="color:${k === 'meta' ? '#2589E8' : '#20C997'}">“</span><span class="text-[15px] font-semibold rk-v leading-snug truncate">${escapeHtml(t)}</span></div>`).join('')}</div>` : ''}
       <div class="text-[13px] font-semibold rk-v mt-5 mb-2">위닝 크리에이티브<i class="fa-regular fa-circle-question mk-info ml-1 muted font-normal" title="${ADS_WIN_TIP}"></i></div>${win}
-      ${recentL.length ? `<div class="flex items-baseline justify-between mt-5 mb-2"><span class="text-[13px] font-semibold rk-v">최근 집행 소재 <span class="ml-2 text-[11px] muted font-normal"><span class="inline-block w-2.5 h-2.5 rounded-sm align-middle ring-2 ring-indigo-500 ring-inset mr-1"></span>위닝 크리에이티브</span></span><button type="button" class="text-[11px] ads-new font-semibold hover:underline" onclick="adsSetMedia('${k}');setTimeout(() => document.querySelector('#adsDetail .ads-grid')?.scrollIntoView({ block: 'start' }), 50)">전체 ${recentL.length}개 보기 ›</button></div>
+      ${recentL.length ? `<div class="flex items-baseline justify-between mt-5 mb-2"><span class="text-[13px] font-semibold rk-v">최근 집행 소재 <span class="ml-2 text-[11px] muted font-normal"><span class="inline-block w-2.5 h-2.5 rounded-sm align-middle ring-2 ring-indigo-500 ring-inset mr-1"></span>위닝 크리에이티브</span></span><button type="button" class="text-[11px] mka-new font-semibold hover:underline" onclick="adsSetMedia('${k}');setTimeout(() => document.querySelector('#adsDetail .mka-grid')?.scrollIntoView({ block: 'start' }), 50)">전체 ${recentL.length}개 보기 ›</button></div>
         <div class="grid grid-cols-8 gap-1.5">${recentL.slice(0, 8).map(c => `<a ${adsMA('ovr-' + k, k, recentL, c)} title="${escapeAttr((c.copy[0] || c.fmtL || '') + ' · ' + c.dur + '일')}" class="relative block aspect-square rounded-md bg-slate-950 overflow-hidden ${c.win ? 'ring-2 ring-indigo-500 ring-inset' : ''}" ${c.thumb ? `style="background:url('${c.thumb}') center/cover no-repeat"` : ''}>${c.thumb ? '' : `<span class="absolute inset-0 flex items-center justify-center text-[10px] muted">${c.fmtL || '없음'}</span>`}<span class="absolute left-1 bottom-1 text-[10px] font-semibold px-1 rounded bg-black/65 text-white">${c.dur.toLocaleString()}일</span></a>`).join('')}</div>` : ''}
       <div class="mt-auto pt-5"></div>
-      <button type="button" class="ads-foot -mx-5 -mb-5 px-5 py-3 border-t border-slate-800 rounded-b-xl flex items-center justify-between gap-3 text-left" style="--fc:${k === 'meta' ? '37,137,232' : '32,201,151'}" onclick="adsSetMedia('${k}');window.scrollTo({top:0})">
+      <button type="button" class="mka-foot -mx-5 -mb-5 px-5 py-3 border-t border-slate-800 rounded-b-xl flex items-center justify-between gap-3 text-left" style="--fc:${k === 'meta' ? '37,137,232' : '32,201,151'}" onclick="adsSetMedia('${k}');window.scrollTo({top:0})">
         <span class="text-[12px] muted truncate">전체 소재 · 교체 이력 · 핵심 카피</span><span class="shrink-0 text-[13px] font-bold" style="color:rgb(var(--fc))">${LB[k]} 상세 보기 <i class="fa-solid fa-arrow-right text-[11px] ml-1"></i></span></button></div>`; };   /* 상세 이동 = 카드 아래 띠 (매체 색, 11/09) */
   let h = `<div class="grid gap-3 md:grid-cols-2 items-stretch">${col('meta')}${col('google')}</div>`;
   return `<div class="space-y-4">${h}</div>`;
@@ -5248,7 +5249,7 @@ async function gdAdsRender(){
     const msg = p.rich ? [p.flow.at(-1)?.v, ...p.newCopy].filter((v, i, A) => v && A.indexOf(v) === i).slice(0, 2) : (p.topCopy ? [p.topCopy] : []);
     const win = P[k].win.slice(0, 3);
     return `<div class="inbox rounded-xl border border-slate-800 bg-slate-900/40 p-4 min-w-0 flex flex-col">
-      <div class="flex items-center justify-between gap-2"><div class="text-[13px] font-semibold">${icon}${LB[k]}</div><span class="ads-badge-${k} text-[11px] font-semibold px-2 py-0.5 rounded">${p.badge}</span></div>
+      <div class="flex items-center justify-between gap-2"><div class="text-[13px] font-semibold">${icon}${LB[k]}</div><span class="mka-badge-${k} text-[11px] font-semibold px-2 py-0.5 rounded">${p.badge}</span></div>
       <div class="flex items-end gap-5 mt-3">
         <div><div class="text-[11px] muted">현재 집행 중인 소재</div><div class="leading-none mt-1"><b class="text-[28px] font-bold rk-v">${p.live}</b><span class="text-sm muted ml-1">개</span></div></div>
         ${lead ? `<div class="pl-4 border-l border-slate-800 min-w-0"><div class="text-[11px] muted">${lead[1]}</div><div class="leading-none mt-1 whitespace-nowrap"><b class="text-[20px] font-bold" style="color:${hex}">${lead[0]}%</b><span class="text-xs font-semibold ml-1.5" style="color:${hex}">${lead[2]}</span></div></div>` : ''}
@@ -5263,10 +5264,10 @@ async function gdAdsRender(){
       ${win.length ? `<div class="grid grid-cols-3 gap-1.5">${win.map(c => `<a ${adsMA('pw-' + k, k, win, c)} class="relative block aspect-square rounded-md bg-slate-950 overflow-hidden" ${c.thumb ? `style="background:url('${c.thumb}') center/cover no-repeat"` : ''} title="${escapeAttr((c.copy[0] || '') + ' · ' + adsDkY(c.a0, T) + ' ~ ' + adsDkY(c.a1, T))}">${c.thumb ? '' : `<span class="absolute inset-0 flex items-center justify-center text-[10px] muted">${c.fmtL || '미리보기 없음'}</span>`}<span class="absolute left-1 bottom-1 text-[10px] font-semibold px-1.5 rounded bg-black/65 text-white">${c.dur.toLocaleString()}일</span></a>`).join('')}</div>`
         : `<div class="inbox rounded-lg border border-slate-800 p-3 text-xs muted">${adsWinEmpty(P[k].items, P[k].th)}</div>`}
       <div class="mt-auto pt-4"></div>
-      <button type="button" class="ads-foot -mx-4 -mb-4 px-4 py-2.5 border-t border-slate-800 rounded-b-xl flex items-center justify-between gap-3 text-left" style="--fc:${rgb}" onclick="gdAdsOpen('${escapeAttr(pkg)}', '${k}')">
+      <button type="button" class="mka-foot -mx-4 -mb-4 px-4 py-2.5 border-t border-slate-800 rounded-b-xl flex items-center justify-between gap-3 text-left" style="--fc:${rgb}" onclick="gdAdsOpen('${escapeAttr(pkg)}', '${k}')">
         <span class="text-[11px] muted truncate">전체 소재 · 교체 이력 · 핵심 카피</span><span class="shrink-0 text-[12px] font-bold" style="color:rgb(var(--fc))">${LB[k]} 상세 보기 <i class="fa-solid fa-arrow-right text-[10px] ml-1"></i></span></button></div>`; };
   B.innerHTML = `<div class="flex flex-wrap items-baseline justify-between gap-2"><div><h4 class="text-sm font-semibold">마케팅 추적</h4><div class="text-[11px] muted mt-0.5">한국 · Meta ${ma.length} · Google ${ga.length} · ${R.tracked_at.slice(5, 10).replace('-', '/')} 추적</div></div>
-    <button type="button" class="text-[13px] font-bold ads-new hover:underline" onclick="gdAdsOpen('${escapeAttr(pkg)}')">요약 보기 &gt;</button></div>
+    <button type="button" class="text-[13px] font-bold mka-new hover:underline" onclick="gdAdsOpen('${escapeAttr(pkg)}')">요약 보기 &gt;</button></div>
     <div class="grid gap-3 md:grid-cols-2 mt-3">${card('meta')}${card('google')}</div>`;
 }
 function gdAdsOpen(pkg, media = 'overview'){ try{ closeGameDetail(); }catch(e){} adsSel = pkg; adsMedia = media; try{ sessionStorage.setItem('gmi.ads', JSON.stringify({ pkg, media })); }catch(e){} switchView('ads'); window.scrollTo({ top: 0 }); }
