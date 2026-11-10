@@ -675,6 +675,7 @@ html.panel-lock { overflow: hidden; }
 .ev-cell.sel { background:rgba(41,47,51,.9); box-shadow:inset 0 0 0 2px #6257e8; }
 .ads-mnav { position:fixed; top:50%; transform:translateY(-50%); width:44px; height:44px; border-radius:999px; background:rgba(32,36,40,.9); border:1px solid rgba(80,87,92,.6); color:#e6e8ea; z-index:57; }
 .ads-mnav:hover:not(:disabled) { border-color:#6257e8; } .ads-mnav:disabled { opacity:.25; cursor:default; }
+@media (min-width:768px){ .ads-mgrid { grid-template-columns:minmax(0,1fr) 300px; } }   /* 소재 크게 보기 2단 (11/10: 대괄호+쉼표 클래스는 미리 만든 CSS 에서 빠져서 직접 지정) */
 .ads-kv { display:grid; grid-template-columns:auto 1fr; gap:4px 12px; font-size:12px; } .ads-kv dt { color:#8b9297; } .ads-kv dd { margin:0; font-weight:600; }
 .ev-dn { font-size:12px; font-weight:600; height:20px; display:flex; align-items:center; gap:4px; }
 .ev-dot { width:7px; height:7px; border-radius:50%; flex:none; } .ev-dn .ev-more { margin-left:auto; font-style:normal; font-weight:500; }   /* 당일 일정 점 · 넘친 개수는 날짜 줄 오른쪽 */
@@ -3989,7 +3990,7 @@ function adsMediaOpen(key, i){
   let el = document.getElementById('adsMediaPop');
   if(!el){ el = document.createElement('div'); el.id = 'adsMediaPop'; el.className = 'fixed inset-0 z-[56] bg-black/75 flex items-center justify-center p-4'; el.onclick = e => { if(e.target === el) adsMediaClose(); }; document.body.appendChild(el); document.addEventListener('keydown', adsMediaKey); }
   el.innerHTML = `<button type="button" onclick="adsMediaStep(-1)" class="ads-mnav left-3" aria-label="이전 소재" ${i ? '' : 'disabled'}><i class="fa-solid fa-chevron-left"></i></button>
-    <div class="card rounded-xl w-full max-w-[1120px] max-h-[92vh] overflow-y-auto thin-scroll p-4 grid gap-5 md:grid-cols-[minmax(0,1fr)_300px]" role="dialog" aria-label="소재 크게 보기">
+    <div class="card rounded-xl w-full max-w-[1120px] max-h-[92vh] overflow-y-auto thin-scroll p-4 grid gap-5 ads-mgrid" role="dialog" aria-label="소재 크게 보기">
       <div class="min-w-0 flex flex-col justify-center">${media}<div id="adsMediaNote" class="text-[11px] muted text-center mt-2">${note}</div></div>
       <div class="min-w-0 flex flex-col">
         <div class="flex items-center gap-2"><span class="text-[12px] muted"><i class="fa-brands fa-${k} mr-1 ${k === 'meta' ? 'text-sky-400' : 'text-emerald-400'}"></i>${LB} 소재 ${i + 1} / ${L.length}</span>
