@@ -2948,7 +2948,7 @@ async function scopeSwitch(c, st, view){
   glState.data = null; glState.fresh = false; glState.loading = null;
   gdOtherGlobal.data = null; gdOtherGlobal.loading = null;
   watchSeenCache.clear();
-  /* 순위 비교: 고른 게임은 나라마다 이름이 달라 그대로 두면 빈 표 → 새 나라의 매출 TOP3로 다시 */
+  /* 순위 비교: 고른 게임은 나라마다 이름이 달라 그대로 두면 빈 표 → 새 나라의 전일 매출 1위 · 10위로 다시 */
   searchSelected = []; Object.keys(searchColorOf).forEach(k => delete searchColorOf[k]); searchDefaultApplied = false; searchHashApplied = true;
   lastSyncAt = 0; fetchBusy = false;
   await fetchAllData();   /* 이 나라를 전에 봤으면 저장 데이터로 먼저, 이어서 새 데이터 */
@@ -3060,6 +3060,11 @@ function daysBetween(a, b){ return Math.round((dateValue(b) - dateValue(a)) / 86
 
 async function openSearchView(){
   searchApplyHashOnce(); /* #search?g=...&p=... 링크로 들어온 경우 */
+  /* 기본 선택 (11/11): 처음 열 때 고른 게임이 없으면 전일 매출 1위 · 10위. 사용자가 다 지운 뒤에는 다시 넣지 않음 (나라를 바꾸면 새 나라 기준으로 다시) */
+  if(!searchSelected.length && !searchDefaultApplied){
+    const top = gsTopList('sales', 10);
+    if(top.length){ searchSetSelection([top[0], top[top.length - 1]].filter((n, i, a) => a.indexOf(n) === i)); loadGameIndex(); return; }
+  }
   loadGameIndex(); /* 전체 기간 게임명 인덱스는 백그라운드로 준비 (차트 렌더를 막지 않음) */
   await ensureSearchRangeLoaded();
 }
@@ -3483,7 +3488,7 @@ const SEARCH_MAX_GAMES = 5;
 const SEARCH_CHIP_PALETTE = ['#c084fc', '#f472b6', '#0891b2', '#4d7c0f', '#fb923c']; /* 매출·인기·상승·하락 색과 겹치지 않게 */
 let searchSelected = [];          /* 선택한 게임명 (칩 순서 = 차트 순서) */
 const searchColorOf = {};         /* gameKey -> 고정 색상 */
-let searchDefaultApplied = false; /* (예전 기본 선택용 표시, 지금은 처음에 아무것도 선택하지 않음) */
+let searchDefaultApplied = false; /* 기본 선택(전일 매출 1위 · 10위)을 이미 했는지 · 한 번 고르면 true */
 let gsTab = 'sales';              /* 드롭다운 기본 탭: 매출 TOP 10 */
 let gsOpen = false;
 let gsItems = [];
