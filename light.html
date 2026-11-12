@@ -226,7 +226,7 @@ body { background:var(--bg); font-family:'Pretendard Variable',Pretendard,-apple
 /* 하위 메뉴 (시장 분석): 아이콘 중심선 위치에 세로선, 선택 항목은 보라 글자 + 굵은 선 */
 /* 주간 리포트: 메뉴와 같은 모양, 새 리포트면 NEW (접힘 상태는 아이콘 모서리) */
 .sb-rep { margin-top:4px; }
-.sb-rep .hd-new, .sb-hot .hd-new { margin-left:auto; margin-right:10px; min-width:33px; text-align:center; }   /* NEW · HOT 글자 폭이 달라도 배지 크기 같게 */   /* 마케팅 추적 HOT: 신규 기능이라 당분간 고정 표시 (11/06) */
+.sb-rep .hd-new, .sb-hot .hd-new, .sb-upd .hd-new { margin-left:auto; margin-right:10px; min-width:33px; text-align:center; }   /* NEW · HOT 글자 폭이 달라도 배지 크기 같게 */   /* 마케팅 추적 HOT: 신규 기능이라 당분간 고정 표시 (11/06) */
 .sb-cnt { margin-left:auto; margin-right:12px; font-size:11px; font-weight:600; color:#a5a4a0; }
 .sb-chev { margin-left:auto; margin-right:10px; display:inline-flex; }
 .sb-chev svg { width:15px; height:15px; transition:transform .22s ease; }
@@ -266,7 +266,7 @@ html.sb-mini .sb-wrap .sb-sub { display:none; }
 html.sb-mini .sb-group { color:transparent; }
 html.sb-mini .sb-group:not(:first-child)::after { content:''; position:absolute; left:8px; right:8px; top:50%; border-top:1px solid #f1f5f9; }
 html.sb-mini .sb-group.raw::before { display:none; }
-html.sb-mini .sb-rep .hd-new, html.sb-mini .sb-hot .hd-new { min-width:0; position:absolute; top:3px; right:2px; margin:0; padding:0 3px; font-size:9px; line-height:14px; }
+html.sb-mini .sb-rep .hd-new, html.sb-mini .sb-hot .hd-new, html.sb-mini .sb-upd .hd-new { min-width:0; position:absolute; top:3px; right:2px; margin:0; padding:0 3px; font-size:9px; line-height:14px; }
 /* 넓은 화면은 사이드바가 시장 분석 섹션 메뉴 역할 → 페이지 안 탭은 숨김 (좁은 화면은 그대로) */
 #mkSectionTabs { display:none; }
 /* 섹션이 다른 화면처럼 위 바 바로 아래(같은 간격)에서 시작 */
@@ -769,7 +769,7 @@ html.panel-lock { overflow: hidden; }
 .wl-cc { display:none; }
 .wl-chd { display:inline-flex; align-items:center; gap:6px; }
 .wl-lb { font-size:10.5px; font-weight:700; opacity:.8; min-width:24px; }
-.wl-head { font-size:11px; font-weight:600; color:#a5a4a0; padding:12px 18px 10px; }
+.wl-head { font-size:11px; font-weight:600; color:#55534e; padding:12px 18px 10px; }
 .wl-row { padding:11px 18px; border-top:1px solid var(--line); cursor:pointer; transition:background .12s; }
 .wl-row:hover { background:rgba(241,245,249,.55); }
 .wl-star { color:#d97706; font-size:13px; } .wl-star:hover { color:#b45309; }
@@ -911,7 +911,7 @@ html[data-theme="light"] .theme-seg:not(.to-dark) button[data-t="light"], html[d
 .hd-icon.fail { color:#b91c1c; border-color:rgba(220,38,38,.5); }
 .hd-report { background:rgba(98,87,232,.1); border-color:rgba(91,79,224,.55); color:#4b40c8; }
 .hd-report.fresh { background:#5046c8; border-color:#6257e8; color:#e6e3ff; }
-.hd-new { font-size:10px; font-weight:700; color:#fff; background:#ef4444; border-radius:5px; padding:0 5px; line-height:16px; }
+.hd-new { font-size:10px; font-weight:700; color:#fff; background:#ef4444; border-radius:5px; padding:0 5px; line-height:16px; } .hd-new.hd-upd { background:#059669; }   /* UPDATE (11/12): 신작 · 행사 달력 데이터가 바뀜 — NEW · HOT 과 같은 규격, 색만 초록 */
 @media (max-width:767px){ .hd-btn { height:36px; } .hd-icon { width:36px; } }
 /* 주간 리포트: 흰 A4 페이지 (화면에선 미리보기, 인쇄하면 PDF) */
 #reportPages, #rpPrintPages { --ink:#202428; --sub:#50575c; --mute:#a0a7ad; --line:#dfe1e3; --soft:#f7f8f8; --sales:#b45309; --sales-bg:#fef3c7; --pop:#0f766e; --pop-bg:#ccfbf1; --up:#dc2626; --up-bg:#fee2e2; --down:#2563eb; --down-bg:#dbeafe; --new:#7c3aed; --new-bg:#ede9fe; --re:#b45309; --re-bg:#fef3c7; --brand:#6257e8; color:var(--ink); letter-spacing:-0.01em; }
@@ -1142,8 +1142,8 @@ body, main { background:#f6f7f9 !important; }
     </div>
     <button class="sb-item" data-view="search" onclick="switchView('search')" data-tip="순위 비교"><i data-lucide="chart-no-axes-combined"></i><span class="sb-tx">순위 비교</span></button>
     <div class="sb-group">일정</div>
-    <button class="sb-item" data-view="calendar" onclick="switchView('calendar')" data-tip="신작 달력"><i data-lucide="calendar-days"></i><span class="sb-tx">신작 달력</span></button>
-    <button class="sb-item" data-view="events" onclick="switchView('events')" data-tip="행사 달력"><i data-lucide="calendar-range"></i><span class="sb-tx">행사 달력</span></button>
+    <button class="sb-item sb-upd" data-view="calendar" onclick="switchView('calendar')" data-tip="신작 달력"><i data-lucide="calendar-days"></i><span class="sb-tx">신작 달력</span><span id="updNew" class="hd-new hd-upd hidden">UPDATE</span></button>
+    <button class="sb-item sb-upd" data-view="events" onclick="switchView('events')" data-tip="행사 달력"><i data-lucide="calendar-range"></i><span class="sb-tx">행사 달력</span><span id="updEvents" class="hd-new hd-upd hidden">UPDATE</span></button>
     <!-- DB 메뉴: 원본 데이터가 필요할 때만 쓰는 메뉴라 맨 아래 묶음으로 -->
     <div class="sb-group raw">RAW DATA</div>
     <button class="sb-item" data-view="sales" onclick="switchView('sales')" data-tip="매출 DB"><i data-lucide="database"></i><span class="sb-tx">매출 DB</span></button>
@@ -1497,8 +1497,6 @@ document.querySelectorAll('.sc-store button').forEach(b => { const on = b.datase
         <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="border:2px solid #e11d48"></span><b class="text-slate-200">새로 진입</b><span class="muted">최근 30일 안에 첫 차트인</span></span>
         <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="border:2px solid #7c3aed"></span><b class="text-slate-200">상위 유지</b><span class="muted">수집 기간 매출 TOP100 90% 이상 유지</span></span>
         <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded" style="border:2px solid #a5a4a0"></span><b class="text-slate-200">기존</b><span class="muted">그 외</span></span>
-        <span class="inline-flex items-center gap-1.5"><span class="w-4 h-0 border-t-2 border-sky-400"></span><b class="text-sky-300">매출 = 인기</b><span class="muted">대각선 · 아래 오른쪽은 매출 우위, 위 왼쪽은 인기 우위</span></span>
-        <span class="muted md:ml-auto"><span class="t-sales font-semibold">가로 → 매출 순위</span> · <span class="t-pop font-semibold">세로 ↑ 인기 순위</span> · 로그 눈금</span>
       </div>
       <p class="text-[12px] text-slate-300 mb-2">매출·인기 모두 TOP100인 게임만 · 마우스를 올리면 이동 경로</p>
       <div class="relative h-[420px] md:h-[500px]"><canvas id="mkPosChart"></canvas></div>
@@ -2850,6 +2848,7 @@ function switchView(view){
   if(view==='ads')work.push(openAdsView());
   if(view==='calendar')work.push(ensureCalendarMonthLoaded());
   if(view==='events')openEventsView();
+  updMarkSeen(view);
   /* 현재 탭을 URL 해시에 기록: 새로고침·링크 공유 시 같은 탭으로 열림 (리포트는 ?w= 주를 유지) */
   history.replaceState(null, '', view === 'dashboard' ? location.pathname + location.search : view === 'report' && location.hash.startsWith('#report') ? location.hash : view === 'business' && mkSection === 'monthly' ? '#monthly' : `#${view}`);
   if(view==='watch')renderWatchPage();
@@ -6215,7 +6214,7 @@ function mkPubScores(idx, mon){
 }
 
 /* ---------- 포지션 맵 ---------- */
-const mkPos = { period: '7d', view: 'new', trail: true, size: false, genre: '', pub: '', q: '' };
+const mkPos = { period: '7d', view: 'bal', trail: true, size: false, genre: '', pub: '', q: '' };
 const MK_POS_TICKS = [1, 2, 3, 5, 10, 20, 30, 50, 100];
 /* 분류(신작 판별 아님): 새로 진입 = 최근 30일 안에 첫 차트인, 상위 유지 = 불러온 수집 기간 내내 매출 TOP100을 90% 이상 유지, 나머지 기존.
    형태: 매출·인기 순위 비율 2배 기준. 보기 버튼 조건 */
@@ -8158,6 +8157,33 @@ function syncSet(s, label, detail){
   box.title = detail ? `${label} · ${detail}` : label;
   box.classList.toggle('retry', s === 'fail'); box.onclick = s === 'fail' ? fetchAllData : null;
 }
+/* UPDATE 띠 (11/12): 신작 달력 · 행사 달력 데이터가 바뀌면 메뉴에 표시. gchart 가 바뀐 시각을 data/changed/<new|events>.json 에 남김.
+   바뀐 지 24시간 안이고 그 뒤로 그 달력을 열어 보지 않았을 때만 · 열면 꺼짐 (주간 리포트 NEW 와 같은 방식) */
+const UPD_SEEN_KEY = 'gmi.upd.seen.v1';
+const UPD_MENU = { new: ['calendar', 'updNew', '신작 달력'], events: ['events', 'updEvents', '행사 달력'] };
+const updAt = {};
+function updSeen(){ try{ return JSON.parse(localStorage.getItem(UPD_SEEN_KEY) || '{}'); }catch(e){ return {}; } }
+function updPaint(){
+  const seen = updSeen();
+  Object.entries(UPD_MENU).forEach(([k, [view, id, label]]) => {
+    const at = updAt[k], t = at ? Date.parse(at) : NaN;
+    const on = !isNaN(t) && Date.now() - t < 86400000 && (seen[k] || '') < at;
+    document.getElementById(id)?.classList.toggle('hidden', !on);
+    const btn = document.querySelector(`.sb-item[data-view="${view}"]`);
+    if(btn) btn.dataset.tip = on ? `${label} · ${Number(at.slice(5, 7))}/${Number(at.slice(8, 10))} ${at.slice(11, 16)} 업데이트` : label;
+  });
+}
+function updMarkSeen(view){
+  const k = Object.keys(UPD_MENU).find(k => UPD_MENU[k][0] === view); if(!k || !updAt[k]) return;
+  const seen = updSeen(); if((seen[k] || '') >= updAt[k]) return;
+  seen[k] = updAt[k]; try{ localStorage.setItem(UPD_SEEN_KEY, JSON.stringify(seen)); }catch(e){}
+  updPaint();
+}
+async function updCheck(){
+  await Promise.all(Object.keys(UPD_MENU).map(k => fetch(`${DATA_BASE}changed/${k}.json?t=${Date.now()}`).then(r => r.ok ? r.json() : null).catch(() => null).then(v => { if(v?.at) updAt[k] = v.at; })));
+  updMarkSeen(currentView);   /* 지금 그 달력을 보고 있으면 본 것으로 */
+  updPaint();
+}
 /* 오늘 수집 로그 확인 (11/09): gchart data/runlog/<오늘>/<카테고리>.json 의 마지막 시도가 실패면 점을 빨강(수집 실패),
    순위 수집이 재시도를 기다리는 중(3번째 전 실패)이면 노랑. 동기화가 정상일 때만 덮어씀 · 자세한 건 /admin */
 async function collectCheck(base){
@@ -8217,6 +8243,7 @@ async function fetchAllData(){
     }else{
       syncSet('ok', '동기화 완료', `마지막 동기화 ${syncTime} · 최신 수집일 ${latest}`);
       collectCheck(`마지막 동기화 ${syncTime} · 최신 수집일 ${latest}`);
+      updCheck();
     }
     updateReportBadge();
   }catch(err){
