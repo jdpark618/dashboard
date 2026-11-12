@@ -5964,10 +5964,15 @@ function mkTabsHtml(tabKey){
     return `<button type="button" data-tabkey="${tabKey}" data-store="${s}" class="${on ? 'on' : ''}" aria-pressed="${on}">${label}</button>`;
   }).join('');
 }
+/* 아이콘을 못 받으면 (서버의 일시 거절 429 등) 4초 뒤 한 번만 다시 받고, 또 실패하면 숨김 (11/12) */
+function mkIconErr(im){
+  if(im.dataset.re){ im.style.visibility = 'hidden'; return; }
+  im.dataset.re = '1'; const u = im.src; setTimeout(() => { if(im.isConnected) im.src = u; }, 4000);
+}
 function mkIcon(name){
   const url = getIconUrlForGame(name);
   return url
-    ? `<img src="${escapeAttr(url)}" alt="" loading="lazy" class="w-6 h-6 rounded-md object-cover shrink-0 bg-slate-800" onerror="this.style.visibility='hidden'">`
+    ? `<img src="${escapeAttr(url)}" alt="" loading="lazy" class="w-6 h-6 rounded-md object-cover shrink-0 bg-slate-800" onerror="mkIconErr(this)">`
     : `<span class="w-6 h-6 rounded-md shrink-0 bg-slate-800 flex items-center justify-center text-[11px] font-bold text-slate-400">${escapeHtml(name.slice(0, 1))}</span>`;
 }
 function mkGameCell(name, sub){
