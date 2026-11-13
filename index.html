@@ -7926,7 +7926,8 @@ function rpBuild(mon){
   })();
   const only = (A, B) => [...A].filter(([k]) => !B.has(k)).map(([, g]) => ({ n: g.name, r: g.rank, g: g.genre || '미분류' })).sort((x, y) => x.r - y.r);
   let prevBoth = null; if(S.sales.pa.size && S.popular.pa.size){ prevBoth = 0; S.sales.pa.forEach((_, k) => { if(S.popular.pa.has(k)) prevBoth++; }); }
-  /* 신작: 그 주 출시 + 다음 주 예정. 플랫폼에 모바일 또는 PC가 있는 게임 (콘솔 전용은 제외)
+  /* 신작 (11/13): 리포트는 지난주 데이터를 이번 주 월요일에 발행하므로, 신작만은 발행일 기준 — 이번 주(발행 주) 출시 + 다음 주 출시 예정.
+     플랫폼에 모바일 또는 PC가 있는 게임 (콘솔 전용은 제외)
      같은 날 안에서는 모바일 전용 → 모바일 포함 멀티 → PC 순 */
   const pfRank = pf => { const t = pf.replace(/\s+/g, ''); return t.includes('모바일') ? (t === '모바일' ? 0 : 1) : 2; };
   const rel = (rawStore.newReleases?.rows || []).map(r => ({ d: String(r[0] || '').trim(), n: String(r[1] || '').trim(), pf: String(r[2] || '').trim(), p: String(r[3] || '').trim(), t: String(r[4] || '').trim(), ic: String(r[6] || '').trim().replace(/^'/, '') }))
@@ -7934,7 +7935,7 @@ function rpBuild(mon){
     .sort((x, y) => x.d.localeCompare(y.d) || pfRank(x.pf) - pfRank(y.pf) || x.n.localeCompare(y.n, 'ko'));
   const nmon = mkAddDays(mon, 7);
   return { mon, pmon, end, issue: nmon, S, pos, both: both.length, prevBoth, onlyS: only(cs, cp), onlyP: only(cp, cs),
-    relLast: rel.filter(r => r.d >= mon && r.d <= end), relNext: rel.filter(r => r.d >= nmon && r.d <= mkAddDays(nmon, 6)) };
+    relThis: rel.filter(r => r.d >= nmon && r.d <= mkAddDays(nmon, 6)), relNext: rel.filter(r => r.d >= mkAddDays(nmon, 7) && r.d <= mkAddDays(nmon, 13)) };
 }
 
 /* 신작 일정 장 나누기: 높이가 일정한 부품만 쓰므로 mm로 계산 (실측값, 쪽 위 끝 기준 위치).
@@ -7943,10 +7944,10 @@ function rpBuild(mon){
 const RP_REL = { limit: 277, startBand: 51.1, startNoBand: 33.4, startCont: 24.7, head: 10.8, box: 7.5, row: 7.6, gap: 5, empty: 8 };
 function rpRelPaginate(D){
   const secs = [
-    { key: 'last', title: `이 주 출시 ${D.relLast.length}개`, list: D.relLast, box: false },
-    { key: 'next', title: `다음 주 예정 ${D.relNext.length}개`, sub: `${rpDot(D.issue)} – ${rpDot(mkAddDays(D.issue, 6))}`, list: D.relNext, box: true }
+    { key: 'this', title: `이번 주 출시 ${D.relThis.length}개`, sub: `${rpDot(D.issue)} – ${rpDot(mkAddDays(D.issue, 6))}`, list: D.relThis, box: false },
+    { key: 'next', title: `다음 주 출시 예정 ${D.relNext.length}개`, sub: `${rpDot(mkAddDays(D.issue, 7))} – ${rpDot(mkAddDays(D.issue, 13))}`, list: D.relNext, box: true }
   ];
-  const pages = [{ y: D.relLast.length ? RP_REL.startBand : RP_REL.startNoBand, parts: [] }];
+  const pages = [{ y: D.relThis.length ? RP_REL.startBand : RP_REL.startNoBand, parts: [] }];
   const page = () => pages.at(-1), room = () => RP_REL.limit - page().y;
   secs.forEach(sec => {
     const rows = sec.list.map((r, i) => ({ r, first: i === 0 || sec.list[i - 1].d !== r.d }));
@@ -8040,7 +8041,7 @@ function rpRender(D){
   const headline = `${hl1}.<br>${hl2}.`;
   const t4 = RP_CLASSES.map(c => { const n = A.types[c], p = A.prevTypes?.[c], d = p == null ? null : n - p;
     return `<div class="rp-t4"><div class="l">${c}</div><div class="v">${n}<span class="${d > 0 ? 'u' : d < 0 ? 'd' : ''}">${d == null ? '' : d ? `${d > 0 ? '▲' : '▼'}${Math.abs(d)}` : '유지'}</span></div></div>`; }).join('');
-  const relPt = `신작(모바일·PC): 이 주 <b>${D.relLast.length}개</b> 출시 · 다음 주(${rpDot(D.issue)} – ${rpDot(mkAddDays(D.issue, 6))}) <b>${D.relNext.length}개</b> 예정 → 4쪽`;
+  const relPt = `신작(모바일·PC): 이번 주(${rpDot(D.issue)} – ${rpDot(mkAddDays(D.issue, 6))}) <b>${D.relThis.length}개</b> 출시 · 다음 주 <b>${D.relNext.length}개</b> 예정 → 4쪽`;
   /* 정리: 주목 · 흐름 주의 · 다음 주 관찰 (해당 없는 줄은 뺌) */
   const watch = [nS30[0] ? `${nm(nS30[0].n)} 매출 30위 유지 여부` : nP30[0] ? `${nm(nP30[0].n)} 등 인기 상위권 신작의 매출 진입 여부` : '', q4o ? `${nm(q4o.n)} TOP5 복귀 여부` : ''].filter(Boolean);
   const sum = [sv[0] ? `<li><b class="k">주목</b><span>${bn(sv[0].n)} ${rv(sv[0].a)}→${sv[0].b}, 이번 주 매출 상승 폭 최대</span></li>` : '',
@@ -8112,7 +8113,7 @@ function rpRender(D){
   const relPart = pt => `<div class="rp-sec${pt.sec.box ? ' box' : ''}"><div class="rp-rel2-h">${pt.sec.title}${pt.cont ? ' <span>(이어서)</span>' : pt.sec.sub ? ` <span>${pt.sec.sub}</span>` : ''}</div>`
     + (pt.sec.list.length ? `<table class="rp-rel2"><colgroup><col style="width:20mm"><col><col style="width:22mm"><col style="width:17mm"><col style="width:36mm"></colgroup><tr><th>날짜</th><th>게임</th><th>플랫폼</th><th>유형</th><th>퍼블리셔</th></tr>${pt.rows.map(relRow).join('')}</table>` : '<div class="rp-empty">해당 일정 없음</div>') + '</div>';
   const p4 = relPages.map((pg, i) => `<section class="rp-page">${run(5 + i)}
-    ${i === 0 ? `<h2 class="first">신작 일정 <small>신작 정보 기준 · 모바일·PC (같은 날은 모바일 → 멀티 → PC 순) · 순위 데이터와 별개</small></h2>${D.relLast.length ? relBand(D.relLast, D.mon) : ''}` : ''}
+    ${i === 0 ? `<h2 class="first">신작 일정 <small>발행일 기준 이번 주 · 다음 주 · 신작 정보 기준 · 모바일·PC (같은 날은 모바일 → 멀티 → PC 순) · 순위 데이터와 별개</small></h2>${D.relThis.length ? relBand(D.relThis, D.issue) : ''}` : ''}
     ${pg.parts.map(relPart).join('')}
     ${foot}</section>`).join('');
   /* 표지: 주간 매출 TOP5 (1~3위 큰 카드, 4·5위 한 줄 카드). 장르·퍼블리셔는 구글 데이터 그대로 */
