@@ -1000,7 +1000,7 @@ html[data-theme="light"] .theme-seg:not(.to-dark) button[data-t="light"], html[d
 .rp-mini.test { background:#fef3c7; color:#b45309; } .rp-mini.soft { background:#e0f2fe; color:#0369a1; } .rp-mini.open { background:#dcfce7; color:#15803d; }
 .rp-empty { font-size:8.4pt; color:var(--mute); padding:2mm 0; }
 .rp-rk2 { width:100%; border-collapse:collapse; font-size:8.4pt; table-layout:fixed; }
-.rp-rk2 th { font-size:7.2pt; color:var(--mute); font-weight:600; text-align:left; padding:1mm; border-bottom:1.2px solid #c3c7ca; }
+.rp-rk2 th { font-size:7.2pt; color:var(--mute); font-weight:600; text-align:left; padding:1mm; white-space:nowrap; border-bottom:1.2px solid #c3c7ca; }
 .rp-rk2 td { height:7.55mm; padding:0 1mm; border-bottom:1px solid var(--line); vertical-align:middle; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .rp-rk2 .p { font-weight:700; color:var(--sub); }
 .rp-rk2 .g { font-weight:600; }
@@ -8069,8 +8069,8 @@ function rpRender(D){
     ${sum ? `<h2>정리 <small>이번 주 핵심 · 다음 주 체크 포인트</small></h2><div class="rp-sum"><ul>${sum}</ul></div>` : ''}
     ${foot}</section>`;
 
-  /* 3쪽 순위표: # · 게임(아이콘 + 이름 한 줄) · 순위(7일 평균) · 증감 */
-  const rkTable = (list, prevLen) => `<table class="rp-rk2"><colgroup><col style="width:6mm"><col><col style="width:12mm"><col style="width:17mm"></colgroup><tr><th>#</th><th>게임</th><th style="text-align:right">순위</th><th style="padding-left:2mm">증감</th></tr>${list.map(x => {
+  /* 3쪽 순위표: 순위(주간) · 게임(아이콘 + 이름 한 줄) · 평균(7일 평균 순위) · 증감(주간 순위 기준). 11/16: 머리글 '#'·'순위'가 중복으로 읽혀 이름만 바꿈 */
+  const rkTable = (list, prevLen) => `<table class="rp-rk2"><colgroup><col style="width:8mm"><col><col style="width:12mm"><col style="width:17mm"></colgroup><tr><th>순위</th><th>게임</th><th style="text-align:right">평균</th><th style="padding-left:2mm">증감</th></tr>${list.map(x => {
     const partial = x.prevPos != null && x.pDays < prevLen * MK_CMP_MIN;
     const tr = x.prevPos == null ? (isFirst(x.first) ? '<span class="rp-mini first">첫 차트인</span>' : '<span class="rp-mini re">재진입</span>')
       : partial ? '<span class="rp-mini part">비교 제외</span>'
