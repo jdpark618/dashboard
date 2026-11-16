@@ -636,6 +636,62 @@ select option { background-color: #ffffff; color: #37352f; }
 .mka-ov-r { position:relative; height:44px; } .mka-ov-r svg { position:absolute; inset:0; width:100%; height:100%; overflow:visible; } .mka-ov-r path { fill:none; vector-effect:non-scaling-stroke; stroke-linecap:round; stroke-linejoin:round; }
 .mka-ov-b { display:grid; height:34px; margin-top:3px; border-bottom:1px solid rgba(120,119,116,.3); } .mka-ov-b span { display:flex; flex-direction:column; justify-content:flex-end; align-items:center; min-width:0; } .mka-ov-b i { display:block; width:62%; max-width:26px; border-radius:2px 2px 0 0; } .mka-ov-b b { font-size:9.5px; font-weight:600; line-height:11px; color:#787774; }
 .mka-ov-x { display:grid; font-size:10px; color:#a5a4a0; margin-top:2px; } .mka-ov-x span { white-space:nowrap; }
+/* 게임 상세 · 업데이트 히스토리 (11/16) */
+.gd-upd-line { display:flex; align-items:center; gap:8px; width:100%; min-width:0; margin-top:10px; padding:9px 12px; border:1px solid var(--line); border-radius:10px; background:rgba(255,255,255,.6); font-size:12.5px; text-align:left; }
+.gd-upd-line:hover { border-color:#6257e8; }
+.gd-upd-line > i { color:#8b80f9; font-size:12px; flex:none; }
+.gd-upd-go { margin-left:auto; flex:none; font-size:12px; font-weight:600; color:#a5b4fc; }
+.gd-upd-v { flex:none; font-size:11px; font-weight:700; padding:1px 7px; border-radius:999px; background:#ece9ff; color:#c7c2ff; }
+.gd-upd-new { font-size:10.5px; font-weight:700; padding:1px 7px; border-radius:999px; background:#6257e8; color:white; margin-left:4px; }
+.gd-upd-stat { display:flex; flex-wrap:wrap; gap:6px 18px; font-size:12.5px; color:#787774; margin:-2px 0 12px; }
+.gd-upd-sh { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px; font-size:12px; color:#787774; }
+.gd-upd-sh i { color:#8b80f9; margin-right:6px; }
+.gd-upd-sh button { flex:none; font-size:12px; font-weight:600; color:#a5b4fc; padding:3px 10px; border:1px solid var(--line); border-radius:999px; }
+.gd-upd-sh button:hover, .gd-upd-sh button.on { border-color:#6257e8; color:#2e2878; background:#ece9ff; }
+.gd-upd-strip { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); gap:4px; padding:6px; margin-bottom:12px; border:1px solid var(--line); border-radius:12px; background:rgba(255,255,255,.6); }
+.gd-upd-strip button { position:relative; display:flex; flex-direction:column; align-items:center; min-width:0; padding:4px 0 2px; border-radius:8px; border:1px solid transparent; cursor:pointer; transition:background .12s, border-color .12s; }
+.gd-upd-strip button:hover { background:#f1f5f9; border-color:#3a4147; }
+.gd-upd-strip button.on { background:#ece9ff; border-color:#6257e8; }
+.gd-upd-strip em { display:flex; align-items:flex-end; justify-content:center; width:100%; height:30px; }
+.gd-upd-strip i { display:block; width:56%; max-width:22px; border-radius:2px 2px 0 0; background:#5b54a8; }
+.gd-upd-strip button:hover i, .gd-upd-strip button.on i { background:#8b80f9; }
+.gd-upd-strip b { font-size:10px; font-weight:700; color:#c7c2ff; line-height:13px; min-height:13px; }
+.gd-upd-strip span { font-size:11px; color:#787774; line-height:16px; white-space:nowrap; margin-top:3px; }
+.gd-upd-strip button.on span { color:#2e2878; font-weight:700; }
+.gd-upd-strip button.zero span { color:#a5a4a0; }
+.gd-upd-strip small { font-size:9px; line-height:10px; height:10px; color:#a5a4a0; white-space:nowrap; }
+.gd-upd-lt { font-size:13px; font-weight:700; color:#37352f; margin:4px 0 10px; } .gd-upd-lt span { font-weight:500; font-size:12px; color:#787774; margin-left:4px; }
+.gd-upd-jump { margin-top:8px; font-size:12.5px; font-weight:600; color:#a5b4fc; }
+@media (max-width:640px){ .gd-upd-strip { gap:2px; padding:4px; } .gd-upd-strip span { font-size:9.5px; } .gd-upd-strip b { font-size:9px; } .gd-upd-sh { font-size:11px; } }
+.gd-upd-q { display:flex; align-items:center; gap:8px; margin-bottom:12px; padding:0 12px; height:34px; border:1px solid var(--line); border-radius:10px; background:rgba(255,255,255,.6); font-size:12.5px; }
+.gd-upd-q i { color:#a5a4a0; font-size:12px; } .gd-upd-q input { flex:1; min-width:0; background:transparent; outline:none; color:#37352f; }
+.gd-upd-m { font-size:12px; font-weight:700; color:#55534e; padding:6px 0 8px 132px; } .gd-upd-m span { font-weight:500; color:#a5a4a0; margin-left:4px; }
+.gd-upd-1 { display:none; }
+.gd-upd-it.fold { padding-bottom:6px; }
+.gd-upd-it.fold .gd-upd-dt { padding-top:5px; } .gd-upd-it.fold .gd-upd-dt b { display:inline; font-size:12.5px; } .gd-upd-it.fold .gd-upd-dt span:not(.gap) { display:none; } .gd-upd-it.fold .gd-upd-dt .gap { display:inline; margin-left:6px; }
+.gd-upd-it.fold .gd-upd-bx { display:flex; align-items:center; gap:6px; padding:6px 12px; cursor:pointer; }
+.gd-upd-it.fold .gd-upd-bx:hover { border-color:#6257e8; }
+.gd-upd-it.fold .gd-upd-bx::before { top:10px; }
+.gd-upd-it.fold .gd-upd-1 { display:block; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12.5px; color:#55534e; }
+.gd-upd-it.fold .gd-upd-n, .gd-upd-it.fold .gd-upd-more, .gd-upd-it.fold .gd-upd-new { display:none; }
+.gd-upd-all { display:block; width:100%; margin-top:4px; padding:9px; border:1px dashed #3a4147; border-radius:10px; font-size:12.5px; font-weight:600; color:#a5b4fc; }
+.gd-upd-all:hover { border-color:#6257e8; }
+.gd-upd-list { position:relative; }
+.gd-upd-it { display:grid; grid-template-columns:118px minmax(0,1fr); gap:14px; position:relative; padding-bottom:14px; }
+.gd-upd-it::before { content:''; position:absolute; left:124px; top:14px; bottom:-2px; border-left:1px dashed #3a4147; }
+.gd-upd-it:last-child::before { display:none; }
+.gd-upd-dt { text-align:right; padding-top:8px; font-size:12px; color:#787774; line-height:1.5; }
+.gd-upd-dt b { display:block; font-size:13.5px; color:#37352f; }
+.gd-upd-dt .gap { display:block; color:#8b80f9; font-weight:600; }
+.gd-upd-bx { position:relative; border:1px solid var(--line); border-radius:12px; padding:10px 14px 11px; background:rgba(255,255,255,.6); }
+.gd-upd-bx::before { content:''; position:absolute; left:-10px; top:13px; width:7px; height:7px; border-radius:50%; background:#5b6268; }
+.gd-upd-it.now .gd-upd-bx { border-color:rgba(98,87,232,.55); }
+.gd-upd-it.now .gd-upd-bx::before { background:#8b80f9; }
+.gd-upd-n { margin-top:6px; white-space:pre-wrap; word-break:keep-all; overflow-wrap:anywhere; font-size:13px; line-height:1.7; color:#55534e; }
+.gd-upd-n.clamp { display:-webkit-box; -webkit-line-clamp:6; -webkit-box-orient:vertical; overflow:hidden; }
+.gd-upd-more { margin-top:4px; font-size:12px; font-weight:600; color:#a5b4fc; }
+.gd-upd-empty { border:1px dashed #3a4147; border-radius:12px; padding:22px; text-align:center; font-size:13px; line-height:1.8; color:#55534e; }
+@media (max-width:640px){ .gd-upd-it { grid-template-columns:76px minmax(0,1fr); gap:10px; } .gd-upd-it::before { left:81px; } .gd-upd-dt b { font-size:12.5px; } .gd-upd-m { padding-left:86px; } }
 /* 순위 단 (11/12) */
 .mka-rk-box { position:relative; height:86px; } .mka-rk-box svg { position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
 .mka-rk-box path { fill:none; vector-effect:non-scaling-stroke; stroke-linecap:round; stroke-linejoin:round; } .mka-rk-p { stroke:#0d9488; stroke-width:2; } .mka-rk-s { stroke:#d97706; stroke-width:1.5; opacity:.6; }
@@ -892,8 +948,9 @@ html.panel-lock { overflow: hidden; }
   .gd-toc-t { display:block; font-size:11px; font-weight:700; color:#a5a4a0; padding:0 11px 8px; }
   .gd-toc button { width:100%; padding:8px 11px; }
   #detailPanel .gd-main { padding:22px 28px 40px; }
-  #detailPanel .gd-rank-box { height:340px; }
-  #detailPanel .gd-score-box { height:190px; }
+  /* 순위 · 평점 한 화면 (11/16): 순위 차트 높이 = 창 높이 − 머리 − (범례 · 평점 · 기간 분석 · 여백 476px) → 스크롤 없이 세 가지가 다 보임 */
+  #detailPanel .gd-rank-box { height:clamp(200px, calc(100vh - 52px - var(--gd-hd, 90px) - 476px), 440px); }
+  #detailPanel .gd-score-box { height:150px; }
   #detailPanel .gd-hd { padding:16px 28px; flex-wrap:nowrap; column-gap:16px; }
   #detailPanel .gd-hd-ic { width:56px; height:56px; border-radius:14px; }
   #detailPanel .gd-hd-nm { font-size:20px; }
@@ -902,7 +959,7 @@ html.panel-lock { overflow: hidden; }
 }
 /* 아주 넓은 화면: 순위 차트 더 높게, 같은 퍼블리셔 목록 두 줄 */
 @media (min-width:1600px){
-  #detailPanel .gd-rank-box { height:400px; }
+
   #detailPubList { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); column-gap:24px; }
   #detailPubList > * { margin-top:0 !important; margin-bottom:4px; }
 }
@@ -1894,9 +1951,8 @@ document.querySelectorAll('.sc-store button').forEach(b => { const on = b.datase
   <nav id="gdToc" class="gd-toc" aria-label="게임 상세 메뉴">
     <div class="gd-toc-t">게임 정보</div>
     <button type="button" data-sec="gdPgSum" onclick="gdGo('gdPgSum')">요약</button>
-    <button type="button" data-sec="gdRank" onclick="gdGo('gdRank')">순위 추이</button>
-    <button type="button" data-sec="gdScore" onclick="gdGo('gdScore')">평점 추이</button>
-    <button type="button" data-sec="gdStats" onclick="gdGo('gdStats')">기간 분석</button>
+    <button type="button" data-sec="gdRank" onclick="gdGo('gdRank')">순위 · 평점</button>
+    <button type="button" data-sec="gdUpd" onclick="gdGo('gdUpd')">업데이트 히스토리</button>
     <button type="button" data-sec="gdAds" onclick="gdGo('gdAds')" hidden>마케팅 추적</button>
     <button type="button" data-sec="gdPub" onclick="gdGo('gdPub')">같은 퍼블리셔</button>
   </nav>
@@ -1907,6 +1963,7 @@ document.querySelectorAll('.sc-store button').forEach(b => { const on = b.datase
       <section class="space-y-3">
         <div class="grid grid-cols-3 gap-2" id="detailKpis"></div>
         <div id="detailContext" class="text-[12px] text-slate-300"></div>
+        <div id="gdUpdLine" class="hidden"></div>
       </section>
       <section id="gdInfo" class="hidden">
         <h4 class="gd-h">스크린샷 <span id="gdShotCount" class="text-[11px] muted font-normal ml-1"></span></h4>
@@ -1934,6 +1991,7 @@ document.querySelectorAll('.sc-store button').forEach(b => { const on = b.datase
           <span class="inline-flex items-center gap-1.5 text-[11px] font-semibold t-sales"><i class="inline-block w-5 border-t-2 border-[#d97706]"></i>매출</span>
           <span class="inline-flex items-center gap-1.5 text-[11px] font-semibold t-pop"><i class="inline-block w-5 border-t-2 border-dashed border-[#0d9488]"></i>인기</span>
           <span class="text-[11px] muted">로그 눈금</span>
+          <span id="gdRankUpdNote" class="hidden inline-flex items-center gap-1.5 text-[11px] font-semibold" style="color:#8b80f9"><i class="inline-block h-3 border-l-2 border-dashed border-[#8b80f9]"></i>업데이트</span>
         </div>
         <div class="mk-seg" id="detailPeriodSel">
           <button type="button" data-d="7" onclick="detailSetDays(7)">7일</button>
@@ -1943,15 +2001,17 @@ document.querySelectorAll('.sc-store button').forEach(b => { const on = b.datase
         </div>
       </div>
       <div class="gd-rank-box h-[230px] card rounded-xl p-2.5 border-slate-700/50 relative"><canvas id="detailChart"></canvas><div id="detailLoading" class="hidden absolute inset-0 flex items-center justify-center text-[11px] text-indigo-300 bg-slate-900/60 rounded-xl"><i class="fa-solid fa-spinner fa-spin mr-1"></i>지난 기간 불러오는 중</div></div>
-    </section>
-    <section id="gdScore" class="gd-page hidden">
+    <div class="mt-6" id="gdScore">
       <h4 class="text-sm font-semibold mb-2"><i class="fa-solid fa-star text-amber-300 text-[11px] mr-1"></i>평점 추이 <span class="text-[11px] font-normal muted ml-1">눈금은 변동 폭에 맞춤</span></h4>
-      <div class="gd-score-box h-[220px] card rounded-xl p-2.5 border-slate-700/50"><canvas id="detailScoreChart"></canvas></div>
-    </section>
-    <section id="gdStats" class="gd-page hidden">
+      <div class="gd-score-box h-[180px] card rounded-xl p-2.5 border-slate-700/50"><canvas id="detailScoreChart"></canvas></div>
+    </div>
+    <div class="mt-6" id="gdStats">
       <h4 class="text-sm font-semibold mb-2">기간 분석 <span id="detailRangeLabel" class="text-[11px] muted font-normal ml-1">-</span></h4>
       <div id="detailStats"></div>
+    </div>
     </section>
+    <!-- 업데이트 히스토리 (11/16): 스토어 업데이트 노트 이력 (gchart data/updates, 패키지명 기준) -->
+    <section id="gdUpd" class="gd-page hidden"><div id="gdUpdBody"></div></section>
     <section id="gdAds" class="gd-page hidden"><div id="gdAdsBody"></div></section>
     <section id="gdPub" class="gd-page hidden"><div id="detailPubWrap" class="hidden">
       <h4 class="text-sm font-semibold mb-2">같은 퍼블리셔의 TOP100 게임 <span id="detailPubName" class="text-[11px] muted font-normal ml-1"></span></h4>
@@ -4486,6 +4546,19 @@ function drawSearchRankChart(canvasId, lines, dates, store = searchCharts, opts 
       ctx.fillText('100위 밖', a.right - 6, top + 4); ctx.restore();
     }
   };
+  /* 업데이트한 날 (11/16): opts.marks = 날짜 목록 → 세로 점선 + 위쪽 작은 표시 · 툴팁에 '업데이트' */
+  const markSet = new Set(opts.marks || []);
+  const marks = {
+    id: 'gdUpdMarks',
+    beforeDatasetsDraw(chart){
+      if(!markSet.size) return;
+      const { ctx, chartArea: a, scales: { x } } = chart;
+      ctx.save(); ctx.strokeStyle = 'rgba(139,128,249,.75)'; ctx.lineWidth = 1.2; ctx.setLineDash([3, 3]);
+      dates.forEach((d, i) => { if(!markSet.has(d)) return; const px = x.getPixelForValue(i); ctx.beginPath(); ctx.moveTo(px, a.top); ctx.lineTo(px, a.bottom); ctx.stroke();
+        ctx.setLineDash([]); ctx.fillStyle = '#8b80f9'; ctx.beginPath(); ctx.moveTo(px - 4, a.top); ctx.lineTo(px + 4, a.top); ctx.lineTo(px, a.top + 6); ctx.closePath(); ctx.fill(); ctx.setLineDash([3, 3]); });
+      ctx.restore();
+    }
+  };
   store[canvasId] = new Chart(canvas.getContext('2d'), {
     type: 'line', data: { labels: dates, datasets },
     options: {
@@ -4497,7 +4570,7 @@ function drawSearchRankChart(canvasId, lines, dates, store = searchCharts, opts 
           filter: c => c.raw != null,
           itemSort: (a, b) => a.raw - b.raw,
           callbacks: {
-            title: items => { const d = items[0]?.label || ''; return d ? `${d} (${CAL_DOW[mkToDate(d).getDay()]})` : ''; },
+            title: items => { const d = items[0]?.label || ''; return d ? `${d} (${CAL_DOW[mkToDate(d).getDay()]})${markSet.has(d) ? ' · 업데이트' : ''}` : ''; },
             label: c => {
               if(c.dataset._kind === 'out') return ` ${c.dataset.label}: 100위 밖`;
               const prev = c.dataIndex > 0 ? c.dataset.data[c.dataIndex - 1] : null, diff = prev != null ? prev - c.raw : null;
@@ -4515,7 +4588,7 @@ function drawSearchRankChart(canvasId, lines, dates, store = searchCharts, opts 
           ticks: { color: '#787774', callback: v => SEARCH_TICKS.includes(v) ? `${v}위` : '' } }
       }
     },
-    plugins: opts.labels ? [band, endLabels] : [band]
+    plugins: opts.labels ? [band, endLabels, marks] : [band, marks]
   });
 }
 
@@ -5077,7 +5150,7 @@ function renderGameDetail(){
   document.getElementById('gdRate').innerHTML = scNow != null
     ? `<div class="flex items-end gap-2"><span class="text-[34px] font-extrabold text-amber-300 leading-none">${scNow.toFixed(1)}</span><span class="text-amber-400 text-[13px] mb-1">${'★'.repeat(Math.round(scNow))}<span class="text-slate-600">${'★'.repeat(5 - Math.round(scNow))}</span></span></div>
        <div class="mt-4 space-y-2 text-[12.5px]"><div class="flex justify-between"><span class="muted">7일 전 ${s7 != null ? s7.toFixed(1) : '-'}</span>${delta(scNow, s7)}</div><div class="flex justify-between"><span class="muted">30일 전 ${s30 != null ? s30.toFixed(1) : '-'}</span>${delta(scNow, s30)}</div></div>
-       <button type="button" class="mt-4 text-[12px] font-semibold text-indigo-300 hover:text-indigo-200" onclick="gdGo('gdScore')">평점 추이 보기 ›</button>`
+       <button type="button" class="mt-4 text-[12px] font-semibold text-indigo-300 hover:text-indigo-200" onclick="gdGo('gdRank', 'gdScore')">평점 추이 보기 ›</button>`
     : '<div class="muted text-[13px]">평점 기록이 없습니다.</div>';
 
   /* 장르 안에서의 위치 */
@@ -5097,10 +5170,13 @@ function renderGameDetail(){
   const dates = detailState.days ? all.slice(-detailState.days) : all;
   setText('detailRangeLabel', dates.length ? `${dates[0]} ~ ${dates.at(-1)} · ${dates.length}일` : '-');
 
+  const upd = gdUpdNow();
   drawSearchRankChart('detailChart', [
     { label: '매출', color: '#d97706', values: dates.map(d => sales.get(d) ?? null) },
     { label: '인기', color: '#0d9488', dash: [5, 4], values: dates.map(d => pop.get(d) ?? null) }
-  ], dates, detailCharts);
+  ], dates, detailCharts, { marks: upd ? upd.list.map(u => u.d) : [] });
+  document.getElementById('gdRankUpdNote')?.classList.toggle('hidden', !(upd && upd.list.some(u => dates.includes(u.d))));
+  gdUpdLine(); if(!upd) gdUpdFill();
 
   /* 평점: 눈금을 변동 폭에 맞춤 */
   if(detailCharts.detailScoreChart){ detailCharts.detailScoreChart.destroy(); delete detailCharts.detailScoreChart; }
@@ -5269,6 +5345,88 @@ function rankMatchFilter(x, f){
 
 /* 게임 정보(스크린샷·설명): DB_앱정보 시트에서 패키지명으로 한 줄만 읽고 기억. 시트·데이터가 없으면 섹션째 숨김 */
 const APPINFO_SHEET = 'DB_앱정보', gdInfoCache = new Map();
+/* ---------- 업데이트 히스토리 (11/16) ----------
+   gchart 순위 수집기가 스토어 상세의 '새로운 기능'(업데이트 노트) · 업데이트 날짜 · 버전을 data/updates/<gp|ios>_<나라>.json 에 쌓음.
+   게임은 패키지명(iOS 는 번들 ID)으로 찾음 — 순위 데이터의 패키지명과 같은 값. 한 줄 = { d 날짜, v 버전, n 노트, s 처음 본 날 } · 최신이 앞 */
+const GD_UPD_SINCE = '2026-11-16';   /* 수집 시작일 (이전 이력은 스토어가 보여 주지 않음) · 게임별로는 가장 오래된 기록의 s(처음 본 날)를 씀 */
+const gdUpdCache = new Map();
+function gdUpdLoad(st, c){
+  const k = `${st}_${c}`;
+  if(!gdUpdCache.has(k)) gdUpdCache.set(k, fetch(`${DATA_BASE}updates/${k}.json`, { cache: 'no-cache' }).then(r => r.ok ? r.json() : {}).catch(() => ({})));
+  return gdUpdCache.get(k);
+}
+let gdUpdCur = null;   /* { key, list } — 지금 보는 게임 · 스토어 · 나라 */
+const gdUpdKey = () => `${detailStore}_${detailCountry}:${detailPkg}`;
+const gdUpdNow = () => gdUpdCur && gdUpdCur.key === gdUpdKey() ? gdUpdCur : null;
+async function gdUpdFill(){
+  const key = gdUpdKey(), pkg = detailPkg;
+  if(!pkg){ gdUpdCur = { key, list: [] }; return; }
+  const db = await gdUpdLoad(detailStore, detailCountry);
+  if(key !== gdUpdKey()) return;
+  gdUpdCur = { key, list: Array.isArray(db?.[pkg]) ? db[pkg].filter(u => u && u.d) : [] };
+  if(gdUpdCur.list.length) renderGameDetail(); else gdUpdLine();
+  if(gdPage === 'gdUpd') gdUpdRender();
+}
+const gdUpdDay = d => { const t = mkToDate(d); return `${t.getMonth() + 1}/${t.getDate()} (${CAL_DOW[t.getDay()]})`; };
+const gdUpdAgo = d => { const n = Math.round((mkToDate(kstTodayStr()) - mkToDate(d)) / 864e5); return n <= 0 ? '오늘' : n === 1 ? '어제' : `${n}일 전`; };
+/* 요약 화면 한 줄: 최근 업데이트 날짜 · 버전 · 노트 첫 줄 → 히스토리 */
+function gdUpdLine(){
+  const el = document.getElementById('gdUpdLine'); if(!el) return;
+  const u = gdUpdNow()?.list[0];
+  el.classList.toggle('hidden', !u);
+  if(!u) return;
+  const first = (u.n || '').split('\n').map(x => x.trim()).find(Boolean) || '노트 없음';
+  el.innerHTML = `<button type="button" class="gd-upd-line" onclick="gdGo('gdUpd')"><i class="fa-solid fa-code-branch"></i><span class="muted shrink-0">최근 업데이트</span><b class="rk-v shrink-0">${gdUpdDay(u.d)}</b>${u.v ? `<span class="gd-upd-v">${escapeHtml(u.v)}</span>` : ''}<span class="truncate text-slate-300">${escapeHtml(first)}</span><span class="gd-upd-go">히스토리 ›</span></button>`;
+}
+/* 목록 보기: 월(기본 = 이번 달 · 월별 막대를 눌러 바꿈) 또는 전체 · 검색어가 있으면 전체에서 찾음 */
+let gdUpdShow = 20, gdUpdQ = '', gdUpdMonth = '';
+const gdUpdThisMonth = () => kstTodayStr().slice(0, 7);
+const gdUpdMonthName = m => `${m.slice(0, 4)}년 ${Number(m.slice(5))}월`;
+function gdUpdPick(m){ gdUpdMonth = m; gdUpdShow = 20; gdUpdRender(); }
+function gdUpdRender(){
+  const B = document.getElementById('gdUpdBody'); if(!B) return;
+  const cur = gdUpdNow();
+  if(!cur){ B.innerHTML = '<div class="text-xs muted py-6"><i class="fa-solid fa-spinner fa-spin mr-1.5"></i>업데이트 노트를 불러오는 중…</div>'; gdUpdFill(); return; }
+  if(B.dataset.key !== cur.key){ B.dataset.key = cur.key; gdUpdShow = 20; gdUpdQ = ''; gdUpdMonth = gdUpdThisMonth(); }
+  const where = `${STORES[detailStore].name} · ${COUNTRIES[detailCountry].name}`, L = cur.list;
+  const since = (L.length && L.at(-1).s) || GD_UPD_SINCE;   /* 이 게임을 처음 본 날 (가장 오래된 기록의 s) */
+  const head = `<h4 class="gd-h">업데이트 히스토리 <span class="text-[11px] muted font-normal ml-1">${where} · ${mkShort(since)}부터 수집 · 스토어 '새로운 기능' 기준</span></h4>`;
+  if(!detailPkg){ B.innerHTML = head + '<div class="gd-upd-empty">이 게임은 패키지명 기록이 없어 업데이트 노트를 찾을 수 없습니다.</div>'; return; }
+  if(!L.length){ B.innerHTML = head + `<div class="gd-upd-empty">아직 모은 업데이트 노트가 없습니다.<br><span class="muted">순위 수집 때 TOP100에 든 게임의 노트를 함께 모읍니다 (${mkShort(GD_UPD_SINCE)}부터 · 스토어는 최신 노트 하나만 보여 줘 그 전 이력은 없음).</span></div>`; return; }
+  const gapOf = i => L[i + 1] ? Math.round((mkToDate(L[i].d) - mkToDate(L[i + 1].d)) / 864e5) : null;
+  /* 위 요약: 기록 수 · 최근 · 평균 간격 */
+  const gaps = L.map((_, i) => gapOf(i)).filter(n => n > 0);
+  const stat = `<div class="gd-upd-stat"><span>기록 <b class="rk-v">${L.length}건</b></span><span>최근 <b class="rk-v">${gdUpdAgo(L[0].d)}</b></span>${gaps.length ? `<span>평균 간격 <b class="rk-v">${Math.round(gaps.reduce((a, b) => a + b, 0) / gaps.length)}일</b></span>` : ''}</div>`;
+  /* 월별 막대: 최근 12개월 (이번 달이 오른쪽 끝) · 눌러서 그 달 이력 보기 · 고른 달은 강조 */
+  const t = mkToDate(kstTodayStr()), months = Array.from({ length: 12 }, (_, k) => { const d = new Date(t.getFullYear(), t.getMonth() - 11 + k, 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; });
+  const perM = months.map(m => L.filter(u => u.d.startsWith(m)).length), mx = Math.max(1, ...perM), q = gdUpdQ.trim().toLowerCase();
+  const sel = q ? '' : gdUpdMonth;
+  const strip = `<div class="gd-upd-sh"><span><i class="fa-regular fa-hand-pointer"></i>월을 누르면 그 달의 업데이트를 볼 수 있습니다</span><button type="button" class="${sel === 'all' ? 'on' : ''}" onclick="gdUpdPick('all')">전체 보기</button></div>
+    <div class="gd-upd-strip" role="group" aria-label="최근 12개월 월별 업데이트 수 · 눌러서 그 달 보기">${months.map((m, k) => { const y = m.slice(0, 4), first = k === 0 || months[k - 1].slice(0, 4) !== y;
+      return `<button type="button" class="${sel === m ? 'on' : ''}${perM[k] ? '' : ' zero'}" onclick="gdUpdPick('${m}')" title="${gdUpdMonthName(m)} · ${perM[k]}건 — 눌러서 보기" aria-pressed="${sel === m}"><b>${perM[k] || ''}</b><em><i style="height:${perM[k] ? Math.max(18, perM[k] / mx * 100) : 0}%"></i></em><span>${Number(m.slice(5))}월</span><small>${first ? `'${y.slice(2)}` : ''}</small></button>`; }).join('')}</div>`;
+  /* 노트 검색 (전체에서 찾음) */
+  const search = `<div class="gd-upd-q"><i class="fa-solid fa-magnifying-glass"></i><input type="search" placeholder="전체 노트에서 찾기 (예: 신규, 이벤트)" value="${escapeAttr(gdUpdQ)}" oninput="gdUpdQ=this.value;gdUpdShow=20;gdUpdRender();const e=document.querySelector('.gd-upd-q input');e.focus();e.setSelectionRange(e.value.length,e.value.length)"></div>`;
+  /* 목록: 검색 중이면 전체에서 · 아니면 고른 달(또는 전체) — 맨 위 3건은 펼친 카드, 나머지는 한 줄(누르면 펼침) */
+  const idx = L.map((u, i) => i).filter(i => q ? ((L[i].n || '').toLowerCase().includes(q) || (L[i].v || '').toLowerCase().includes(q)) : sel === 'all' || L[i].d.startsWith(sel));
+  const title = q ? `'${escapeHtml(gdUpdQ.trim())}' 검색 결과 <span>${idx.length}건 · 전체 기간</span>` : sel === 'all' ? `전체 <span>${idx.length}건</span>` : `${gdUpdMonthName(sel)}${sel === gdUpdThisMonth() ? ' (이번 달)' : ''} <span>${idx.length}건</span>`;
+  const shown = idx.slice(0, gdUpdShow);
+  let lastM = '', html = '';
+  shown.forEach((i, n) => {
+    const u = L[i], m = u.d.slice(0, 7);
+    if((q || sel === 'all') && m !== lastM){ lastM = m; html += `<li class="gd-upd-m">${gdUpdMonthName(m)} <span>${idx.filter(k => L[k].d.startsWith(m)).length}건</span></li>`; }
+    const note = (u.n || '').trim(), first = note.split('\n').map(x => x.trim()).find(Boolean) || '노트 없음 (날짜만 바뀜)', gap = gapOf(i), open = q || n < 3;
+    const long = note.split('\n').length > 6 || note.length > 320;
+    html += `<li class="gd-upd-it${i === 0 ? ' now' : ''}${open ? '' : ' fold'}"><div class="gd-upd-dt"><b>${gdUpdDay(u.d)}</b><span>${gdUpdAgo(u.d)}</span>${gap ? `<span class="gap">+${gap}일</span>` : ''}</div>
+      <div class="gd-upd-bx" ${open ? '' : `role="button" tabindex="0" onclick="this.parentElement.classList.remove('fold')" title="눌러서 펼치기"`}>${u.v ? `<span class="gd-upd-v">${escapeHtml(u.v)}</span>` : ''}${i === 0 ? '<span class="gd-upd-new">최신</span>' : ''}
+        <div class="gd-upd-1">${escapeHtml(first)}</div>
+        <div class="gd-upd-n${long ? ' clamp' : ''}">${note ? escapeHtml(note) : '<span class="muted">노트 없음 (날짜만 바뀜)</span>'}</div>${long ? `<button type="button" class="gd-upd-more" onclick="event.stopPropagation();const n=this.previousElementSibling;n.classList.toggle('clamp');this.textContent=n.classList.contains('clamp')?'펼치기':'접기'">펼치기</button>` : ''}</div></li>`;
+  });
+  const more = idx.length > shown.length ? `<button type="button" class="gd-upd-all" onclick="gdUpdShow+=20;gdUpdRender()">이전 기록 ${Math.min(20, idx.length - shown.length)}건 더 보기 <span class="muted">(남은 ${idx.length - shown.length}건)</span></button>` : '';
+  /* 빈 달: 가장 가까운 이전 업데이트로 바로 가기 */
+  const prev = !q && sel !== 'all' ? L.find(u => u.d.slice(0, 7) < sel) : null;
+  const empty = q ? '찾는 내용이 든 노트가 없습니다.' : `${gdUpdMonthName(sel)}에는 업데이트가 없습니다.${prev ? `<br><button type="button" class="gd-upd-jump" onclick="gdUpdPick('${prev.d.slice(0, 7)}')">직전 업데이트 ${gdUpdDay(prev.d)} 보기 ›</button>` : ''}`;
+  B.innerHTML = head + stat + strip + search + `<div class="gd-upd-lt">${title}</div>` + (shown.length ? `<ol class="gd-upd-list">${html}</ol>${more}` : `<div class="gd-upd-empty">${empty}</div>`);
+}
 async function gdLoadInfo(pkg, c = COUNTRY, st = STORE){
   const sec = document.getElementById('gdInfo'), want = detailCurrentName;
   const show = info => {
@@ -5430,11 +5588,13 @@ async function gdAdsRender(){
     <div class="grid gap-3 md:grid-cols-2 mt-3">${card('meta')}${card('google')}</div>`;
 }
 function gdAdsOpen(pkg, media = 'overview'){ try{ closeGameDetail(); }catch(e){} adsSel = pkg; adsMedia = media; try{ sessionStorage.setItem('gmi.ads', JSON.stringify({ pkg, media })); }catch(e){} switchView('ads'); window.scrollTo({ top: 0 }); }
-function gdGo(id){
+function gdGo(id, anchor){
   gdPage = id;
   if(id === 'gdAds') gdAdsRender();
+  if(id === 'gdUpd') gdUpdRender();
   document.querySelectorAll('#detailPanel .gd-page').forEach(pg => pg.classList.toggle('hidden', pg.id !== id));
   document.getElementById('detailPanel').scrollTop = 0;
+  if(anchor) setTimeout(() => { const el = document.getElementById(anchor), P = document.getElementById('detailPanel'); if(el) P.scrollTop = el.getBoundingClientRect().top - P.getBoundingClientRect().top + P.scrollTop - (P.querySelector('.sticky.top-0')?.offsetHeight || 0) - 12; }, 0);
   gdSpy();
   Object.values(detailCharts).forEach(c => c?.resize?.());
 }
