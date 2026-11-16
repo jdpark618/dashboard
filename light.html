@@ -41,8 +41,14 @@ try{ localStorage.removeItem('gmi.theme'); }catch(e){}   /* 예전 버전이 남
   /* 라이트 파일이어도 주소창에는 /light.html 을 안 보이게 (11/06): 주소만 바꾸고 다시 불러오지 않음.
      새로고침하면 index.html 이 열렸다가 위 줄에서 바로 light.html 로 넘어오므로 화면은 그대로 */
   else if(PAGE_THEME === 'light' && /light\.html$/.test(location.pathname)) try{ history.replaceState(history.state, '', location.pathname.replace(/light\.html$/, '') + location.search + location.hash); }catch(e){} })();
-/* 페이지를 연 채로 기기 설정이 바뀌면 따라감 (토글로 고른 탭은 제외) */
-try{ matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if(!pickedTheme() && osTheme() !== PAGE_THEME) themeGo(osTheme()); }); }catch(e){}
+/* 인쇄 중 표시 (11/16): 크롬은 인쇄 미리보기를 그리는 동안 기기 설정을 '라이트'로 알려 줌 → 아래 테마 따라가기가 페이지를 다시 불러
+   인쇄 창이 저절로 닫혔음 (다크 기기에서 주간 리포트 PDF 저장이 안 되던 원인). 인쇄 중에는 테마 전환 · 자동 갱신을 하지 않음 */
+let PRINTING = false;
+addEventListener('beforeprint', () => { PRINTING = true; });
+addEventListener('afterprint', () => { setTimeout(() => { PRINTING = false; }, 1500); });
+const isPrinting = () => { try{ return PRINTING || matchMedia('print').matches; }catch(e){ return PRINTING; } };
+/* 페이지를 연 채로 기기 설정이 바뀌면 따라감 (토글로 고른 탭 · 인쇄 중은 제외) */
+try{ matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if(!isPrinting() && !pickedTheme() && osTheme() !== PAGE_THEME) themeGo(osTheme()); }); }catch(e){}
 document.documentElement.dataset.theme = PAGE_THEME;
 function themeGo(t){ const u = themeUrl(t); if(u === location.href) location.reload(); else location.replace(u); }   /* 라이트 페이지는 주소가 /dashboard/ 라 다크 주소와 같음 → 같으면 새로 불러오기 (안 그러면 # 이동만 되고 안 바뀜, 11/09) */
 function setTheme(t){ try{ sessionStorage.setItem('gmi.theme', t); }catch(e){} themeGo(t); }
@@ -7818,7 +7824,7 @@ async function reportPrint(){
   /* 2쪽 아이콘이 아직 받아지는 중이면 최대 5초 기다림 (못 받은 아이콘은 회색 네모로 남음) */
   const imgs = [...document.querySelectorAll('#rpPrintRoot img')].filter(i => !i.complete);
   if(imgs.length) await Promise.race([Promise.all(imgs.map(i => new Promise(r => { i.onload = i.onerror = r; }))), new Promise(r => setTimeout(r, 5000))]);
-  window.print();
+  PRINTING = true; window.print();
 }
 /* Ctrl+P로 인쇄해도 리포트 페이지만 */
 window.addEventListener('beforeprint', () => { if(currentView === 'report' && document.querySelector('#reportPages .rp-page')) rpPreparePrint(); });
@@ -8408,7 +8414,7 @@ window.addEventListener('scroll', () => document.querySelectorAll('.tap-tip').fo
 window.addEventListener('hashchange', () => { const v = viewFromHash(); if(v !== sbNavKey().replace(/^biz:.*/, 'business')) switchView(v); });
 /* 탭을 오래 열어두었다가 돌아오면 30분 경과 시 자동 갱신 */
 document.addEventListener('visibilitychange', () => {
-  if(document.visibilityState === 'visible' && lastSyncAt && Date.now() - lastSyncAt > AUTO_REFRESH_MS && !fetchBusy) fetchAllData();
+  if(document.visibilityState === 'visible' && !isPrinting() && lastSyncAt && Date.now() - lastSyncAt > AUTO_REFRESH_MS && !fetchBusy) fetchAllData();
 });
 </script>
 </body>
