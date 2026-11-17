@@ -631,6 +631,10 @@ select option { background-color: #202428; color: #e8eaed; }
 .mka-sp { display:block; width:100%; height:22px; overflow:visible; } .mka-sp path { fill:none; stroke-width:1.6; vector-effect:non-scaling-stroke; stroke-linecap:round; stroke-linejoin:round; }
 .mka-in { flex-shrink:0; white-space:nowrap; font-size:10px; font-weight:700; line-height:16px; padding:0 6px; border-radius:4px; color:white; background:#7c3aed; }
 .mka-n7 { font-weight:700; color:var(--c-up); } .mka-none { font-size:10.5px; color:#8b9298; white-space:nowrap; }
+/* 업데이트한 날 (11/17) */
+.mka-upd { position:absolute; top:0; bottom:0; width:0; border-left:1.5px dashed rgba(139,128,249,.8); pointer-events:none; z-index:2; }
+.mka-neu { position:absolute; bottom:1px; transform:translateX(-50%); border-radius:50%; background:rgba(244,114,182,.9); z-index:4; cursor:help; }
+.mka-upd-t { position:absolute; top:-2px; width:9px; height:7px; margin-left:-4.5px; background:#8b80f9; clip-path:polygon(0 0,100% 0,50% 100%); z-index:4; cursor:help; }
 /* 요약 카드 미니 차트 (11/12) */
 .mka-ov-r { position:relative; height:44px; } .mka-ov-r svg { position:absolute; inset:0; width:100%; height:100%; overflow:visible; } .mka-ov-r path { fill:none; vector-effect:non-scaling-stroke; stroke-linecap:round; stroke-linejoin:round; }
 .mka-ov-b { display:grid; height:34px; margin-top:3px; border-bottom:1px solid rgba(160,167,173,.3); } .mka-ov-b span { display:flex; flex-direction:column; justify-content:flex-end; align-items:center; min-width:0; } .mka-ov-b i { display:block; width:62%; max-width:26px; border-radius:2px 2px 0 0; } .mka-ov-b b { font-size:9.5px; font-weight:600; line-height:11px; color:#a0a7ad; }
@@ -948,7 +952,7 @@ html.panel-lock { overflow: hidden; }
   .gd-toc button { width:100%; padding:8px 11px; }
   #detailPanel .gd-main { padding:22px 28px 40px; }
   /* 순위 · 평점 한 화면 (11/16): 순위 차트 높이 = 창 높이 − 머리 − (범례 · 평점 · 기간 분석 · 여백 484px · 배포본 글꼴 차이 여유 포함) → 스크롤 없이 세 가지가 다 보임 */
-  #detailPanel .gd-rank-box { height:clamp(200px, calc(100vh - 52px - var(--gd-hd, 90px) - 484px), 440px); }
+  #detailPanel .gd-rank-box { height:clamp(200px, calc(100vh - 52px - var(--gd-hd, 90px) - 488px), 440px); }
   #detailPanel .gd-score-box { height:150px; }
   #detailPanel .gd-hd { padding:16px 28px; flex-wrap:nowrap; column-gap:16px; }
   #detailPanel .gd-hd-ic { width:56px; height:56px; border-radius:14px; }
@@ -1938,7 +1942,7 @@ document.querySelectorAll('.sc-store button').forEach(b => { const on = b.datase
           <h4 class="text-sm font-semibold">순위 추이</h4>
           <span class="inline-flex items-center gap-1.5 text-[11px] font-semibold t-sales"><i class="inline-block w-5 border-t-2 border-[#fbbf24]"></i>매출</span>
           <span class="inline-flex items-center gap-1.5 text-[11px] font-semibold t-pop"><i class="inline-block w-5 border-t-2 border-dashed border-[#2dd4bf]"></i>인기</span>
-          <span class="text-[11px] muted">로그 눈금</span>
+          <span id="gdRankAdsNote" class="hidden inline-flex items-center gap-1.5 text-[11px] font-semibold" style="color:#f9a8d4"><i class="inline-block w-3 h-2.5 rounded-sm" style="background:rgba(244,114,182,.25);border-bottom:2px solid rgba(244,114,182,.75)"></i>UA 집행</span>
           <span id="gdRankUpdNote" class="hidden inline-flex items-center gap-1.5 text-[11px] font-semibold" style="color:#8b80f9"><i class="inline-block h-3 border-l-2 border-dashed border-[#8b80f9]"></i>업데이트</span>
         </div>
         <div class="mk-seg" id="detailPeriodSel">
@@ -4046,7 +4050,8 @@ async function adsOvFill(pkg){
     ${[1, 10, 100].map(v => `<span class="mka-rk-y" style="top:${Y(v)}%">${v}</span>`).join('')}
     ${ent.map(k => `<i class="mka-rk-e" style="left:${x(k) / SPAN * 100}%"></i><span class="mka-rk-el" style="${x(k) / SPAN > .7 ? `right:${100 - x(k) / SPAN * 100}%;padding-right:4px` : `left:${x(k) / SPAN * 100}%;padding-left:4px`}">진입 ${adsDk(k)} · ${m.get(k)}위</span>`).join('')}
     <div class="mka-rk-h">${Array.from({ length: SPAN }, (_, i) => { const k = W0 + i; return k > E ? '<span></span>' : `<span title="${adsDk(k)} · 인기 ${m.get(k) ? m.get(k) + '위' : 'TOP100 밖'}"></span>`; }).join('')}</div>`;
-  els.forEach(el => { el.querySelector('.mka-ov-r').innerHTML = html; });
+  const um = await adsUpdMarks(pkg, W0, W0 + SPAN - 1); if(adsSel !== pkg) return;
+  els.forEach(el => { el.querySelector('.mka-ov-r').innerHTML = html + um; });
   document.querySelectorAll('#adsDetail .mka-ov-now').forEach(el => { el.innerHTML = `<span class="t-pop font-semibold">━ 인기 ${lp ? lp + '위' : '100위 밖'}</span> <span class="muted">Play · 한국</span>`; });
 }
 /* 순위 기록 불러오기 (게임마다 한 번): 13주 창 + 한 주 앞까지의 달 */
@@ -4061,6 +4066,14 @@ function adsRankLoad(pkg, W0, E){
     R.from = (rawStore.popular?.rows || []).reduce((mn, r) => { const d = rowDate(r); return d && d < mn ? d : mn; }, '9999'); R.from = R.from === '9999' ? Infinity : Math.round(Date.parse(R.from) / 86400000);
     return R; })(); }
   return adsRank[pkg].p;
+}
+/* 마케팅 추적 화면의 업데이트한 날 (11/17): Google Play 한국 기준 (+ App Store 과거 기록) · 세로 점선 + 위쪽 표시(마우스를 올리면 날짜 · 버전 · 노트 첫 줄) */
+async function adsUpdMarks(pkg, W0, E){
+  let list = []; try{ list = await updMerged('gp', 'kr', pkg); }catch(e){}
+  const x = k => (k - W0 + .5) / ((E - W0 + 1) || 1) * 100, SP = E - W0 + 1;
+  return list.map(u => ({ u, k: Math.round(Date.parse(u.d) / 864e5) })).filter(o => o.k >= W0 && o.k <= E)
+    .map(({ u, k }) => { const pos = (k - W0 + .5) / SP * 100, first = (u.n || '').split('\n').map(t => t.trim()).find(Boolean) || '노트 없음';
+      return `<i class="mka-upd" style="left:${pos}%"></i><b class="mka-upd-t" style="left:${pos}%" title="업데이트 ${adsDk(k)}${u.v ? ` · ${u.v}` : ''} — ${escapeAttr(first)}"></b>`; }).join('');
 }
 async function adsRankFill(pkg){
   const rows = [...document.querySelectorAll('#adsDetail .mka-rk')]; if(!rows.length) return;
@@ -4078,7 +4091,8 @@ async function adsRankFill(pkg){
     ${ent.map(k => `<i class="mka-rk-e" style="left:${x(k) / SPAN * 100}%"></i><span class="mka-rk-el" style="${x(k) / SPAN > .8 ? `right:${100 - x(k) / SPAN * 100}%;padding-right:4px` : `left:${x(k) / SPAN * 100}%;padding-left:4px`}">인기 진입 ${adsDk(k)} · ${R.popular.get(k)}위</span>`).join('')}
     <div class="mka-rk-h">${Array.from({ length: SPAN }, (_, i) => { const k = W0 + i; return k > T ? '<span></span>' : `<span title="${adsDk(k)} · 인기 ${R.popular.get(k) ? R.popular.get(k) + '위' : 'TOP100 밖'} · 매출 ${R.sales.get(k) ? R.sales.get(k) + '위' : 'TOP100 밖'}"></span>`; }).join('')}</div>`;
   const none = !R.popular.size && !R.sales.size;
-  rows.forEach(el => { el.querySelector('.mka-rk-box').innerHTML = none ? '<span class="mka-rk-none muted">이 기간 Google Play 한국 TOP100 기록 없음</span>' : svg;
+  const um = await adsUpdMarks(pkg, W0, W0 + SPAN - 1); if(adsSel !== pkg) return;
+  rows.forEach(el => { el.querySelector('.mka-rk-box').innerHTML = (none ? '<span class="mka-rk-none muted">이 기간 Google Play 한국 TOP100 기록 없음</span>' : svg) + um;
     el.querySelector('.mka-rk-now').innerHTML = none ? '' : `<span class="t-pop font-semibold">━ 인기 ${lp ? lp + '위' : '100위 밖'}</span> <span class="t-sales font-semibold ml-1">━ 매출 ${ls ? ls + '위' : '100위 밖'}</span>`; });
 }
 /* 요약 카드 (11/06): 현황 4칸 + 교체 주기 4칸을 한 카드에. 위닝 수는 머리에 두고 누르면 위닝 영역으로 */
@@ -4494,13 +4508,27 @@ function drawSearchRankChart(canvasId, lines, dates, store = searchCharts, opts 
       ctx.fillText('100위 밖', a.right - 6, top + 4); ctx.restore();
     }
   };
+  /* UA 집행 기간 (11/17): opts.ads = { spans: [{from, to, n}] } → 차트 높이는 그대로 두고 그 기간 배경을 옅게 칠하고 바닥에 'UA 집행 (소재 N개)' */
+  const ads = opts.ads && opts.ads.spans.length ? opts.ads : null;
+  const uaOf = d => ads ? ads.spans.find(p => d >= p.from && d <= p.to) : null;
   /* 업데이트한 날 (11/16): opts.marks = 날짜 목록 → 세로 점선 + 위쪽 작은 표시 · 툴팁에 '업데이트' */
   const markSet = new Set(opts.marks || []);
   const marks = {
     id: 'gdUpdMarks',
     beforeDatasetsDraw(chart){
-      if(!markSet.size) return;
       const { ctx, chartArea: a, scales: { x } } = chart;
+      if(ads){
+        const step = dates.length > 1 ? x.getPixelForValue(1) - x.getPixelForValue(0) : 20;
+        ctx.save(); ctx.font = '600 11px "Pretendard Variable", Pretendard, sans-serif'; ctx.textBaseline = 'bottom';
+        ads.spans.forEach(p => { const i0 = dates.indexOf(p.from), i1 = dates.indexOf(p.to); if(i0 < 0 || i1 < 0) return;
+          const l = Math.max(a.left, x.getPixelForValue(i0) - step / 2), r = Math.min(a.right, x.getPixelForValue(i1) + step / 2);
+          ctx.fillStyle = 'rgba(244,114,182,.10)'; ctx.fillRect(l, a.top, r - l, a.bottom - a.top);
+          ctx.fillStyle = 'rgba(244,114,182,.75)'; ctx.fillRect(l, a.bottom - 2, r - l, 2);
+          const full = `UA 집행 (소재 ${p.n}개)`, short = `UA ${p.n}개`, tx = ctx.measureText(full).width + 8 <= r - l ? full : ctx.measureText(short).width + 6 <= r - l ? short : '';
+          if(tx){ ctx.fillStyle = '#f9a8d4'; ctx.textAlign = 'center'; ctx.fillText(tx, (l + r) / 2, a.bottom - 5); } });
+        ctx.restore();
+      }
+      if(!markSet.size) return;
       ctx.save(); ctx.strokeStyle = 'rgba(139,128,249,.75)'; ctx.lineWidth = 1.2; ctx.setLineDash([3, 3]);
       dates.forEach((d, i) => { if(!markSet.has(d)) return; const px = x.getPixelForValue(i); ctx.beginPath(); ctx.moveTo(px, a.top); ctx.lineTo(px, a.bottom); ctx.stroke();
         ctx.setLineDash([]); ctx.fillStyle = '#8b80f9'; ctx.beginPath(); ctx.moveTo(px - 4, a.top); ctx.lineTo(px + 4, a.top); ctx.lineTo(px, a.top + 6); ctx.closePath(); ctx.fill(); ctx.setLineDash([3, 3]); });
@@ -4518,7 +4546,7 @@ function drawSearchRankChart(canvasId, lines, dates, store = searchCharts, opts 
           filter: c => c.raw != null,
           itemSort: (a, b) => a.raw - b.raw,
           callbacks: {
-            title: items => { const d = items[0]?.label || ''; return d ? `${d} (${CAL_DOW[mkToDate(d).getDay()]})${markSet.has(d) ? ' · 업데이트' : ''}` : ''; },
+            title: items => { const d = items[0]?.label || ''; if(!d) return ''; const ua = uaOf(d); return `${d} (${CAL_DOW[mkToDate(d).getDay()]})${markSet.has(d) ? ' · 업데이트' : ''}${ua ? ` · UA 집행 ${mkShort(ua.from)}~${mkShort(ua.to)} (소재 ${ua.n}개)` : ''}`; },
             label: c => {
               if(c.dataset._kind === 'out') return ` ${c.dataset.label}: 100위 밖`;
               const prev = c.dataIndex > 0 ? c.dataset.data[c.dataIndex - 1] : null, diff = prev != null ? prev - c.raw : null;
@@ -5118,11 +5146,12 @@ function renderGameDetail(){
   const dates = detailState.days ? all.slice(-detailState.days) : all;
   setText('detailRangeLabel', dates.length ? `${dates[0]} ~ ${dates.at(-1)} · ${dates.length}일` : '-');
 
-  const upd = gdUpdNow();
+  const upd = gdUpdNow(), adsD = gdAdsDaily(dates);
   drawSearchRankChart('detailChart', [
     { label: '매출', color: '#fbbf24', values: dates.map(d => sales.get(d) ?? null) },
     { label: '인기', color: '#2dd4bf', dash: [5, 4], values: dates.map(d => pop.get(d) ?? null) }
-  ], dates, detailCharts, { marks: upd ? upd.list.map(u => u.d) : [] });
+  ], dates, detailCharts, { marks: upd ? upd.list.map(u => u.d) : [], ads: adsD });
+  document.getElementById('gdRankAdsNote')?.classList.toggle('hidden', !(adsD && adsD.spans.length));
   document.getElementById('gdRankUpdNote')?.classList.toggle('hidden', !(upd && upd.list.some(u => dates.includes(u.d))));
   gdUpdLine(); if(!upd) gdUpdFill();
 
@@ -5306,27 +5335,28 @@ function gdUpdLoad(st, c){
 let gdUpdCur = null;   /* { key, list } — 지금 보는 게임 · 스토어 · 나라 */
 const gdUpdKey = () => `${detailStore}_${detailCountry}:${detailPkg}`;
 const gdUpdNow = () => gdUpdCur && gdUpdCur.key === gdUpdKey() ? gdUpdCur : null;
+/* 한 게임의 업데이트 이력 (최신이 앞).
+   Google Play 는 과거 이력을 공개하지 않음 → 같은 게임(상세 창의 Play ↔ App Store 연결)의 App Store 과거 기록을 아래에 이어 붙임.
+   Google 이 직접 모은 첫 기록(없으면 수집 시작일)보다 3일 이상 앞선 것만 → 같은 업데이트가 스토어마다 하루 이틀 다르게 잡혀도 두 번 나오지 않음.
+   이후 기록은 스토어마다 따로 쌓임. 파일은 건드리지 않고 화면에서만 합침 (x:1 = 다른 스토어 기록) */
+async function updMerged(st, c, pkg){
+  if(!pkg) return [];
+  const db = await gdUpdLoad(st, c);
+  let list = Array.isArray(db?.[pkg]) ? db[pkg].filter(u => u && u.d) : [];
+  if(st === 'gp'){
+    const oid = await gdLink('gp', pkg).catch(() => '');
+    if(oid){
+      const idb = await gdUpdLoad('ios', c), cut = mkAddDays(list.length ? list.at(-1).d : GD_UPD_SINCE, -3);
+      list = list.concat((Array.isArray(idb?.[oid]) ? idb[oid] : []).filter(u => u && u.d && u.d <= cut).map(u => ({ ...u, x: 1 })));
+    }
+  }
+  return list;
+}
 async function gdUpdFill(){
   const key = gdUpdKey(), pkg = detailPkg;
   if(!pkg){ gdUpdCur = { key, list: [] }; return; }
-  const st = detailStore, c = detailCountry;
-  const db = await gdUpdLoad(st, c);
+  const list = await updMerged(detailStore, detailCountry, pkg);
   if(key !== gdUpdKey()) return;
-  let list = Array.isArray(db?.[pkg]) ? db[pkg].filter(u => u && u.d) : [];
-  /* Google Play 는 과거 이력을 공개하지 않음 → 같은 게임(상세 창의 Play ↔ App Store 연결)의 App Store 과거 기록을 아래에 이어 붙임.
-     Google 이 직접 모은 첫 기록(없으면 수집 시작일)보다 3일 이상 앞선 것만 → 같은 업데이트가 스토어마다 하루 이틀 다르게 잡혀도 두 번 나오지 않음.
-     이후 기록은 스토어마다 따로 쌓임. 파일은 건드리지 않고 화면에서만 합침 (x:1 = 다른 스토어 기록) */
-  if(st === 'gp'){
-    const oid = await gdLink('gp', pkg).catch(() => '');
-    if(key !== gdUpdKey()) return;
-    if(oid){
-      const idb = await gdUpdLoad('ios', c);
-      if(key !== gdUpdKey()) return;
-      const cut = mkAddDays(list.length ? list.at(-1).d : GD_UPD_SINCE, -3);
-      const past = (Array.isArray(idb?.[oid]) ? idb[oid] : []).filter(u => u && u.d && u.d <= cut).map(u => ({ ...u, x: 1 }));
-      list = list.concat(past);
-    }
-  }
   gdUpdCur = { key, list };
   if(gdUpdCur.list.length) renderGameDetail(); else gdUpdLine();
   if(gdPage === 'gdUpd') gdUpdRender();
@@ -5505,12 +5535,33 @@ document.getElementById('gdShots').addEventListener('scroll', () => gdShotNav(),
 let gdPage = 'gdPgSum';
 /* 앱 상세 패널 '마케팅 추적' (11/06): 추적한 적 있는 게임만 왼쪽 메뉴에 보이고, 개요와 같은 계산을 패널 폭으로 요약 */
 let gdAdsPkg = '';
+/* 순위 차트용 UA 집행 기간 (11/17): 새 소재를 한 주에 5개 이상 넣은 주 → 이어진 주는 한 기간으로 합침 (첫 투입일 ~ 마지막 투입일, 소재 수 합계).
+   매주 1~4개씩 넣는 상시 교체는 표시하지 않음. 뺀 것 · 교체 같은 세부는 마케팅 추적에서 (Meta + Google, 한국) */
+const GD_UA_MIN = 5;
+function gdAdsDaily(dates){
+  if(!gdAdsPkg || detailCountry !== 'kr' || !dates.length) return null;
+  const R = adsCache[gdAdsPkg];
+  if(!R){ if(!gdAdsDailyLoading){ gdAdsDailyLoading = true; const pkg = gdAdsPkg; fetch(`${ADS_BASE}${encodeURIComponent(pkg)}.json`).then(r => r.ok ? r.json() : null).then(j => { if(j) adsCache[pkg] = j; gdAdsDailyLoading = false; if(j && gdAdsPkg === pkg) renderGameDetail(); }).catch(() => { gdAdsDailyLoading = false; }); } return null; }
+  const B = adsBuild(R), items = [...B.P.meta.items, ...B.P.google.items];
+  const k = d => Math.round(Date.parse(d) / 864e5);
+  const d0 = k(dates[0]), d1 = k(dates.at(-1)), wk = new Map();
+  items.forEach(c => { const w = adsWk(c.a0), o = wk.get(w) || { n: 0, a: c.a0, b: c.a0 }; o.n++; o.a = Math.min(o.a, c.a0); o.b = Math.max(o.b, c.a0); wk.set(w, o); });
+  const spans = [];
+  [...wk.entries()].filter(([, o]) => o.n >= GD_UA_MIN).sort((p, q) => p[0] - q[0]).forEach(([w, o]) => {
+    const last = spans.at(-1);
+    if(last && w - last.w === 7){ last.w = w; last.b = o.b; last.n += o.n; } else spans.push({ w, a: o.a, b: o.b, n: o.n });
+  });
+  const ds = n => new Date(n * 864e5).toISOString().slice(0, 10);
+  return { spans: spans.filter(p => p.b >= d0 && p.a <= d1).map(p => ({ from: ds(Math.max(p.a, d0)), to: ds(Math.min(p.b, d1)), n: p.n })) };
+}
+let gdAdsDailyLoading = false;
 async function gdAdsCheck(name){
   try{ if(!adsIndex) await adsIndexLoad(); }catch(e){ return; }
   const nz = v => String(v || '').replace(/[\s:：·\-]/g, '').toLowerCase(), gp = (typeof detailIds !== 'undefined' && detailIds?.gp) || (detailStore === 'gp' ? detailPkg : '');
   const hit = (adsIndex || []).find(x => (gp && x.pkg === gp) || nz(x.name) === nz(name));
   if(detailCurrentName !== name) return;   /* 그 사이 다른 게임을 열었으면 무시 */
   gdAdsPkg = hit ? hit.pkg : ''; gdSpy();
+  if(gdAdsPkg) renderGameDetail();   /* 순위 차트에 광고 소재 띠 */
 }
 async function gdAdsRender(){
   const B = document.getElementById('gdAdsBody'); if(!B || !gdAdsPkg) return;
