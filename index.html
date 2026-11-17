@@ -846,7 +846,7 @@ html.panel-lock { overflow: hidden; }
 .card-hd { display:flex; align-items:center; justify-content:space-between; gap:8px; min-height:41px; padding-bottom:12px; margin-bottom:12px; border-bottom:1px solid rgba(41,47,51,.8); }
 /* 관심 게임 카드 변동 배지 (전일 대비) */
 /* 관심 게임 페이지: 한 줄에 한 게임 */
-.wl-head, .wl-row { display:grid; grid-template-columns:22px 40px minmax(0,1.3fr) repeat(4, minmax(0,1fr)); align-items:center; column-gap:14px; }
+.wl-head, .wl-row { display:grid; grid-template-columns:22px 40px minmax(0,1.3fr) repeat(4, minmax(0,1fr)) minmax(0,.85fr); align-items:center; column-gap:14px; }
 .wl-cs { display:contents; }
 .wl-c { display:flex; flex-direction:column; gap:3px; min-width:0; }
 .wl-c:empty { min-height:1px; }
@@ -865,11 +865,18 @@ html.panel-lock { overflow: hidden; }
 .wl-rk { font-size:13px; display:flex; align-items:center; gap:5px; white-space:nowrap; }
 .wl-sub { font-size:11px; color:#a0a7ad; white-space:nowrap; }
 .wl-row.ev { box-shadow:inset 3px 0 0 #f59e0b; }
+/* 순위 변동 이유 칩 (11/17): 업데이트(보라) · UA 집행(분홍) — 차트 표기와 같은 색 */
+.sig { display:inline-flex; align-items:center; gap:4px; flex-shrink:0; } .sig:empty { display:none; }
+.sig-c { font-size:10.5px; font-weight:700; line-height:17px; padding:0 6px; border-radius:4px; white-space:nowrap; }
+.sig-c.upd { background:rgba(139,128,249,.16); color:#a99ffb; } .sig-c.ua { background:rgba(244,114,182,.15); color:#f9a8d4; }
+.wl-upd { display:flex; flex-direction:column; gap:2px; min-width:0; font-size:12.5px; white-space:nowrap; }
+.wl-upd .v { font-size:11px; color:#a0a7ad; overflow:hidden; text-overflow:ellipsis; }
 @media (max-width:1023px){
   .wl-head, .wl-row { grid-template-columns:22px 36px minmax(0,1fr); column-gap:10px; padding-left:12px; padding-right:12px; }
   .wl-head .wl-chd { display:none; }
   .wl-cs { display:flex; flex-wrap:wrap; gap:6px 16px; grid-column:3 / -1; margin-top:6px; }
   .wl-c:empty { display:none; }
+  .wl-upd { grid-column:3 / -1; flex-direction:row; align-items:baseline; gap:6px; margin-top:4px; } .wl-upd:empty { display:none; }
   .wl-cc { display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:700; color:#c3c7ca; }
   .wl-ic { width:36px; height:36px; }
   .wl-m { display:none; }
@@ -2529,7 +2536,7 @@ function renderScoreBadgeHtml(scoreVal) {
 }
 
 /* 리스트 렌더링: 1줄 게임명 · 2줄 순위/장르/평점, 오른쪽은 변동만 (좁은 칸에서도 게임명이 보이도록) */
-function renderRankList(elId, items, {showMeta=true, listType='normal'}={}) {
+function renderRankList(elId, items, {showMeta=true, listType='normal', sig=''}={}) {
   const el = document.getElementById(elId);
   if (!items || !items.length) { el.innerHTML = '<li class="text-xs muted py-4 text-center">데이터 없음</li>'; return; }
 
@@ -2560,7 +2567,8 @@ function renderRankList(elId, items, {showMeta=true, listType='normal'}={}) {
         ${iconHtml}
         <div class="min-w-0 flex-1">
           <div class="text-[13px] font-medium truncate text-slate-100 group-hover:text-white">${escapeHtml(it.name)}</div>
-          <div class="text-[11px] muted truncate mt-0.5">${meta.join('<span class="mx-1 text-slate-600">·</span>')}</div>
+          ${sig && it.appId ? `<div class="flex items-center gap-1.5 mt-0.5 min-w-0"><div class="text-[11px] muted truncate">${meta.join('<span class="mx-1 text-slate-600">·</span>')}</div><span class="sig" data-pkg="${escapeAttr(it.appId)}" data-a="${mkAddDays(sig, -2)}" data-ua="${mkAddDays(sig, -6)}" data-b="${sig}"></span></div>`
+            : `<div class="text-[11px] muted truncate mt-0.5">${meta.join('<span class="mx-1 text-slate-600">·</span>')}</div>`}
         </div>
         <div class="w-14 text-right flex justify-end shrink-0">${rankChangeBadge(displayChange, false)}</div>
       </li>`;
@@ -2725,9 +2733,10 @@ function renderToday(){
   renderRankList('popularTop10List', p.popularTop10, {showMeta:true, listType:'top10'});
   renderRankList('salesTop10List', p.salesTop10, {showMeta:true, listType:'top10'});
   /* 대시보드는 요약만: 목록마다 5개, 나머지는 시장 분석 '순위 변동'에서 */
-  renderRankList('newEntriesList', p.newEntries.slice(0, 5), {showMeta:true, listType:'newPop'});
-  renderRankList('salesRisingList', p.salesRising.slice(0, 5), {showMeta:true, listType:'risingSales'});
-  renderRankList('salesFallingList', p.salesFalling.slice(0, 5), {showMeta:true, listType:'fallingSales'});
+  renderRankList('newEntriesList', p.newEntries.slice(0, 5), {showMeta:true, listType:'newPop', sig:p.asOfDate});
+  renderRankList('salesRisingList', p.salesRising.slice(0, 5), {showMeta:true, listType:'risingSales', sig:p.asOfDate});
+  renderRankList('salesFallingList', p.salesFalling.slice(0, 5), {showMeta:true, listType:'fallingSales', sig:p.asOfDate});
+  sigFill(document.getElementById('dashChg'));
 
   renderGenreBars('popularGenreBars', p.popularGenre);
   renderGenreBars('salesGenreBars', p.salesGenre);
@@ -5566,6 +5575,33 @@ let gdAdsPkg = '';
 /* 순위 차트용 UA 집행 기간 (11/17): 새 소재를 한 주에 5개 이상 넣은 주 → 이어진 주는 한 기간으로 합침 (첫 투입일 ~ 마지막 투입일, 소재 수 합계).
    매주 1~4개씩 넣는 상시 교체는 표시하지 않음. 뺀 것 · 교체 같은 세부는 마케팅 추적에서 (Meta + Google, 한국) */
 const GD_UA_MIN = 5;
+/* 순위 변동 이유 칩 (11/17): 자리(.sig data-pkg · data-a~data-b 업데이트 범위 · data-ua~data-b UA 범위)를 먼저 그리고 데이터가 오면 채움.
+   쓰는 곳: 일간 요약 '오늘의 순위 변동'. 주간 리포트 순위표는 게임 이름을 다 보여야 해서 넣지 않음 (11/17 결정).
+   업데이트 = 그 스토어·나라 수집 기록 · UA = 한국 Google Play 추적 게임만, 그 기간 새 소재 GD_UA_MIN 개 이상 (순위 차트 'UA 집행'과 같은 기준) */
+const sigAdsMemo = new Map();
+function sigAds(pkg){
+  if(!sigAdsMemo.has(pkg)) sigAdsMemo.set(pkg, (async () => {
+    try{ if(!adsIndex) await adsIndexLoad(); }catch(e){ return null; }
+    if(!(adsIndex || []).some(x => x.pkg === pkg)) return null;
+    try{ adsCache[pkg] ||= await (await fetch(`${ADS_BASE}${encodeURIComponent(pkg)}.json`)).json(); }catch(e){ return null; }
+    const B = adsBuild(adsCache[pkg]); return [...B.P.meta.items, ...B.P.google.items].map(c => c.a0);
+  })());
+  return sigAdsMemo.get(pkg);
+}
+async function sigFill(root, st = STORE, c = COUNTRY){
+  const els = [...(root?.querySelectorAll('.sig[data-pkg]') || [])].filter(e => e.dataset.pkg && !e.dataset.done);
+  if(!els.length) return;
+  const db = await gdUpdLoad(st, c), k = d => Math.round(Date.parse(d) / 864e5);
+  await Promise.all(els.map(async el => {
+    const { pkg, a, b } = el.dataset, ua = el.dataset.ua || a; el.dataset.done = '1';
+    const u = (db?.[pkg] || []).find(x => x && x.d && x.d >= a && x.d <= b);
+    const starts = st === 'gp' && c === 'kr' ? await sigAds(pkg) : null;
+    const n = starts ? starts.filter(t => t >= k(ua) && t <= k(b)).length : 0;
+    const first = u ? (u.n || '').split('\n').map(t => t.trim()).find(Boolean) || '' : '';
+    el.innerHTML = (u ? `<span class="sig-c upd" title="업데이트 ${u.d}${u.v ? ` · ${escapeAttr(u.v)}` : ''}${first ? ` — ${escapeAttr(first)}` : ''}">업데이트 ${mkShort(u.d)}</span>` : '')
+      + (n >= GD_UA_MIN ? `<span class="sig-c ua" title="${mkShort(ua)}~${mkShort(b)} 새 광고 소재 ${n}개">UA 소재 ${n}개</span>` : '');
+  }));
+}
 function gdAdsDaily(dates){
   if(!gdAdsPkg || detailCountry !== 'kr' || !dates.length) return null;
   const R = adsCache[gdAdsPkg];
@@ -7687,7 +7723,7 @@ function renderWatchPage(){
     if(x.t[k]) return `<div class="wl-rk"><span class="wl-lb ${cls}">${lab}</span><b class="rk-v">${rankOf(x.t[k])}위</b>${rankChangeBadge(String(x.t[k][2] || '-'))}</div>`;
     return `<div class="wl-rk"><span class="wl-lb ${cls}">${lab}</span><span class="wl-sub">${x.ls[k]?.d ? `밖 · ${mkShort(x.ls[k].d)}` : '-'}</span></div>`;
   };
-  box.innerHTML = `<div class="wl-head"><span></span><span></span><span>게임</span>${GL_ORDER.map(c => `<span class="wl-chd">${glFlag(c, 'sm')}${COUNTRIES[c].name}</span>`).join('')}</div>`
+  box.innerHTML = `<div class="wl-head"><span></span><span></span><span>게임</span>${GL_ORDER.map(c => `<span class="wl-chd">${glFlag(c, 'sm')}${COUNTRIES[c].name}</span>`).join('')}<span class="wl-chd">최근 업데이트</span></div>`
     + rows.map(r => {
       /* 상세는 지금 나라에 기록이 있으면 그 나라로, 없으면 기록이 있는 첫 나라로 */
       const oc = r.per[COUNTRY] ? COUNTRY : GL_ORDER.find(c => r.per[c]) || COUNTRY;
@@ -7700,8 +7736,19 @@ function renderWatchPage(){
         <div class="min-w-0"><div class="wl-nm">${escapeHtml(r.name)}</div>
           <div class="wl-meta"><span>${escapeHtml(r.meta.publisher || '-')} · ${escapeHtml(r.meta.genre || '-')}</span>${r.ev ? `<span class="wl-ev ${r.ev.cls}">${r.ev.text}</span>` : ''}</div></div>
         <div class="wl-cs">${GL_ORDER.map(c => r.per[c] ? `<div class="wl-c"><span class="wl-cc">${glFlag(c, 'sm')}${COUNTRIES[c].name}</span>${line(r.per[c], 'sales')}${line(r.per[c], 'popular')}</div>` : '<div class="wl-c"></div>').join('')}</div>
+        <div class="wl-upd" data-pkg="${escapeAttr(r.e.id || '')}" data-c="${oc}"></div>
       </div>`;
     }).join('');
+  watchUpdFill(box);
+}
+/* 관심 게임 '최근 업데이트' (11/17): 상세 창 업데이트 히스토리와 같은 기록(Google 은 App Store 과거 기록 이어 붙임)의 가장 최근 것 */
+function watchUpdFill(box){
+  box.querySelectorAll('.wl-upd[data-pkg]').forEach(async el => {
+    const pkg = el.dataset.pkg; if(!pkg){ el.innerHTML = '<span class="wl-sub">-</span>'; return; }
+    let u = null; try{ u = (await updMerged(STORE, el.dataset.c || COUNTRY, pkg))[0] || null; }catch(e){}
+    if(!el.isConnected) return;
+    el.innerHTML = u ? `<span><span class="wl-cc">업데이트</span> <b class="rk-v">${mkShort(u.d)}</b> <span class="wl-sub">${gdUpdAgo(u.d)}</span></span>${u.v ? `<span class="v" title="${escapeAttr(u.v)}">v${escapeHtml(String(u.v).replace(/^v/i, ''))}</span>` : ''}` : '<span class="wl-sub">기록 없음</span>';
+  });
 }
 /* 관심 게임 변동: 전일 대비로 카드 하나에 가장 큰 사건 하나만 (TOP10 진입 > 이탈 > 급상승 > 급하락) */
 const WATCH_JUMP = 10;
