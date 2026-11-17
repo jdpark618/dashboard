@@ -635,7 +635,7 @@ select option { background-color: #ffffff; color: #37352f; }
 /* 업데이트한 날 (11/17) */
 .mka-upd { position:absolute; top:0; bottom:0; width:0; border-left:1.5px dashed rgba(139,128,249,.8); pointer-events:none; z-index:2; }
 .mka-neu { position:absolute; bottom:1px; transform:translateX(-50%); border-radius:50%; background:rgba(244,114,182,.9); z-index:4; cursor:help; }
-.mka-upd-t { position:absolute; top:-2px; width:9px; height:7px; margin-left:-4.5px; background:#8b80f9; clip-path:polygon(0 0,100% 0,50% 100%); z-index:4; cursor:help; }
+.mka-upd-t { position:absolute; top:0; width:9px; height:7px; margin-left:-4.5px; background:#8b80f9; clip-path:polygon(0 0,100% 0,50% 100%); z-index:4; cursor:help; }
 /* 요약 카드 미니 차트 (11/12) */
 .mka-ov-r { position:relative; height:44px; } .mka-ov-r svg { position:absolute; inset:0; width:100%; height:100%; overflow:visible; } .mka-ov-r path { fill:none; vector-effect:non-scaling-stroke; stroke-linecap:round; stroke-linejoin:round; }
 .mka-ov-b { display:grid; height:34px; margin-top:3px; border-bottom:1px solid rgba(120,119,116,.3); } .mka-ov-b span { display:flex; flex-direction:column; justify-content:flex-end; align-items:center; min-width:0; } .mka-ov-b i { display:block; width:62%; max-width:26px; border-radius:2px 2px 0 0; } .mka-ov-b b { font-size:9.5px; font-weight:600; line-height:11px; color:#787774; }
@@ -701,7 +701,7 @@ select option { background-color: #ffffff; color: #37352f; }
 .mka-rk-box path { fill:none; vector-effect:non-scaling-stroke; stroke-linecap:round; stroke-linejoin:round; } .mka-rk-p { stroke:#0d9488; stroke-width:2; } .mka-rk-s { stroke:#d97706; stroke-width:1.5; opacity:.6; }
 .mka-rk-g { stroke:rgba(120,119,116,.22); stroke-width:1; stroke-dasharray:3 3; vector-effect:non-scaling-stroke; }
 .mka-rk-y { position:absolute; left:2px; transform:translateY(-50%); font-size:9px; color:#a5a4a0; line-height:1; pointer-events:none; }
-.mka-rk-e { position:absolute; top:0; bottom:0; width:0; border-left:1.5px dashed #0d9488; opacity:.8; } .mka-rk-el { position:absolute; top:0; font-size:10px; font-weight:600; color:#0d9488; white-space:nowrap; pointer-events:none; }
+.mka-rk-e { position:absolute; top:0; bottom:0; width:0; border-left:1.5px dashed #0d9488; opacity:.8; } .mka-rk-el { position:absolute; top:9px; font-size:10px; font-weight:600; line-height:14px; color:#0d9488; white-space:nowrap; pointer-events:none; z-index:5; background:rgba(24,27,30,.92); border-radius:3px; padding:0 4px !important; margin-left:5px; }   /* 11/17: 업데이트 점선 · 순위 선과 겹쳐도 읽히게 배경 */
 .mka-rk-h { position:absolute; inset:0; display:grid; grid-auto-flow:column; grid-auto-columns:1fr; } .mka-rk-h span:hover { background:rgba(120,119,116,.12); } .mka-rk-none { position:absolute; left:4px; top:50%; transform:translateY(-50%); font-size:11px; }
 .mka-today { position:absolute; top:0; bottom:0; width:0; border-left:1.5px dashed #d97706; }
 .mka-today-lb { position:absolute; top:0; font-size:10px; font-weight:600; color:#d97706; padding-right:4px; white-space:nowrap; }
@@ -4094,7 +4094,7 @@ async function adsOvFill(pkg){
   const W0 = Number(els[0].dataset.w0), E = Number(els[0].dataset.e), NW = Number(els[0].dataset.n), SPAN = NW * 7;
   const R = await adsRankLoad(pkg, W0, E); if(adsSel !== pkg) return;
   if(!R.ready){ R.ready = true; const r0 = Math.min(...R.popular.keys(), ...R.sales.keys()); if(NW < ADS_WEEKS && r0 < W0 + 7 && adsCache[pkg]) return adsRenderDetail(adsCache[pkg]); }
-  const Y = rk => 8 + Math.log10(rk) / 2 * 84, x = k => k - W0 + .5, m = R.popular;
+  const Y = rk => 20 + Math.log10(rk) / 2 * 74, x = k => k - W0 + .5, m = R.popular;   /* 위 20% = 업데이트 ▼ 자리 (11/17) */
   let d = '', pen = false; for(let k = W0; k <= E; k++){ const rk = m.get(k); if(rk == null){ pen = false; continue; } d += `${pen ? 'L' : 'M'}${x(k)} ${Y(rk).toFixed(1)}${!pen && m.get(k + 1) == null ? 'h.01' : ''}`; pen = true; }
   const ent = []; for(let k = Math.max(W0, R.from + 7); k <= E; k++) if(m.has(k) && ![1, 2, 3, 4, 5, 6, 7].some(i => m.has(k - i))) ent.push(k);
   let lp = null; for(let k = E; k >= E - 2 && lp == null; k--) if(m.has(k)) lp = m.get(k);
@@ -4133,7 +4133,7 @@ async function adsRankFill(pkg){
   await adsRankLoad(pkg, W0, T);
   if(adsSel !== pkg) return;
   if(!adsRank[pkg].ready){ adsRank[pkg].ready = true; const r0 = Math.min(...adsRank[pkg].popular.keys(), ...adsRank[pkg].sales.keys()); if(NW < ADS_WEEKS && r0 < W0 + 7 && adsCache[pkg]) return adsRenderDetail(adsCache[pkg]); }   /* 순위 기록을 알았으니 가로축 주 수를 다시 정해 한 번 더 그림 */
-  const R = adsRank[pkg], Y = rk => 6 + Math.log10(rk) / 2 * 88, x = k => k - W0 + .5;
+  const R = adsRank[pkg], Y = rk => 17 + Math.log10(rk) / 2 * 77, x = k => k - W0 + .5;   /* 위 17% = 업데이트 ▼ 자리 (11/17) */
   const path = m => { let d = '', pen = false; for(let k = W0; k <= T; k++){ const rk = m.get(k); if(rk == null){ pen = false; continue; } d += `${pen ? 'L' : 'M'}${x(k)} ${Y(rk).toFixed(1)}${!pen && m.get(k + 1) == null ? 'h.01' : ''}`; pen = true; } return d; };
   const ent = []; for(let k = Math.max(W0, R.from + 7); k <= T; k++) if(R.popular.has(k) && ![1, 2, 3, 4, 5, 6, 7].some(i => R.popular.has(k - i))) ent.push(k);
   const last = m => { for(let k = T; k >= T - 2; k--) if(m.has(k)) return m.get(k); return null; }, lp = last(R.popular), ls = last(R.sales);
@@ -4583,14 +4583,14 @@ function drawSearchRankChart(canvasId, lines, dates, store = searchCharts, opts 
       if(!markSet.size) return;
       ctx.save(); ctx.strokeStyle = 'rgba(139,128,249,.75)'; ctx.lineWidth = 1.2; ctx.setLineDash([3, 3]);
       dates.forEach((d, i) => { if(!markSet.has(d)) return; const px = x.getPixelForValue(i); ctx.beginPath(); ctx.moveTo(px, a.top); ctx.lineTo(px, a.bottom); ctx.stroke();
-        ctx.setLineDash([]); ctx.fillStyle = '#8b80f9'; ctx.beginPath(); ctx.moveTo(px - 4, a.top); ctx.lineTo(px + 4, a.top); ctx.lineTo(px, a.top + 6); ctx.closePath(); ctx.fill(); ctx.setLineDash([3, 3]); });
+        ctx.setLineDash([]); ctx.fillStyle = '#8b80f9'; ctx.beginPath(); ctx.moveTo(px - 4, a.top - 11); ctx.lineTo(px + 4, a.top - 11); ctx.lineTo(px, a.top - 4); ctx.closePath(); ctx.fill(); ctx.setLineDash([3, 3]); });   /* ▼ 는 차트 영역 위 여백에 */
       ctx.restore();
     }
   };
   store[canvasId] = new Chart(canvas.getContext('2d'), {
     type: 'line', data: { labels: dates, datasets },
     options: {
-      responsive: true, maintainAspectRatio: false, animation: false, layout: { padding: { top: 6, right: 6 + labelW } },
+      responsive: true, maintainAspectRatio: false, animation: false, layout: { padding: { top: markSet.size ? 16 : 6, right: 6 + labelW } },   /* 업데이트 ▼ 자리 */
       interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: { display: false },
