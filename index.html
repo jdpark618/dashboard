@@ -4516,16 +4516,20 @@ function drawSearchRankChart(canvasId, lines, dates, store = searchCharts, opts 
   const marks = {
     id: 'gdUpdMarks',
     beforeDatasetsDraw(chart){
-      const { ctx, chartArea: a, scales: { x } } = chart;
+      const { ctx, chartArea: a, scales: { x, y } } = chart;
       if(ads){
+        /* 바닥 띠 · 글자는 '100위 밖' 띠가 있으면 그 위에 (밖 표시 · 글자와 겹치지 않게) */
+        const base = hasOut ? Math.min(a.bottom, y.getPixelForValue(112)) : a.bottom;
         const step = dates.length > 1 ? x.getPixelForValue(1) - x.getPixelForValue(0) : 20;
         ctx.save(); ctx.font = '600 11px "Pretendard Variable", Pretendard, sans-serif'; ctx.textBaseline = 'bottom';
         ads.spans.forEach(p => { const i0 = dates.indexOf(p.from), i1 = dates.indexOf(p.to); if(i0 < 0 || i1 < 0) return;
           const l = Math.max(a.left, x.getPixelForValue(i0) - step / 2), r = Math.min(a.right, x.getPixelForValue(i1) + step / 2);
           ctx.fillStyle = 'rgba(244,114,182,.10)'; ctx.fillRect(l, a.top, r - l, a.bottom - a.top);
-          ctx.fillStyle = 'rgba(244,114,182,.75)'; ctx.fillRect(l, a.bottom - 2, r - l, 2);
+          ctx.fillStyle = 'rgba(244,114,182,.75)'; ctx.fillRect(l, base - 2, r - l, 2);
           const full = `UA 집행 (소재 ${p.n}개)`, short = `UA ${p.n}개`, tx = ctx.measureText(full).width + 8 <= r - l ? full : ctx.measureText(short).width + 6 <= r - l ? short : '';
-          if(tx){ ctx.fillStyle = '#f9a8d4'; ctx.textAlign = 'center'; ctx.fillText(tx, (l + r) / 2, a.bottom - 5); } });
+          if(tx){ const w = ctx.measureText(tx).width + 8, cx = (l + r) / 2;   /* 순위 선 위에서도 읽히게 어두운 바탕 */
+            ctx.fillStyle = 'rgba(32,36,40,.85)'; ctx.fillRect(cx - w / 2, base - 19, w, 15);
+            ctx.fillStyle = '#f9a8d4'; ctx.textAlign = 'center'; ctx.fillText(tx, cx, base - 5); } });
         ctx.restore();
       }
       if(!markSet.size) return;
