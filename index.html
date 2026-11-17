@@ -789,6 +789,7 @@ html.panel-lock { overflow: hidden; }
 .srch-in::placeholder { color:#6f767b; }
 .srch-in:hover { border-color:#50575c; }
 .srch-in:focus { border-color:#6257e8; box-shadow:0 0 0 3px rgba(98,87,232,.2); }
+#searchQuery { border-color:#6257e8; box-shadow:0 0 0 3px rgba(98,87,232,.2); }   /* 순위 비교 (11/17): 검색이 주 기능이라 처음부터 강조 */
 .srch-x { position:absolute; right:8px; top:50%; transform:translateY(-50%); color:#6f767b; font-size:12px; padding:2px 4px; }
 .srch-x:hover { color:#dfe1e3; }
 .srch-in:placeholder-shown ~ .srch-x { display:none; }
@@ -4526,16 +4527,35 @@ function drawSearchRankChart(canvasId, lines, dates, store = searchCharts, opts 
           const l = Math.max(a.left, x.getPixelForValue(i0) - step / 2), r = Math.min(a.right, x.getPixelForValue(i1) + step / 2);
           ctx.fillStyle = 'rgba(244,114,182,.10)'; ctx.fillRect(l, a.top, r - l, a.bottom - a.top);
           ctx.fillStyle = 'rgba(244,114,182,.75)'; ctx.fillRect(l, base - 2, r - l, 2);
-          const full = `UA 집행 (소재 ${p.n}개)`, short = `UA ${p.n}개`, tx = ctx.measureText(full).width + 8 <= r - l ? full : ctx.measureText(short).width + 6 <= r - l ? short : '';
-          if(tx){ const w = ctx.measureText(tx).width + 8, cx = (l + r) / 2;   /* 순위 선 위에서도 읽히게 어두운 바탕 */
-            ctx.fillStyle = 'rgba(32,36,40,.85)'; ctx.fillRect(cx - w / 2, base - 19, w, 15);
-            ctx.fillStyle = '#f9a8d4'; ctx.textAlign = 'center'; ctx.fillText(tx, cx, base - 5); } });
+        });
         ctx.restore();
       }
       if(!markSet.size) return;
       ctx.save(); ctx.strokeStyle = 'rgba(139,128,249,.75)'; ctx.lineWidth = 1.2; ctx.setLineDash([3, 3]);
       dates.forEach((d, i) => { if(!markSet.has(d)) return; const px = x.getPixelForValue(i); ctx.beginPath(); ctx.moveTo(px, a.top); ctx.lineTo(px, a.bottom); ctx.stroke();
         ctx.setLineDash([]); ctx.fillStyle = '#8b80f9'; ctx.beginPath(); ctx.moveTo(px - 4, a.top - 11); ctx.lineTo(px + 4, a.top - 11); ctx.lineTo(px, a.top - 4); ctx.closePath(); ctx.fill(); ctx.setLineDash([3, 3]); });   /* ▼ 는 차트 영역 위 여백에 */
+      ctx.restore();
+    }
+  };
+  /* UA 집행 글자 (11/17): 순위 선을 다 그린 뒤 맨 위에 — 기간 아래쪽(100위 밖 띠 위) · 위쪽 중 순위 점과 덜 겹치는 자리에, 어두운 바탕으로 */
+  const uaLabels = {
+    id: 'gdUaLabels',
+    afterDatasetsDraw(chart){
+      if(!ads) return;
+      const { ctx, chartArea: a, scales: { x, y } } = chart, base = hasOut ? Math.min(a.bottom, y.getPixelForValue(112)) : a.bottom;
+      const step = dates.length > 1 ? x.getPixelForValue(1) - x.getPixelForValue(0) : 20;
+      const pts = chart.data.datasets.filter(d => d._kind === 'rank').flatMap(d => d.data.map((v, i) => v == null ? null : [x.getPixelForValue(i), y.getPixelForValue(v)]).filter(Boolean));
+      ctx.save(); ctx.font = '600 11px "Pretendard Variable", Pretendard, sans-serif'; ctx.textBaseline = 'bottom'; ctx.textAlign = 'center';
+      ads.spans.forEach(p => { const i0 = dates.indexOf(p.from), i1 = dates.indexOf(p.to); if(i0 < 0 || i1 < 0) return;
+        const l = Math.max(a.left, x.getPixelForValue(i0) - step / 2), r = Math.min(a.right, x.getPixelForValue(i1) + step / 2);
+        const full = `UA 집행 (소재 ${p.n}개)`, short = `UA ${p.n}개`, tx = ctx.measureText(full).width + 8 <= r - l ? full : ctx.measureText(short).width + 6 <= r - l ? short : '';
+        if(!tx) return;
+        const w = ctx.measureText(tx).width + 8, cx = (l + r) / 2;
+        const hits = (t, b) => pts.filter(([px, py]) => px >= cx - w / 2 - 6 && px <= cx + w / 2 + 6 && py >= t - 4 && py <= b + 4).length;
+        const bot = [base - 19, base - 4], top = [a.top + 3, a.top + 18];
+        const [t, b] = hits(...bot) <= hits(...top) ? bot : top;
+        ctx.fillStyle = 'rgba(32,36,40,.9)'; ctx.fillRect(cx - w / 2, t, w, b - t);
+        ctx.fillStyle = '#f9a8d4'; ctx.fillText(tx, cx, b - 1); });
       ctx.restore();
     }
   };
@@ -4568,7 +4588,7 @@ function drawSearchRankChart(canvasId, lines, dates, store = searchCharts, opts 
           ticks: { color: '#a0a7ad', callback: v => SEARCH_TICKS.includes(v) ? `${v}위` : '' } }
       }
     },
-    plugins: opts.labels ? [band, endLabels, marks] : [band, marks]
+    plugins: opts.labels ? [band, endLabels, marks, uaLabels] : [band, marks, uaLabels]
   });
 }
 
@@ -5385,7 +5405,7 @@ function gdUpdRender(){
   const B = document.getElementById('gdUpdBody'); if(!B) return;
   const cur = gdUpdNow();
   if(!cur){ B.innerHTML = '<div class="text-xs muted py-6"><i class="fa-solid fa-spinner fa-spin mr-1.5"></i>업데이트 노트를 불러오는 중…</div>'; gdUpdFill(); return; }
-  if(B.dataset.key !== cur.key){ B.dataset.key = cur.key; gdUpdShow = 20; gdUpdQ = ''; gdUpdMonth = gdUpdThisMonth(); }
+  if(B.dataset.key !== cur.key){ B.dataset.key = cur.key; gdUpdShow = 20; gdUpdQ = ''; gdUpdMonth = cur.list[0]?.d?.slice(0, 7) || gdUpdThisMonth(); }   /* 11/17: 처음엔 마지막 업데이트가 있는 달 */
   const where = `${STORES[detailStore].name} · ${COUNTRIES[detailCountry].name}`, L = cur.list;
   const since = L.filter(u => !u.h && !u.x).map(u => u.s).filter(Boolean).sort()[0] || GD_UPD_SINCE;   /* 이 게임을 처음 본 날 (과거 버전 기록 h:1 은 제외) */
   const head = `<h4 class="gd-h">업데이트 히스토리 <span class="text-[11px] muted font-normal ml-1">${where} · ${L.some(u => u.h && !u.x) ? '스토어 버전 기록(최근 25개) + ' : ''}${mkShort(since)}부터 수집</span></h4>`;
