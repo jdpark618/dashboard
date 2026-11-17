@@ -632,6 +632,9 @@ select option { background-color: #202428; color: #e8eaed; }
 .mka-in { flex-shrink:0; white-space:nowrap; font-size:10px; font-weight:700; line-height:16px; padding:0 6px; border-radius:4px; color:white; background:#7c3aed; }
 .mka-n7 { font-weight:700; color:var(--c-up); } .mka-none { font-size:10.5px; color:#8b9298; white-space:nowrap; }
 /* 업데이트한 날 (11/17) */
+.mka-ov-lg { display:inline-flex; align-items:center; gap:12px; font-size:11px; font-weight:600; } .mka-ov-lg > span { display:inline-flex; align-items:center; gap:5px; }   /* 요약 미니 차트 범례 (11/17): 업데이트 · 인기 순위 · 소재 투입만 */
+.mka-lg-upd { display:inline-block; width:9px; height:7px; background:#8b80f9; clip-path:polygon(0 0,100% 0,50% 100%); }
+.mka-lg-line { display:inline-block; width:14px; border-top:2px solid #2dd4bf; } .mka-lg-bar { display:inline-block; width:7px; height:10px; border-radius:1.5px 1.5px 0 0; }
 .mka-upd { position:absolute; top:0; bottom:0; width:0; border-left:1.5px dashed rgba(139,128,249,.8); pointer-events:none; z-index:2; }
 .mka-neu { position:absolute; bottom:1px; transform:translateX(-50%); border-radius:50%; background:rgba(244,114,182,.9); z-index:4; cursor:help; }
 .mka-upd-t { position:absolute; top:0; width:9px; height:7px; margin-left:-4.5px; background:#8b80f9; clip-path:polygon(0 0,100% 0,50% 100%); z-index:4; cursor:help; }
@@ -4031,7 +4034,7 @@ const adsRank = {};
 function adsOvMini(k, items, all, T, rgb){
   const now = adsDay(Date.now() / 1000), E = adsAsOf != null ? T : Math.max(T, now), NW = adsTlWeeks(all.length ? all : items, E), W0 = adsWk(E) - (NW - 1) * 7;
   const weeks = Array.from({ length: NW }, (_, i) => W0 + i * 7), cnt = weeks.map(w => items.filter(c => c.a0 >= w && c.a0 <= w + 6).length), mx = Math.max(1, ...cnt);
-  return `<div class="flex items-baseline justify-between gap-2 mt-5"><span class="text-[13px] font-semibold rk-v">인기 순위 &amp; 소재 투입</span><span class="text-[11px] muted">최근 ${NW}주 · <span class="mka-ov-now">인기 순위 불러오는 중…</span></span></div>
+  return `<div class="flex items-baseline justify-between gap-2 mt-5"><span class="text-[13px] font-semibold rk-v">인기 순위 &amp; 소재 투입</span><span class="mka-ov-lg"><span style="color:#8b80f9"><b class="mka-lg-upd"></b>업데이트</span><span class="t-pop"><i class="mka-lg-line"></i>인기 순위</span><span style="color:rgb(${rgb})"><i class="mka-lg-bar" style="background:rgb(${rgb})"></i>소재 투입</span></span></div>
     <div class="mka-ov mt-1.5" data-w0="${W0}" data-e="${E}" data-n="${NW}">
       <div class="mka-ov-r"></div>
       <div class="mka-ov-b" style="grid-template-columns:repeat(${NW},minmax(0,1fr))">${cnt.map((n, i) => `<span title="${adsDk(weeks[i])}주 · 신규 소재 ${n}개">${n ? `<b>${n}</b><i style="height:calc((100% - 12px) * ${Math.max(.14, n / mx).toFixed(3)});background:rgb(${rgb})"></i>` : ''}</span>`).join('')}</div>
@@ -4046,14 +4049,12 @@ async function adsOvFill(pkg){
   const Y = rk => 20 + Math.log10(rk) / 2 * 74, x = k => k - W0 + .5, m = R.popular;   /* 위 20% = 업데이트 ▼ 자리 (11/17) */
   let d = '', pen = false; for(let k = W0; k <= E; k++){ const rk = m.get(k); if(rk == null){ pen = false; continue; } d += `${pen ? 'L' : 'M'}${x(k)} ${Y(rk).toFixed(1)}${!pen && m.get(k + 1) == null ? 'h.01' : ''}`; pen = true; }
   const ent = []; for(let k = Math.max(W0, R.from + 7); k <= E; k++) if(m.has(k) && ![1, 2, 3, 4, 5, 6, 7].some(i => m.has(k - i))) ent.push(k);
-  let lp = null; for(let k = E; k >= E - 2 && lp == null; k--) if(m.has(k)) lp = m.get(k);
   const html = !m.size ? '<span class="mka-rk-none muted">이 기간 인기 TOP100 기록 없음</span>' : `<svg viewBox="0 0 ${SPAN} 100" preserveAspectRatio="none">${[1, 10, 100].map(v => `<line x1="0" x2="${SPAN}" y1="${Y(v)}" y2="${Y(v)}" class="mka-rk-g"/>`).join('')}<path d="${d}" class="mka-rk-p"/></svg>
     ${[1, 10, 100].map(v => `<span class="mka-rk-y" style="top:${Y(v)}%">${v}</span>`).join('')}
     ${ent.map(k => `<i class="mka-rk-e" style="left:${x(k) / SPAN * 100}%"></i><span class="mka-rk-el" style="${x(k) / SPAN > .7 ? `right:${100 - x(k) / SPAN * 100}%;padding-right:4px` : `left:${x(k) / SPAN * 100}%;padding-left:4px`}">진입 ${adsDk(k)} · ${m.get(k)}위</span>`).join('')}
     <div class="mka-rk-h">${Array.from({ length: SPAN }, (_, i) => { const k = W0 + i; return k > E ? '<span></span>' : `<span title="${adsDk(k)} · 인기 ${m.get(k) ? m.get(k) + '위' : 'TOP100 밖'}"></span>`; }).join('')}</div>`;
   const um = await adsUpdMarks(pkg, W0, W0 + SPAN - 1); if(adsSel !== pkg) return;
   els.forEach(el => { el.querySelector('.mka-ov-r').innerHTML = html + um; });
-  document.querySelectorAll('#adsDetail .mka-ov-now').forEach(el => { el.innerHTML = `<span class="t-pop font-semibold">━ 인기 ${lp ? lp + '위' : '100위 밖'}</span> <span class="muted">Play · 한국</span>`; });
 }
 /* 순위 기록 불러오기 (게임마다 한 번): 13주 창 + 한 주 앞까지의 달 */
 function adsRankLoad(pkg, W0, E){
