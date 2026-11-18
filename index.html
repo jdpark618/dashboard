@@ -941,6 +941,9 @@ html.panel-lock { overflow: hidden; }
 .gd-sh-nav[disabled] { opacity:0; pointer-events:none; }
 .gd-desc-box { max-height:260px; overflow:auto; border:1px solid var(--line); border-radius:12px; padding:14px 16px; background:rgba(32,36,40,.6); font-size:13px; line-height:1.75; color:#c3c7ca; white-space:pre-line; }
 .gd-rate { border:1px solid var(--line); border-radius:12px; padding:16px; background:rgba(32,36,40,.6); }
+.gd-rate-cap { display:flex; align-items:baseline; justify-content:space-between; gap:8px; font-size:12px; color:#a0a7ad; margin-bottom:7px; } .gd-rate-cap small { font-size:11px; white-space:nowrap; }
+.gd-rate-num { font-size:26px; font-weight:800; line-height:1; font-variant-numeric:tabular-nums; }
+.gd-dl { padding-bottom:14px; margin-bottom:14px; border-bottom:1px solid var(--line); }
 .gd-shots { display:flex; gap:10px; overflow-x:auto; scroll-behavior:smooth; scrollbar-width:none; }
 .gd-shots::-webkit-scrollbar { display:none; }
 .gd-shots:empty { display:none; }
@@ -1947,7 +1950,7 @@ document.querySelectorAll('.sc-store button').forEach(b => { const on = b.datase
           <div id="gdDesc" class="gd-desc-box thin-scroll"></div>
         </section>
         <section class="min-w-0">
-          <h4 class="gd-h">평점 <span class="text-[11px] muted font-normal ml-1 gd-store-nm">구글 플레이</span></h4>
+          <h4 class="gd-h" id="gdRateT">다운로드 &amp; 평점</h4>
           <div id="gdRate" class="gd-rate"></div>
         </section>
       </div>
@@ -5122,6 +5125,17 @@ function detailKpiHtml(label, icon, cls, n){
     <div class="mt-0.5 leading-tight">${sub}</div></div>`;
 }
 
+/* 누적 다운로드 (11/18): 수집기가 순위 수집 때 갱신하는 Google Play 전 세계 누적 설치 수. App Store 화면에서도 같은 게임이면 표시, 기록이 없으면 칸을 숨김 */
+let gdDlCache = null;
+const gdDlLoad = () => gdDlCache ||= fetch(`${DATA_BASE}installs.json`, { cache: 'no-cache' }).then(r => r.ok ? r.json() : {}).then(j => j.g || {}).catch(() => ({}));
+async function gdDlFill(){
+  const el = document.getElementById('gdDl'), id = detailIds.gp;
+  const g = await gdDlLoad(), n = id ? g[id] : null;
+  if(document.getElementById('gdDl') !== el || detailIds.gp !== id) return;
+  setText('gdRateT', n ? '다운로드 & 평점' : '평점');
+  el.hidden = !n;
+  if(n) el.innerHTML = `<div class="gd-rate-cap"><span>누적 다운로드</span><small>Google Play 전 세계</small></div><div class="gd-rate-num rk-v">${Number(n).toLocaleString('en-US')}</div>`;
+}
 function renderGameDetail(){
   if(!detailCurrentName) return;
   const local = detailCountry === COUNTRY && detailStore === STORE, X = local ? null : gdExtSrc(detailCountry, detailStore);
@@ -5166,11 +5180,12 @@ function renderGameDetail(){
   /* 평점 카드: 지금 · 7일 전 · 30일 전 */
   const scAt = n => { const d = scDates.filter(x => x <= mkAddDays(scDates.at(-1) || '2000-01-01', -n)).at(-1); return d ? score.get(d) : null; };
   const s7 = scAt(7), s30 = scAt(30), delta = (a, b) => { if(a == null || b == null) return '<span class="muted">-</span>'; const v = Math.round((a - b) * 10) / 10; return v ? `<span class="${v > 0 ? 'rank-up' : 'rank-down'} font-semibold">${v > 0 ? '▲' : '▼'}${Math.abs(v).toFixed(1)}</span>` : '<span class="muted">변동 없음</span>'; };
-  document.getElementById('gdRate').innerHTML = scNow != null
-    ? `<div class="flex items-end gap-2"><span class="text-[34px] font-extrabold text-amber-300 leading-none">${scNow.toFixed(1)}</span><span class="text-amber-400 text-[13px] mb-1">${'★'.repeat(Math.round(scNow))}<span class="text-slate-600">${'★'.repeat(5 - Math.round(scNow))}</span></span></div>
+  document.getElementById('gdRate').innerHTML = `<div id="gdDl" class="gd-dl" hidden></div><div class="gd-rate-cap"><span>평점</span><small>${detailStore === 'ios' ? '앱스토어' : '구글 플레이'}</small></div>` + (scNow != null
+    ? `<div class="flex items-end gap-2"><span class="gd-rate-num text-amber-300">${scNow.toFixed(1)}</span><span class="text-amber-400 text-[13px]">${'★'.repeat(Math.round(scNow))}<span class="text-slate-600">${'★'.repeat(5 - Math.round(scNow))}</span></span></div>
        <div class="mt-4 space-y-2 text-[12.5px]"><div class="flex justify-between"><span class="muted">7일 전 ${s7 != null ? s7.toFixed(1) : '-'}</span>${delta(scNow, s7)}</div><div class="flex justify-between"><span class="muted">30일 전 ${s30 != null ? s30.toFixed(1) : '-'}</span>${delta(scNow, s30)}</div></div>
        <button type="button" class="mt-4 text-[12px] font-semibold text-indigo-300 hover:text-indigo-200" onclick="gdGo('gdRank', 'gdScore')">평점 추이 보기 ›</button>`
-    : '<div class="muted text-[13px]">평점 기록이 없습니다.</div>';
+    : '<div class="muted text-[13px]">평점 기록이 없습니다.</div>');
+  gdDlFill();
 
   /* 장르 안에서의 위치 */
   const genreRank = (map, cur) => {
@@ -5828,6 +5843,7 @@ async function gdResolveLink(){
   if(detailIds[st] !== id) return;
   detailLinked = true;
   gdRenderCountryTable();
+  gdDlFill();   /* App Store 화면으로 열었으면 이제 Google Play 쪽 패키지를 알게 됨 */
 }
 async function gdSetScope(c, st = detailStore){
   if(!COUNTRIES[c] || !STORES[st] || !detailIds[st]) return;
