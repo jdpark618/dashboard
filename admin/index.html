@@ -49,12 +49,12 @@
   /* DB 용량 (11/18): 막대 + % + 수명 · 값이 오기 전에는 숨김 */
   .cap:empty { display:none; }
   .cap { display:flex; align-items:center; gap:16px; background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:14px 18px; margin-bottom:14px; }
-  .cap .lb { font-weight:600; white-space:nowrap; }
+  .cap .lb { font-weight:600; white-space:nowrap; min-width:124px; }
   .cap .bar { flex:1; height:8px; border-radius:999px; background:var(--surface-2); overflow:hidden; min-width:80px; }
   .cap .bar i { display:block; height:100%; border-radius:999px; background:var(--ok); }
   .cap .bar i.warn { background:var(--warn); } .cap .bar i.ng { background:var(--ng); }
   .cap .pct { font-weight:700; font-size:14px; min-width:44px; text-align:right; }
-  .cap .life { color:var(--mu); font-size:12px; white-space:nowrap; } .cap .life b { color:var(--tx); font-weight:600; }
+  .cap .life { color:var(--mu); font-size:12px; white-space:nowrap; min-width:150px; text-align:right; } .cap .life b { color:var(--tx); font-weight:600; }
   @media (max-width:640px){ .cap { flex-wrap:wrap; gap:8px 12px; } .cap .bar { flex-basis:100%; order:3; } .cap .life { margin-left:auto; } }
 </style>
 </head>
@@ -65,6 +65,7 @@
     <div class="note" id="note"></div>
   </header>
   <div class="cap" id="cap"></div>
+  <div class="cap" id="capPages"></div>
   <div id="days"><div class="err">실행 기록을 불러오는 중...</div></div>
 </div>
 <script>
@@ -74,19 +75,22 @@
    인기 · 매출은 같은 순위 수집 실행에서 나오고, 재시도는 1시간 간격 최대 3번 (최초 → 재시도 → 최종) */
 /* DB 용량 (11/18): 구글 시트 한 파일 1,000만 셀 한도 대비 사용률 · 지금 속도로 한도까지 남은 기간.
    값 = 순위 수집기가 매일 남기는 gchart data/sheet_usage.json (탭마다 행×열 합계, 최근 90일).
-   하루 증가 = 최근 14일 기록의 실제 증가 속도 (기록이 7일 미만이면 순위 16개 차트 × 100행 × 10열 = 16,000 으로 추정) */
-(async () => {
-  const el = document.getElementById('cap');
-  let j = null; try { j = await (await fetch('https://jdpark618.github.io/gchart/data/sheet_usage.json?t=' + Date.now())).json(); }catch(e){}
+   하루 증가 = 최근 14일 기록의 실제 증가 속도 (기록이 7일 미만이면 순위 16개 차트 × 100행 × 10열 = 16,000 으로 추정)
+   GitHub Pages 용량 (11/18): 권장 1GB 대비 · 값 = 마케팅 추적이 매일 남기는 data/pages_usage.json (main 파일 합계) · 기록이 7일 미만이면 하루 1.7MB 로 추정 */
+async function capCard(id, label, file, key, limit0, guess){
+  const el = document.getElementById(id);
+  let j = null; try { j = await (await fetch(`https://jdpark618.github.io/gchart/data/${file}?t=` + Date.now())).json(); }catch(e){}
   const H = j?.hist || []; if(!H.length){ el.remove(); return; }
-  const last = H.at(-1), limit = j.limit || 1e7, used = last.cells, pct = used / limit * 100, dn = d => Date.parse(d) / 864e5;
+  const last = H.at(-1), limit = j.limit || limit0, used = last[key], pct = used / limit * 100, dn = d => Date.parse(d) / 864e5;
   const from = H.filter(x => dn(x.d) >= dn(last.d) - 14)[0], span = dn(last.d) - dn(from.d);
-  const perDay = span >= 7 && last.cells > from.cells ? (last.cells - from.cells) / span : 16000;
+  const perDay = span >= 7 && last[key] > from[key] ? (last[key] - from[key]) / span : guess;
   const days = Math.floor((limit - used) / perDay), end = new Date(Date.now() + days * 864e5);
   const life = days >= 365 ? `약 ${(days / 365).toFixed(1)}년` : `약 ${Math.round(days / 30)}개월`;
-  el.innerHTML = `<span class="lb">DB 용량</span><div class="bar"><i class="${pct >= 85 ? 'ng' : pct >= 70 ? 'warn' : ''}" style="width:${Math.max(pct, 1).toFixed(1)}%"></i></div>
+  el.innerHTML = `<span class="lb">${label}</span><div class="bar"><i class="${pct >= 85 ? 'ng' : pct >= 70 ? 'warn' : ''}" style="width:${Math.max(pct, 1).toFixed(1)}%"></i></div>
     <span class="pct">${pct.toFixed(1)}%</span><span class="life">수명 <b>${life}</b> · ${end.getFullYear()}년 ${end.getMonth() + 1}월경</span>`;
-})();
+}
+capCard('cap', 'DB 용량', 'sheet_usage.json', 'cells', 1e7, 16000);
+capCard('capPages', 'GitHub Pages 용량', 'pages_usage.json', 'bytes', 1e9, 1.7e6);
 const CATS = [
   { k: 'new',     lb: '신작',   wf: 'Wame Calendar Scraper',        cron: '03:12' },
   { k: 'popular', lb: '인기',   wf: 'Daily PlayStore Rank Scraper', cron: '03:42' },
