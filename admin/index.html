@@ -95,7 +95,9 @@ const CATS = [
   { k: 'new',     lb: '신작',   wf: 'Wame Calendar Scraper',        cron: '03:12' },
   { k: 'popular', lb: '인기',   wf: 'Daily PlayStore Rank Scraper', cron: '03:42' },
   { k: 'sales',   lb: '매출',   wf: 'Daily PlayStore Rank Scraper', cron: '03:42' },
-  { k: 'ads',     lb: '마케팅', wf: 'Ad Tracker (마케팅 추적)',      cron: '05:30' },
+  { k: 'ads',      lb: '마케팅 TOP5', wf: 'Ad Tracker (마케팅 추적)', cron: '05:30' },
+  { k: 'ads_rot',  lb: '마케팅 순번', wf: 'Ad Tracker (마케팅 추적)', cron: '이어서' },   /* 11/19: 단계마다 다른 서버(IP) */
+  { k: 'ads_fill', lb: '마케팅 보충', wf: 'Ad Tracker (마케팅 추적)', cron: '이어서' },
 ];
 const LOG_BASE = 'https://jdpark618.github.io/gchart/data/runlog/', DAYS = 14, FIRST_DAY = '2026-11-03';   /* 10/27~11/2 는 보지 않음 (11/09) */
 const kst = iso => new Date(Date.parse(iso) + 9 * 3600e3);   /* UTC ISO → KST 를 UTC 칸에 담은 Date (표시용) */
@@ -104,6 +106,7 @@ const DOW = ['일', '월', '화', '수', '목', '금', '토'];
 const esc = v => String(v ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const ICON = { o: '✓', x: '✕', w: '!', r: '↻', m: '·' };
 function lateTxt(cron, d){
+  if(!/^\d{1,2}:\d{2}$/.test(cron)) return '';   /* '1차 뒤'처럼 시각이 아닌 예약은 지연 표시 없음 */
   const [h, m] = cron.split(':').map(Number), mins = d.getUTCHours() * 60 + d.getUTCMinutes() - (h * 60 + m);
   if(mins < 0) return '';
   return `<span class="late ${mins >= 240 ? 'bad' : ''}">+${Math.floor(mins / 60)}시간 ${mins % 60}분</span>`;
