@@ -8309,7 +8309,7 @@ function rpAnalyze(D){
   const longEnough = (SI.dates[0] || '9') < gap0, before = (idx, k) => idx.dates.some(d => d < D.mon && idx.byDate.get(d).has(k));
   const nw = [], re = [], surge = [], stable = [];
   meta.forEach((v, k) => {
-    const it = { n: v.name, g: v.genre, cls: rpClass(v.name, v.genre), sb: best(SI, k, wkS), pb: best(PI, k, wkP) }, f = first(k, v.name);
+    const it = { k, n: v.name, g: v.genre, cls: rpClass(v.name, v.genre), sb: best(SI, k, wkS), pb: best(PI, k, wkP) }, f = first(k, v.name);
     /* 신작: 이 주 첫 차트인이고 그 전엔 매출·인기 어느 쪽에도 없던 게임.
        인기 순위 없이 매출로만 들어온 게임은 수집 전부터 있던 게임의 업데이트 복귀로 봄 */
     const debut = f && f >= D.mon && f <= D.end && !before(SI, k) && !before(PI, k);
@@ -8327,7 +8327,7 @@ function rpAnalyze(D){
     const r = [...pw, ...wkS].map(d => rk(SI, k, d)); let mx = 0; for(let i = 3; i < r.length; i++) mx = Math.max(mx, r[i] - r[i - 3]);
     /* 직전 3주 안에 업데이트 급등(3일 10계단+)이 있었으면 하락은 그 효과가 끝난 것 */
     const h = SI.dates.filter(d => d >= mkAddDays(D.mon, -28) && d < D.mon).map(d => rk(SI, k, d)); let up = 0; for(let i = 3; i < h.length; i++) up = Math.max(up, h[i - 3] - h[i]);
-    drops.push({ n: g.name, a: r[0], b: r.at(-1), sharp: mx >= 15, after: up >= 10, d: c - g.rank }); });
+    drops.push({ k, n: g.name, a: r[0], b: r.at(-1), sharp: mx >= 15, after: up >= 10, d: c - g.rank }); });
   const ord = m => [...m].sort((a, b) => mkAvgOrder(a[1], b[1]));
   const top5 = D.S.sales.top.slice(0, 5), keys5 = new Set(top5.map(x => x.key)), curPos = new Map(ord(D.S.sales.ca).map(([k], i) => [k, i + 1]));
   const outs = ord(D.S.sales.pa).slice(0, 5).filter(([k]) => !keys5.has(k)).map(([k, g]) => ({ n: g.name, pos: curPos.get(k) ?? null }));
@@ -8472,6 +8472,10 @@ function rpRender(D){
   const foot = `<div class="rp-foot"><span>Google Play 국내 매출·인기 순위(일별 TOP100) 기준</span><span>발행 ${D.issue}</span></div>`;
   /* 1쪽 분석: 고정 질문 4개에 결론 한 줄 + 근거 한 줄. 맨 위 한 문장은 질문들의 판정을 이어 붙임.
      게임명은 굵게, 조사를 바로 붙이지 않음 */
+  /* 11/19: 업데이트 기록이 있는 주(RP_UPD_SINCE~)는 추정 대신 기록으로 씀 — 급등 · 하락 · 헤드라인 */
+  const UD = rpUpdDb?.ev && D.mon >= RP_UPD_SINCE ? rpUpdDb.ev : null;
+  const updOf = (k, from, to) => { if(!UD || !k) return null; const p = String(k).replace(/^id:/, ''); return UD.filter(e => e.p === p && e.d >= from && e.d <= to).sort((a, b) => b.d.localeCompare(a.d))[0] || null; };
+  const uTxt = u => `${rpSlash(u.d)} ${u.size === '대' ? '대규모 ' : ''}업데이트`;
   const A = rpAnalyze(D), bn = n => `<b>${esc(cut(n, 22))}</b>`, nm = n => esc(cut(n, 18)), rv = v => v > 100 ? '밖' : v;
   const lst = (arr, f, n = 4) => arr.length ? arr.slice(0, n).map(f).join(' · ') + (arr.length > n ? ` 외 ${arr.length - n}개` : '') : '없음';
   const major = arr => { const c = {}; arr.forEach(x => { c[x.cls] = (c[x.cls] || 0) + 1; }); const t = Object.entries(c).sort((a, b) => b[1] - a[1])[0]; return t && t[1] * 2 > arr.length ? t : null; };
@@ -8491,26 +8495,34 @@ function rpRender(D){
     : nP30.length ? '→ 인기 상위권 진입 후 아직 매출로 이어지지 않음. 2주 차 매출 순위로 안착 여부 판단 필요' : '';
   /* ② 매출 급등 */
   const sv = A.surge.filter(x => !A.nw.some(w => w.n === x.n)), sF = sv.filter(x => x.flat).length, mS = major(sv), lowP = sv.filter(x => x.flat && x.pb > 30).length === sF;
-  const flatTxt = `${lowP ? '인기 순위는 하위권이나' : '인기 순위 변화 없이'} 꾸준한 업데이트로 매출 유지·상승 흐름`;
-  const q2c = !sv.length ? '매출 30위 안으로 급등한 게임 없음'
+  sv.forEach(x => { x.u = updOf(x.k, mkAddDays(D.mon, -3), D.end); }); const uN = sv.filter(x => x.u).length;
+  const flatTxt = UD ? `${lowP ? '인기 순위는 하위권이나' : '인기 순위 변화 없이'} 매출만 상승` : `${lowP ? '인기 순위는 하위권이나' : '인기 순위 변화 없이'} 꾸준한 업데이트로 매출 유지·상승 흐름`;
+  const q2c0 = !sv.length ? '매출 30위 안으로 급등한 게임 없음'
     : sv.length === 1 ? `${bn(sv[0].n)} 매출 ${rv(sv[0].a)}→${sv[0].b}위 급등, ${sv[0].flat ? flatTxt : '인기도 함께 상승'}`
     : `급등 ${sv.length}개${!mS ? '' : mS[1] === sv.length ? ` 모두 ${mS[0]} 장르` : ` 중 ${mS[0]} 장르 ${mS[1]}개`}, ${sF === sv.length ? flatTxt : !sF ? '인기·매출 동반 상승' : `${sF}개는 ${flatTxt}`}`;
+  const q2c = !(UD && uN) ? q2c0 : sv.length === 1 ? `${bn(sv[0].n)} ${uTxt(sv[0].u)} 직후 매출 ${rv(sv[0].a)}→${sv[0].b}위 급등, ${sv[0].flat ? '인기 순위 변화 없음' : '인기도 함께 상승'}`
+    : `급등 ${sv.length}개 중 ${uN === sv.length ? '모두' : `${uN}개가`} 이번 주 업데이트 직후 상승${sF === sv.length ? ', 인기 순위 변화 없이 매출만 상승' : ''}`;
   const q2b = !sv.length ? [] : [sv.length > 1 && sF === sv.length ? `${sv.length}개 모두 인기 순위 변화 없이 매출만 상승` : sv.length > 1 && sF ? `인기 동반 상승: ${lst(sv.filter(x => !x.flat), x => `${nm(x.n)} 인기 ${rv(x.pa)}→${rv(x.pb)}`, 2)}` : '',
-    lst(sv, x => `${nm(x.n)} ${rv(x.a)}→${x.b}`, 5)];
-  const q2i = !sv.length ? '' : sF === sv.length ? '→ 신규 유입보다 기존 유저의 업데이트 결제가 매출을 끌어올린 주로 보임'
+    lst(sv, x => `${nm(x.n)} ${rv(x.a)}→${x.b}${x.u ? ` (${rpSlash(x.u.d)} 업데이트)` : ''}`, 5)];
+  const q2i0 = !sv.length ? '' : sF === sv.length ? '→ 신규 유입보다 기존 유저의 업데이트 결제가 매출을 끌어올린 주로 보임'
     : !sF ? '→ 업데이트와 함께 신규 유입도 늘며 매출이 오른 것으로 보임'
     : '→ 대부분 기존 유저의 업데이트 결제로 보이며, 인기 동반 상승 게임은 신규 유입도 함께 늘어난 것으로 보임';
+  const q2i = !sv.length || !UD ? q2i0 : !uN ? '→ 업데이트 기록 없이 오른 상승으로, 상품 판매 등 게임 내 다른 요인으로 보임'
+    : sF === sv.length ? '→ 업데이트 직후 인기 변화 없이 매출만 올라, 기존 유저의 업데이트 결제로 보임'
+    : uN * 2 < sv.length ? '→ 업데이트 직후 상승은 일부이고, 나머지는 상품 판매 등 게임 내 다른 요인으로 보임' : q2i0;
   /* ③ 안정 유지 · 하락 */
   const st = A.stable, dp = A.drops[0], dpSurge = dp && sv.find(x => x.n === dp.n);
   const q3c = !A.hasPrev ? '전주 수집 기록이 없어 판단 불가'
     : `${st.length}개가 2주 연속 매출 30위 안 유지${st.length >= 15 ? ', 상위권은 견고' : st.length < 8 ? ', 상위권 변동 큼' : ''}`;
   const q3b = !A.hasPrev ? [] : [st.length ? lst(st, x => `${nm(x.n)} ${x.lo === x.hi ? `${x.lo}위` : `${x.lo}–${x.hi}위`}`) + (st[0].lo === st[0].hi ? ` (${nm(st[0].n)} 변동 없음)` : '') : '',
     A.drops.length ? `하락: ${lst(A.drops, x => `${nm(x.n)} ${x.a}→${rv(x.b)}`, 3)}` : ''];
-  const q3i = !A.hasPrev ? '' : !dp ? '→ 하락한 게임 없이 상위권 구도 유지'
+  const dpU = dp && updOf(dp.k, mkAddDays(D.mon, -28), D.end);
+  const q3i0 = !A.hasPrev ? '' : !dp ? '→ 하락한 게임 없이 상위권 구도 유지'
     : dpSurge ? `→ ${bn(dp.n)} 주 초 업데이트로 급등(${rv(dpSurge.a)}→${dpSurge.b})한 뒤 급등 전 순위로 돌아가는 흐름으로 보임`
     : dp.after ? `→ ${bn(dp.n)} 직전 업데이트 효과가 끝나 급등 전 순위로 돌아가는 흐름으로 보임`
     : dp.sharp ? `→ ${bn(dp.n)} 단기간 급락, 밸런스·콘텐츠 등 게임 내 문제 가능성 확인 필요`
     : `→ ${bn(dp.n)} 완만한 하락, 다음 업데이트 전 일시적으로 매출이 감소하는 시기로 보임`;
+  const q3i = !UD || !dp || !(dpSurge || dp.after) ? q3i0 : dpU ? `→ ${bn(dp.n)} ${uTxt(dpU)} 효과가 끝나 급등 전 순위로 돌아가는 흐름으로 보임` : `→ ${bn(dp.n)} 직전 급등 효과가 끝나 급등 전 순위로 돌아가는 흐름으로 보임`;
   /* ④ TOP5 */
   const t5 = A.top5, inn = t5.filter(x => x.prevPos == null || x.prevPos > 5), mv = t5.filter(x => x.prevPos != null && x.prevPos !== x.pos).sort((a, b) => Math.abs(b.prevPos - b.pos) - Math.abs(a.prevPos - a.pos))[0];
   const q4c = !A.hasPrev ? '전주 수집 기록이 없어 비교 불가'
@@ -8521,7 +8533,9 @@ function rpRender(D){
   const q4o = A.outs.find(o => o.pos);
   const q4i = !A.hasPrev ? '' : q4o ? `→ ${bn(q4o.n)} 다음 업데이트 시점에 TOP5로 돌아오는지 확인 필요` : !inn.length && !mv ? '→ 상위권 구도 변화 없음' : '';
   /* 맨 위 두 줄 요약: 1) 차트를 움직인 것 2) 상위권 · 신작 상태 */
-  const hl1 = sv.length >= 2 ? `업데이트에 반응한 ${mS ? `${mS[0]} 장르가` : '게임들이'} 매출 차트를 움직인 한 주` : sv.length ? '업데이트 급등 1건 외에는 차트 변화가 크지 않은 한 주' : '차트 변화가 크지 않은 한 주';
+  const hl1 = UD ? (sv.length >= 2 ? (uN * 2 >= sv.length ? `업데이트 직후 매출이 오른 ${mS ? `${mS[0]} 장르가` : '게임들이'} 매출 차트를 움직인 한 주` : '매출 급등 게임들이 차트를 움직인 한 주')
+      : sv.length ? `${uN ? '업데이트' : '매출'} 급등 1건 외에는 차트 변화가 크지 않은 한 주` : '차트 변화가 크지 않은 한 주')
+    : sv.length >= 2 ? `업데이트에 반응한 ${mS ? `${mS[0]} 장르가` : '게임들이'} 매출 차트를 움직인 한 주` : sv.length ? '업데이트 급등 1건 외에는 차트 변화가 크지 않은 한 주' : '차트 변화가 크지 않은 한 주';
   const hl2 = [!A.hasPrev ? '' : inn.length ? `상위 5위 중 ${inn.length}자리 교체` : '상위권은 큰 변화 없이 유지',
     !A.nw.length ? '새로 차트에 든 신작 없음' : nS30.length ? `신작은 ${bn(nS30[0].n)}${nS30.length > 1 ? ` 외 ${nS30.length - 1}개` : ' 1개만'} 매출 30위권 진입` : nP30.length ? '신작은 인기 진입에 그쳐 아직 매출 안착 전' : '신작은 인기 상위권에도 들지 못함'].filter(Boolean).join(', ');
   const headline = `${hl1}.<br>${hl2}.`;
@@ -8531,7 +8545,7 @@ function rpRender(D){
   /* 정리: 주목 · 흐름 주의 · 다음 주 관찰 (해당 없는 줄은 뺌) */
   const watch = [nS30[0] ? `${nm(nS30[0].n)} 매출 30위 유지 여부` : nP30[0] ? `${nm(nP30[0].n)} 등 인기 상위권 신작의 매출 진입 여부` : '', q4o ? `${nm(q4o.n)} TOP5 복귀 여부` : ''].filter(Boolean);
   const sum = [sv[0] ? `<li><b class="k">주목</b><span>${bn(sv[0].n)} ${rv(sv[0].a)}→${sv[0].b}, 이번 주 매출 상승 폭 최대</span></li>` : '',
-    dp ? `<li><b class="k">흐름 주의</b><span>${bn(dp.n)} ${dp.a}→${rv(dp.b)}, ${dpSurge || dp.after ? '업데이트 효과 이후 하락 폭 큼' : dp.sharp ? '단기간 급락' : '완만한 하락 지속'}</span></li>` : '',
+    dp ? `<li><b class="k">흐름 주의</b><span>${bn(dp.n)} ${dp.a}→${rv(dp.b)}, ${dpSurge || dp.after ? (UD && !dpU ? '급등 이후 하락 폭 큼' : '업데이트 효과 이후 하락 폭 큼') : dp.sharp ? '단기간 급락' : '완만한 하락 지속'}</span></li>` : '',
     watch.length ? `<li><b class="k">다음 주 관찰</b><span>${watch.join(', ')}</span></li>` : ''].join('');
   const qb = (no, t, c, b, i) => `<div class="rp-q"><div class="t">${no} · ${t}</div><div class="c">${c}</div>${b.filter(Boolean).length ? `<ul class="b">${b.filter(Boolean).map(x => `<li>${x}</li>`).join('')}</ul>` : ''}${i ? `<div class="i">${i}</div>` : ''}</div>`;
   const p1 = `<section class="rp-page">${run(2)}
