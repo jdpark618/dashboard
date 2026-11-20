@@ -846,11 +846,7 @@ html.panel-lock { overflow: hidden; }
 .ev-lanes { position:absolute; left:0; right:0; top:28px; pointer-events:none; }
 .evb { position:absolute; height:18px; border-radius:4px; font-size:11px; line-height:18px; padding:0 7px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:600; color:#dfe2e5; background:color-mix(in srgb, var(--c) 16%, transparent); box-shadow:inset 2px 0 0 var(--c); }
 .evb.cl { border-top-left-radius:0; border-bottom-left-radius:0; box-shadow:none; }
-/* 11/20 달력 정리: 2주 넘는 행사는 달력 위 '장기 진행' 한 줄 · 당일 일정은 칸 안에 점 + 제목 */
-.ev-long { display:flex; flex-wrap:wrap; align-items:center; gap:6px; padding:10px 12px; border-bottom:1px solid var(--line); }
-.ev-long .lb { font-size:11px; color:#6f777d; margin-right:4px; }
-.ev-pill { display:inline-flex; align-items:center; gap:6px; height:24px; padding:0 9px; border-radius:6px; background:#292f33; font-size:11.5px; font-weight:600; white-space:nowrap; cursor:pointer; }
-.ev-pill i { width:3px; height:12px; border-radius:2px; background:var(--c); } .ev-pill span { color:#6f777d; font-weight:500; }
+/* 11/20 달력 정리: 당일 일정은 칸 안에 점 + 제목 */
 .ev-one { position:absolute; left:0; right:0; pointer-events:none; display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); } .ev-one > div { padding:0 8px; min-width:0; }
 .ev-one .ev-it { color:#a0a7ad; } .ev-one .ev-it i { width:5px; height:5px; } .evb.cr { border-top-right-radius:0; border-bottom-right-radius:0; }
 .ev-items { margin-top:59px; } .ev-it { display:flex; align-items:center; gap:5px; font-size:11px; line-height:17px; white-space:nowrap; overflow:hidden; }
@@ -1695,7 +1691,7 @@ document.querySelectorAll('.sc-store button').forEach(b => { const on = b.datase
       <button onclick="evMove(0)" class="cal-today-btn">오늘</button>
       <div id="evChips" class="flex flex-wrap items-center gap-1.5 ml-1"></div>
     </div>
-    <div class="flex items-center gap-3 ml-auto"><span id="evUpd" class="text-[11px] muted"></span><a id="evOpen" class="asof hover:underline" href="#" target="_blank" rel="noopener">구글 캘린더에서 열기 ›</a></div>
+    <div class="flex items-center gap-3 ml-auto"><span id="evUpd" class="text-[11px] muted"></span></div>
   </div>
   <div class="ev-body"><section id="evCal" class="card rounded-xl overflow-hidden"></section><aside id="evPanel" class="card rounded-xl p-4 thin-scroll"></aside></div>
 </div>
@@ -2979,7 +2975,6 @@ function switchView(view){
 /* 스토어·국가 선택을 지금 페이지 칸으로: both = 스토어+국가, store = 스토어만(4개국을 함께 보는 화면)
    country = 국가만(두 스토어를 나란히 보는 일간 마켓별 순위). 신작 달력 · 신작 DB · 신작 동향 · 주간 리포트는 없음 */
 /* 행사 달력 (11/09): gchart data/events.json (6시간마다 공개 구글 캘린더에서 받음) → 직접 그림 */
-const EVENT_CAL_ID = 'c_58bf32be64488847f1007ad21615b0fcdf767a96764ea45106af7b5b75974456@group.calendar.google.com';   /* 구글 캘린더 '캘린더 ID' (공개) — 원본 열기 링크용 */
 /* 분류: 제목 앞 [..] 머리표 */
 const EV_CATS = [['행사', '#7c6cf0', ['행사', '쇼']], ['e스포츠', '#e0567a', ['e']], ['비즈니스', '#2f9e8f', ['비즈니스', 'Biz', '국회', '토론']],
   ['출시·테스트', '#e08a2f', ['출시', '테스트']], ['마감·접수', '#8a94a0', ['마감', '접수', '모집', '채용']], ['방송', '#3b82c4', ['Live', 'LIVE']], ['기타', '#8a94a0', []]];
@@ -2987,7 +2982,6 @@ const evS = { data: null, ym: null, sel: null, off: new Set() };
 const evD = s => new Date(s + 'T00:00:00Z'), evF = d => d.toISOString().slice(0, 10), evAdd = (s, n) => evF(new Date(evD(s).getTime() + n * 864e5));
 const evMD = s => `${+s.slice(5, 7)}/${+s.slice(8)}`;
 async function openEventsView(){
-  const a = document.getElementById('evOpen'); a.href = `https://calendar.google.com/calendar/u/0?cid=${encodeURIComponent(EVENT_CAL_ID)}`;
   if(!evS.data){
     document.getElementById('evCal').innerHTML = `<div class="p-10 text-center text-xs muted"><i class="fa-solid fa-spinner fa-spin mr-1.5"></i>행사 일정을 불러오는 중...</div>`;
     try{ const j = await (await fetch(`${DATA_BASE}events.json`)).json(); evS.data = j;
@@ -3006,15 +3000,14 @@ function evRender(){
   const J = evS.data; if(!J) return;
   const EV = J.events.filter(e => !evS.off.has(e.cat)), today = kstTodayStr(), first = evS.ym + '-01';
   const dow = (evD(first).getUTCDay() + 6) % 7, start = evAdd(first, -dow), last = evF(new Date(Date.UTC(+evS.ym.slice(0, 4), +evS.ym.slice(5, 7), 0)));
-  const weeks = Math.ceil((dow + +last.slice(8)) / 7), LANES = 3, LONG = 14, LH = 21, IH = 17;   /* 11/20 달력 정리: 막대 3줄 · 2주 넘는 행사는 위 한 줄 · 당일 일정은 칸 안에 제목 */
+  const weeks = Math.ceil((dow + +last.slice(8)) / 7), LANES = 3, LONG = 14, LH = 21, IH = 17;   /* 11/20 달력 정리: 막대 3줄 · 2주 넘는 행사는 달력에서 빼고 오른쪽 패널에서만 · 당일 일정은 칸 안에 제목 */
   document.getElementById('evTitle').textContent = `${evS.ym.slice(0, 4)}년 ${+evS.ym.slice(5, 7)}월`;
-  const len = e => (evD(e.e) - evD(e.s)) / 864e5 + 1, long = EV.filter(e => len(e) > LONG && e.e >= first && e.s <= last).sort((a, b) => a.s.localeCompare(b.s)), body = EV.filter(e => len(e) <= LONG);
+  const len = e => (evD(e.e) - evD(e.s)) / 864e5 + 1, body = EV.filter(e => len(e) <= LONG);
   const cal = document.getElementById('evCal');
-  cal.innerHTML = long.length ? `<div class="ev-long"><span class="lb">장기 진행</span>${long.map(e => `<span class="ev-pill" style="--c:${e.col}" title="${escapeAttr(e.t)}" onclick="evPick('${e.s < first ? first : e.s}')"><i></i>${escapeHtml(e.st)}<span>${evMD(e.s)}~${evMD(e.e)}</span></span>`).join('')}</div>` : '';
   /* 화면 높이에 맞춤: 주당 높이 (최소 116px) · 오른쪽 패널은 달력과 같은 높이 */
-  const longH = cal.firstElementChild?.offsetHeight || 0, top = cal.getBoundingClientRect().top + scrollY, wh = Math.max(116, Math.floor((innerHeight - top - 24 - 34 - longH) / weeks));
-  const root = document.documentElement.style; root.setProperty('--ev-wh', wh + 'px'); root.setProperty('--ev-ph', (wh * weeks + 36 + longH) + 'px');
-  let h = cal.innerHTML + `<div class="ev-dow">${['월', '화', '수', '목', '금', '토', '일'].map(d => `<div>${d}</div>`).join('')}</div>`;
+  const top = cal.getBoundingClientRect().top + scrollY, wh = Math.max(116, Math.floor((innerHeight - top - 24 - 34) / weeks));
+  const root = document.documentElement.style; root.setProperty('--ev-wh', wh + 'px'); root.setProperty('--ev-ph', (wh * weeks + 36) + 'px');
+  let h = `<div class="ev-dow">${['월', '화', '수', '목', '금', '토', '일'].map(d => `<div>${d}</div>`).join('')}</div>`;
   for(let w = 0; w < weeks; w++){
     const ws = evAdd(start, w * 7), we = evAdd(ws, 6);
     /* 여러 날 행사: 주 안에서 겹치지 않게 줄 배치 (긴 행사 먼저), 3줄까지 막대 · 넘치면 그 날 '+N개' */
