@@ -827,7 +827,30 @@ html.panel-lock { overflow: hidden; }
 .filter-row .mk-asof-slot, .filter-row .asof { margin-left:auto; text-align:right; }
 .asof { font-size:12px; color:rgba(91,79,224,.9); }
 /* 행사 달력: 구글 캘린더 임베드 (원래 밝은 화면이라 다크 테마에서는 색 반전 + 색상 회전으로 사이트 톤에 맞춤) */
-#view-events { max-width:1180px; margin:0 auto; }   /* 넓은 화면에서도 가로 1180px 가운데 (인벤 게임 캘린더 크기) */
+#view-events { max-width:1180px; margin:0 auto; }
+/* 게임 뉴스 (11/20): 루리웹 플랫폼별 뉴스 섹션 → gchart data/news */
+#view-news { max-width:1360px; margin:0 auto; }
+/* 날짜 묶음: 누르면 접기·펼치기 */
+.nw-day { display:flex; align-items:center; gap:8px; width:100%; padding:12px 18px; font-size:13.5px; font-weight:700; color:#45433d; background:#f8fafc; border-top:1px solid var(--line); text-align:left; cursor:pointer; }
+.nw-day:first-child { border-top:0; border-radius:12px 12px 0 0; } .nw-day b { font-size:11.5px; color:#8b9297; font-weight:500; }
+.nw-day .cv { margin-left:auto; font-size:11px; color:#8b9297; transition:transform .15s; } .nw-day.off .cv { transform:rotate(-90deg); }
+/* 기사 한 줄: 시각(타임라인 점) · 썸네일 · 제목/요약/출처 — 높이 통일 */
+.nw-it { position:relative; display:grid; grid-template-columns:52px 112px minmax(0,1fr); gap:14px; align-items:center; height:92px; padding:0 18px; }
+.nw-it + .nw-it::before { content:''; position:absolute; top:0; left:84px; right:18px; height:1px; background:var(--line); }
+.nw-it:hover { background:rgba(241,245,249,.45); }
+.nw-it .tm { position:relative; align-self:stretch; display:flex; align-items:center; font-size:11.5px; color:#787774; font-weight:600; }
+.nw-it .tm::after { content:''; position:absolute; right:-1px; top:0; bottom:0; width:1px; background:#e2e8f0; }
+.nw-it .tm i { position:absolute; right:-4px; top:50%; width:7px; height:7px; margin-top:-3.5px; border-radius:50%; background:#cbd5e1; z-index:1; }
+.nw-it:hover .tm i { background:#6257e8; }
+.nw-it .th { width:112px; height:68px; border-radius:7px; background:#f1f5f9 center/cover no-repeat; }
+.nw-it .t { display:block; font-size:15px; font-weight:700; line-height:1.35; color:#f0f1f2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .nw-it:hover .t { text-decoration:underline; text-underline-offset:3px; }
+.nw-it .d { display:block; font-size:12px; color:#8b9297; margin-top:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.nw-it .src { display:flex; align-items:center; gap:4px; margin-top:6px; font-size:11px; color:#a5a4a0; }
+.nw-pf { display:inline-block; font-size:10px; font-weight:700; padding:0 5px; line-height:16px; border-radius:4px; color:var(--tc); background:color-mix(in srgb, var(--tc) 16%, transparent); }
+.nw-more { display:block; width:100%; padding:12px; font-size:12px; color:#787774; border-top:1px solid var(--line); } .nw-more:hover { color:#45433d; }
+/* 검색창 안 검색 대상 고르기 */
+.nw-srch .srch-in { padding-right:84px; } .nw-srch select { position:absolute; right:5px; top:50%; transform:translateY(-50%); height:24px; border-radius:6px; border:0; background:#f1f5f9; color:#787774; font-size:11.5px; padding:0 6px; outline:none; cursor:pointer; }
+@media (max-width:767px){ .nw-it { grid-template-columns:40px 76px minmax(0,1fr); gap:10px; height:84px; padding:0 12px; } .nw-it + .nw-it::before { left:62px; right:12px; } .nw-it .th { width:76px; height:52px; } .nw-it .t { font-size:13.5px; } .nw-it .src { display:none; } .nw-day { padding:11px 12px; } .nw-srch { width:100% !important; } }
 .ev-body { display:grid; grid-template-columns:minmax(0,1fr) 360px; gap:16px; }
 @media (max-width:1199px){ .ev-body { grid-template-columns:1fr; } }
 .ev-dow, .ev-wk { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); }
@@ -1338,7 +1361,8 @@ body, main { background:#f6f7f9 !important; }
       <div class="sb-sub"><button type="button" data-go="biz:structure" onclick="sbGo('biz:structure')">시장 구조</button><button type="button" data-go="biz:change" onclick="sbGo('biz:change')">상위권 분석</button><button type="button" data-go="biz:debut" onclick="sbGo('biz:debut')">마케팅 동향</button><button type="button" data-go="biz:releases" onclick="sbGo('biz:releases')">신작 동향</button></div>
     </div>
     <button class="sb-item" data-view="search" onclick="switchView('search')" data-tip="순위 비교"><i data-lucide="chart-no-axes-combined"></i><span class="sb-tx">순위 비교</span></button>
-    <div class="sb-group">일정</div>
+    <div class="sb-group">소식</div>   <!-- 11/20: 일정 → 소식 (게임 뉴스 · 신작 달력 · 행사 달력) -->
+    <button class="sb-item" data-view="news" onclick="switchView('news')" data-tip="게임 뉴스"><i data-lucide="newspaper"></i><span class="sb-tx">게임 뉴스</span></button>
     <button class="sb-item sb-upd" data-view="calendar" onclick="switchView('calendar')" data-tip="신작 달력"><i data-lucide="calendar-days"></i><span class="sb-tx">신작 달력</span><span id="updNew" class="hd-new hd-upd hidden">UPDATE</span></button>
     <button class="sb-item sb-upd" data-view="events" onclick="switchView('events')" data-tip="행사 달력"><i data-lucide="calendar-range"></i><span class="sb-tx">행사 달력</span><span id="updEvents" class="hd-new hd-upd hidden">UPDATE</span></button>
     <!-- DB 메뉴: 원본 데이터가 필요할 때만 쓰는 메뉴라 맨 아래 묶음으로 -->
@@ -1747,6 +1771,15 @@ document.querySelectorAll('.sc-store button').forEach(b => { const on = b.datase
     <div class="flex items-center gap-3 ml-auto"><span id="evUpd" class="text-[11px] muted"></span></div>
   </div>
   <div class="ev-body"><section id="evCal" class="card rounded-xl overflow-hidden"></section><aside id="evPanel" class="card rounded-xl p-4 thin-scroll"></aside></div>
+</div>
+
+<div id="view-news" class="hidden space-y-3">
+  <div class="cal-bar">
+    <div class="flex items-center gap-2 flex-wrap"><div id="nwChips" class="flex flex-wrap items-center gap-1.5"></div>
+      <label class="srch nw-srch" style="width:300px"><i class="fa-solid fa-magnifying-glass srch-ic"></i><input id="nwQ" class="srch-in" placeholder="뉴스 검색" oninput="nwRender()"><select id="nwQF" onchange="nwRender()" aria-label="검색 대상"><option value="">전체</option><option value="g">게임명</option><option value="c">회사</option></select></label></div>
+    <span id="nwUpd" class="text-[11px] muted ml-auto"></span>
+  </div>
+  <section id="nwList" class="card rounded-xl"></section>
 </div>
 
 <div id="view-calendar" class="hidden space-y-3">
@@ -3003,7 +3036,7 @@ function switchView(view){
   sbDrawer(false); sbSync();
   if(!document.getElementById('detailPanel').classList.contains('translate-x-full')) closeGameDetail();
   document.documentElement.dataset.view = view;
-  ['dashboard','global','watch','ranking','market','business','search','ads','calendar','events','database','report'].forEach(v => {
+  ['dashboard','global','watch','ranking','market','business','search','ads','calendar','events','news','database','report'].forEach(v => {
     const el = document.getElementById(`view-${v}`);
     if(el) el.classList.toggle('hidden', v==='database' ? !(view==='sales'||view==='popular'||view==='newReleases') : view!==v);
   });
@@ -3015,6 +3048,7 @@ function switchView(view){
   if(view==='ads')work.push(openAdsView());
   if(view==='calendar')work.push(ensureCalendarMonthLoaded());
   if(view==='events')openEventsView();
+  if(view==='news')work.push(openNewsView());
   updMarkSeen(view);
   /* 현재 탭을 URL 해시에 기록: 새로고침·링크 공유 시 같은 탭으로 열림 (리포트는 ?w= 주를 유지) */
   history.replaceState(null, '', view === 'dashboard' ? location.pathname + location.search : view === 'report' && location.hash.startsWith('#report') ? location.hash : view === 'business' && mkSection === 'monthly' ? '#monthly' : `#${view}`);
@@ -3091,6 +3125,48 @@ function evRender(){
     <div class="ev-sec">이날 시작 · 당일<b>${day.length}</b></div>${day.map(card).join('') || '<div class="text-xs muted">없음</div>'}
     ${going.length ? `<div class="ev-sec">진행 중인 행사<b>${going.length}</b></div>${going.map(card).join('')}` : ''}`;
 }
+/* ── 게임 뉴스 (11/20) ─────────────────────────────
+   루리웹 편집부가 나눈 플랫폼 섹션(모바일 · PC/온라인 · 비디오게임)을 그대로 씀 — 분류는 하지 않음.
+   gchart news.py 가 3시간마다 data/news/YYYY-MM.json 에 모음. 처음엔 최근 두 달만 받고, '더 보기'로 날짜를 늘림 */
+const NW_PF = { m: ['모바일', '#2f9e8f'], pc: ['PC', '#7c6cf0'], cs: ['콘솔', '#e08a2f'] };
+let NEWS_BASE = `${DATA_BASE}news/`;
+const nwS = { items: null, pf: '', days: 7, upd: '', off: new Set() };
+/* 검색용: 제목의 ‘…’ 안 = 게임명, 첫 ‘ 또는 쉼표 앞 = 회사 (보도자료 제목 형식) */
+const nwGame = t => [...t.matchAll(/[‘'"“]([^’'"”]{2,})[’'"”]/g)].map(m => m[1]).join(' ');
+const nwCo = t => { const m = t.match(/^(?:\[[^\]]+\]\s*)?([^‘'",]{2,40}?)(?:\s*[‘'"]|,)/); return m ? m[1].replace(/㈜|\(주\)|주식회사/g, '').trim() : ''; };
+async function openNewsView(){
+  if(!nwS.items){
+    document.getElementById('nwList').innerHTML = `<div class="p-10 text-center text-xs muted"><i class="fa-solid fa-spinner fa-spin mr-1.5"></i>뉴스를 불러오는 중...</div>`;
+    try{
+      const idx = await (await fetch(`${NEWS_BASE}index.json`, { cache: 'no-cache' })).json();
+      const J = await Promise.all((idx.months || []).slice(-2).map(m => fetch(`${NEWS_BASE}${m}.json`, { cache: 'no-cache' }).then(r => r.ok ? r.json() : { items: [] })));
+      nwS.items = J.flatMap(j => j.items).sort((a, b) => b.ts.localeCompare(a.ts) || b.id - a.id);
+      nwS.upd = J.map(j => j.updated || '').sort().at(-1) || '';
+    }catch(e){ document.getElementById('nwList').innerHTML = mkEmpty('뉴스를 불러오지 못했습니다.'); return; }
+  }
+  nwRender();
+}
+function nwPick(p){ nwS.pf = p; nwS.days = 7; nwRender(); }
+function nwRender(){
+  if(!nwS.items) return;
+  const q = (document.getElementById('nwQ').value || '').trim().toLowerCase(), qf = document.getElementById('nwQF').value;
+  const hay = x => (qf === 'g' ? nwGame(x.t) : qf === 'c' ? nwCo(x.t) : x.t + ' ' + x.d).toLowerCase();
+  const A = nwS.items.filter(x => !q || hay(x).includes(q)), L = A.filter(x => !nwS.pf || x.p.includes(nwS.pf));
+  document.getElementById('nwChips').innerHTML = [['', '전체', '#787774'], ...Object.entries(NW_PF).map(([k, [n, c]]) => [k, n, c])].map(([k, n, c]) =>
+    `<button type="button" class="cal-chip ${nwS.pf === k ? 'on' : ''}" style="--tc:${c}" onclick="nwPick('${k}')">${k ? '<i></i>' : ''}${n} <b>${(k ? A.filter(x => x.p.includes(k)) : A).length}</b></button>`).join('');
+  document.getElementById('nwUpd').textContent = nwS.upd ? `루리웹 뉴스 · 수집 ${evMD(nwS.upd.slice(0, 10))} ${nwS.upd.slice(11, 16)}` : '';
+  const days = [...new Set(L.map(x => x.ts.slice(0, 10)))], show = days.slice(0, nwS.days);
+  const dw = d => '일월화수목금토'[new Date(d + 'T00:00:00Z').getUTCDay()];
+  const row = x => `<a class="nw-it" href="https://bbs.ruliweb.com/news/read/${x.id}" target="_blank" rel="noopener" title="${escapeAttr(x.t)}"><span class="tm">${x.ts.slice(11)}<i></i></span>
+    ${x.th ? `<span class="th" style="background-image:url('${escapeAttr(x.th)}')"></span>` : '<span class="th"></span>'}
+    <span class="min-w-0"><span class="t">${escapeHtml(x.t)}</span>${x.d ? `<span class="d">${escapeHtml(x.d)}</span>` : ''}
+    <span class="src">${x.p.map(k => `<span class="nw-pf" style="--tc:${NW_PF[k][1]}">${NW_PF[k][0]}</span>`).join('')}<span>루리웹 뉴스</span></span></span></a>`;
+  document.getElementById('nwList').innerHTML = !L.length ? mkEmpty(q ? '검색 결과가 없습니다.' : '뉴스가 없습니다.')
+    : show.map(d => { const R = L.filter(x => x.ts.startsWith(d)), off = nwS.off.has(d);
+        return `<button type="button" class="nw-day ${off ? 'off' : ''}" onclick="nwFold('${d}')" aria-expanded="${!off}">${+d.slice(5, 7)}월 ${+d.slice(8)}일 (${dw(d)})<b>${R.length}건</b><i class="fa-solid fa-chevron-down cv"></i></button>${off ? '' : R.map(row).join('')}`; }).join('')
+      + (days.length > show.length ? `<button type="button" class="nw-more" onclick="nwS.days += 7; nwRender()">이전 7일 더 보기</button>` : '');
+}
+function nwFold(d){ nwS.off.has(d) ? nwS.off.delete(d) : nwS.off.add(d); nwRender(); }
 /* 스토어·국가 전환: 새로고침 없이 이 자리에서. 메뉴·상단바·필터 줄은 그대로 두고 필터 줄 아래 본문만 '읽는 중'
    나라·스토어에 묶인 데이터·캐시만 비우고 지금 화면을 다시 그림 (패키지·시트 이름으로 키를 둔 캐시는 그대로 재사용) */
 async function scopeSwitch(c, st, view){
@@ -3177,7 +3253,7 @@ function showToast(msg){
   t.textContent = msg; t.classList.add('on');
   clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('on'), 2500);
 }
-const VALID_VIEWS = ['dashboard','global','watch','ranking','market','monthly','business','calendar','events','sales','popular','newReleases','search','ads','report'];
+const VALID_VIEWS = ['dashboard','global','watch','ranking','market','monthly','business','calendar','events','news','sales','popular','newReleases','search','ads','report'];
 function viewFromHash(){ const v = decodeURIComponent(location.hash.slice(1)).split('?')[0]; return VALID_VIEWS.includes(v) && !((COUNTRY !== 'kr' || STORE !== 'gp') && KR_ONLY_VIEWS.includes(v)) ? v : 'dashboard'; }
 /* 다른 나라에서 한국 전용 메뉴를 누르면 한국으로 바꿔 그 화면을 연다 */
 document.addEventListener('click', e => {
