@@ -829,7 +829,22 @@ html.panel-lock { overflow: hidden; }
 /* 행사 달력: 구글 캘린더 임베드 (원래 밝은 화면이라 다크 테마에서는 색 반전 + 색상 회전으로 사이트 톤에 맞춤) */
 #view-events { max-width:1180px; margin:0 auto; }
 /* 게임 뉴스 (11/20): 루리웹 플랫폼별 뉴스 섹션 → gchart data/news */
-#view-news { max-width:1360px; margin:0 auto; }
+#view-news { max-width:1440px; margin:0 auto; }
+/* 11/20 좌우 반반: 모바일·PC | 콘솔 — 칸마다 화면 높이에 맞춰 따로 스크롤 (양이 달라도 빈 곳 없음) */
+.nw-cols { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:14px; }
+.nw-col { display:flex; flex-direction:column; min-width:0; overflow:hidden; }
+.nw-col > h3 { display:flex; align-items:baseline; gap:8px; padding:13px 18px; font-size:14.5px; font-weight:700; border-bottom:1px solid var(--line); } .nw-col > h3 b { font-size:12px; color:#8b9297; font-weight:500; }
+.nw-col .bd { height:var(--nw-h, 720px); overflow-y:auto; }
+@media (max-width:1023px){ .nw-cols { grid-template-columns:minmax(0,1fr); gap:10px; } .nw-col .bd { height:auto; max-height:none; overflow:visible; } .nw-cols .nw-day { top:52px; } }
+@media (max-width:767px){ .nw-cols .nw-col .nw-it { grid-template-columns:76px minmax(0,1fr); gap:12px; height:84px; } .nw-cols .nw-col .nw-it .th { width:76px; height:52px; } .nw-cols .nw-col .nw-it .t { font-size:13.5px; } }
+.nw-cols .nw-day:first-child { border-radius:0; border-top:0; }
+.nw-cols .nw-day { position:sticky; top:0; z-index:2; background:#eef2f6; border-top:1px solid #e2e8f0; border-bottom:1px solid var(--line); }   /* 날짜 헤더: 한 단계 어둡게 + 스크롤 중 상단 고정 */
+.nw-cols .nw-it:hover { background:rgba(98,87,232,.07); } .nw-cols .nw-it:hover .t { color:#5b4fe0; }
+.nw-col .bd { scrollbar-color:rgba(165,164,160,.2) transparent; } .nw-col .bd:hover { scrollbar-color:rgba(120,119,116,.75) transparent; }
+.nw-tabs { display:none; }
+@media (max-width:1023px){ .nw-tabs { display:flex; gap:6px; } .nw-tabs button { flex:1; height:36px; border-radius:8px; border:1px solid #e2e8f0; background:#f8fafc; color:#787774; font-size:13px; font-weight:600; } .nw-tabs button b { font-weight:500; opacity:.7; } .nw-tabs button.on { color:#45433d; border-color:#6257e8; background:rgba(98,87,232,.14); } .nw-col:not(.tab-on) { display:none; } .nw-col > h3 { display:none; } }
+.nw-cols .nw-it { grid-template-columns:96px minmax(0,1fr); gap:14px; height:84px; } .nw-cols .nw-it .th { width:96px; height:60px; } .nw-cols .nw-it .t { font-size:14.5px; }
+
 /* 날짜 묶음: 누르면 접기·펼치기 */
 .nw-day { display:flex; align-items:center; gap:8px; width:100%; padding:12px 18px; font-size:13.5px; font-weight:700; color:#45433d; background:#f8fafc; border-top:1px solid var(--line); text-align:left; cursor:pointer; }
 .nw-day:first-child { border-top:0; border-radius:12px 12px 0 0; } .nw-day b { font-size:11.5px; color:#8b9297; font-weight:500; }
@@ -1771,11 +1786,12 @@ document.querySelectorAll('.sc-store button').forEach(b => { const on = b.datase
 
 <div id="view-news" class="hidden space-y-3">
   <div class="cal-bar">
-    <div class="flex items-center gap-2 flex-wrap"><div id="nwChips" class="flex flex-wrap items-center gap-1.5"></div>
-      <label class="srch nw-srch" style="width:300px"><i class="fa-solid fa-magnifying-glass srch-ic"></i><input id="nwQ" class="srch-in" placeholder="뉴스 검색" oninput="nwRender()"><select id="nwQF" onchange="nwRender()" aria-label="검색 대상"><option value="">전체</option><option value="g">게임명</option><option value="c">회사</option></select></label></div>
+    <div class="flex items-center gap-2 flex-wrap">
+      <label class="srch nw-srch" style="width:300px"><i class="fa-solid fa-magnifying-glass srch-ic"></i><input id="nwQ" class="srch-in" placeholder="뉴스 검색" oninput="nwRender()"><select id="nwQF" onchange="nwRender()" aria-label="검색 대상"><option value="">전체</option><option value="g">게임명</option><option value="c">회사</option></select></label>
+    </div>
     <span id="nwUpd" class="text-[11px] muted ml-auto"></span>
   </div>
-  <section id="nwList" class="card rounded-xl"></section>
+  <div class="nw-cols" id="nwList"></div>
 </div>
 
 <div id="view-calendar" class="hidden space-y-3">
@@ -3126,43 +3142,52 @@ function evRender(){
    gchart news.py 가 3시간마다 data/news/YYYY-MM.json 에 모음. 처음엔 최근 두 달만 받고, '더 보기'로 날짜를 늘림 */
 const NW_PF = { m: ['모바일', '#2f9e8f'], pc: ['PC', '#7c6cf0'], cs: ['콘솔', '#e08a2f'] };
 let NEWS_BASE = `${DATA_BASE}news/`;
-const nwS = { items: null, pf: '', days: 7, upd: '', off: new Set() };
+const nwS = { items: null, days: { l: 7, r: 7 }, upd: '', off: new Set(), tab: 'l' };
+const NW_COLS = [['l', '모바일 · PC', ['m', 'pc']], ['r', '콘솔', ['cs']]];
 /* 검색용: 제목의 ‘…’ 안 = 게임명, 첫 ‘ 또는 쉼표 앞 = 회사 (보도자료 제목 형식) */
 const nwGame = t => [...t.matchAll(/[‘'"“]([^’'"”]{2,})[’'"”]/g)].map(m => m[1]).join(' ');
 const nwCo = t => { const m = t.match(/^(?:\[[^\]]+\]\s*)?([^‘'",]{2,40}?)(?:\s*[‘'"]|,)/); return m ? m[1].replace(/㈜|\(주\)|주식회사/g, '').trim() : ''; };
 async function openNewsView(){
   if(!nwS.items){
-    document.getElementById('nwList').innerHTML = `<div class="p-10 text-center text-xs muted"><i class="fa-solid fa-spinner fa-spin mr-1.5"></i>뉴스를 불러오는 중...</div>`;
+    document.getElementById('nwList').innerHTML = `<div class="card rounded-xl p-10 text-center text-xs muted" style="grid-column:1/-1"><i class="fa-solid fa-spinner fa-spin mr-1.5"></i>뉴스를 불러오는 중...</div>`;
     try{
       const idx = await (await fetch(`${NEWS_BASE}index.json`, { cache: 'no-cache' })).json();
       const J = await Promise.all((idx.months || []).slice(-2).map(m => fetch(`${NEWS_BASE}${m}.json`, { cache: 'no-cache' }).then(r => r.ok ? r.json() : { items: [] })));
       nwS.items = J.flatMap(j => j.items).sort((a, b) => b.ts.localeCompare(a.ts) || b.id - a.id);
       nwS.upd = J.map(j => j.updated || '').sort().at(-1) || '';
-    }catch(e){ document.getElementById('nwList').innerHTML = mkEmpty('뉴스를 불러오지 못했습니다.'); return; }
+    }catch(e){ document.getElementById('nwList').innerHTML = `<div class="card rounded-xl" style="grid-column:1/-1">${mkEmpty('뉴스를 불러오지 못했습니다.')}</div>`; return; }
   }
   nwRender();
 }
-function nwPick(p){ nwS.pf = p; nwS.days = 7; nwRender(); }
+function nwTab(c){ nwS.tab = c; nwRender(); }
+function nwMore(c){ nwS.days[c] += 7; nwRender(); }
+function nwFold(k){ nwS.off.has(k) ? nwS.off.delete(k) : nwS.off.add(k); nwRender(); }
 function nwRender(){
   if(!nwS.items) return;
   const q = (document.getElementById('nwQ').value || '').trim().toLowerCase(), qf = document.getElementById('nwQF').value;
   const hay = x => (qf === 'g' ? nwGame(x.t) : qf === 'c' ? nwCo(x.t) : x.t + ' ' + x.d).toLowerCase();
-  const A = nwS.items.filter(x => !q || hay(x).includes(q)), L = A.filter(x => !nwS.pf || x.p.includes(nwS.pf));
-  document.getElementById('nwChips').innerHTML = [['', '전체', '#787774'], ...Object.entries(NW_PF).map(([k, [n, c]]) => [k, n, c])].map(([k, n, c]) =>
-    `<button type="button" class="cal-chip ${nwS.pf === k ? 'on' : ''}" style="--tc:${c}" onclick="nwPick('${k}')">${k ? '<i></i>' : ''}${n} <b>${(k ? A.filter(x => x.p.includes(k)) : A).length}</b></button>`).join('');
+  const A = nwS.items.filter(x => !q || hay(x).includes(q));
   document.getElementById('nwUpd').textContent = nwS.upd ? `루리웹 뉴스 · 수집 ${evMD(nwS.upd.slice(0, 10))} ${nwS.upd.slice(11, 16)}` : '';
-  const days = [...new Set(L.map(x => x.ts.slice(0, 10)))], show = days.slice(0, nwS.days);
   const dw = d => '일월화수목금토'[new Date(d + 'T00:00:00Z').getUTCDay()];
-  const row = x => `<a class="nw-it" href="https://bbs.ruliweb.com/news/read/${x.id}" target="_blank" rel="noopener" title="${escapeAttr(x.t)}">
+  const row = (x, own) => { const pf = x.p.filter(k => own.length > 1 || !own.includes(k));   /* 콘솔 칸은 '콘솔' 칩 생략 (다른 플랫폼 동시 기사만 칩) */
+    return `<a class="nw-it" href="https://bbs.ruliweb.com/news/read/${x.id}" target="_blank" rel="noopener" title="${escapeAttr(x.t)}">
     <span class="th">${x.th ? `<img src="${escapeAttr(x.th)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}</span>
     <span class="min-w-0"><span class="t">${escapeHtml(x.t)}</span>${x.d ? `<span class="d">${escapeHtml(x.d)}</span>` : ''}
-    <span class="src">${x.p.map(k => `<span class="nw-pf" style="--tc:${NW_PF[k][1]}">${NW_PF[k][0]}</span>`).join('')}</span></span></a>`;
-  document.getElementById('nwList').innerHTML = !L.length ? mkEmpty(q ? '검색 결과가 없습니다.' : '뉴스가 없습니다.')
-    : show.map(d => { const R = L.filter(x => x.ts.startsWith(d)), off = nwS.off.has(d);
-        return `<button type="button" class="nw-day ${off ? 'off' : ''}" onclick="nwFold('${d}')" aria-expanded="${!off}">${+d.slice(5, 7)}월 ${+d.slice(8)}일 (${dw(d)})<b>${R.length}건</b><i class="fa-solid fa-chevron-down cv"></i></button>${off ? '' : R.map(row).join('')}`; }).join('')
-      + (days.length > show.length ? `<button type="button" class="nw-more" onclick="nwS.days += 7; nwRender()">이전 7일 더 보기</button>` : '');
+    ${pf.length ? `<span class="src">${pf.map(k => `<span class="nw-pf" style="--tc:${NW_PF[k][1]}">${NW_PF[k][0]}</span>`).join('')}</span>` : ''}</span></a>`; };
+  const col = ([c, name, own]) => { const L = A.filter(x => x.p.some(k => own.includes(k))), days = [...new Set(L.map(x => x.ts.slice(0, 10)))], show = days.slice(0, nwS.days[c]);
+    const body = !L.length ? mkEmpty(q ? '검색 결과가 없습니다.' : '뉴스가 없습니다.')
+      : show.map(d => { const R = L.filter(x => x.ts.startsWith(d)), k = `${c}|${d}`, off = nwS.off.has(k);
+          return `<button type="button" class="nw-day ${off ? 'off' : ''}" onclick="nwFold('${k}')" aria-expanded="${!off}">${+d.slice(5, 7)}월 ${+d.slice(8)}일 (${dw(d)})<b>${R.length}건</b><i class="fa-solid fa-chevron-down cv"></i></button>${off ? '' : R.map(x => row(x, own)).join('')}`; }).join('')
+        + (days.length > show.length ? `<button type="button" class="nw-more" onclick="nwMore('${c}')">이전 7일 더 보기</button>` : '');
+    return `<section class="card rounded-xl nw-col"><h3>${name}<b>${L.length}건</b></h3><div class="bd thin-scroll">${body}</div></section>`; };
+  const box = document.getElementById('nwList');
+  /* 좁은 화면: 반반 대신 탭 전환 */
+  box.innerHTML = `<div class="nw-tabs">${NW_COLS.map(([c, name, own]) => `<button type="button" class="${nwS.tab === c ? 'on' : ''}" onclick="nwTab('${c}')">${name} <b>${A.filter(x => x.p.some(k => own.includes(k))).length}</b></button>`).join('')}</div>`
+    + NW_COLS.map(C => col(C).replace('class="card rounded-xl nw-col"', `class="card rounded-xl nw-col ${nwS.tab === C[0] ? 'tab-on' : ''}"`)).join('');
+  /* 칸 높이 = 화면 아래까지 (두 칸이 같은 높이로 끝남) */
+  const top = box.getBoundingClientRect().top + scrollY;
+  document.documentElement.style.setProperty('--nw-h', Math.max(420, innerHeight - top - 24 - 48) + 'px');
 }
-function nwFold(d){ nwS.off.has(d) ? nwS.off.delete(d) : nwS.off.add(d); nwRender(); }
 /* 스토어·국가 전환: 새로고침 없이 이 자리에서. 메뉴·상단바·필터 줄은 그대로 두고 필터 줄 아래 본문만 '읽는 중'
    나라·스토어에 묶인 데이터·캐시만 비우고 지금 화면을 다시 그림 (패키지·시트 이름으로 키를 둔 캐시는 그대로 재사용) */
 async function scopeSwitch(c, st, view){
