@@ -837,7 +837,7 @@ html.panel-lock { overflow: hidden; }
 .nw-it { position:relative; display:grid; grid-template-columns:112px minmax(0,1fr); gap:16px; align-items:center; height:92px; padding:0 18px; }
 .nw-it + .nw-it::before { content:''; position:absolute; top:0; left:18px; right:18px; height:1px; background:var(--line); }
 .nw-it:hover { background:rgba(41,47,51,.45); }
-.nw-it .th { width:112px; height:68px; border-radius:7px; background:#292f33 center/cover no-repeat; }
+.nw-it .th { width:112px; height:68px; border-radius:7px; background:#292f33; overflow:hidden; } .nw-it .th img { width:100%; height:100%; object-fit:cover; display:block; }   /* 루리웹 이미지는 Referer 없이 받아야 열림 */
 .nw-it .t { display:block; font-size:15px; font-weight:700; line-height:1.35; color:#f0f1f2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .nw-it:hover .t { text-decoration:underline; text-underline-offset:3px; }
 .nw-it .d { display:block; font-size:12px; color:#8b9297; margin-top:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .nw-it .src { display:flex; align-items:center; gap:4px; margin-top:6px; font-size:11px; color:#6f767b; }
@@ -1740,7 +1740,7 @@ document.querySelectorAll('.sc-store button').forEach(b => { const on = b.datase
       <div class="srch w-48"><i class="fa-solid fa-magnifying-glass srch-ic" aria-hidden="true"></i><input id="calSearch" class="srch-in" placeholder="게임 검색" autocomplete="off" oninput="calSearchInput(this.value)"><button type="button" class="srch-x" onclick="document.getElementById('calSearch').value=''; calSearchInput('')" aria-label="검색 지우기"><i class="fa-solid fa-xmark"></i></button></div>
       <div class="mk-seg" id="calCapRow" title="칸당 표시">
         <span id="calCapSel" class="contents">
-          <button type="button" data-c="5" onclick="setCalCap(5)" class="on">5개</button>
+          <button type="button" data-c="4" onclick="setCalCap(4)" class="on">4개</button>
           <button type="button" data-c="99" onclick="setCalCap(99)">전체</button>
         </span>
       </div>
@@ -3101,7 +3101,7 @@ function nwRender(){
   const days = [...new Set(L.map(x => x.ts.slice(0, 10)))], show = days.slice(0, nwS.days);
   const dw = d => '일월화수목금토'[new Date(d + 'T00:00:00Z').getUTCDay()];
   const row = x => `<a class="nw-it" href="https://bbs.ruliweb.com/news/read/${x.id}" target="_blank" rel="noopener" title="${escapeAttr(x.t)}">
-    ${x.th ? `<span class="th" style="background-image:url('${escapeAttr(x.th)}')"></span>` : '<span class="th"></span>'}
+    <span class="th">${x.th ? `<img src="${escapeAttr(x.th)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}</span>
     <span class="min-w-0"><span class="t">${escapeHtml(x.t)}</span>${x.d ? `<span class="d">${escapeHtml(x.d)}</span>` : ''}
     <span class="src">${x.p.map(k => `<span class="nw-pf" style="--tc:${NW_PF[k][1]}">${NW_PF[k][0]}</span>`).join('')}</span></span></a>`;
   document.getElementById('nwList').innerHTML = !L.length ? mkEmpty(q ? '검색 결과가 없습니다.' : '뉴스가 없습니다.')
@@ -3279,7 +3279,7 @@ async function ensureCalendarMonthLoaded(){
   renderCalendar();
 }
 
-let calMaxPerCell = 5;
+let calMaxPerCell = 4;   /* 11/20: 칸당 5 → 4 */
 const calState = { showPast: false, view: 'grid', types: new Set(['OPEN', 'TEST', 'EARLY']), q: '' };
 const CAL_TYPE_LABEL = { OPEN: '정식', TEST: '테스트', EARLY: '얼리 액세스' };
 const CAL_DOW = ['일', '월', '화', '수', '목', '금', '토'];
