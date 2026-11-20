@@ -836,14 +836,16 @@ html.panel-lock { overflow: hidden; }
 .nw-col > h3 { display:flex; align-items:baseline; gap:8px; padding:13px 18px; font-size:14.5px; font-weight:700; border-bottom:1px solid var(--line); } .nw-col > h3 b { font-size:12px; color:#8b9297; font-weight:500; }
 .nw-col .bd { height:var(--nw-h, 720px); overflow-y:auto; }
 @media (max-width:1023px){ .nw-cols { grid-template-columns:minmax(0,1fr); gap:10px; } .nw-col .bd { height:auto; max-height:none; overflow:visible; } .nw-cols .nw-day { top:52px; } }
-@media (max-width:767px){ .nw-cols .nw-col .nw-it { grid-template-columns:76px minmax(0,1fr); gap:12px; height:84px; } .nw-cols .nw-col .nw-it .th { width:76px; height:52px; } .nw-cols .nw-col .nw-it .t { font-size:13.5px; } }
+@media (max-width:767px){ .nw-cols .nw-col .nw-it { grid-template-columns:76px minmax(0,1fr); gap:12px; height:100px; } .nw-cols .nw-col .nw-it .th { width:76px; height:52px; } .nw-cols .nw-col .nw-it .t { font-size:13.5px; } }
 .nw-cols .nw-day:first-child { border-radius:0; border-top:0; }
 .nw-cols .nw-day { position:sticky; top:0; z-index:2; background:#eef2f6; border-top:1px solid #e2e8f0; border-bottom:1px solid var(--line); }   /* 날짜 헤더: 한 단계 어둡게 + 스크롤 중 상단 고정 */
 .nw-cols .nw-it:hover { background:rgba(98,87,232,.07); } .nw-cols .nw-it:hover .t { color:#5b4fe0; }
 .nw-col .bd { scrollbar-color:rgba(165,164,160,.2) transparent; } .nw-col .bd:hover { scrollbar-color:rgba(120,119,116,.75) transparent; }
 .nw-tabs { display:none; }
 @media (max-width:1023px){ .nw-tabs { display:flex; gap:6px; } .nw-tabs button { flex:1; height:36px; border-radius:8px; border:1px solid #e2e8f0; background:#f8fafc; color:#787774; font-size:13px; font-weight:600; } .nw-tabs button b { font-weight:500; opacity:.7; } .nw-tabs button.on { color:#45433d; border-color:#6257e8; background:rgba(98,87,232,.14); } .nw-col:not(.tab-on) { display:none; } .nw-col > h3 { display:none; } }
-.nw-cols .nw-it { grid-template-columns:96px minmax(0,1fr); gap:14px; height:84px; } .nw-cols .nw-it .th { width:96px; height:60px; } .nw-cols .nw-it .t { font-size:14.5px; }
+.nw-cols .nw-it { grid-template-columns:96px minmax(0,1fr); gap:14px; height:104px; } .nw-cols .nw-it .th { width:96px; height:60px; }
+.nw-cols .nw-it .t { font-size:14.5px; white-space:normal; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.38; }   /* 11/20: 제목 최대 2줄 · 요약 1줄 · 줄 높이 고정 */
+.nw-cols .nw-it .d { margin-top:4px; } .nw-cols .nw-it .src { margin-top:5px; }
 
 /* 날짜 묶음: 누르면 접기·펼치기 */
 .nw-day { display:flex; align-items:center; gap:8px; width:100%; padding:12px 18px; font-size:13.5px; font-weight:700; color:#45433d; background:#f8fafc; border-top:1px solid var(--line); text-align:left; cursor:pointer; }
@@ -1787,9 +1789,9 @@ document.querySelectorAll('.sc-store button').forEach(b => { const on = b.datase
 <div id="view-news" class="hidden space-y-3">
   <div class="cal-bar">
     <div class="flex items-center gap-2 flex-wrap">
-      <label class="srch nw-srch" style="width:300px"><i class="fa-solid fa-magnifying-glass srch-ic"></i><input id="nwQ" class="srch-in" placeholder="뉴스 검색" oninput="nwRender()"><select id="nwQF" onchange="nwRender()" aria-label="검색 대상"><option value="">전체</option><option value="g">게임명</option><option value="c">회사</option></select></label>
+      <label class="srch nw-srch" style="width:380px"><i class="fa-solid fa-magnifying-glass srch-ic"></i><input id="nwQ" class="srch-in" placeholder="뉴스 검색" oninput="nwRender()"><select id="nwQF" onchange="nwRender()" aria-label="검색 대상"><option value="">전체</option><option value="g">게임명</option><option value="c">회사</option></select></label>
     </div>
-    <span id="nwUpd" class="text-[11px] muted ml-auto"></span>
+    <span id="nwUpd" class="text-[11px] ml-auto" style="color:#a5a4a0"></span>
   </div>
   <div class="nw-cols" id="nwList"></div>
 </div>
