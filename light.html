@@ -878,7 +878,8 @@ html.panel-lock { overflow: hidden; }
 .ev-body { display:grid; grid-template-columns:minmax(0,1fr) 360px; gap:16px; }
 @media (max-width:1199px){ .ev-body { grid-template-columns:1fr; } }
 .ev-dow, .ev-wk { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); }
-.ev-dow { border-bottom:1px solid var(--line); } .ev-dow div { padding:8px 10px; font-size:11px; color:#8b9297; }
+.ev-dow { border-bottom:1px solid var(--line); } .ev-dow div { padding:8px 10px; font-size:11.5px; font-weight:600; color:#55534e; text-align:center; }   /* 11/20: 요일 가운데 · 밝게 · 토 파랑 · 일 빨강 */
+.ev-dow div:nth-child(6) { color:#2563eb; } .ev-dow div:nth-child(7) { color:#dc2626; }
 .ev-wk { position:relative; border-bottom:1px solid var(--line); height:var(--ev-wh, 124px); } .ev-wk:last-child { border-bottom:0; }
 .ev-cell { border-right:1px solid var(--line); padding:5px 6px 4px; min-width:0; cursor:pointer; } .ev-cell:last-child { border-right:0; }
 .ev-cell:hover { background:rgba(241,245,249,.45); } .ev-cell.out .ev-dn { color:#454c51; }
@@ -889,7 +890,7 @@ html.panel-lock { overflow: hidden; }
 .mka-kv { display:grid; grid-template-columns:auto 1fr; gap:4px 12px; font-size:12px; } .mka-kv dt { color:#8b9297; } .mka-kv dd { margin:0; font-weight:600; }
 .ev-dn { font-size:12px; font-weight:600; height:20px; display:flex; align-items:center; gap:4px; }
 .ev-dot { width:7px; height:7px; border-radius:50%; flex:none; } .ev-dn .ev-more { margin-left:auto; font-style:normal; font-weight:500; }   /* 당일 일정 점 · 넘친 개수는 날짜 줄 오른쪽 */
-.ev-dn { color:#787774; } .ev-cell.we .ev-dn { color:#6f777d; }   /* 11/20: 주말 빨강·파랑 글자 없앰 */
+.ev-dn { color:#787774; } .ev-cell.sat .ev-dn { color:#2563eb; } .ev-cell.sun .ev-dn { color:#dc2626; } .ev-cell.out.we .ev-dn { opacity:.45; }   /* 11/20: 토 · 일 날짜도 색 */
 .ev-cell.today .ev-dn span { background:#6257e8; color:rgb(255,255,255); border-radius:999px; padding:0 6px; line-height:18px; }
 .ev-lanes { position:absolute; left:0; right:0; top:28px; pointer-events:none; }
 .evb { position:absolute; height:18px; border-radius:4px; font-size:11px; line-height:18px; padding:0 7px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:600; color:#dfe2e5; background:color-mix(in srgb, var(--c) 16%, transparent); box-shadow:inset 2px 0 0 var(--c); }
@@ -1343,7 +1344,7 @@ body, main { background:#f6f7f9 !important; }
 .evb { color:#1f2328 !important; background:color-mix(in srgb, var(--c) 16%, #ffffff) !important; }   /* 행사 달력 막대 (11/09) */
 .ev-cell:hover { background:#f7f8fa !important; } .ev-cell.sel { background:#f4f2ff !important; box-shadow:inset 0 0 0 1.5px #5046c8 !important; }
 .ev-cell.today .ev-dn span { background:#5046c8 !important; }
-.ev-cell.we .ev-dn { color:#8b9297 !important; } .ev-dn, .ev-one .ev-it { color:#50575c !important; } .ev-cell.out .ev-dn { color:#c4c9cd !important; }   /* 행사 달력 정리 (11/20) */
+.ev-dn, .ev-one .ev-it { color:#50575c !important; } .ev-cell.sat .ev-dn { color:#2563eb !important; } .ev-cell.sun .ev-dn { color:#dc2626 !important; } .ev-cell.out .ev-dn { color:#c4c9cd !important; }   /* 행사 달력 정리 (11/20) */
 .nw-it .d { color:#64748b !important; }   /* 게임 뉴스 요약 (11/20: 다크는 한 단계 밝게 #929eaa) */
 .mka-mnav { background:#ffffff !important; border-color:#dfe3e9 !important; color:#1f2328 !important; box-shadow:0 2px 8px rgba(15,23,42,.12); }   /* 소재 크게 보기 좌우 버튼 (11/09) */
 .gd-ctab2 thead tr:first-child th.gd-sh { border-bottom-color:#e3e5ea !important; }   /* 상세 표: 스토어 이름 줄 ↔ 매출·인기 줄 구분선 */
@@ -3133,7 +3134,7 @@ function evRender(){
     const bars = lanes.slice(0, LANES).flatMap((L, li) => L.map(b => `<div class="evb ${b.cl ? 'cl' : ''} ${b.cr ? 'cr' : ''}" style="left:calc(${b.c0} * 100% / 7 + 4px);width:calc(${b.c1 - b.c0 + 1} * 100% / 7 - 8px);top:${li * LH}px;--c:${b.e.col}" title="${escapeAttr(b.e.t)}">${escapeHtml(b.e.st)}</div>`)).join('');
     let cells = '', ones = '';
     for(let c = 0; c < 7; c++){ const d = evAdd(ws, c), one = body.filter(e => !e.multi && e.s === d), more = Math.max(0, one.length - room) + (hidden[c] || 0);
-      cells += `<div class="ev-cell ${d.slice(0, 7) !== evS.ym ? 'out' : ''} ${d === today ? 'today' : ''} ${d === evS.sel ? 'sel' : ''} ${c >= 5 ? 'we' : ''}" onclick="evPick('${d}')"><div class="ev-dn"><span>${+d.slice(8)}</span></div></div>`;
+      cells += `<div class="ev-cell ${d.slice(0, 7) !== evS.ym ? 'out' : ''} ${d === today ? 'today' : ''} ${d === evS.sel ? 'sel' : ''} ${c === 5 ? 'we sat' : c === 6 ? 'we sun' : ''}" onclick="evPick('${d}')"><div class="ev-dn"><span>${+d.slice(8)}</span></div></div>`;
       ones += `<div>${one.slice(0, room).map(e => `<div class="ev-it"><i style="background:${e.col}"></i><span title="${escapeAttr((e.tm ? e.tm + ' ' : '') + e.t)}">${escapeHtml(e.st)}</span></div>`).join('')}${more ? `<div class="ev-more">+${more}개</div>` : ''}</div>`; }
     h += `<div class="ev-wk">${cells}<div class="ev-lanes">${bars}</div><div class="ev-one" style="top:${28 + used * LH}px">${ones}</div></div>`;
   }

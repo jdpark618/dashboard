@@ -117,7 +117,7 @@ body, main { background:#f6f7f9 !important; }
 .evb { color:#1f2328 !important; background:color-mix(in srgb, var(--c) 16%, #ffffff) !important; }   /* 행사 달력 막대 (11/09) */
 .ev-cell:hover { background:#f7f8fa !important; } .ev-cell.sel { background:#f4f2ff !important; box-shadow:inset 0 0 0 1.5px #5046c8 !important; }
 .ev-cell.today .ev-dn span { background:#5046c8 !important; }
-.ev-cell.we .ev-dn { color:#8b9297 !important; } .ev-dn, .ev-one .ev-it { color:#50575c !important; } .ev-cell.out .ev-dn { color:#c4c9cd !important; }   /* 행사 달력 정리 (11/20) */
+.ev-dn, .ev-one .ev-it { color:#50575c !important; } .ev-cell.sat .ev-dn { color:#2563eb !important; } .ev-cell.sun .ev-dn { color:#dc2626 !important; } .ev-cell.out .ev-dn { color:#c4c9cd !important; }   /* 행사 달력 정리 (11/20) */
 .nw-it .d { color:#64748b !important; }   /* 게임 뉴스 요약 (11/20: 다크는 한 단계 밝게 #929eaa) */
 .mka-mnav { background:#ffffff !important; border-color:#dfe3e9 !important; color:#1f2328 !important; box-shadow:0 2px 8px rgba(15,23,42,.12); }   /* 소재 크게 보기 좌우 버튼 (11/09) */
 .gd-ctab2 thead tr:first-child th.gd-sh { border-bottom-color:#e3e5ea !important; }   /* 상세 표: 스토어 이름 줄 ↔ 매출·인기 줄 구분선 */
