@@ -767,6 +767,11 @@ select option { background-color: #202428; color: #e8eaed; }
 .ta-ch { position:relative; } .ta-ch svg { display:block; width:100%; height:auto; touch-action:pan-y; }
 .ta-tip { position:absolute; top:30px; pointer-events:none; background:#202428; border:1px solid var(--line); border-radius:8px; padding:7px 10px; font-size:12px; color:var(--ta-tx2); box-shadow:0 4px 14px rgba(0,0,0,.25); max-width:250px; display:none; z-index:3; } .ta-tip b { display:block; margin-bottom:2px; color:var(--ta-tx); }
 .ta-three { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-top:14px; }
+/* 11/20: 결론 | 해석 박스(오른쪽 · 큰 글씨 + 부연 한 줄) */
+.ta-hx { display:grid; grid-template-columns:minmax(0,1fr) 400px; gap:18px; align-items:stretch; }
+.ta-rdx { margin:0; display:flex; flex-direction:column; justify-content:center; padding:16px 20px; border-radius:10px; }
+.ta-rdx b { font-size:16px; font-weight:700; line-height:1.55; color:var(--ta-tx); } .ta-rdx small { font-size:12.5px; font-weight:500; line-height:1.55; color:var(--ta-tx2); margin-top:8px; }
+@media (max-width:1023px){ .ta-hx { grid-template-columns:minmax(0,1fr); } .ta-rdx { margin-top:2px; } }
 /* 11/20: 차트 | 분석 카드 3개 세로 — 차트 아래선은 카드 아래선에 맞춤 (taFitChart) · 좁은 화면은 위아래 */
 .ta-mid { display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:16px; align-items:start; margin-top:4px; }
 .ta-mid .ta-three { grid-template-columns:minmax(0,1fr); gap:8px; margin-top:14px; } .ta-mid .ta-an { padding:12px 14px; } .ta-mid .ta-an h5 { margin-bottom:6px; }
@@ -7896,8 +7901,13 @@ function taStory(g){
     업데이트상승: '최근 업데이트 이후 매출 반응이 나타난 것으로 보임', 업데이트유지: '꾸준한 업데이트로 매출 순위를 방어하는 운영으로 보임', 업데이트하락: '업데이트가 있었지만 순위 하락을 되돌리지는 못한 구간으로 보임',
     안정상승: '스토어 노트와 소재로 드러나지 않는 게임 내 이벤트·상품 효과로 보임', 안정유지: '큰 변화 없이 기존 이용자 매출이 유지되는 구간으로 보임', 안정하락: '다음 업데이트 전 일시적으로 매출이 감소하는 구간으로 보임',
     마케팅상승: '소재 확대로 유입이 늘며 매출이 함께 오른 것으로 보임', 마케팅유지: '소재 확대의 매출 반응은 아직 확인되지 않은 것으로 보임', 마케팅하락: '소재 확대에도 매출 반응이 약한 구간으로 보임' }[g.case + flow];
+  const sub = { 복합상승: '두 요인이 겹친 시점이라 어느 쪽 효과가 더 컸는지는 다음 업데이트에서 다시 확인이 필요함', 복합유지: '상위권일수록 같은 집행으로 끌어올릴 여지가 작아, 순위 유지 자체가 성과일 수 있음', 복합하락: '집행 반응이 늦게 나타나는 경우도 있어 1~2주 흐름을 더 볼 필요가 있음',
+    업데이트상승: '같은 기간 새 소재가 크게 늘지 않아 업데이트 효과의 비중이 큰 것으로 볼 수 있음', 업데이트유지: '업데이트 주기가 일정하게 이어지는지가 순위 유지의 핵심으로 보임', 업데이트하락: '업데이트 내용(이벤트 · 버그 수정 비중)에 따라 반응 차이가 크게 나타남',
+    안정상승: '패키지 · 상품 판매처럼 스토어 노트에 남지 않는 변화가 있었을 가능성이 큼', 안정유지: '신규 유입보다 기존 이용자 결제 비중이 큰 구간으로 볼 수 있음', 안정하락: '다음 업데이트 시점의 반등 여부로 흐름을 판단할 수 있음',
+    마케팅상승: '업데이트 없이 오른 만큼 신규 유입 효과로 볼 여지가 큼', 마케팅유지: '소재 효과가 매출에 반영되기까지 시차가 있을 수 있음', 마케팅하락: '소재 방향이 기존 이용자층과 맞는지 확인이 필요해 보임' }[g.case + flow] || '';
   const rd2 = le && flow === '상승' && (g.case === '업데이트' || g.case === '복합') && le.res === '하락' ? '14일 기준 순위는 올랐지만 최근 업데이트 직후 매출은 내려가, 상승은 그 이전 업데이트나 게임 내 요인으로 보임' : rd;   /* 11/20 */
-  return { q, cl, ev, rd: rd2, le };
+  const sub2 = rd2 !== rd ? '업데이트 직후 반응만 보면 하락이라, 14일 상승을 업데이트 효과로 보기는 어려움' : sub;
+  return { q, cl, ev, rd: rd2, sub: sub2, le };
 }
 function taSummary(G){
   const by = t => G.filter(g => g.trend === t), up = by('상승'), keep = by('유지'), dn = by('하락'), nw = by('신규 진입'), top = up.slice().sort((a, b) => b.dr - a.dr)[0], mx = G.filter(g => g.case === '복합');
@@ -7936,13 +7946,14 @@ function taDetailHtml(g){
   const live = g.rel ? (() => { const y = (Date.parse(taData.base) - Date.parse(g.rel)) / 864e5 / 365; return y >= 1 ? `${y.toFixed(1)}년` : `${Math.max(1, Math.round(y * 12))}개월`; })() : '';
   const S = g.S.filter(v => v != null);
   return `<div class="ta-dh">${taIcon(g)}<div><h3>${escapeHtml(g.name)}</h3><small>${escapeHtml(g.pub)} · ${escapeHtml(g.genre)}${live ? ` · 라이브 ${live}` : ''}</small></div><div class="r"><span class="ta-chip ${TA_CASE[g.case][1]}">${TA_CASE[g.case][0]}</span><span class="ta-chip">매출 ${g.trend}</span><button type="button" class="ta-open" data-game="${escapeAttr(g.name)}" onclick="openGameDetail(this.dataset.game)">게임 상세 ›</button></div></div>
-    <p class="ta-q">${st.q}</p><p class="ta-cl">${st.cl}</p><ul class="ta-ev">${st.ev.map(x => `<li>${x}</li>`).join('')}</ul><p class="ta-rd">→ ${st.rd}</p>
+    <div class="ta-hx"><div class="min-w-0"><p class="ta-q">${st.q}</p><p class="ta-cl">${st.cl}</p><ul class="ta-ev">${st.ev.map(x => `<li>${x}</li>`).join('')}</ul></div>
+      <div class="ta-rd ta-rdx"><b>→ ${st.rd}</b>${st.sub ? `<small>${st.sub}</small>` : ''}</div></div>
     <div class="ta-mid"><div class="min-w-0" id="taChW">${taChart(g)}</div>
     <div class="ta-three">${box('rk', '순위 분석', '<div class="ta-kg">' + kv('매출 14일', `${taRk(g.s14)} → ${g.rank}위`) + kv('인기 14일', `${taRk(g.pop14)} → ${taRk(g.pop)}`) + kv('60일 최고 매출', `${Math.min(...S)}위`) + kv('60일 TOP10 유지', `${S.filter(v => v <= 10).length}일`) + '</div>')}
       ${box('up', '업데이트 분석', '<div class="ta-kg">' + kv('60일 업데이트', `${g.upd60}회${g.gap ? ` · ${g.gap}일 주기` : ''}`) + kv('규모 대 · 중 · 소', `${sz('대')} · ${sz('중')} · ${sz('소')}`) + '</div>' + (g.cats.length ? `<div class="ta-bar">${g.cats.map(c => `<i style="width:${c[1] / tot * 100}%;background:${TA_CAT_C[c[0]]}"></i>`).join('')}</div><div class="ta-bl">${g.cats.map(c => `<span><i style="background:${TA_CAT_C[c[0]]}"></i>${c[0]} ${Math.round(c[1] / tot * 100)}%</span>`).join('')}</div>` : '<p class="ta-nt">노트 내용이 부족합니다</p>'))}
       ${box('ma', '마케팅 분석', ok ? '<div class="ta-kg">' + kv('직전 14일 새 소재', `${g.prev14}개`) + kv('최근 14일 새 소재', `${g.now14}개`) + kv('60일 UA 집행 구간', `${g.bands.length}회`) + kv('업데이트 동반 집행', `${g.ev.filter(e => e.strong).length} / ${g.ev.length}건`) + '</div>' : `<p class="ta-nt">${g.mk === 'wait' ? '아직 마케팅 추적 전입니다. 순번이 오면 자동으로 채워집니다.' : '광고 계정을 아직 찾지 못했습니다.'}</p>`)}</div></div>
     <div class="ta-hd" style="margin-top:18px"><h4>업데이트별 반응</h4><span>전 3일 평균 → 후 1~3일 평균 매출 순위</span></div>
-    <div class="ta-tw"><table class="ta-t"><thead><tr><th>날짜</th><th>규모</th><th class="l">주요 내용</th><th>동반 소재</th><th>매출 변화</th><th>인기 변화</th><th>판정</th></tr></thead><tbody>${g.ev.slice(0, 6).map(e => `<tr><td>${taDay(e.d)}</td><td><span class="ta-sz ${e.size === '대' ? 'b' : e.size === '중' ? 'm' : ''}">${e.size}</span>${e.est ? ' <span class="muted text-[11px]">추정</span>' : ''}</td><td class="l w">${e.note ? escapeHtml(e.note) : '<span class="muted">노트 없음</span>'}</td><td>${e.cr == null ? `<span class="muted">${TA_MK[g.mk]}</span>` : `${e.cr}개`}</td><td>${e.dv == null ? '<span class="muted">측정 전</span>' : `${Math.round(e.b)} → ${Math.round(e.a)}위`}</td><td>${e.pdv == null ? '<span class="muted">-</span>' : taDelta(e.pdv)}</td><td><b class="${e.res === '상승' ? 'rank-up' : e.res === '하락' ? 'rank-down' : 'muted'}">${e.res}</b></td></tr>`).join('') || '<tr><td colspan="7" class="muted">최근 업데이트 기록이 없습니다</td></tr>'}</tbody></table></div>`;
+    <div class="ta-tw"><table class="ta-t"><thead><tr><th>날짜</th><th>규모</th><th class="l">주요 내용</th><th>동반 소재</th><th>매출 변화</th><th>인기 변화</th><th>판정</th></tr></thead><tbody>${g.ev.slice(0, 6).map(e => `<tr><td>${taDay(e.d)}</td><td><span class="ta-sz ${e.size === '대' ? 'b' : e.size === '중' ? 'm' : ''}">${e.size}</span>${e.est ? ' <span class="muted text-[11px]">추정</span>' : ''}</td><td class="l w">${e.note ? escapeHtml(e.note) : '<span class="muted">노트 없음</span>'}</td><td>${e.cr == null ? `<span class="muted">${TA_MK[g.mk]}</span>` : `${e.cr}개`}</td><td>${e.dv == null ? '<span class="muted">측정 전</span>' : `${Math.round(e.b)} → ${Math.round(e.a)}위`}</td><td>${e.pdv == null ? '<span class="muted">-</span>' : taDelta(Math.round(e.pdv))}</td><td><b class="${e.res === '상승' ? 'rank-up' : e.res === '하락' ? 'rank-down' : 'muted'}">${e.res}</b></td></tr>`).join('') || '<tr><td colspan="7" class="muted">최근 업데이트 기록이 없습니다</td></tr>'}</tbody></table></div>`;
 }
 function taPick(pkg){ taSel = pkg; taPane = 'dt'; taPaint(); document.querySelector('#taRail .ta-ri.on')?.scrollIntoView({ block: 'nearest', inline: 'center' }); }
 function taSetPane(k){ taPane = k; taPaint(); }
