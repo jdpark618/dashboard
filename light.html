@@ -8743,7 +8743,7 @@ function rpRender(D){
   const coverRow = (t, i) => {
     const pc = S.popular.ca.get(t.key), pp = S.popular.pa.get(t.key), rt = rpRating(t.n, c0, D.end), icon = getIconUrlForGame(t.n);
     const rd = rt ? Math.round((rt.b - rt.a) * 10) / 10 : 0;
-    return `<div class="rp-cv rp-cv-row"><div class="rp-cv-hd"><div class="rp-cv-ic">${icon ? `<img class="ic" src="${escapeAttr(playIconSize(icon, 128))}" alt="" onerror="this.style.visibility='hidden'">` : ''}<img class="md" src="img/medal-${i + 1}.png" alt="${i + 1}위"></div>
+    return `<div class="rp-cv rp-cv-row"><div class="rp-cv-hd"><div class="rp-cv-ic">${icon ? `<img class="ic" src="${escapeAttr(playIconSize(icon, 128))}" alt="" onerror="this.style.visibility='hidden'">` : ''}<img class="md" src="img/medal-${i + 1}.png?v=2" alt="${i + 1}위"></div>
         <div><div class="nm">${esc(t.n)}</div><div class="sb">${esc(rpPubClean(t.p) || '-')} · ${esc(t.g || '-')}</div></div></div>
       <div class="st2">매출 <b>${R(t.avg)}위</b> <i>(전주 ${t.prevPos ? `${t.prevPos}위` : '순위권 밖'})</i><br>
         인기 <b>${pc ? `${R(pc.rank)}위` : 'TOP100 밖'}</b>${pc ? ` <i>(전주 ${pp ? `${R(pp.rank)}위` : '순위권 밖'})</i>` : ''}<br>
@@ -8753,7 +8753,7 @@ function rpRender(D){
     const pc = S.popular.ca.get(t.key), pp = S.popular.pa.get(t.key), rt = rpRating(t.n, c0, D.end), icon = getIconUrlForGame(t.n);
     const rd = rt ? Math.round((rt.b - rt.a) * 10) / 10 : 0;
     return `<div class="rp-cv"><div>
-        <div class="rp-cv-hd"><div class="rp-cv-ic">${icon ? `<img class="ic" src="${escapeAttr(playIconSize(icon, 256))}" alt="" onerror="this.style.visibility='hidden'">` : ''}<img class="md" src="img/medal-${i + 1}.png" alt="${i + 1}위"></div>
+        <div class="rp-cv-hd"><div class="rp-cv-ic">${icon ? `<img class="ic" src="${escapeAttr(playIconSize(icon, 256))}" alt="" onerror="this.style.visibility='hidden'">` : ''}<img class="md" src="img/medal-${i + 1}.png?v=2" alt="${i + 1}위"></div>
           <div><div class="nm">${esc(t.n)}</div><div class="sb">${esc(rpPubClean(t.p) || '-')} · ${esc(t.g || '-')}</div></div></div>
         <div class="st">매출 <b>${R(t.avg)}위</b> <i>(전주 ${t.prevPos ? `${t.prevPos}위` : '순위권 밖'})</i><br>
           인기 <b>${pc ? `${R(pc.rank)}위` : 'TOP100 밖'}</b>${pc ? ` <i>(전주 ${pp ? `${R(pp.rank)}위` : '순위권 밖'})</i>` : ''}<br>
