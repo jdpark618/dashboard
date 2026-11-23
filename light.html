@@ -6421,10 +6421,13 @@ function mkMonday(s){ const dt = mkToDate(s); const dow = (dt.getDay() + 6) % 7;
 function mkShort(s){ return s ? s.substring(5).replace('-', '/') : '-'; }
 function mkWeekLabel(mon){ return `${mkShort(mon)}~${mkShort(mkAddDays(mon, 6))}`; }
 
-/* 지난 완료 주의 월요일: 최신일이 일요일이면 그 주, 아니면 직전 주 */
+/* 지난 완료 주의 월요일 (11/23): 오늘(KST) 기준 지난주로 고정 — 일요일 수집이 빠지거나 월요일 수집이 늦어도 월요일엔 항상 지난주
+   그 주 데이터가 하루도 없을 때만 예전 규칙(최신일이 일요일이면 그 주, 아니면 직전 주) */
 function mkTargetWeekMonday(){
   const s = mkGetIndex('sales').dates.at(-1) || mkGetIndex('popular').dates.at(-1);
   if(!s) return null;
+  const last = mkAddDays(mkMonday(kstTodayStr()), -7);
+  if(s >= last) return last;
   const mon = mkMonday(s);
   return mkToDate(s).getDay() === 0 ? mon : mkAddDays(mon, -7);
 }
