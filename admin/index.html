@@ -145,7 +145,7 @@ async function main(){
       /* 상태: 실행 중(재시도 대기 포함) → 노랑 / 마지막 시도 결과 → 초록·빨강 / 로그 없으면 GitHub 결과 */
       const running = sch && sch.status !== 'completed', last = A.at(-1);
       const st = running ? 'run' : last ? (last.ok ? 'ok' : 'ng') : sch.conclusion === 'success' ? 'ok' : 'ng';
-      const s = sch ? kst(sch.run_started_at) : kst(A[0].start), e = sch ? kst(sch.updated_at) : kst(last.end);
+      const s = A[0] ? kst(A[0].start) : kst(sch.run_started_at), e = last && !running ? kst(last.end) : sch ? kst(sch.updated_at) : kst(last.end);   /* 시각은 수집 로그 기준: 마케팅 1·2·3차는 한 실행 안의 단계라 실행 시각이 같음 (11/24) */
       const dur = Math.max(1, Math.round((e - s) / 60e3));
       let body;
       if(!A.length) body = msgList(running ? [['m', '실행 중...']] : [['m', '수집 로그 없음 (로그 기록 시작 전)']]);
