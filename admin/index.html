@@ -55,6 +55,13 @@
   .cap .bar i.warn { background:var(--warn); } .cap .bar i.ng { background:var(--ng); }
   .cap .pct { font-weight:700; font-size:14px; min-width:44px; text-align:right; }
   .cap .life { color:var(--mu); font-size:12px; white-space:nowrap; min-width:150px; text-align:right; } .cap .life b { color:var(--tx); font-weight:600; }
+  /* 전일 대비 증가 (11/25): 최근 14일 하루 증가율 막대 + 어제→오늘 % */
+  .cap .dl { display:flex; align-items:center; gap:8px; white-space:nowrap; }
+  .cap .spk { display:flex; align-items:flex-end; gap:2px; height:20px; }
+  .cap .spk i { width:4px; border-radius:1px; background:rgba(125,114,240,.38); min-height:2px; }
+  .cap .spk i:last-child { background:var(--pu); }
+  .cap .dv { font-weight:700; color:#a59cf6; font-size:12px; min-width:52px; } .cap .dv.hi { color:var(--warn); }
+  .cap .dv small { display:block; font-weight:400; color:var(--mu); font-size:10px; }
   @media (max-width:640px){ .cap { flex-wrap:wrap; gap:8px 12px; } .cap .bar { flex-basis:100%; order:3; } .cap .life { margin-left:auto; } }
 </style>
 </head>
@@ -85,9 +92,16 @@ async function capCard(id, label, file, key, limit0, guess){
   const from = H.filter(x => dn(x.d) >= dn(last.d) - 14)[0], span = dn(last.d) - dn(from.d);
   const perDay = span >= 7 && last[key] > from[key] ? (last[key] - from[key]) / span : guess;
   const days = Math.floor((limit - used) / perDay), end = new Date(Date.now() + days * 864e5);
+  /* 전일 대비: 하루 간격 기록끼리의 증가율 · 최근 14일 막대 (마지막 = 오늘) · 평소(중앙값)의 2배 넘으면 노랑 */
+  const inc = H.slice(1).map((x, i) => dn(x.d) - dn(H[i].d) === 1 && H[i][key] ? { d: x.d, p: (x[key] - H[i][key]) / H[i][key] * 100, v: x[key] - H[i][key] } : null).filter(Boolean).slice(-14);
+  const td = inc.at(-1)?.d === last.d ? inc.at(-1) : null, mx = Math.max(...inc.map(x => x.p), 0.01);
+  const med = inc.map(x => x.p).sort((a, b) => a - b)[inc.length >> 1] || 0;
+  const fmtV = v => key === 'bytes' ? `${v < 0 ? '−' : '+'}${(Math.abs(v) / 1e6).toFixed(1)}MB` : `${v < 0 ? '−' : '+'}${Math.abs(v).toLocaleString()}셀`;
+  const dl = td ? `<span class="dl" title="전일 대비 하루 증가율 · 최근 ${inc.length}일"><span class="spk">${inc.map(x => `<i style="height:${Math.max(2, x.p / mx * 20).toFixed(1)}px" title="${Number(x.d.slice(5, 7))}/${Number(x.d.slice(8))} ${x.p >= 0 ? '+' : ''}${x.p.toFixed(2)}%"></i>`).join('')}</span>
+    <span class="dv ${inc.length >= 5 && td.p > med * 2 ? 'hi' : ''}">${td.p >= 0 ? '▲' : '▼'} ${Math.abs(td.p).toFixed(1)}%<small>전일 ${fmtV(td.v)}</small></span></span>` : '';
   const life = days >= 365 ? `약 ${(days / 365).toFixed(1)}년` : `약 ${Math.round(days / 30)}개월`;
   el.innerHTML = `<span class="lb">${label}</span><div class="bar"><i class="${pct >= 85 ? 'ng' : pct >= 70 ? 'warn' : ''}" style="width:${Math.max(pct, 1).toFixed(1)}%"></i></div>
-    <span class="pct">${pct.toFixed(1)}%</span><span class="life">수명 <b>${life}</b> · ${end.getFullYear()}년 ${end.getMonth() + 1}월경</span>`;
+    <span class="pct">${pct.toFixed(1)}%</span>${dl}<span class="life">수명 <b>${life}</b> · ${end.getFullYear()}년 ${end.getMonth() + 1}월경</span>`;
 }
 capCard('cap', 'DB 용량', 'sheet_usage.json', 'cells', 1e7, 16000);
 capCard('capPages', 'GitHub Pages 용량', 'pages_usage.json', 'bytes', 1e9, 1.7e6);
@@ -98,6 +112,7 @@ const CATS = [
   { k: 'ads',      lb: '마케팅 TOP5', wf: 'Ad Tracker (마케팅 추적)', cron: '순위 뒤', fixed: 1 },   /* 순위가 끝나면 시작 (로그의 05:30 은 옛 표기) */
   { k: 'ads_rot',  lb: '마케팅 순번', wf: 'Ad Tracker (마케팅 추적)', cron: '이어서' },   /* 11/19: 단계마다 다른 서버(IP) */
   { k: 'ads_fill', lb: '마케팅 보충', wf: 'Ad Tracker (마케팅 추적)', cron: '이어서' },
+  { k: 'news', lb: '뉴스', wf: 'Game News (게임 뉴스)', cron: '3시간마다', multi: 1, from: '2026-11-25' },   /* 11/25: 하루 여러 번 → 마지막 실행 + 하루 합계 */
 ];
 const LOG_BASE = 'https://jdpark618.github.io/gchart/data/runlog/', DAYS = 14, FIRST_DAY = '2026-11-03';   /* 10/27~11/2 는 보지 않음 (11/09) */
 const kst = iso => new Date(Date.parse(iso) + 9 * 3600e3);   /* UTC ISO → KST 를 UTC 칸에 담은 Date (표시용) */
@@ -121,6 +136,17 @@ function msgList(M){
   return `<ul class="msgs">${rest.filter(x => x[0] !== 'w').map(li).join('')}${det('Meta')}${det('Google')}${rest.filter(x => x[0] === 'w').map(li).join('')}</ul>`;
 }
 async function getLog(day, k){ try{ const r = await fetch(`${LOG_BASE}${day}/${k}.json?t=${Date.now()}`); return r.ok ? await r.json() : null; }catch(e){ return null; } }
+/* 하루 여러 번 도는 수집 (뉴스, 11/25): 상태 = 마지막 실행 · 실행 횟수 · 하루 새 기사 합계 · 실패가 있었으면 시각 */
+function multiRow(c, A, R, isToday){
+  const head = `<td><div class="cat"><span class="dot %s"></span>${c.lb}</div></td><td>${c.cron}</td>`;
+  if(!A.length) return { st: 'wait', html: head.replace('%s', 'wait') + `<td style="color:var(--mu)">${isToday ? '아직 실행 전' : '실행 기록 없음'}</td><td><ul class="msgs"><li class="m">-</li></ul></td>` };
+  const last = A.at(-1), st = last.ok ? 'ok' : 'ng', s = kst(last.start), fails = A.filter(a => !a.ok);
+  const sumNew = A.reduce((t, a) => t + (Number(String(a.msgs[0]?.[1] || '').match(/새 기사 (\d+)건/)?.[1]) || 0), 0);
+  const run = R.filter(r => r.name === c.wf && Math.abs(Date.parse(r.run_started_at) - Date.parse(last.start)) < 10 * 60e3)[0];
+  const msgs = [...last.msgs];
+  if(fails.length) msgs.push(['w', `실패 ${fails.length}회 · ${fails.map(a => hm(kst(a.start))).join(', ')}`]);
+  return { st, html: head.replace('%s', st) + `<td><span class="t">${hm(s)}</span><span class="late">마지막</span><div class="extra">${A.length}회 실행 · 새 기사 ${sumNew}건${run ? ` · <a class="run" href="${run.html_url}" target="_blank" rel="noopener">실행 기록 ↗</a>` : ''}</div></td><td>${msgList(msgs)}</td>` };
+}
 async function main(){
   const today = ymd(kst(new Date().toISOString())), days = [];
   for(let i = 0; i < DAYS; i++){ const d = ymd(new Date(Date.parse(today) - i * 864e5)); if(d >= FIRST_DAY) days.push(d); }
@@ -134,8 +160,9 @@ async function main(){
   runs.filter(r => CATS.some(c => c.wf === r.name)).forEach(r => { const d = ymd(kst(r.run_started_at || r.created_at)); if(!byDay.has(d)) byDay.set(d, []); byDay.get(d).push(r); });
   document.getElementById('days').innerHTML = days.map(day => {
     const R = byDay.get(day) || [], dw = DOW[new Date(day + 'T00:00:00Z').getUTCDay()];
-    const rows = CATS.map(c => {
+    const rows = CATS.filter(c => !c.from || day >= c.from).map(c => {
       const L = logs[`${day}/${c.k}`], A = L?.attempts || [], cron = c.fixed ? c.cron : L?.sched || c.cron;
+      if(c.multi) return multiRow(c, A, R, day === today);
       /* 실제로 수집한 실행 = 첫 시도 시각을 품은 실행 (11/24: 외부 예약은 workflow_dispatch 라 schedule 만 보면 gate 에서 끝난 안전망을 잡음) */
       const mine = R.filter(r => r.name === c.wf).sort((a, b) => a.run_started_at.localeCompare(b.run_started_at)), t0 = A[0] && Date.parse(A[0].start);
       const sch = (t0 && mine.find(r => Date.parse(r.run_started_at) <= t0 + 60e3 && t0 <= Date.parse(r.updated_at))) || mine.find(r => r.event === 'schedule');
@@ -164,7 +191,7 @@ async function main(){
         <td>${body}${extraManual}</td>` };
     });
     const ng = rows.filter(r => r.st === 'ng').length, ok = rows.filter(r => r.st === 'ok').length;
-    return `<section class="day"><div class="day-hd"><b>${Number(day.slice(5, 7))}/${Number(day.slice(8))} (${dw})</b>${ng ? `<span class="pill ng">실패 ${ng}</span>` : ok === 4 ? '<span class="pill ok">모두 정상</span>' : ''}<span class="sum">${ok}/4 정상</span></div>
+    return `<section class="day"><div class="day-hd"><b>${Number(day.slice(5, 7))}/${Number(day.slice(8))} (${dw})</b>${ng ? `<span class="pill ng">실패 ${ng}</span>` : ok === rows.length ? '<span class="pill ok">모두 정상</span>' : ''}<span class="sum">${ok}/${rows.length} 정상</span></div>
       <table><colgroup><col style="width:170px"><col style="width:90px"><col style="width:220px"><col></colgroup>
       <thead><tr><th>카테고리</th><th>예약 시간</th><th>실제 실행</th><th>수집 로그</th></tr></thead><tbody>${rows.map(r => `<tr>${r.html}</tr>`).join('')}</tbody></table></section>`;
   }).join('');
