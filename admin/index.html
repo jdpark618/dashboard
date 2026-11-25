@@ -93,8 +93,8 @@ capCard('cap', 'DB 용량', 'sheet_usage.json', 'cells', 1e7, 16000);
 capCard('capPages', 'GitHub Pages 용량', 'pages_usage.json', 'bytes', 1e9, 1.7e6);
 const CATS = [
   { k: 'new',     lb: '신작',   wf: 'Wame Calendar Scraper',        cron: '00:30' },   /* 11/24~ Google Cloud Scheduler 가 부름 */
-  { k: 'popular', lb: '인기',   wf: 'Daily PlayStore Rank Scraper', cron: '01:00' },
-  { k: 'sales',   lb: '매출',   wf: 'Daily PlayStore Rank Scraper', cron: '01:00' },
+  { k: 'popular', lb: '인기',   wf: 'Daily PlayStore Rank Scraper', cron: '09:00' },
+  { k: 'sales',   lb: '매출',   wf: 'Daily PlayStore Rank Scraper', cron: '09:00' },
   { k: 'ads',      lb: '마케팅 TOP5', wf: 'Ad Tracker (마케팅 추적)', cron: '순위 뒤', fixed: 1 },   /* 순위가 끝나면 시작 (로그의 05:30 은 옛 표기) */
   { k: 'ads_rot',  lb: '마케팅 순번', wf: 'Ad Tracker (마케팅 추적)', cron: '이어서' },   /* 11/19: 단계마다 다른 서버(IP) */
   { k: 'ads_fill', lb: '마케팅 보충', wf: 'Ad Tracker (마케팅 추적)', cron: '이어서' },

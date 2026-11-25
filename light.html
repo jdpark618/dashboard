@@ -3302,8 +3302,8 @@ document.addEventListener('click', e => {
 
 /* KST 기준 오늘 날짜 (사용자 PC 시간대와 무관하게 스토어 집계일과 비교) */
 function kstTodayStr(){ return new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' }); }
-/* 크롤러는 KST 07시 전후 실행 → 08시 전까지는 전일 데이터가 최신이어도 정상으로 본다 */
-const CRAWL_READY_HOUR_KST = 8;
+/* 순위 수집은 KST 09:00 (11/25~) → 10시 전까지는 전일 데이터가 최신이어도 정상으로 본다 */
+const CRAWL_READY_HOUR_KST = 10;   /* 11/25: 순위 수집 09:00 KST (Cloud Scheduler) */
 function expectedLatestDateStr(){
   const kstHour = Number(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul', hour: 'numeric', hourCycle: 'h23' }));
   const today = kstTodayStr();
@@ -8906,7 +8906,7 @@ async function fetchAllData(){
     if(!needNews) newsP.then(n => { rawStore.newReleases = n; onNewsLoaded(); }).catch(e => console.warn('신작 정보를 불러오지 못했습니다', e));
     lastSyncAt = Date.now();
     const syncTime = new Date(lastSyncAt).toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' });
-    /* 수집 파이프라인 지연 감지: 최신 데이터 날짜가 기대 수집일(KST 08시 기준)보다 이전이면 경고 표시 */
+    /* 수집 파이프라인 지연 감지: 최신 데이터 날짜가 기대 수집일(KST 10시 기준)보다 이전이면 경고 표시 */
     const latest = latestDate(rawStore.sales), expected = expectedLatestDateStr();
     const lag = latest ? daysBetween(latest, kstTodayStr()) : null;
     if(latest && latest < expected){
