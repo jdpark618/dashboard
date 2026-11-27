@@ -92,13 +92,15 @@ async function capCard(id, label, file, key, limit0, guess){
   const from = H.filter(x => dn(x.d) >= dn(last.d) - 14)[0], span = dn(last.d) - dn(from.d);
   const perDay = span >= 7 && last[key] > from[key] ? (last[key] - from[key]) / span : guess;
   const days = Math.floor((limit - used) / perDay), end = new Date(Date.now() + days * 864e5);
-  /* 전일 대비: 하루 간격 기록끼리의 증가율 · 최근 14일 막대 (마지막 = 오늘) · 평소(중앙값)의 2배 넘으면 노랑 */
-  const inc = H.slice(1).map((x, i) => dn(x.d) - dn(H[i].d) === 1 && H[i][key] ? { d: x.d, p: (x[key] - H[i][key]) / H[i][key] * 100, v: x[key] - H[i][key] } : null).filter(Boolean).slice(-14);
+  /* 전일 대비: 하루 간격 기록끼리 늘어난 양을 총 용량(한도) 대비 % 로 (11/27~, 전엔 전일 사용량 대비 증가율이라 헷갈림)
+     · 최근 14일 막대 (마지막 = 오늘) · 평소(중앙값)의 2배 넘으면 노랑 */
+  const inc = H.slice(1).map((x, i) => dn(x.d) - dn(H[i].d) === 1 ? { d: x.d, p: (x[key] - H[i][key]) / limit * 100, v: x[key] - H[i][key] } : null).filter(Boolean).slice(-14);
+  const fmtP = p => `${p < 0 ? '−' : '+'}${Math.abs(p) < 0.01 && p !== 0 ? '<0.01' : Math.abs(p).toFixed(2)}%`;
   const td = inc.at(-1)?.d === last.d ? inc.at(-1) : null, mx = Math.max(...inc.map(x => x.p), 0.01);
   const med = inc.map(x => x.p).sort((a, b) => a - b)[inc.length >> 1] || 0;
   const fmtV = v => key === 'bytes' ? `${v < 0 ? '−' : '+'}${(Math.abs(v) / 1e6).toFixed(1)}MB` : `${v < 0 ? '−' : '+'}${Math.abs(v).toLocaleString()}셀`;
-  const dl = td ? `<span class="dl" title="전일 대비 하루 증가율 · 최근 ${inc.length}일"><span class="spk">${inc.map(x => `<i style="height:${Math.max(2, x.p / mx * 20).toFixed(1)}px" title="${Number(x.d.slice(5, 7))}/${Number(x.d.slice(8))} ${x.p >= 0 ? '+' : ''}${x.p.toFixed(2)}%"></i>`).join('')}</span>
-    <span class="dv ${inc.length >= 5 && td.p > med * 2 ? 'hi' : ''}">${td.p >= 0 ? '▲' : '▼'} ${Math.abs(td.p).toFixed(1)}%<small>전일 ${fmtV(td.v)}</small></span></span>` : '';
+  const dl = td ? `<span class="dl" title="전일 대비 증가 · 총 용량 대비 % · 최근 ${inc.length}일"><span class="spk">${inc.map(x => `<i style="height:${Math.max(2, x.p / mx * 20).toFixed(1)}px" title="${Number(x.d.slice(5, 7))}/${Number(x.d.slice(8))} ${fmtP(x.p)} (${fmtV(x.v)})"></i>`).join('')}</span>
+    <span class="dv ${inc.length >= 5 && td.p > med * 2 ? 'hi' : ''}">${fmtP(td.p)}<small>전일 ${fmtV(td.v)}</small></span></span>` : '';
   const life = days >= 365 ? `약 ${(days / 365).toFixed(1)}년` : `약 ${Math.round(days / 30)}개월`;
   el.innerHTML = `<span class="lb">${label}</span><div class="bar"><i class="${pct >= 85 ? 'ng' : pct >= 70 ? 'warn' : ''}" style="width:${Math.max(pct, 1).toFixed(1)}%"></i></div>
     <span class="pct">${pct.toFixed(1)}%</span>${dl}<span class="life">수명 <b>${life}</b> · ${end.getFullYear()}년 ${end.getMonth() + 1}월경</span>`;
